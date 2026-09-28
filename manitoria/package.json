@@ -1,0 +1,11 @@
+{
+  "name": "manitoria",
+  "version": "3.5.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "build": "node build.mjs",
+    "test": "node tests.mjs && node campaign-tests.mjs && node desk-tests.mjs && node arena-tests.mjs && node model-tests.mjs"
+  }
+}
