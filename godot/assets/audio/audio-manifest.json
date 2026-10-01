@@ -1,0 +1,849 @@
+{
+  "rate": 44100,
+  "families": [
+    "beast",
+    "claw",
+    "stone",
+    "wing",
+    "fire",
+    "lightning",
+    "ice",
+    "venom",
+    "spirit",
+    "nature",
+    "water",
+    "holy",
+    "metal",
+    "shadow",
+    "bow",
+    "quake",
+    "shield",
+    "heal"
+  ],
+  "species": {
+    "minotaur": "beast",
+    "golem": "stone",
+    "troll": "stone",
+    "wendigo": "shadow",
+    "direwolf": "beast",
+    "manticore": "venom",
+    "griffin": "wing",
+    "kitsune": "spirit",
+    "wyvern": "venom",
+    "harpy": "wing",
+    "phoenix": "fire",
+    "kirin": "lightning",
+    "basilisk": "venom",
+    "treant": "nature",
+    "naga": "water",
+    "unicorn": "holy",
+    "cerberus": "beast",
+    "nemean": "beast",
+    "yeti": "ice",
+    "zaratan": "shield",
+    "owlbear": "claw",
+    "hydra": "nature",
+    "chimera": "fire",
+    "gargoyle": "stone",
+    "nekomata": "shadow",
+    "jackalope": "nature",
+    "cyclops": "quake",
+    "thunderbird": "lightning",
+    "sphinx": "spirit",
+    "pegasus": "wing",
+    "arachne": "venom",
+    "salamander": "fire"
+  },
+  "assets": [
+    {
+      "file": "fx\\beast.wav",
+      "seconds": 0.42,
+      "peak_dbfs": -2.62,
+      "rms_dbfs": -11.11,
+      "sha256": "d6e79acf496addb0ddf96afcfc2ca796a1587b20c384dd7a2883ccf56268eeca"
+    },
+    {
+      "file": "fx\\attack_beast.wav",
+      "seconds": 0.14,
+      "peak_dbfs": -4.44,
+      "rms_dbfs": -11.28,
+      "sha256": "f84b2ffa8902ae0dc810415c087ae89c886312e6e9c6ebaf0832bc2957dcdb30"
+    },
+    {
+      "file": "fx\\charge_beast.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -8.4,
+      "rms_dbfs": -22.23,
+      "sha256": "b33ab74d1d2ebc90e81cec3297859ed8b438333194bb7269d973b9997faac0f4"
+    },
+    {
+      "file": "fx\\death_beast.wav",
+      "seconds": 1.05,
+      "peak_dbfs": -3.61,
+      "rms_dbfs": -16.03,
+      "sha256": "6a993da72385b17a8b05fc0523687a3f2f1ee765fb61c55ac06a146eb577caea"
+    },
+    {
+      "file": "fx\\claw.wav",
+      "seconds": 0.42,
+      "peak_dbfs": -2.62,
+      "rms_dbfs": -11.24,
+      "sha256": "73208e8d83015c98fd8a628f0e22a36c40ee1706f6e49822dfa6b06d6320d16a"
+    },
+    {
+      "file": "fx\\attack_claw.wav",
+      "seconds": 0.14,
+      "peak_dbfs": -4.44,
+      "rms_dbfs": -11.14,
+      "sha256": "6fdb8754f8261c70b235848faf0cc15a4b44b9844ae21555aaafaa10c933d386"
+    },
+    {
+      "file": "fx\\charge_claw.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -8.4,
+      "rms_dbfs": -21.87,
+      "sha256": "362885286d77b6fabad98b9a1457b6d442dbc5ea268d2e4c2d976efc28f5da75"
+    },
+    {
+      "file": "fx\\death_claw.wav",
+      "seconds": 1.05,
+      "peak_dbfs": -3.61,
+      "rms_dbfs": -15.88,
+      "sha256": "cf9a634a621863ac32931bd6d633b9911fbe39d3098af32bed6a8c0c7d260855"
+    },
+    {
+      "file": "fx\\stone.wav",
+      "seconds": 0.42,
+      "peak_dbfs": -2.62,
+      "rms_dbfs": -10.22,
+      "sha256": "79ecd5fee529899956110ff8286abee67d44cdeb67499d427a65a3e2b593eacd"
+    },
+    {
+      "file": "fx\\attack_stone.wav",
+      "seconds": 0.14,
+      "peak_dbfs": -4.44,
+      "rms_dbfs": -11.35,
+      "sha256": "178ee3e7841a15a070782ecd49a18e2a411bad105e3d5b7c0dd068be7505c027"
+    },
+    {
+      "file": "fx\\charge_stone.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -8.4,
+      "rms_dbfs": -21.88,
+      "sha256": "cf2d358f1112d0d6241816b8f8f66c3782911d1d529412803f9be7f8ed080a7e"
+    },
+    {
+      "file": "fx\\death_stone.wav",
+      "seconds": 1.05,
+      "peak_dbfs": -3.61,
+      "rms_dbfs": -14.69,
+      "sha256": "1aac357dd8765564cbaa57aeab4c20cb2e46a220c12e04772789db7ddac33176"
+    },
+    {
+      "file": "fx\\wing.wav",
+      "seconds": 0.42,
+      "peak_dbfs": -2.62,
+      "rms_dbfs": -12.06,
+      "sha256": "a6635f460e1d44a0e10ce413514f827200b03d2b231dc7ce0af76c108fb3af5b"
+    },
+    {
+      "file": "fx\\attack_wing.wav",
+      "seconds": 0.14,
+      "peak_dbfs": -4.44,
+      "rms_dbfs": -12.64,
+      "sha256": "2f14954b7c85d8ead23fdb595e101705b573575808f3832d8615fed97d8d8198"
+    },
+    {
+      "file": "fx\\charge_wing.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -8.4,
+      "rms_dbfs": -23.45,
+      "sha256": "1f74f339a1b7aa9c71932c71501c83049f0179bb21d4d22b0d543fd77fd8b19a"
+    },
+    {
+      "file": "fx\\death_wing.wav",
+      "seconds": 1.05,
+      "peak_dbfs": -3.61,
+      "rms_dbfs": -17.03,
+      "sha256": "15c2cde38879d88afe43853d27dc564043f0733e77c982dbd71148571f47c2b5"
+    },
+    {
+      "file": "fx\\fire.wav",
+      "seconds": 0.42,
+      "peak_dbfs": -2.62,
+      "rms_dbfs": -11.61,
+      "sha256": "d72e2426dab52ff3850a67425c1ae4bfe27c9f77e072bd1956a04196281837c4"
+    },
+    {
+      "file": "fx\\attack_fire.wav",
+      "seconds": 0.14,
+      "peak_dbfs": -4.44,
+      "rms_dbfs": -12.88,
+      "sha256": "fae06125ce46479cf158fd015da5c45236d4f6ddd1ca4a840a2cd04a0a986a3c"
+    },
+    {
+      "file": "fx\\charge_fire.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -8.4,
+      "rms_dbfs": -22.05,
+      "sha256": "034e0439a3d8d8a1348a4e397ae8b2131be9ef6847e732dccc055a07de8eba5d"
+    },
+    {
+      "file": "fx\\death_fire.wav",
+      "seconds": 1.05,
+      "peak_dbfs": -3.61,
+      "rms_dbfs": -16.52,
+      "sha256": "1c9f4945cb1611bd41056fe3ea933b9e169d5a848916486c784f6aea9fa30577"
+    },
+    {
+      "file": "fx\\lightning.wav",
+      "seconds": 0.42,
+      "peak_dbfs": -2.62,
+      "rms_dbfs": -13.53,
+      "sha256": "19d80a3c4236e7719ec1c3c1fd5727f71b47ba9294018aabea7a8409e89a967e"
+    },
+    {
+      "file": "fx\\attack_lightning.wav",
+      "seconds": 0.14,
+      "peak_dbfs": -4.44,
+      "rms_dbfs": -12.25,
+      "sha256": "4bb1a80bfafc126cd3b79fba715e112ae9cae299a3d62d96864b68311bc44706"
+    },
+    {
+      "file": "fx\\charge_lightning.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -8.4,
+      "rms_dbfs": -24.4,
+      "sha256": "af87df583e8839bf6cba1bece0ae3c39457aa0db8c719d9c28a797bce7cfa40a"
+    },
+    {
+      "file": "fx\\death_lightning.wav",
+      "seconds": 1.05,
+      "peak_dbfs": -3.61,
+      "rms_dbfs": -18.86,
+      "sha256": "234de7098c2737de6773a740b2142d3278fe2a6aaac8d8e09e1246d44556d649"
+    },
+    {
+      "file": "fx\\ice.wav",
+      "seconds": 0.42,
+      "peak_dbfs": -2.62,
+      "rms_dbfs": -15.63,
+      "sha256": "5e47dcc872b2d9f97f415c3bee786210ecb7a61b1a22d8b44a4947abbe2c5a01"
+    },
+    {
+      "file": "fx\\attack_ice.wav",
+      "seconds": 0.14,
+      "peak_dbfs": -4.44,
+      "rms_dbfs": -14.74,
+      "sha256": "c6eb5753a0015bad800526fd3ca57525fa27e34fb06254f8976ff828a9380556"
+    },
+    {
+      "file": "fx\\charge_ice.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -8.4,
+      "rms_dbfs": -22.24,
+      "sha256": "6966a1a7a9de02b16fe8f6a2067ed38760820a5ec5d7f1c9d0e8c81991563836"
+    },
+    {
+      "file": "fx\\death_ice.wav",
+      "seconds": 1.05,
+      "peak_dbfs": -3.61,
+      "rms_dbfs": -20.74,
+      "sha256": "1f25d780e8504fc9f8869b583c99f22d9aa45ba3300721b43700f1dcb6f7b231"
+    },
+    {
+      "file": "fx\\venom.wav",
+      "seconds": 0.42,
+      "peak_dbfs": -2.62,
+      "rms_dbfs": -13.64,
+      "sha256": "98c1851f07939559e702682552834c493f58be82161cb9479f89c41b975594cd"
+    },
+    {
+      "file": "fx\\attack_venom.wav",
+      "seconds": 0.14,
+      "peak_dbfs": -4.44,
+      "rms_dbfs": -14.5,
+      "sha256": "72adc60fe002a891c81674fb900835bf03c4be48ec645254c4682516ffc9a70c"
+    },
+    {
+      "file": "fx\\charge_venom.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -8.4,
+      "rms_dbfs": -23.93,
+      "sha256": "087ec80c66e406b04c7b7b026c28a601006b117cbd8e2f6221486bfef711d1c4"
+    },
+    {
+      "file": "fx\\death_venom.wav",
+      "seconds": 1.05,
+      "peak_dbfs": -3.61,
+      "rms_dbfs": -18.85,
+      "sha256": "1b715f94f9b5a54a4d10c84ed7f69fa83a33ff794b394d48dda0fe598ac6569d"
+    },
+    {
+      "file": "fx\\spirit.wav",
+      "seconds": 0.42,
+      "peak_dbfs": -2.62,
+      "rms_dbfs": -12.03,
+      "sha256": "92aae9aca16d09cd7d4adecb2459e95239cce175860ef36fe420508239c3f978"
+    },
+    {
+      "file": "fx\\attack_spirit.wav",
+      "seconds": 0.14,
+      "peak_dbfs": -4.44,
+      "rms_dbfs": -12.83,
+      "sha256": "0bd218b2e4b00b700728d74cf61e968c5f4e4852a19cdb468e8277687e03f28f"
+    },
+    {
+      "file": "fx\\charge_spirit.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -8.4,
+      "rms_dbfs": -21.46,
+      "sha256": "f1ca5d731d7c9aa9925d5e674495a5d170151fd5bfe9eb5f1f8da1b8bdf66791"
+    },
+    {
+      "file": "fx\\death_spirit.wav",
+      "seconds": 1.05,
+      "peak_dbfs": -3.61,
+      "rms_dbfs": -17.06,
+      "sha256": "460fecb94ac0cace210b2b09f96919e315e5bd6fa7c80ff0c4eb58d56ed66326"
+    },
+    {
+      "file": "fx\\nature.wav",
+      "seconds": 0.42,
+      "peak_dbfs": -2.62,
+      "rms_dbfs": -13.13,
+      "sha256": "69c6b620fb9d5af63e19512afed03d5454871e2106e0014bc44eca525a529a8d"
+    },
+    {
+      "file": "fx\\attack_nature.wav",
+      "seconds": 0.14,
+      "peak_dbfs": -4.44,
+      "rms_dbfs": -13.62,
+      "sha256": "607b2a4e26a6f296f81307f94819b5d3734497ba21530084c1be0a5a7d805c88"
+    },
+    {
+      "file": "fx\\charge_nature.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -8.4,
+      "rms_dbfs": -23.25,
+      "sha256": "1978ee66614063cd7fc540a2c1a88aaecc048ca380bc111d6952d47c292e9389"
+    },
+    {
+      "file": "fx\\death_nature.wav",
+      "seconds": 1.05,
+      "peak_dbfs": -3.61,
+      "rms_dbfs": -18.54,
+      "sha256": "601017334b803d15f5b105b17ec89caa742675d682387eddbf4752628a429b87"
+    },
+    {
+      "file": "fx\\water.wav",
+      "seconds": 0.42,
+      "peak_dbfs": -2.62,
+      "rms_dbfs": -13.85,
+      "sha256": "21c6a9f8d2c0c4dec782fa0df22b1bec488cda40a3df61be59081e408e26c6fe"
+    },
+    {
+      "file": "fx\\attack_water.wav",
+      "seconds": 0.14,
+      "peak_dbfs": -4.44,
+      "rms_dbfs": -14.32,
+      "sha256": "703f1894ebd36970039503893e8782c5dc453cb3130f064c985398ad7ef60b62"
+    },
+    {
+      "file": "fx\\charge_water.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -8.4,
+      "rms_dbfs": -23.66,
+      "sha256": "ba1cbd0e3cab0c08b17347ab02d7e7f0c275ed25417f3ccaf189eefd0229f305"
+    },
+    {
+      "file": "fx\\death_water.wav",
+      "seconds": 1.05,
+      "peak_dbfs": -3.61,
+      "rms_dbfs": -19.37,
+      "sha256": "ab8f4958d97fd93cdb1efc202bd2b443c960ea78dfbb1efabe28f611be56837f"
+    },
+    {
+      "file": "fx\\holy.wav",
+      "seconds": 0.42,
+      "peak_dbfs": -2.62,
+      "rms_dbfs": -13.86,
+      "sha256": "0a4e5a48df120cdfdd285e5dedbbf4441b89c8117c657cbb19c7670d216ac406"
+    },
+    {
+      "file": "fx\\attack_holy.wav",
+      "seconds": 0.14,
+      "peak_dbfs": -4.44,
+      "rms_dbfs": -13.33,
+      "sha256": "a8f2e85feb02464cc38c6cf0f644a5e3efe9de376b5a6c7eaba1866a43b20739"
+    },
+    {
+      "file": "fx\\charge_holy.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -8.4,
+      "rms_dbfs": -22.82,
+      "sha256": "fdb00fa3921daf863c4b18b6dcab02ff1837f9a8b64d5ee8221a8ed113277b5e"
+    },
+    {
+      "file": "fx\\death_holy.wav",
+      "seconds": 1.05,
+      "peak_dbfs": -3.61,
+      "rms_dbfs": -18.79,
+      "sha256": "28946ec7aa56dd86d0069aad2d5ee3613c19ef7347ec454e69a79abc7fda1556"
+    },
+    {
+      "file": "fx\\metal.wav",
+      "seconds": 0.42,
+      "peak_dbfs": -2.62,
+      "rms_dbfs": -15.14,
+      "sha256": "a5a0114e6276ba2bf4f2757476cddbadbd429bef5b3839340f344775d0e23126"
+    },
+    {
+      "file": "fx\\attack_metal.wav",
+      "seconds": 0.14,
+      "peak_dbfs": -4.44,
+      "rms_dbfs": -14.79,
+      "sha256": "9fe3c171d540c8536a1c3adf2a568020e92fdc2e4a5f86801286afaf019a3cad"
+    },
+    {
+      "file": "fx\\charge_metal.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -8.4,
+      "rms_dbfs": -23.61,
+      "sha256": "d4a5216fdf3f0b6040311761d37ffa7e4a9aeb59fda25f0669c1310eeea48cbc"
+    },
+    {
+      "file": "fx\\death_metal.wav",
+      "seconds": 1.05,
+      "peak_dbfs": -3.61,
+      "rms_dbfs": -20.5,
+      "sha256": "8c3d5bd1dfa3aab4d4d33855773cbb9654237c588588e63a1476854281a5bdb0"
+    },
+    {
+      "file": "fx\\shadow.wav",
+      "seconds": 0.42,
+      "peak_dbfs": -2.62,
+      "rms_dbfs": -12.04,
+      "sha256": "55e5fc29fea1f33db8c5214723fc7f553c4f7d7b86362c91bd1cb926926e1c79"
+    },
+    {
+      "file": "fx\\attack_shadow.wav",
+      "seconds": 0.14,
+      "peak_dbfs": -4.44,
+      "rms_dbfs": -12.21,
+      "sha256": "1a6ebd898ea6f460456c7a7263c0c08279505e0020d11d534ccd0b0fc876c85d"
+    },
+    {
+      "file": "fx\\charge_shadow.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -8.4,
+      "rms_dbfs": -21.0,
+      "sha256": "64ccc588e493be49cc03f461a550622a919e34a0cafeff4154480f0c5fd2efbf"
+    },
+    {
+      "file": "fx\\death_shadow.wav",
+      "seconds": 1.05,
+      "peak_dbfs": -3.61,
+      "rms_dbfs": -16.91,
+      "sha256": "16ee39cd6686a24d0874799113c97df6d18dfcb01c340d5c9c35618f8f6c92b6"
+    },
+    {
+      "file": "fx\\bow.wav",
+      "seconds": 0.42,
+      "peak_dbfs": -2.62,
+      "rms_dbfs": -18.6,
+      "sha256": "14bb999eed1a0a7f525dc61025b72e0335bf5a2aaa1bd6ad123e3d7f0cff4f69"
+    },
+    {
+      "file": "fx\\attack_bow.wav",
+      "seconds": 0.14,
+      "peak_dbfs": -4.44,
+      "rms_dbfs": -16.21,
+      "sha256": "4fb20136cf94bee7aa2595c3c38c1d1fb33ed58bcec16e18dd06fada9a1b93c2"
+    },
+    {
+      "file": "fx\\charge_bow.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -8.4,
+      "rms_dbfs": -25.95,
+      "sha256": "de2468518fd49a716d198b4fc56e75544b231f40b2813704e84a3599e871ffad"
+    },
+    {
+      "file": "fx\\death_bow.wav",
+      "seconds": 1.05,
+      "peak_dbfs": -3.61,
+      "rms_dbfs": -23.84,
+      "sha256": "5f850a6861566ae9f89e6d6439e1797441216a82b4ca54bf6788990ad237c247"
+    },
+    {
+      "file": "fx\\quake.wav",
+      "seconds": 0.42,
+      "peak_dbfs": -2.62,
+      "rms_dbfs": -10.14,
+      "sha256": "31f7c33662537d64317a1529de926abebe7aa351414c812fecc59426f5166cbf"
+    },
+    {
+      "file": "fx\\attack_quake.wav",
+      "seconds": 0.14,
+      "peak_dbfs": -4.44,
+      "rms_dbfs": -11.65,
+      "sha256": "9d09b3c6bdca70ee966d0499cef411feb9c3f5dcf668463d8daff4f8ca24a593"
+    },
+    {
+      "file": "fx\\charge_quake.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -8.4,
+      "rms_dbfs": -21.75,
+      "sha256": "355025721172239874ecc5b051d9119e11180bd766d59e9ae38f34ebc6614b86"
+    },
+    {
+      "file": "fx\\death_quake.wav",
+      "seconds": 1.05,
+      "peak_dbfs": -3.61,
+      "rms_dbfs": -14.99,
+      "sha256": "c893299125b4cfe82a26cedd165a8e98c20d5f4b7f146e46846c3d8eecce3822"
+    },
+    {
+      "file": "fx\\shield.wav",
+      "seconds": 0.42,
+      "peak_dbfs": -2.62,
+      "rms_dbfs": -13.47,
+      "sha256": "2591acccc951656d7b4b4656900fa27ea8fe6f51265ffb689a2b8710e4cdb7b6"
+    },
+    {
+      "file": "fx\\attack_shield.wav",
+      "seconds": 0.14,
+      "peak_dbfs": -4.44,
+      "rms_dbfs": -12.95,
+      "sha256": "31c7257a7d89ef14fba6076fa989407cb49a5438bd2df545856137887484a8e8"
+    },
+    {
+      "file": "fx\\charge_shield.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -8.4,
+      "rms_dbfs": -22.74,
+      "sha256": "fcd55c2eaa369e196e4b4b1f115a6a6b8fdcb6d8e18f1587cd51d80473906995"
+    },
+    {
+      "file": "fx\\death_shield.wav",
+      "seconds": 1.05,
+      "peak_dbfs": -3.61,
+      "rms_dbfs": -18.5,
+      "sha256": "47c4db2abb0cc404e8663304af027757ccbf9d1bf6a634c3a88a50d8c914972a"
+    },
+    {
+      "file": "fx\\heal.wav",
+      "seconds": 0.42,
+      "peak_dbfs": -2.62,
+      "rms_dbfs": -13.72,
+      "sha256": "cc8a1361f3dd110ab8c8b78342bb1d36ff34c3e34d76b13f9c18a94a4ed49aee"
+    },
+    {
+      "file": "fx\\attack_heal.wav",
+      "seconds": 0.14,
+      "peak_dbfs": -4.44,
+      "rms_dbfs": -13.2,
+      "sha256": "e2d02a490879490da02d58c78766a87a446f1331103146062796cfe151d8f829"
+    },
+    {
+      "file": "fx\\charge_heal.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -8.4,
+      "rms_dbfs": -22.94,
+      "sha256": "b6bd02c7fe7c45bbacc83d2a0c50a0382b75a22d2fe5c5f7ba9328d7f406792a"
+    },
+    {
+      "file": "fx\\death_heal.wav",
+      "seconds": 1.05,
+      "peak_dbfs": -3.61,
+      "rms_dbfs": -18.61,
+      "sha256": "ae8aa53539963a10fd36a60d5315614171dc231e8f84d6517ed74e9a6c1bf4ca"
+    },
+    {
+      "file": "fx\\hero_minotaur.wav",
+      "seconds": 0.4,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -10.21,
+      "sha256": "d2239fa81c14d2daf7e75ab392a734edd2b93d45ce564c2a6bb844864d9f4a7c"
+    },
+    {
+      "file": "fx\\hero_golem.wav",
+      "seconds": 0.44,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -9.55,
+      "sha256": "c550eb6ed177a6fce6ad8e62025a7e4f193f93a172913ac2c5363886241f4abe"
+    },
+    {
+      "file": "fx\\hero_troll.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -9.48,
+      "sha256": "e78b6b1c9f4156571d989139dd3f7b44b87a4667167e714d54b035872a03b6a6"
+    },
+    {
+      "file": "fx\\hero_wendigo.wav",
+      "seconds": 0.4,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -11.44,
+      "sha256": "17714cf129d229a4a18687d22852761a486e82e77043fd0f936660ef78de53e5"
+    },
+    {
+      "file": "fx\\hero_direwolf.wav",
+      "seconds": 0.44,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -10.51,
+      "sha256": "b585475477b87ef9f3407d07d9b734313d686470b862c348660526f122011e69"
+    },
+    {
+      "file": "fx\\hero_manticore.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -12.42,
+      "sha256": "fdf2b16e993578f83031b3b7d2321aa21426cd345bf6d1c5121cdd23b9b2ddc3"
+    },
+    {
+      "file": "fx\\hero_griffin.wav",
+      "seconds": 0.4,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -11.02,
+      "sha256": "757bed12dbe75bed3c7bac51980f3655185f048ba3da011e7a5ff35825d869c4"
+    },
+    {
+      "file": "fx\\hero_kitsune.wav",
+      "seconds": 0.44,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -11.29,
+      "sha256": "d4c191696f61ce1855e9ad198ca30b72671bee5f7d443e56c273153273f232ea"
+    },
+    {
+      "file": "fx\\hero_wyvern.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -13.36,
+      "sha256": "02ae1ac67493422519dd090a1d9923df2d2a5f40b394a0fc2665157ac8f9b45a"
+    },
+    {
+      "file": "fx\\hero_harpy.wav",
+      "seconds": 0.4,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -11.2,
+      "sha256": "681e4b0328b237c057ed6ea3de70b59514f0dafdff5dd50f60440cc94299a145"
+    },
+    {
+      "file": "fx\\hero_phoenix.wav",
+      "seconds": 0.44,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -10.94,
+      "sha256": "f957d22857f60ee2f22c2943fb7a1ffc85f3a407f013dae3669aee61070c0e46"
+    },
+    {
+      "file": "fx\\hero_kirin.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -13.17,
+      "sha256": "810ad1602b555c87e87b1bb32fdbf217bfb0d1dcdb8a21f9219bc253a2f3d353"
+    },
+    {
+      "file": "fx\\hero_basilisk.wav",
+      "seconds": 0.4,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -12.84,
+      "sha256": "3b55403d0fdd85786df62edd4dffdbdf6817da34b1fadcc96de40b6bb6f2ef53"
+    },
+    {
+      "file": "fx\\hero_treant.wav",
+      "seconds": 0.44,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -12.71,
+      "sha256": "f92b2fe175c02a03e090101fe22026c0a5f488b1573d8dfba34e79b8dcab6f3b"
+    },
+    {
+      "file": "fx\\hero_naga.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -13.21,
+      "sha256": "6914874b1ae6ae8490c3b48312a9ee4ed245a22c190ed2a9efc062a41eecaac9"
+    },
+    {
+      "file": "fx\\hero_unicorn.wav",
+      "seconds": 0.4,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -13.56,
+      "sha256": "428931355ada030014e65396dc48f278be033ac82cd6c84db8194bed981bc05d"
+    },
+    {
+      "file": "fx\\hero_cerberus.wav",
+      "seconds": 0.44,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -10.38,
+      "sha256": "0d121eb93d5f6eda0756adb23512b465ee9f7d3236bc53f8f03b6dee47f6fd74"
+    },
+    {
+      "file": "fx\\hero_nemean.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -10.8,
+      "sha256": "dee2dcefc11b012c910b837f4fe3a2e17c7518257ec4d03dd31f8ba8094604ca"
+    },
+    {
+      "file": "fx\\hero_yeti.wav",
+      "seconds": 0.4,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -13.95,
+      "sha256": "45cc3834488414f2ee7266f993f6941000b47d3d39704f02a7f9de3b3125887e"
+    },
+    {
+      "file": "fx\\hero_zaratan.wav",
+      "seconds": 0.44,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -13.7,
+      "sha256": "f0ef2f3130aca6b410840a23db631129ccb1e28fc9f75ad1db840b6a35897bc4"
+    },
+    {
+      "file": "fx\\hero_owlbear.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -10.65,
+      "sha256": "05afb12222c86aee00a0ac17a86547f22e38c805982e92c1451e069a609b46fc"
+    },
+    {
+      "file": "fx\\hero_hydra.wav",
+      "seconds": 0.4,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -12.64,
+      "sha256": "97a861cfeae5b2c9beaae124dab72029013cbb15550cb495e19d4464e648da30"
+    },
+    {
+      "file": "fx\\hero_chimera.wav",
+      "seconds": 0.44,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -10.73,
+      "sha256": "82a3836f2302190166a7e774a5a661a6d159c00bd4e1c2807e108661af2800b8"
+    },
+    {
+      "file": "fx\\hero_gargoyle.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -9.91,
+      "sha256": "7b71c29881d175e6be0914c73ae38a85a8ee1fb1f664aab9b0fb41a1aff12395"
+    },
+    {
+      "file": "fx\\hero_nekomata.wav",
+      "seconds": 0.4,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -11.2,
+      "sha256": "abaecce2293f341b2491b903bb921a536c62ecd1225c13a2818f558ac472e191"
+    },
+    {
+      "file": "fx\\hero_jackalope.wav",
+      "seconds": 0.44,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -12.74,
+      "sha256": "cce17d06131f090d3acbc7628880cfa25d831b2e7f0928f630a9afbf583ca851"
+    },
+    {
+      "file": "fx\\hero_cyclops.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -9.66,
+      "sha256": "df3407a24db3f1638fdccd7c3b8d980876a03e9e1ba2c7fbe7f7690f911d36f7"
+    },
+    {
+      "file": "fx\\hero_thunderbird.wav",
+      "seconds": 0.4,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -12.57,
+      "sha256": "1f89ae8fbded1340caefd59d9d5519f3ab6a3fa6cece3f03b1b901d6a11813c9"
+    },
+    {
+      "file": "fx\\hero_sphinx.wav",
+      "seconds": 0.44,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -11.48,
+      "sha256": "462375c304a22ca2eedebaadd2363b7c650106aaa7f59de6af927ba803007162"
+    },
+    {
+      "file": "fx\\hero_pegasus.wav",
+      "seconds": 0.48,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -11.92,
+      "sha256": "6f7a962b3330f4527f3d308b711884b3c27ea21f4c0398fc5b71828072ce1997"
+    },
+    {
+      "file": "fx\\hero_arachne.wav",
+      "seconds": 0.4,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -12.62,
+      "sha256": "2b25ba5f89880c088d5f40d640802c2252a737df3f95dccecefadbcbec38e992"
+    },
+    {
+      "file": "fx\\hero_salamander.wav",
+      "seconds": 0.44,
+      "peak_dbfs": -1.94,
+      "rms_dbfs": -10.81,
+      "sha256": "ff7d8387c54b09dc68ae7edcdd360078622e182ef30660f8dcfc930ec4c574cf"
+    },
+    {
+      "file": "fx\\victory.wav",
+      "seconds": 2.0,
+      "peak_dbfs": -2.16,
+      "rms_dbfs": -12.88,
+      "sha256": "2e1d9a8a274162879204ad4be297c0ee35f79cf34c9bad823ec8806cfed667a0"
+    },
+    {
+      "file": "fx\\honor.wav",
+      "seconds": 1.2,
+      "peak_dbfs": -2.16,
+      "rms_dbfs": -14.0,
+      "sha256": "216f4861e29be557c57593a273ca752819f2f1a001d3620d5336ec2ae77233ad"
+    },
+    {
+      "file": "fx\\upgrade.wav",
+      "seconds": 1.2,
+      "peak_dbfs": -2.16,
+      "rms_dbfs": -14.43,
+      "sha256": "4731868cd4d34553c694907bf5a65cc7aceea0925ce99c3c24751c4c802433ed"
+    },
+    {
+      "file": "fx\\multikill.wav",
+      "seconds": 1.2,
+      "peak_dbfs": -2.16,
+      "rms_dbfs": -13.08,
+      "sha256": "6f9e3097b9b6a81d4c7878d8740ca5e8a43418a60de62c1873d3fb3410c31ca8"
+    },
+    {
+      "file": "fx\\arena_gate.wav",
+      "seconds": 2.0,
+      "peak_dbfs": -2.16,
+      "rms_dbfs": -12.15,
+      "sha256": "a883e78d001befde999e69d6cfeca8f2484ffac46e76d2c7b602ae9695a967fb"
+    },
+    {
+      "file": "fx\\interrupt.wav",
+      "seconds": 1.2,
+      "peak_dbfs": -2.16,
+      "rms_dbfs": -14.92,
+      "sha256": "bc73f5ececefc2e8875a21a9381fdf3226e2627fc5cea95ccb33c283ef55869e"
+    },
+    {
+      "file": "preparation.wav",
+      "seconds": 58.182,
+      "peak_dbfs": -7.54,
+      "rms_dbfs": -22.28,
+      "sha256": "49b90a125858a24097b5a209b5ebffc68940568f08296a2d2e58e2bb4a7941ac"
+    },
+    {
+      "file": "arena.wav",
+      "seconds": 58.182,
+      "peak_dbfs": -4.73,
+      "rms_dbfs": -19.81,
+      "sha256": "5374c7e361bdeea722cb08f7ec9b13fa2b832ef42d61182481952c38836bff4f"
+    }
+  ],
+  "score": {
+    "bpm": 132,
+    "key": "D major",
+    "bars": 32,
+    "version": "0.8.2"
+  }
+}

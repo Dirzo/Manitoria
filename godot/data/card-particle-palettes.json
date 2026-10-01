@@ -1,0 +1,962 @@
+{
+ "acid": {
+  "highlight": "dfedc7",
+  "primary": "a4cb60",
+  "source": "acid"
+ },
+ "ambush": {
+  "highlight": "cdc0e4",
+  "primary": "704bb3",
+  "source": "ambush"
+ },
+ "antlerrush": {
+  "highlight": "f3e4ce",
+  "primary": "dcb373",
+  "source": "antlerrush"
+ },
+ "arcanist": {
+  "highlight": "cebde9",
+  "primary": "7342c0",
+  "source": "arcanist"
+ },
+ "barrage": {
+  "highlight": "f2e3cd",
+  "primary": "d9af6f",
+  "source": "barrage"
+ },
+ "basic": {
+  "highlight": "f1e4cb",
+  "primary": "d8b16a",
+  "source": "basic"
+ },
+ "beam": {
+  "highlight": "f4e5c9",
+  "primary": "e0b464",
+  "source": "beam"
+ },
+ "blocked": {
+  "highlight": "dfd2c9",
+  "primary": "a28064",
+  "source": "blocked"
+ },
+ "boulder": {
+  "highlight": "e6d9d0",
+  "primary": "b79278",
+  "source": "boulder"
+ },
+ "brood": {
+  "highlight": "e9cbc7",
+  "primary": "c06960",
+  "source": "brood"
+ },
+ "bulwark": {
+  "highlight": "efe2cd",
+  "primary": "d2ad71",
+  "source": "bulwark"
+ },
+ "chain": {
+  "highlight": "baccea",
+  "primary": "3b6dc3",
+  "source": "chain"
+ },
+ "discovery:arachne:0": {
+  "highlight": "d9ceea",
+  "primary": "9273c4",
+  "source": "discovery:arachne:0"
+ },
+ "discovery:arachne:1": {
+  "highlight": "d7e7cf",
+  "primary": "8eba74",
+  "source": "discovery:arachne:1"
+ },
+ "discovery:arachne:2": {
+  "highlight": "d4d1e6",
+  "primary": "837cb8",
+  "source": "discovery:arachne:2"
+ },
+ "discovery:arachne:3": {
+  "highlight": "dcd1f1",
+  "primary": "9c7ad8",
+  "source": "discovery:arachne:3"
+ },
+ "discovery:basilisk:0": {
+  "highlight": "eaedd6",
+  "primary": "c4ca8b",
+  "source": "discovery:basilisk:0"
+ },
+ "discovery:basilisk:1": {
+  "highlight": "e0eccd",
+  "primary": "a6c771",
+  "source": "discovery:basilisk:1"
+ },
+ "discovery:basilisk:2": {
+  "highlight": "eaecd3",
+  "primary": "c4ca82",
+  "source": "discovery:basilisk:2"
+ },
+ "discovery:basilisk:3": {
+  "highlight": "efedd1",
+  "primary": "d3cb7d",
+  "source": "discovery:basilisk:3"
+ },
+ "discovery:cerberus:0": {
+  "highlight": "fad2be",
+  "primary": "f28046",
+  "source": "discovery:cerberus:0"
+ },
+ "discovery:cerberus:1": {
+  "highlight": "f7d4c1",
+  "primary": "e8854e",
+  "source": "discovery:cerberus:1"
+ },
+ "discovery:cerberus:2": {
+  "highlight": "fcdbca",
+  "primary": "f69867",
+  "source": "discovery:cerberus:2"
+ },
+ "discovery:cerberus:3": {
+  "highlight": "f5d6c6",
+  "primary": "e38b5c",
+  "source": "discovery:cerberus:3"
+ },
+ "discovery:chimera:0": {
+  "highlight": "f2d3bf",
+  "primary": "db8348",
+  "source": "discovery:chimera:0"
+ },
+ "discovery:chimera:1": {
+  "highlight": "daebce",
+  "primary": "94c573",
+  "source": "discovery:chimera:1"
+ },
+ "discovery:chimera:2": {
+  "highlight": "f5e7cf",
+  "primary": "e2ba76",
+  "source": "discovery:chimera:2"
+ },
+ "discovery:chimera:3": {
+  "highlight": "f9e8ce",
+  "primary": "edbc73",
+  "source": "discovery:chimera:3"
+ },
+ "discovery:cyclops:0": {
+  "highlight": "f5e4ca",
+  "primary": "e2b269",
+  "source": "discovery:cyclops:0"
+ },
+ "discovery:cyclops:1": {
+  "highlight": "f6e7d0",
+  "primary": "e6b97a",
+  "source": "discovery:cyclops:1"
+ },
+ "discovery:cyclops:2": {
+  "highlight": "f3e5cf",
+  "primary": "deb575",
+  "source": "discovery:cyclops:2"
+ },
+ "discovery:cyclops:3": {
+  "highlight": "f3e4cc",
+  "primary": "dcb16d",
+  "source": "discovery:cyclops:3"
+ },
+ "discovery:direwolf:0": {
+  "highlight": "cfe4f0",
+  "primary": "76b2d4",
+  "source": "discovery:direwolf:0"
+ },
+ "discovery:direwolf:1": {
+  "highlight": "f3e8d6",
+  "primary": "dcbe8b",
+  "source": "discovery:direwolf:1"
+ },
+ "discovery:direwolf:2": {
+  "highlight": "cdd7e6",
+  "primary": "6f8db6",
+  "source": "discovery:direwolf:2"
+ },
+ "discovery:direwolf:3": {
+  "highlight": "d9e7d2",
+  "primary": "93b980",
+  "source": "discovery:direwolf:3"
+ },
+ "discovery:gargoyle:0": {
+  "highlight": "e7d7f1",
+  "primary": "ba8cd7",
+  "source": "discovery:gargoyle:0"
+ },
+ "discovery:gargoyle:1": {
+  "highlight": "dfd4f0",
+  "primary": "a385d6",
+  "source": "discovery:gargoyle:1"
+ },
+ "discovery:gargoyle:2": {
+  "highlight": "e1d6f6",
+  "primary": "a88ae4",
+  "source": "discovery:gargoyle:2"
+ },
+ "discovery:gargoyle:3": {
+  "highlight": "daccef",
+  "primary": "946dd1",
+  "source": "discovery:gargoyle:3"
+ },
+ "discovery:golem:0": {
+  "highlight": "d3edef",
+  "primary": "82cbd0",
+  "source": "discovery:golem:0"
+ },
+ "discovery:golem:1": {
+  "highlight": "d9e7d1",
+  "primary": "93ba7c",
+  "source": "discovery:golem:1"
+ },
+ "discovery:golem:2": {
+  "highlight": "d5ebed",
+  "primary": "87c6cd",
+  "source": "discovery:golem:2"
+ },
+ "discovery:golem:3": {
+  "highlight": "f2e6d6",
+  "primary": "d9b78b",
+  "source": "discovery:golem:3"
+ },
+ "discovery:griffin:0": {
+  "highlight": "f1e1cc",
+  "primary": "d6aa6d",
+  "source": "discovery:griffin:0"
+ },
+ "discovery:griffin:1": {
+  "highlight": "f3e4cf",
+  "primary": "dcb277",
+  "source": "discovery:griffin:1"
+ },
+ "discovery:griffin:2": {
+  "highlight": "f1e4d0",
+  "primary": "d7b279",
+  "source": "discovery:griffin:2"
+ },
+ "discovery:griffin:3": {
+  "highlight": "f2e3ce",
+  "primary": "d9ae72",
+  "source": "discovery:griffin:3"
+ },
+ "discovery:harpy:0": {
+  "highlight": "d5d2e9",
+  "primary": "887fc0",
+  "source": "discovery:harpy:0"
+ },
+ "discovery:harpy:1": {
+  "highlight": "d6d2e9",
+  "primary": "8980c0",
+  "source": "discovery:harpy:1"
+ },
+ "discovery:harpy:2": {
+  "highlight": "d7d3ed",
+  "primary": "8d83cc",
+  "source": "discovery:harpy:2"
+ },
+ "discovery:harpy:3": {
+  "highlight": "d8d4ed",
+  "primary": "8e84cb",
+  "source": "discovery:harpy:3"
+ },
+ "discovery:hydra:0": {
+  "highlight": "d8e3c2",
+  "primary": "90ae51",
+  "source": "discovery:hydra:0"
+ },
+ "discovery:hydra:1": {
+  "highlight": "e9eccc",
+  "primary": "c1c96e",
+  "source": "discovery:hydra:1"
+ },
+ "discovery:hydra:2": {
+  "highlight": "ebeed3",
+  "primary": "c6d082",
+  "source": "discovery:hydra:2"
+ },
+ "discovery:hydra:3": {
+  "highlight": "efecd5",
+  "primary": "d1c988",
+  "source": "discovery:hydra:3"
+ },
+ "discovery:jackalope:0": {
+  "highlight": "f1e1c9",
+  "primary": "d7ab65",
+  "source": "discovery:jackalope:0"
+ },
+ "discovery:jackalope:1": {
+  "highlight": "f1e5ce",
+  "primary": "d8b573",
+  "source": "discovery:jackalope:1"
+ },
+ "discovery:jackalope:2": {
+  "highlight": "efe3cf",
+  "primary": "d1af77",
+  "source": "discovery:jackalope:2"
+ },
+ "discovery:jackalope:3": {
+  "highlight": "f3e5ce",
+  "primary": "ddb574",
+  "source": "discovery:jackalope:3"
+ },
+ "discovery:kirin:0": {
+  "highlight": "cedaf0",
+  "primary": "7495d4",
+  "source": "discovery:kirin:0"
+ },
+ "discovery:kirin:1": {
+  "highlight": "d3d9f1",
+  "primary": "8193d7",
+  "source": "discovery:kirin:1"
+ },
+ "discovery:kirin:2": {
+  "highlight": "cdd9f1",
+  "primary": "6f93d8",
+  "source": "discovery:kirin:2"
+ },
+ "discovery:kirin:3": {
+  "highlight": "f2e6d3",
+  "primary": "d9b982",
+  "source": "discovery:kirin:3"
+ },
+ "discovery:kitsune:0": {
+  "highlight": "ced2f1",
+  "primary": "747fd7",
+  "source": "discovery:kitsune:0"
+ },
+ "discovery:kitsune:1": {
+  "highlight": "d4d8f4",
+  "primary": "8390df",
+  "source": "discovery:kitsune:1"
+ },
+ "discovery:kitsune:2": {
+  "highlight": "cdd1f2",
+  "primary": "707cda",
+  "source": "discovery:kitsune:2"
+ },
+ "discovery:kitsune:3": {
+  "highlight": "d3cff2",
+  "primary": "8276da",
+  "source": "discovery:kitsune:3"
+ },
+ "discovery:manticore:0": {
+  "highlight": "d7e4c5",
+  "primary": "8cb25b",
+  "source": "discovery:manticore:0"
+ },
+ "discovery:manticore:1": {
+  "highlight": "f6e6cf",
+  "primary": "e7b877",
+  "source": "discovery:manticore:1"
+ },
+ "discovery:manticore:2": {
+  "highlight": "f4e7d5",
+  "primary": "e1ba86",
+  "source": "discovery:manticore:2"
+ },
+ "discovery:manticore:3": {
+  "highlight": "f8e8d1",
+  "primary": "ecbd7a",
+  "source": "discovery:manticore:3"
+ },
+ "discovery:minotaur:0": {
+  "highlight": "f4e2c9",
+  "primary": "e0ae65",
+  "source": "discovery:minotaur:0"
+ },
+ "discovery:minotaur:1": {
+  "highlight": "eed4c2",
+  "primary": "cf844f",
+  "source": "discovery:minotaur:1"
+ },
+ "discovery:minotaur:2": {
+  "highlight": "f9e7cc",
+  "primary": "efba6d",
+  "source": "discovery:minotaur:2"
+ },
+ "discovery:minotaur:3": {
+  "highlight": "f9e7ce",
+  "primary": "edbb74",
+  "source": "discovery:minotaur:3"
+ },
+ "discovery:naga:0": {
+  "highlight": "cddfe8",
+  "primary": "71a3bc",
+  "source": "discovery:naga:0"
+ },
+ "discovery:naga:1": {
+  "highlight": "d1e2eb",
+  "primary": "7babc5",
+  "source": "discovery:naga:1"
+ },
+ "discovery:naga:2": {
+  "highlight": "cfe4f0",
+  "primary": "77b1d3",
+  "source": "discovery:naga:2"
+ },
+ "discovery:naga:3": {
+  "highlight": "cce1ec",
+  "primary": "6da9c9",
+  "source": "discovery:naga:3"
+ },
+ "discovery:nekomata:0": {
+  "highlight": "d3cff1",
+  "primary": "8177d7",
+  "source": "discovery:nekomata:0"
+ },
+ "discovery:nekomata:1": {
+  "highlight": "d5d0f0",
+  "primary": "8779d3",
+  "source": "discovery:nekomata:1"
+ },
+ "discovery:nekomata:2": {
+  "highlight": "d3cfee",
+  "primary": "8175cd",
+  "source": "discovery:nekomata:2"
+ },
+ "discovery:nekomata:3": {
+  "highlight": "cfd3eb",
+  "primary": "7681c6",
+  "source": "discovery:nekomata:3"
+ },
+ "discovery:nemean:0": {
+  "highlight": "f5e3c8",
+  "primary": "e3ae61",
+  "source": "discovery:nemean:0"
+ },
+ "discovery:nemean:1": {
+  "highlight": "f7e4c8",
+  "primary": "e9b263",
+  "source": "discovery:nemean:1"
+ },
+ "discovery:nemean:2": {
+  "highlight": "f6e6ce",
+  "primary": "e7b973",
+  "source": "discovery:nemean:2"
+ },
+ "discovery:nemean:3": {
+  "highlight": "f3e3ca",
+  "primary": "ddae68",
+  "source": "discovery:nemean:3"
+ },
+ "discovery:owlbear:0": {
+  "highlight": "f9ebd8",
+  "primary": "eec590",
+  "source": "discovery:owlbear:0"
+ },
+ "discovery:owlbear:1": {
+  "highlight": "f9e9d2",
+  "primary": "edc07e",
+  "source": "discovery:owlbear:1"
+ },
+ "discovery:owlbear:2": {
+  "highlight": "f2e3cf",
+  "primary": "dab076",
+  "source": "discovery:owlbear:2"
+ },
+ "discovery:owlbear:3": {
+  "highlight": "f9e9d3",
+  "primary": "edc080",
+  "source": "discovery:owlbear:3"
+ },
+ "discovery:pegasus:0": {
+  "highlight": "f8ecda",
+  "primary": "ebc794",
+  "source": "discovery:pegasus:0"
+ },
+ "discovery:pegasus:1": {
+  "highlight": "f4e6dd",
+  "primary": "dfb79d",
+  "source": "discovery:pegasus:1"
+ },
+ "discovery:pegasus:2": {
+  "highlight": "d7e1f1",
+  "primary": "8da9d8",
+  "source": "discovery:pegasus:2"
+ },
+ "discovery:pegasus:3": {
+  "highlight": "f4e6dd",
+  "primary": "deb79d",
+  "source": "discovery:pegasus:3"
+ },
+ "discovery:phoenix:0": {
+  "highlight": "f5d2bb",
+  "primary": "e17d3c",
+  "source": "discovery:phoenix:0"
+ },
+ "discovery:phoenix:1": {
+  "highlight": "fce7c5",
+  "primary": "f8b95a",
+  "source": "discovery:phoenix:1"
+ },
+ "discovery:phoenix:2": {
+  "highlight": "f5d1bb",
+  "primary": "e17b3c",
+  "source": "discovery:phoenix:2"
+ },
+ "discovery:phoenix:3": {
+  "highlight": "f6d2bc",
+  "primary": "e67e40",
+  "source": "discovery:phoenix:3"
+ },
+ "discovery:salamander:0": {
+  "highlight": "f8d2bd",
+  "primary": "eb7e41",
+  "source": "discovery:salamander:0"
+ },
+ "discovery:salamander:1": {
+  "highlight": "f5d0bb",
+  "primary": "e2793d",
+  "source": "discovery:salamander:1"
+ },
+ "discovery:salamander:2": {
+  "highlight": "f0d0bb",
+  "primary": "d4793e",
+  "source": "discovery:salamander:2"
+ },
+ "discovery:salamander:3": {
+  "highlight": "f5d2bd",
+  "primary": "e37e41",
+  "source": "discovery:salamander:3"
+ },
+ "discovery:sphinx:0": {
+  "highlight": "f6e7d1",
+  "primary": "e6ba7d",
+  "source": "discovery:sphinx:0"
+ },
+ "discovery:sphinx:1": {
+  "highlight": "f8ead6",
+  "primary": "ebc289",
+  "source": "discovery:sphinx:1"
+ },
+ "discovery:sphinx:2": {
+  "highlight": "f1e2cd",
+  "primary": "d7ac71",
+  "source": "discovery:sphinx:2"
+ },
+ "discovery:sphinx:3": {
+  "highlight": "f6e5cd",
+  "primary": "e4b571",
+  "source": "discovery:sphinx:3"
+ },
+ "discovery:thunderbird:0": {
+  "highlight": "cdd9ef",
+  "primary": "7093d2",
+  "source": "discovery:thunderbird:0"
+ },
+ "discovery:thunderbird:1": {
+  "highlight": "d1dbf0",
+  "primary": "7a98d5",
+  "source": "discovery:thunderbird:1"
+ },
+ "discovery:thunderbird:2": {
+  "highlight": "ccd9f5",
+  "primary": "6d94e1",
+  "source": "discovery:thunderbird:2"
+ },
+ "discovery:thunderbird:3": {
+  "highlight": "c9d7ee",
+  "primary": "658ecf",
+  "source": "discovery:thunderbird:3"
+ },
+ "discovery:treant:0": {
+  "highlight": "e8dcc3",
+  "primary": "bf9c53",
+  "source": "discovery:treant:0"
+ },
+ "discovery:treant:1": {
+  "highlight": "ede1c7",
+  "primary": "caa95f",
+  "source": "discovery:treant:1"
+ },
+ "discovery:treant:2": {
+  "highlight": "f1ecce",
+  "primary": "d8ca72",
+  "source": "discovery:treant:2"
+ },
+ "discovery:treant:3": {
+  "highlight": "ede0c6",
+  "primary": "cba85c",
+  "source": "discovery:treant:3"
+ },
+ "discovery:troll:0": {
+  "highlight": "f1e3ce",
+  "primary": "d7ae73",
+  "source": "discovery:troll:0"
+ },
+ "discovery:troll:1": {
+  "highlight": "ece2cd",
+  "primary": "c9ad6f",
+  "source": "discovery:troll:1"
+ },
+ "discovery:troll:2": {
+  "highlight": "f4eed2",
+  "primary": "e0ce7f",
+  "source": "discovery:troll:2"
+ },
+ "discovery:troll:3": {
+  "highlight": "f0e3d1",
+  "primary": "d4b07c",
+  "source": "discovery:troll:3"
+ },
+ "discovery:unicorn:0": {
+  "highlight": "f4e9d9",
+  "primary": "dfc093",
+  "source": "discovery:unicorn:0"
+ },
+ "discovery:unicorn:1": {
+  "highlight": "ede0d6",
+  "primary": "cba589",
+  "source": "discovery:unicorn:1"
+ },
+ "discovery:unicorn:2": {
+  "highlight": "f4e7d5",
+  "primary": "dfbb87",
+  "source": "discovery:unicorn:2"
+ },
+ "discovery:unicorn:3": {
+  "highlight": "f9eddd",
+  "primary": "eecc9d",
+  "source": "discovery:unicorn:3"
+ },
+ "discovery:wendigo:0": {
+  "highlight": "d4cff1",
+  "primary": "8476d6",
+  "source": "discovery:wendigo:0"
+ },
+ "discovery:wendigo:1": {
+  "highlight": "d5ddeb",
+  "primary": "869dc5",
+  "source": "discovery:wendigo:1"
+ },
+ "discovery:wendigo:2": {
+  "highlight": "d8e1ef",
+  "primary": "90a8d2",
+  "source": "discovery:wendigo:2"
+ },
+ "discovery:wendigo:3": {
+  "highlight": "d6e6ef",
+  "primary": "8ab8d3",
+  "source": "discovery:wendigo:3"
+ },
+ "discovery:wyvern:0": {
+  "highlight": "dfeace",
+  "primary": "a4c472",
+  "source": "discovery:wyvern:0"
+ },
+ "discovery:wyvern:1": {
+  "highlight": "dfe8ce",
+  "primary": "a2bd73",
+  "source": "discovery:wyvern:1"
+ },
+ "discovery:wyvern:2": {
+  "highlight": "e2f4d7",
+  "primary": "adde8e",
+  "source": "discovery:wyvern:2"
+ },
+ "discovery:wyvern:3": {
+  "highlight": "dfe9d1",
+  "primary": "a5c07b",
+  "source": "discovery:wyvern:3"
+ },
+ "discovery:yeti:0": {
+  "highlight": "d4ddeb",
+  "primary": "849dc7",
+  "source": "discovery:yeti:0"
+ },
+ "discovery:yeti:1": {
+  "highlight": "d6e0ef",
+  "primary": "89a7d1",
+  "source": "discovery:yeti:1"
+ },
+ "discovery:yeti:2": {
+  "highlight": "d5dfee",
+  "primary": "86a3cf",
+  "source": "discovery:yeti:2"
+ },
+ "discovery:yeti:3": {
+  "highlight": "d6dfef",
+  "primary": "8aa5d0",
+  "source": "discovery:yeti:3"
+ },
+ "discovery:zaratan:0": {
+  "highlight": "d0e7eb",
+  "primary": "79bbc5",
+  "source": "discovery:zaratan:0"
+ },
+ "discovery:zaratan:1": {
+  "highlight": "d0dcea",
+  "primary": "799ac3",
+  "source": "discovery:zaratan:1"
+ },
+ "discovery:zaratan:2": {
+  "highlight": "cddce4",
+  "primary": "709cb3",
+  "source": "discovery:zaratan:2"
+ },
+ "discovery:zaratan:3": {
+  "highlight": "c6dfe2",
+  "primary": "5ca2ab",
+  "source": "discovery:zaratan:3"
+ },
+ "drain": {
+  "highlight": "ebbfc3",
+  "primary": "c54854",
+  "source": "drain"
+ },
+ "execute": {
+  "highlight": "ebcbc8",
+  "primary": "c66962",
+  "source": "execute"
+ },
+ "fear": {
+  "highlight": "c7ddee",
+  "primary": "5f9ecf",
+  "source": "fear"
+ },
+ "fire": {
+  "highlight": "fad3bb",
+  "primary": "f2813c",
+  "source": "fire"
+ },
+ "fissure": {
+  "highlight": "ebd2c0",
+  "primary": "c57f4b",
+  "source": "fissure"
+ },
+ "flamewave": {
+  "highlight": "f9d2bb",
+  "primary": "ef7e3d",
+  "source": "flamewave"
+ },
+ "focus": {
+  "highlight": "c3c8e9",
+  "primary": "5362bf",
+  "source": "focus"
+ },
+ "force": {
+  "highlight": "efd0bb",
+  "primary": "d1773d",
+  "source": "force"
+ },
+ "foxfire": {
+  "highlight": "bacfee",
+  "primary": "3977cd",
+  "source": "foxfire"
+ },
+ "frost": {
+  "highlight": "d2e5f2",
+  "primary": "7fb4db",
+  "source": "frost"
+ },
+ "frostroar": {
+  "highlight": "ced9e8",
+  "primary": "7393be",
+  "source": "frostroar"
+ },
+ "gaze": {
+  "highlight": "eee0c5",
+  "primary": "cfa758",
+  "source": "gaze"
+ },
+ "gore": {
+  "highlight": "f0e1cf",
+  "primary": "d3ab76",
+  "source": "gore"
+ },
+ "guardian": {
+  "highlight": "ece0cb",
+  "primary": "caa86a",
+  "source": "guardian"
+ },
+ "gust": {
+  "highlight": "c9dbe6",
+  "primary": "6498b7",
+  "source": "gust"
+ },
+ "howl": {
+  "highlight": "c7d8ed",
+  "primary": "608fcb",
+  "source": "howl"
+ },
+ "hunger": {
+  "highlight": "c6deec",
+  "primary": "5ca1ca",
+  "source": "hunger"
+ },
+ "magma": {
+  "highlight": "f3ceba",
+  "primary": "dc7439",
+  "source": "magma"
+ },
+ "maul": {
+  "highlight": "e3d5c8",
+  "primary": "b08663",
+  "source": "maul"
+ },
+ "meteor": {
+  "highlight": "f6d1bc",
+  "primary": "e77d3e",
+  "source": "meteor"
+ },
+ "prideroar": {
+  "highlight": "efdec6",
+  "primary": "d2a15c",
+  "source": "prideroar"
+ },
+ "quake": {
+  "highlight": "f4e4cb",
+  "primary": "e0b16a",
+  "source": "quake"
+ },
+ "radiance": {
+  "highlight": "f2e6d2",
+  "primary": "dab87d",
+  "source": "radiance"
+ },
+ "rally": {
+  "highlight": "f0dfc2",
+  "primary": "d5a550",
+  "source": "rally"
+ },
+ "ravager": {
+  "highlight": "f1e2cc",
+  "primary": "d7ad6e",
+  "source": "ravager"
+ },
+ "rebirth": {
+  "highlight": "fad2bb",
+  "primary": "f07f3e",
+  "source": "rebirth"
+ },
+ "regrowth": {
+  "highlight": "dae0cf",
+  "primary": "94a776",
+  "source": "regrowth"
+ },
+ "renew": {
+  "highlight": "eef2d1",
+  "primary": "cedb7c",
+  "source": "renew"
+ },
+ "riddle": {
+  "highlight": "eddcc4",
+  "primary": "cd9b56",
+  "source": "riddle"
+ },
+ "rootbloom": {
+  "highlight": "e2d9c9",
+  "primary": "ad9366",
+  "source": "rootbloom"
+ },
+ "roots": {
+  "highlight": "e7dfd0",
+  "primary": "bca279",
+  "source": "roots"
+ },
+ "shellup": {
+  "highlight": "ccdce8",
+  "primary": "6d9bbe",
+  "source": "shellup"
+ },
+ "shriek": {
+  "highlight": "ced9e7",
+  "primary": "7492ba",
+  "source": "shriek"
+ },
+ "silence": {
+  "highlight": "c6d4e8",
+  "primary": "5d83be",
+  "source": "silence"
+ },
+ "skystrike": {
+  "highlight": "efe1cd",
+  "primary": "d2aa70",
+  "source": "skystrike"
+ },
+ "smash": {
+  "highlight": "e3d8cf",
+  "primary": "ae8f76",
+  "source": "smash"
+ },
+ "stonedive": {
+  "highlight": "b5c8da",
+  "primary": "2c6395",
+  "source": "stonedive"
+ },
+ "storm": {
+  "highlight": "beceee",
+  "primary": "4674ce",
+  "source": "storm"
+ },
+ "stormcall": {
+  "highlight": "cad4e7",
+  "primary": "6883b9",
+  "source": "stormcall"
+ },
+ "summons": {
+  "highlight": "bfd0e5",
+  "primary": "4778b5",
+  "source": "summons"
+ },
+ "tailwind": {
+  "highlight": "cee3f5",
+  "primary": "72b0e2",
+  "source": "tailwind"
+ },
+ "threefold": {
+  "highlight": "efcfbb",
+  "primary": "d2753c",
+  "source": "threefold"
+ },
+ "tidal": {
+  "highlight": "c6dde9",
+  "primary": "5d9dc0",
+  "source": "tidal"
+ },
+ "toxic": {
+  "highlight": "e1edcb",
+  "primary": "a9cd6c",
+  "source": "toxic"
+ },
+ "triplebite": {
+  "highlight": "f1d2c0",
+  "primary": "d77f4b",
+  "source": "triplebite"
+ },
+ "vanish": {
+  "highlight": "cebdea",
+  "primary": "7442c2",
+  "source": "vanish"
+ },
+ "venom": {
+  "highlight": "dbe7c6",
+  "primary": "99ba5d",
+  "source": "venom"
+ },
+ "victory": {
+  "highlight": "f3e3c6",
+  "primary": "ddae5e",
+  "source": "victory"
+ },
+ "vigor": {
+  "highlight": "f0c7c3",
+  "primary": "d46055",
+  "source": "vigor"
+ },
+ "ward": {
+  "highlight": "d0e8d4",
+  "primary": "79be83",
+  "source": "ward"
+ },
+ "whirl": {
+  "highlight": "f3e8da",
+  "primary": "dcbf95",
+  "source": "whirl"
+ },
+ "wisps": {
+  "highlight": "b8ceee",
+  "primary": "3373ce",
+  "source": "wisps"
+ }
+}

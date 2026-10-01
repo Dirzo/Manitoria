@@ -1,0 +1,882 @@
+extends Node3D
+
+const GOLD = Color("f1cf85")
+const INK = Color("0e1b26")
+const WHITE = Color("fff5df")
+const MUTED = Color("c2c4d6")
+var campaign = Campaign.new()
+var arena: ArenaView
+var sound: SoundDesign
+var ui: Control
+var layer: CanvasLayer
+var sim: BattleSim
+var phase = "menu"
+var tab = "overview"
+var selected_id = ""
+var paused = false
+var speed = 1.0
+const COUNTDOWN = 3.6
+var countdown = 0.0
+var countdown_shown = -1
+var countdown_label: Label
+var legend_left = 0.0 # Legendary moment: brief slow-motion while a legendary skill lands
+var legend_total = 1.0
+var tactical = false # Tactical view: 0.75x with footprints, target lines and status tags
+var accumulator = 0.0
+var match_label: Label
+var toast_label: Label
+var event_box: VBoxContainer
+var event_history: Array = []
+var exhibition = false
+var exhibition_rivals: Array = []
+var last_rendered_phase = ""
+var presentation_tween: Tween
+var showcase_index = 0
+var new_slot = 1
+var new_name: LineEdit
+var new_club_draft = "Ravenmoor Menagerie"
+var new_crest: Dictionary = {}
+var new_motto = "Fortune favours the bold"
+var new_motto_funny = false
+var dragged_id = ""
+var drag_offset = Vector2.ZERO
+var orbiting = false
+var qa = ""
+var qa_capture = ""
+var qa_level = 1
+var qa_elapsed = 0.0
+var qa_taken = false
+var resolving = false
+var desk_state = {"role": "All", "sort": "Power", "metric": "impact", "per_bout": true, "intel": "Rankings", "club": "Identity", "compare": []}
+
+func _ready() -> void:
+ HeroData.load_data()
+ arena = ArenaView.new(); add_child(arena)
+ arena.legendary_moment.connect(func(d): legend_left = d; legend_total = d)
+ sound = SoundDesign.new(); add_child(sound)
+ layer = CanvasLayer.new(); add_child(layer)
+ ui = Control.new(); layer.add_child(ui); ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+ ui.mouse_filter = Control.MOUSE_FILTER_IGNORE; ui.theme = make_theme()
+ for arg in OS.get_cmdline_user_args():
+  if arg=="--disable-card-particles":CardParticles.enabled=false
+  if arg.begins_with("--qa="): qa = arg.trim_prefix("--qa=")
+  if arg.begins_with("--capture="): qa_capture = arg.trim_prefix("--capture=")
+  if arg.begins_with("--qa_level="): qa_level = int(arg.trim_prefix("--qa_level="))
+ if not qa.is_empty():
+  campaign.new_run("Ravenmoor Menagerie", 97, 731)
+  # QA club: Jackalope headliner plus a full five from the draft board (exactly the 8-unit budget).
+  var qa_picks = ["jackalope", "golem", "troll", "harpy", "naga"]
+  for i in range(qa_picks.size()):
+   var h = campaign.draft_prospect(qa_picks[i]); h.slot = Campaign.FORMATION[i]
+   campaign.state.roster.append(h)
+  campaign.state.headliner = campaign.state.roster[0].id
+  campaign.draft_rivals()
+  campaign.state.gold = 200
+  if qa_level > 1: campaign.state.tour.level = qa_level; campaign.state.trophies = qa_level - 1
+  selected_id = campaign.state.roster[0].id
+  if qa == "starter":
+   campaign.new_run("Ravenmoor Menagerie",97,731);phase="starter";render()
+  elif qa in ["skill_preview","heal_preview"]:
+   var h=campaign.state.roster[0];h.sp="golem" if qa=="skill_preview" else "unicorn";h.level=3
+   var rng=RandomNumberGenerator.new();rng.seed=103;HeroData.queue_reward(h,3,true,103)
+   phase="upgrade";render()
+   var key=0 if qa=="skill_preview" else 2
+   var demo=AbilityPreview.new();demo.game=self;demo.hero=h.duplicate(true);demo.card={"type":"ability","key":str(key),"name":HeroData.learned_ability(h.sp,key).name,"description":HeroData.learned_ability(h.sp,key).description,"rarity":"Rare","bonus":1.1};ui.add_child(demo);demo.build()
+  elif qa=="ascension_preview":
+   var h=campaign.state.roster[0];h.sp="kirin";h.level=10;h.evolution="ascended";h.learned={}
+   phase="hub";tab="overview";render()
+   var demo=AbilityPreview.new();demo.game=self;demo.hero=h;var ability=ChampionEvolution.action(h.sp)
+   demo.card={"type":"ability","key":"12","name":ability.name,"description":ability.description,"rarity":"Legendary","bonus":1.0};ui.add_child(demo);demo.build()
+  elif qa in ["bracket","vault"]:
+   if qa=="vault":
+    TrophyVault.award(campaign,"Gold");campaign.state.tour.level+=1;TrophyVault.award(campaign,"Silver");campaign.state.tour.level+=1;TrophyVault.award(campaign,"Bronze")
+   phase="hub";tab="overview";render();TournamentRewardsUI.open_screen(self,qa)
+  elif qa == "intro":
+   phase="intro";render()
+  elif qa.begins_with("attacks_"):
+   var themes={"attacks_claw":["owlbear","maul"],"attacks_bite":["cerberus","triplebite"],"attacks_weapon":["minotaur","whirl"],"attacks_slam":["troll","smash"],"attacks_thrust":["minotaur","gore"],"attacks_breath":["salamander","fire"]}
+   var theme=themes.get(qa,themes.attacks_claw);var h=campaign.state.roster[0];h.sp=theme[0];h.level=7
+   HeroData.queue_reward(h,5,true,103);phase="upgrade";render()
+   var card={"type":"signature","key":"signature","name":HeroData.species[h.sp].ability_name,"description":"Signature attack","rarity":"Rare","bonus":1.1}
+   if HeroData.species[h.sp].ab!=theme[1]:
+    for i in range(HeroData.DISCOVERY_CHOICES):
+     var ability=HeroData.learned_ability(h.sp,i)
+     if ability.effect==theme[1]:
+      card={"type":"ability","key":str(i),"name":ability.name,"description":ability.description,"rarity":"Rare","bonus":1.1};break
+   var demo=AbilityPreview.new();demo.game=self;demo.hero=h.duplicate(true);demo.card=card;ui.add_child(demo);demo.build()
+  elif qa.begins_with("particles_"):
+   var themes={"particles_fire":["phoenix","beam"],"particles_ward":["golem","ward"],"particles_frost":["kirin","frost"],"particles_nature":["treant","roots"],"particles_storm":["kirin","storm"]}
+   var theme=themes.get(qa,themes.particles_fire);var h=campaign.state.roster[0];h.sp=theme[0];h.level=7
+   HeroData.queue_reward(h,5,true,103);phase="upgrade";render()
+   var key=0
+   for i in range(HeroData.DISCOVERY_CHOICES):
+    if HeroData.learned_ability(h.sp,i).effect==theme[1]:key=i;break
+   var a=HeroData.learned_ability(h.sp,key)
+   var demo=AbilityPreview.new();demo.game=self;demo.hero=h.duplicate(true);demo.card={"type":"ability","key":str(key),"name":a.name,"description":a.description,"rarity":"Legendary","bonus":1.25};ui.add_child(demo);demo.build()
+  elif qa == "new":
+   phase = "new"; render()
+  elif qa == "runover":
+   campaign.state.run_over = true; phase = "runover"; render()
+  elif qa == "arena":
+   for h in campaign.state.roster: h.level = 3; h.learned = {"0": 1}
+   phase = "prep"; begin_battle()
+  elif qa in ["tour_shop","role_catalog","tour_world","tour_legendary","tour_arena"]:
+   campaign.state.tour.level=6;campaign.state.gold=1800
+   for h in campaign.state.roster:h.level=10;h.learned={"0":2,"1":2,"2":2};h.skill_rarity={"0":"Legendary","1":"Rare","2":"Rare","signature":"Legendary"}
+   if qa in ["tour_shop","role_catalog"]:
+    campaign.state.inventory=["fang","ember","coin","moon","archmage","phoenixember","seed"]
+    campaign.state.roster[0].equipment={"0":"bastion","1":"fang"}
+    if qa=="role_catalog":set_meta("shop_catalog",true);set_meta("shop_category",1)
+    campaign.state.tour.shop=true;campaign.state.tour.stock=WorldTour.stock(campaign);phase="shop";render()
+   elif qa=="tour_arena":
+    var outfits=[{"0":"bastion","1":"bell"},{"0":"berserker","1":"bloodmaw"},{"0":"archmage","1":"crown"},{"0":"tempest","1":"quiver"},{"0":"lifebloom","1":"swap"}]
+    for i in range(campaign.state.roster.size()):campaign.state.roster[i].equipment=outfits[i%outfits.size()]
+    phase="prep";begin_battle()
+   elif qa=="tour_legendary":
+    var h=campaign.state.roster[0];h.learned={};h.pending=[[{"type":"ability","key":"0","name":"Fault Line · Rank 1","description":"A devastating fracture. Legendary: +25% potency.","rarity":"Legendary","bonus":1.25},{"type":"ability","key":"1","name":"Granite Covenant · Rank 1","description":"Fortify your allies. Rare: +10% potency.","rarity":"Rare","bonus":1.1},{"type":"ability","key":"2","name":"Stone Golem Cyclone · Rank 1","description":"A sweeping strike.","rarity":"Uncommon","bonus":1.0}]];phase="upgrade";render()
+   else:phase="hub";tab="overview";render()
+  elif qa == "exhibition":
+   start_exhibition()
+  elif qa == "evolution":
+   var h = campaign.state.roster[0]; h.level = 10; h.learned = {"0":2, "2":2, "4":2}; h.signature_rank = 2
+   HeroData.queue_reward(h, 10, true, 918)
+   phase = "upgrade"; preview_team(); render()
+  elif qa == "evolved_arena":
+   for i in range(campaign.state.roster.size()):
+    var h = campaign.state.roster[i]; h.level = 10; h.learned = {"0":2, "2":2, "4":2}; h.evolution = HeroData.EVOLUTIONS.keys()[i%3]
+   phase = "prep"; begin_battle()
+  elif qa in ["result", "upgrade", "report_abilities", "report_healing"]:
+   for bout in range(2 if qa == "upgrade" else 1):
+    var test_sim = BattleSim.new(); test_sim.silent = true
+    test_sim.setup(campaign.lineup(), campaign.opponent().roster, campaign.match_seed(), campaign.quality()); test_sim.run_to_end(); campaign.resolve(test_sim)
+   phase = "upgrade" if qa == "upgrade" else "result"; preview_team(); render()
+   if qa.begins_with("report_"):
+    var report_ui = ui.find_children("*", "MatchAnalytics", true, false)[0]
+    if qa == "report_abilities": report_ui.detail_mode = "Abilities"
+    else: report_ui.metric = "healing"
+    report_ui.rebuild()
+  elif qa == "art_profile":
+   var hero=campaign.state.roster[0]; hero.level=7; hero.learned={"0":2,"1":1,"2":1}
+   phase="hub"; tab="roster"; render()
+   ui.find_children("*","ManagementDesk",true,false)[0].profile(hero,true)
+  elif qa in ["prep", "tactics"]:
+   phase = "prep"; render()
+   if qa == "tactics": show_tactics(selected_id)
+  else:
+   phase = "hub" if qa != "menu" else "menu"; tab = qa if qa in ["roster", "market", "matches", "club", "intel"] else "overview"
+   if qa=="roster":
+    campaign.state.inventory=["fang","ember","coin","moon","archmage","phoenixember","seed"]
+    campaign.state.roster[0].equipment={"0":"bastion","1":"fang"};campaign.state.roster[2].equipment={"claw":"sunclaw"}
+   render()
+ else: render()
+ sound.scene_music(SoundDesign.music_for_phase(phase))
+ get_tree().auto_accept_quit = false
+
+const TITLE_FONT = "res://assets/fonts/uncialantiqua.ttf"
+const MENU_FONT = "res://assets/fonts/uncialantiqua.ttf"
+
+func make_theme() -> Theme:
+ var theme = Theme.new(); theme.default_font_size = 18
+ if ResourceLoader.exists("res://assets/fonts/ebgaramond.ttf"):
+  var body_font=FontVariation.new();body_font.base_font=load("res://assets/fonts/ebgaramond.ttf");body_font.variation_opentype={"wght":550};theme.default_font=body_font
+ theme.set_font("font","Button",load(MENU_FONT))
+ theme.set_font_size("font_size","Button",18)
+ theme.set_color("font_color", "Label", WHITE)
+ theme.set_color("font_outline_color", "Label", Color(0.01, 0.02, 0.03, 0.85))
+ theme.set_constant("outline_size", "Label", 4)
+ theme.set_color("font_color", "Button", WHITE)
+ theme.set_color("font_hover_color", "Button", GOLD)
+ theme.set_color("font_disabled_color", "Button", Color("6c818b"))
+ theme.set_stylebox("normal", "Button", style(Color("263b43"), Color("9c895d"), 4, 12, 2))
+ theme.set_stylebox("hover", "Button", style(Color("405860"), GOLD, 4, 12, 2))
+ theme.set_stylebox("pressed", "Button", style(Color("234843"), GOLD, 4, 12, 2))
+ theme.set_stylebox("disabled", "Button", style(Color("272e31"), Color("625b63"), 4, 12))
+ theme.set_stylebox("focus", "Button", style(Color(0, 0, 0, 0), GOLD, 10, 0, 2))
+ theme.set_stylebox("normal", "LineEdit", style(Color("101e2a"), Color("58747b"), 10, 16))
+ theme.set_color("font_color", "LineEdit", WHITE)
+ theme.set_constant("separation", "VBoxContainer", 14)
+ theme.set_constant("separation", "HBoxContainer", 12)
+ theme.set_stylebox("panel", "PanelContainer", style(Color(.045,.095,.115,.96), Color("9b8053"), 5, 20, 2))
+ return theme
+
+func style(fill: Color, border: Color, radius: int, margin: int, width: int = 1) -> StyleBoxFlat:
+ var s = StyleBoxFlat.new(); s.bg_color = fill; s.border_color = border
+ if margin>=10 and fill.a>.5:
+  s.shadow_color=Color(0.01,0.02,0.025,0.3);s.shadow_size=4;s.shadow_offset=Vector2(0,3)
+ s.set_border_width_all(width); s.set_corner_radius_all(radius)
+ s.content_margin_left = margin; s.content_margin_right = margin; s.content_margin_top = margin; s.content_margin_bottom = margin
+ return s
+
+func label(parent: Node, text_value: String, size: int = 18, color: Color = WHITE, wrap: bool = true) -> Label:
+ var l = Label.new(); l.text = text_value; l.add_theme_font_size_override("font_size", size); l.add_theme_color_override("font_color", color)
+ if size >= 22: l.text = uncial_text(text_value)
+ if size >= 40: l.add_theme_font_override("font", load(TITLE_FONT))
+ elif size >= 22: l.add_theme_font_override("font", load(MENU_FONT))
+ if wrap: l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+ parent.add_child(l); return l
+
+# Uncial Antiqua's lowercase g reads like a 5 next to numbers ("450g"), so spell gold out in display text.
+static var _gold_re: RegEx
+static func uncial_text(value: String) -> String:
+ if _gold_re == null: _gold_re = RegEx.create_from_string("(\\d)g\\b")
+ return _gold_re.sub(value, "$1 gold", true)
+
+func button(parent: Node, text_value: String, callback: Callable, primary: bool = false, disabled: bool = false) -> Button:
+ var b = Button.new(); b.text = uncial_text(text_value); b.custom_minimum_size.y = 44; b.disabled = disabled
+ if primary:
+  b.add_theme_stylebox_override("normal", style(Color("267450"), Color("f1d79f"), 4, 12, 2))
+  b.add_theme_color_override("font_color", WHITE)
+ b.pressed.connect(callback); parent.add_child(b); return b
+
+func panel(rect: Rect2) -> VBoxContainer:
+ var p = FantasyFrame.new(); ui.add_child(p); p.position = rect.position; p.size = rect.size
+ var box = VBoxContainer.new(); p.add_child(box)
+ return box
+
+func scroll_panel(rect: Rect2) -> VBoxContainer:
+ var p = FantasyFrame.new(); ui.add_child(p); p.position = rect.position; p.size = rect.size
+ var scroll = ScrollContainer.new(); scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED; p.add_child(scroll)
+ var box = VBoxContainer.new(); box.size_flags_horizontal = Control.SIZE_EXPAND_FILL; scroll.add_child(box)
+ return box
+
+func divider(parent: Node) -> void:
+ var line = HSeparator.new(); parent.add_child(line)
+
+func initials(name_value: String) -> String:
+ var words = name_value.split(" ", false)
+ var text_value = ""
+ for w in words.slice(0, 3): text_value += w[0].to_upper()
+ return text_value if not text_value.is_empty() else "M"
+
+func render() -> void:
+ if phase != last_rendered_phase:
+  if presentation_tween: presentation_tween.kill()
+  ui.modulate.a = 0.0
+  presentation_tween = create_tween(); presentation_tween.tween_property(ui,"modulate:a",1.0,0.20)
+  last_rendered_phase = phase
+ sound.set_combat_paused(phase == "battle" and paused)
+ sound.scene_music(SoundDesign.music_for_phase(phase))
+ for child in ui.get_children(): child.queue_free(); ui.remove_child(child)
+ match_label = null; event_box = null
+ arena.visible = phase not in ["hub", "menu", "new", "shop", "starter", "intro", "runover"]
+ if phase in ["hub", "menu", "new", "shop", "starter", "intro", "runover"]:
+  sim = null
+  var backdrop=ClubBackdrop.new();backdrop.theme_name=ClubBackdrop.theme_for(self);backdrop.shade=.08 if phase=="menu" else .30;ui.add_child(backdrop)
+ build_header()
+ if phase == "menu": build_menu()
+ elif phase == "new": build_new()
+ elif phase == "runover": build_runover()
+ elif phase == "battle": build_battle_hud()
+ elif phase == "result": build_result()
+ elif phase == "upgrade": build_upgrade()
+ elif phase == "shop": TournamentShop.build(self)
+ elif phase == "starter": HeadlinerUI.starter(self)
+ elif phase == "intro":
+  var introduction=ContestantIntro.new();introduction.game=self;ui.add_child(introduction);introduction.build()
+ elif phase == "prep": build_prep(); preview_formation()
+ else:
+  var desk = ManagementDesk.new(); desk.game = self; ui.add_child(desk); desk.build()
+ toast_label = label(ui, "", 18, GOLD)
+ toast_label.position = Vector2(350, 737 if phase == "battle" else 115); toast_label.size = Vector2(900, 45); toast_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; toast_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+func build_header() -> void:
+ FantasyUI.header(self)
+
+func stage_label() -> String:
+ if campaign.state.has("tour"):
+  return "TEAM LEVEL %d · %s" % [campaign.state.tour.level,WorldTour.region(campaign).name.to_upper()]
+ if campaign.state.round < 3: return "PROVING GROUNDS %d / 3" % (campaign.state.round + 1)
+ if campaign.state.round >= 17: return "SEASON COMPLETE"
+ return "LEAGUE WEEK %d / 14" % (campaign.state.round - 2)
+
+var welcomed = false
+func build_menu() -> void:
+ FantasyUI.menu(self)
+ if not welcomed and qa.is_empty():
+  welcomed = true
+  get_tree().create_timer(0.6).timeout.connect(func(): sound.announce("welcome"))
+
+func build_showcase() -> void:
+ var gallery = ["kirin", "minotaur", "phoenix", "griffin", "unicorn", "golem"]
+ var sp = gallery[showcase_index % gallery.size()]
+ var box = panel(Rect2(640,158,905,670))
+ box.get_parent().add_theme_stylebox_override("panel",style(Color(0.045,0.09,0.12,0.75),Color("365c68"),20,24))
+ label(box,"THE MENAGERIE  /  32 CREATURES. COUNTLESS BUILDS.",13,GOLD)
+ var stage = Control.new(); stage.custom_minimum_size = Vector2(0,420); stage.size_flags_horizontal = Control.SIZE_EXPAND_FILL; box.add_child(stage)
+ var backdrop = SplashArt.new(); backdrop.sp = sp; backdrop.backdrop_only = true; stage.add_child(backdrop); backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+ var preview = HeroPreview.new(); preview.species_id = sp; stage.add_child(preview); preview.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); preview.stretch = true
+ label(box,HeroData.species[sp].n,30)
+ label(box,HeroData.species[sp].role + "  ·  " + HeroData.species[sp].ability_name,17,GOLD)
+ var row = HBoxContainer.new(); box.add_child(row)
+ button(row,"← Previous",func(): showcase_index = posmod(showcase_index-1,gallery.size()); render())
+ for clip in ["idle","attack","cast"]: button(row,clip.capitalize(),func(): preview.play(clip))
+ button(row,"Next →",func(): showcase_index = (showcase_index+1)%gallery.size(); render())
+
+func build_new() -> void:
+ if new_crest.is_empty(): new_crest = Crest.default_for(new_club_draft)
+ # The great title.
+ var title = label(ui, "MANITORIA", 150, Color("ffe4a0"), false)
+ title.position = Vector2(0, 26); title.size = Vector2(1600, 190); title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+ title.add_theme_color_override("font_outline_color", Color("2a160c")); title.add_theme_constant_override("outline_size", 18)
+ title.add_theme_color_override("font_shadow_color", Color(0.9, 0.55, 0.15, 0.45)); title.add_theme_constant_override("shadow_offset_y", 0); title.add_theme_constant_override("shadow_outline_size", 34)
+ var sub = label(ui, "FOUND YOUR GUILD", 26, Color("fff2d0"), false)
+ sub.position = Vector2(0, 206); sub.size = Vector2(1600, 40); sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+ sub.add_theme_font_override("font", load(MENU_FONT)); sub.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85)); sub.add_theme_constant_override("outline_size", 6)
+ # Charter (left).
+ var box = panel(Rect2(150, 268, 560, 590))
+ label(box, "THE GUILD CHARTER", 15, GOLD)
+ var roller = RandomNumberGenerator.new(); roller.randomize()
+ var head = HBoxContainer.new(); box.add_child(head)
+ label(head, "Guild name", 14, MUTED, false).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ var both = button(head, "Roll name & motto", func():
+  var r = GuildNames.roll(roller); new_club_draft = r.name; new_motto = r.motto; new_motto_funny = r.funny; render())
+ both.tooltip_text = "Half glorious, half ridiculous"
+ var name_row = HBoxContainer.new(); box.add_child(name_row)
+ new_name = LineEdit.new(); new_name.text = new_club_draft; new_name.max_length = 36; new_name.placeholder_text = "Your guild name"; new_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL; name_row.add_child(new_name)
+ button(name_row, "Epic", func(): new_club_draft = GuildNames.roll(roller, 0).name; render()).tooltip_text = "Roll a badass name"
+ button(name_row, "Silly", func(): new_club_draft = GuildNames.roll(roller, 1).name; render()).tooltip_text = "Roll a funny name"
+ label(box, "Motto", 14, MUTED)
+ var motto_row = HBoxContainer.new(); box.add_child(motto_row)
+ var motto = LineEdit.new(); motto.text = new_motto; motto.max_length = 48; motto.placeholder_text = "Words to fight by"; motto.size_flags_horizontal = Control.SIZE_EXPAND_FILL; motto_row.add_child(motto)
+ button(motto_row, "Epic", func(): new_motto = GuildNames.motto(roller, false); render()).tooltip_text = "Roll a badass motto"
+ button(motto_row, "Silly", func(): new_motto = GuildNames.motto(roller, true); render()).tooltip_text = "Roll a funny motto"
+ motto.text_changed.connect(func(v): new_motto = v)
+ label(box, "You begin with 1,200 gold. Sign a Legendary headliner, then draft the rest of your squad from the board.", 16, MUTED)
+ label(box, "Save slot", 14, MUTED)
+ var slots = HBoxContainer.new(); box.add_child(slots)
+ for slot in range(1, 4):
+  var saved = Campaign.new(); var occupied = saved.load_slot(slot)
+  var b = button(slots, "Slot %d%s" % [slot, " · used" if occupied else ""], func(): new_slot = slot; render(), new_slot == slot)
+  b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ var spacer = Control.new(); spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL; box.add_child(spacer)
+ var go = button(box, "Found the guild & choose your headliner →", found_club, true); go.custom_minimum_size.y = 58
+ button(box, "Back to menu", func(): phase = "menu"; render())
+ # Crest forge (right).
+ var right = panel(Rect2(740, 268, 710, 590))
+ label(right, "GUILD CREST", 15, GOLD)
+ var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 22); right.add_child(row)
+ var crest_col = VBoxContainer.new(); row.add_child(crest_col)
+ var crest = Crest.make(crest_col, new_crest, new_club_draft, Vector2(250, 290))
+ var banner = label(crest_col, new_club_draft, 20, GOLD); banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; banner.custom_minimum_size.x = 250
+ var motto_label = label(crest_col, "“%s”" % new_motto, 14, MUTED); motto_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; motto_label.custom_minimum_size.x = 250
+ motto.text_changed.connect(func(v): motto_label.text = "“%s”" % v)
+ new_name.text_changed.connect(func(value): new_club_draft = value; crest.guild_name = value; banner.text = value; crest._place_emblem())
+ var opts = VBoxContainer.new(); opts.size_flags_horizontal = Control.SIZE_EXPAND_FILL; opts.add_theme_constant_override("separation", 8); row.add_child(opts)
+ var cycle = func(parent: Node, title_text: String, key: String, values: Array) -> void:
+  var line = HBoxContainer.new(); parent.add_child(line)
+  label(line, title_text, 14, MUTED, false).custom_minimum_size.x = 82
+  button(line, "◀", func(): new_crest[key] = values[posmod(values.find(new_crest[key]) - 1, values.size())]; render())
+  var shown = str(new_crest[key]); if key == "emblem" and shown != "Monogram": shown = HeroData.species[shown].n
+  var v = label(line, shown, 17, WHITE, false); v.custom_minimum_size.x = 150; v.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+  button(line, "▶", func(): new_crest[key] = values[(values.find(new_crest[key]) + 1) % values.size()]; render())
+ cycle.call(opts, "Shape", "shape", Crest.SHAPES)
+ cycle.call(opts, "Division", "pattern", Crest.PATTERNS)
+ cycle.call(opts, "Emblem", "emblem", Crest.emblems())
+ cycle.call(opts, "Trim", "metal", Crest.METAL_ORDER)
+ for pair in [["Field", "primary"], ["Charge", "secondary"]]:
+  label(opts, pair[0], 14, MUTED, false)
+  var grid = GridContainer.new(); grid.columns = 6; grid.add_theme_constant_override("h_separation", 6); grid.add_theme_constant_override("v_separation", 6); opts.add_child(grid)
+  for t in Crest.TINCTURE_ORDER:
+   var sw = Button.new(); sw.custom_minimum_size = Vector2(44, 30); sw.tooltip_text = t; grid.add_child(sw)
+   var chosen = new_crest[pair[1]] == t
+   for st in ["normal", "hover", "pressed"]: sw.add_theme_stylebox_override(st, style(Color(Crest.TINCTURES[t]), GOLD if chosen else (Color("ffffff") if st == "hover" else Color(0, 0, 0, 0.6)), 4, 0, 3 if chosen else 1))
+   var key = pair[1]
+   sw.pressed.connect(func(): new_crest[key] = t; render())
+ var dice = HBoxContainer.new(); opts.add_child(dice)
+ button(dice, "Randomize crest", func(): new_crest = Crest.default_for(str(randi()) + new_club_draft); render())
+
+func build_runover() -> void:
+ var st = campaign.state; var t = st.get("tour", {})
+ var title = label(ui, "THE RUN IS OVER", 84, Color("ffcfb8"), false)
+ title.position = Vector2(0, 120); title.size = Vector2(1600, 120); title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+ title.add_theme_color_override("font_outline_color", Color("2a0c0c")); title.add_theme_constant_override("outline_size", 14)
+ var box = panel(Rect2(400, 270, 800, 360))
+ var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 26); box.add_child(row)
+ Crest.make(row, Crest.of_campaign(campaign), st.name, Vector2(170, 200))
+ var col = VBoxContainer.new(); col.size_flags_horizontal = Control.SIZE_EXPAND_FILL; row.add_child(col)
+ label(col, st.name, 32, GOLD)
+ if str(st.get("motto", "")) != "": label(col, "“%s”" % st.motto, 16, MUTED)
+ var hist: Array = t.get("history", [])
+ var best = 9
+ for h in hist: best = mini(best, int(h.get("place", 9)))
+ label(col, "%s difficulty · %d cups contested · %d cup%s won" % [st.difficulty, hist.size(), int(st.get("trophies", 0)), "" if int(st.get("trophies", 0)) == 1 else "s"], 18)
+ label(col, "Best finish: %s · Reached %s" % [TournamentRewardsUI._place_text(best) if best < 9 else "—", WorldTour.region(campaign).place if not t.is_empty() else "—"], 18)
+ var face = campaign.headliner()
+ if not face.is_empty(): label(col, "Headliner: %s the %s · Level %d" % [face.name, HeroData.species[face.sp].n, int(face.level)], 16, GOLD)
+ label(box, "Your legacy boosts and unlocked evolutions carry over to your next guild.", 15, MUTED)
+ var actions = HBoxContainer.new(); box.add_child(actions)
+ button(actions, "Found a new guild", func(): new_crest = {}; phase = "new"; render(), true).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ button(actions, "Main menu", func(): phase = "menu"; render()).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+func found_club() -> void:
+ var name_value = new_name.text
+ if FileAccess.file_exists(Campaign.save_path(new_slot)):
+  var dialog = ConfirmationDialog.new(); ui.add_child(dialog)
+  dialog.title = "Replace this campaign slot?"; dialog.dialog_text = "Slot %d already has a campaign. Replace it with your new club?\nThe previous file will be kept as a recovery backup." % new_slot
+  dialog.confirmed.connect(func(): start_club(name_value, new_slot)); dialog.popup_centered(Vector2i(520, 180))
+ else: start_club(name_value, new_slot)
+
+func start_club(name_value: String, slot: int) -> void:
+ exhibition = false
+ campaign.new_run(name_value, slot)
+ campaign.state.crest = new_crest.duplicate() if not new_crest.is_empty() else Crest.default_for(name_value)
+ campaign.state.motto = new_motto.strip_edges().left(48)
+ desk_state.compare = []; desk_state.role = "All"
+ if not campaign.save(): toast(campaign.last_error); return
+ phase = "starter"; tab = "market"; selected_id = ""; render()
+
+func load_campaign(slot: int) -> void:
+ exhibition = false
+ if not campaign.load_slot(slot): toast(campaign.last_error); return
+ desk_state.compare = []; desk_state.role = "All"
+ sound.set_music(campaign.state.get("music", true)); sound.effects_enabled = campaign.state.get("effects", true)
+ sound.set_mix(campaign.state.get("music_volume",0.5),campaign.state.get("effects_volume",0.5))
+ selected_id = campaign.state.get("selected", "")
+ phase = "upgrade" if not campaign.pending_heroes().is_empty() else "shop" if campaign.state.get("tour",{}).get("shop",false) else "hub"
+ if campaign.state.roster.is_empty() and campaign.state.has("tour"):phase="starter"
+ if campaign.state.get("run_over", false): phase = "runover"
+ tab = "overview"; render(); sound.scene_music("club")
+
+func controls_hint() -> void:
+ var l = label(ui, "RIGHT DRAG TO ORBIT    ·    SCROLL TO ZOOM    ·    F11 FULLSCREEN", 13, Color("c1cfcc"))
+ l.position = Vector2(400, 820); l.size = Vector2(790, 25); l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+
+func prepare_match() -> void:
+ if not campaign.pending_heroes().is_empty(): phase = "upgrade"; render(); return
+ if campaign.state.get("tour",{}).get("shop",false): phase="shop"; render(); return
+ if campaign.state.get("tour",{}).get("complete",false) or (not campaign.state.has("tour") and campaign.state.round >= 17): tab = "overview"; phase = "hub"; render(); return
+ if campaign.state.roster.size() < Campaign.MIN_SQUAD: tab = "market"; phase = "hub"; render(); return
+ phase = "prep"; render()
+
+func build_prep() -> void:
+ var box = scroll_panel(Rect2(26, 135, 350, 602))
+ label(box, "5v5  ·  THE OPENING MATTERS", 13, GOLD)
+ label(box, "Arrange your five.", 28)
+ label(box, "Drag heroes or names to move them. Select a hero, then click a tile. Double-click a beast for tactics.", 16, MUTED)
+ var select = OptionButton.new()
+ for h in campaign.state.roster:
+  select.add_item(h.name + " · " + HeroData.species[h.sp].n)
+  if h.id == selected_id: select.selected = select.item_count - 1
+ if selected_id.is_empty(): selected_id = campaign.state.roster[0].id
+ select.item_selected.connect(func(i): selected_id = campaign.state.roster[i].id; render())
+ box.add_child(select)
+ label(box, "BACK         MIDDLE         FRONT →", 12, GOLD)
+ var grid = GridContainer.new(); grid.columns = 3; grid.add_theme_constant_override("h_separation", 6); grid.add_theme_constant_override("v_separation", 6); box.add_child(grid)
+ for slot in range(15):
+  var cell = FormationCell.new(); cell.destination = slot; cell.custom_minimum_size = Vector2(90, 48)
+  var heroes = campaign.lineup().filter(func(h): return h.slot == slot)
+  cell.hero_id = heroes[0].id if not heroes.is_empty() else ""
+  cell.text = heroes[0].name if not heroes.is_empty() else "+"
+  if cell.hero_id == selected_id: cell.add_theme_stylebox_override("normal", style(Color("45636b"), GOLD, 8, 4, 2))
+  cell.placed.connect(place_hero)
+  cell.pressed.connect(func(): place_hero(selected_id, slot))
+  grid.add_child(cell)
+ var footer = panel(Rect2(26, 749, 350, 127))
+ label(footer, "%d / 5 READY  ·  %s" % [campaign.lineup().size(), campaign.state.difficulty.to_upper()], 15, GOLD)
+ var actions = HBoxContainer.new(); footer.add_child(actions)
+ button(actions, "Back", func(): phase = "hub"; render())
+ var enter = button(actions, "Enter the arena →", introduce_match, true, not campaign.lineup_ready())
+ enter.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ var opp = campaign.opponent()
+ var scout = panel(Rect2(406, 126, 784, 86))
+ var scout_heading = HBoxContainer.new(); scout.add_child(scout_heading)
+ label(scout_heading, "NEXT  /  " + opp.name.to_upper(), 15, GOLD, false).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ button(scout_heading, "Scout rivals", show_opponent_scout)
+ label(scout, "5v5 · Rival health / attack %d%% · Set your formation and individual orders." % roundi(campaign.quality() * 100), 15, MUTED)
+ var orders = scroll_panel(Rect2(1220, 135, 354, 741))
+ label(orders, "YOUR FIVE  /  BATTLE ORDERS", 14, GOLD)
+ label(orders, "Tactics for every starter", 24)
+ for hero in campaign.lineup():
+  var card = PanelContainer.new(); orders.add_child(card)
+  card.add_theme_stylebox_override("panel", style(Color("17303b"), Color("365662"), 10, 10))
+  var stack = VBoxContainer.new(); card.add_child(stack)
+  var identity = HBoxContainer.new(); stack.add_child(identity)
+  var portrait = SplashArt.make(identity, hero.sp, Vector2(50, 52))
+  var info = VBoxContainer.new(); info.size_flags_horizontal = Control.SIZE_EXPAND_FILL; identity.add_child(info)
+  label(info, hero.name, 18)
+  label(info, HeroData.species[hero.sp].role, 12, MUTED)
+  var tactics = button(identity, "Tactics", func(): selected_id = hero.id; show_tactics(hero.id))
+  tactics.name = "StarterTactics_" + hero.id; tactics.add_theme_font_size_override("font_size", 14)
+  label(stack, BattleTactics.summary(hero), 13, GOLD)
+
+ controls_hint()
+
+func place_hero(id: String, destination: int) -> void:
+ if campaign.place_hero(id, destination): selected_id = id; render()
+ else: toast("Swap with a starter, or move a starter to the bench first.")
+
+func preview_formation() -> void:
+ arena.set_region(WorldTour.region(campaign) if campaign.state.has("tour") else {})
+ arena.clear_fighters(); arena.target_distance = 49.0; arena.camera.h_offset = 0; arena.target_pitch = 0.95; arena.target_yaw = 0.0
+ sim = BattleSim.new(); sim.silent = true
+ sim.setup(campaign.lineup(), campaign.opponent().roster, campaign.match_seed(), campaign.quality())
+ arena.sync(sim, 1.0, 1.0)
+
+func preview_team() -> void:
+ arena.clear_fighters(); arena.target_distance = 24.0; arena.camera.h_offset = -3.7; arena.target_pitch = 0.52
+ sim = BattleSim.new(); sim.silent = true
+ var list = campaign.lineup()
+ if list.is_empty(): demo_stage(); return
+ for i in range(list.size()): sim.add_unit(list[i], 0, Vector2((i % 3 - 1) * 2.8 + 1, (i / 3) * 3.6 - 1.6))
+ arena.sync(sim, 1.0)
+
+func demo_stage() -> void:
+ arena.clear_fighters(); arena.target_distance = 16; arena.camera.h_offset = -3.8; arena.target_pitch = 0.36
+ sim = BattleSim.new(); sim.silent = true
+ for i in range(3):
+  var h = HeroData.make_hero(["minotaur", "kirin", "griffin"][i], "demo" + str(i), ["THE VANGUARD", "THE TEMPEST", "THE SOVEREIGN"][i])
+  var u = sim.add_unit(h, 0, Vector2((i - 1) * 2.8 + 0.3, i % 2 * 1.2) / ArenaView.FLOOR_SCALE); u.heading = 0.2
+ arena.sync(sim, 1.0)
+
+# The contestant intro screen is retired: matches start straight in the arena with a countdown.
+func introduce_match() -> void:
+ if not campaign.lineup_ready() or not campaign.pending_heroes().is_empty():return
+ if campaign.state.get("tour",{}).get("shop",false) or campaign.state.get("tour",{}).get("complete",false):return
+ begin_battle()
+
+func begin_battle() -> void:
+ if not campaign.lineup_ready() or not campaign.pending_heroes().is_empty(): return
+ if not exhibition and (campaign.state.get("tour",{}).get("shop",false) or campaign.state.get("tour",{}).get("complete",false)): return
+ if exhibition or not qa.is_empty() or campaign.save():
+  phase = "battle"; paused = false; speed = 0.75 if tactical else 1.0; accumulator = 0.0; event_history.clear(); resolving = false
+  sound.reset_battle()
+  arena.set_region(WorldTour.region(campaign) if not exhibition and campaign.state.has("tour") else {})
+  arena.clear_fighters(); arena.camera.h_offset = 0; arena.target_distance = 31 if tactical else 37; arena.target_pitch = 0.95; arena.target_yaw = 0.0
+  if arena.clarity: arena.clarity.tactical = tactical
+  sim = BattleSim.new(); sim.action.connect(on_battle_event)
+  sim.setup(campaign.lineup(), exhibition_rivals if exhibition else campaign.opponent().roster, campaign.match_seed(), 1.0 if exhibition else campaign.quality())
+  sound.announce("battle", true)
+  countdown = COUNTDOWN; countdown_shown = -1; arena.target_yaw = 0.55; arena.camera_yaw = 0.55; arena.target_distance += 6.0
+  arena.sync(sim, 1.0); render(); sound.scene_music("arena"); pass # Music supplies the arena entrance; avoid a competing pitched stinger.
+ else: toast(campaign.last_error)
+
+func update_countdown() -> void:
+ if not is_instance_valid(countdown_label): return
+ var step = 3 - int(floor((COUNTDOWN - countdown) / 0.9))
+ if countdown <= 0.0: countdown_label.visible = false; return
+ if step != countdown_shown:
+  countdown_shown = step
+  countdown_label.text = str(step) if step > 0 else "FIGHT!"
+  countdown_label.add_theme_color_override("font_color", GOLD if step > 0 else Color("ff8a5c"))
+  countdown_label.pivot_offset = countdown_label.size * 0.5
+  countdown_label.scale = Vector2.ONE * 1.8; countdown_label.modulate.a = 1.0
+  var tw = create_tween().set_parallel(true)
+  tw.tween_property(countdown_label, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+  if step <= 0: tw.tween_property(countdown_label, "modulate:a", 0.0, 0.7).set_delay(0.25)
+  sound.cue("contest_versus" if step <= 0 else "contest_reveal", step <= 0)
+
+func build_battle_hud() -> void:
+ var dashboard = BattleDashboard.new(); dashboard.game = self; ui.add_child(dashboard)
+ if countdown > 0.0:
+  countdown_label = Label.new(); ui.add_child(countdown_label)
+  countdown_label.size = Vector2(600, 220); countdown_label.position = Vector2(500, 300)
+  countdown_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; countdown_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+  countdown_label.add_theme_font_size_override("font_size", 150)
+  countdown_label.add_theme_color_override("font_outline_color", Color(0.05, 0.03, 0.02)); countdown_label.add_theme_constant_override("outline_size", 22)
+  countdown_label.add_theme_font_override("font", load(TITLE_FONT))
+  countdown_shown = -1
+ var top = panel(Rect2(530, 127, 540, 91))
+ match_label = label(top, "THE GATES ARE OPEN", 24, GOLD); match_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+ var bottom = panel(Rect2(340, 796, 920, 80))
+ var row = HBoxContainer.new(); row.alignment = BoxContainer.ALIGNMENT_CENTER; bottom.add_child(row)
+ button(row, "Resume" if paused else "Pause", func(): paused = not paused; render())
+ button(row, "Tactical ¾×", func(): set_tactical(true), tactical)
+ for value in [1.0, 2.0, 4.0]: button(row, "%dx" % value, func(): set_tactical(false); speed = value; render(), speed == value and not tactical)
+ button(row, "Reset camera", func(): arena.target_yaw = 0.0; arena.target_distance = 31 if tactical else 37; arena.target_pitch = 0.95)
+ var feed = panel(Rect2(1250, 654, 325, 122))
+ event_box = VBoxContainer.new(); event_box.add_theme_constant_override("separation", 5); feed.add_child(event_box)
+ refresh_feed()
+
+func on_battle_event(e: Dictionary) -> void:
+ arena.handle_event(e)
+ var unit = sim.find_unit(int(e.get("uid", -1)))
+ var pan = 0.0
+ if e.has("pos"):
+  var screen = arena.camera.unproject_position(ArenaView.world_point(e.pos, 1.0))
+  pan = clampf(screen.x / get_viewport().get_visible_rect().size.x * 2.0 - 1.0, -1.0, 1.0)
+ sound.battle_event(e, unit, pan)
+ if e.type == "cast":
+  var h = sim.find_unit(e.uid)
+  event_history.append(h.hero.name + " · " + e.name)
+ elif e.type == "multikill":
+  var phrase = ["", "", "DOUBLE KILL", "TRIPLE KILL", "QUADRA KILL", "TEAM WIPE"][mini(5, e.count)]
+  event_history.append(e.name + " · " + phrase); sound.cue("multikill", true)
+  toast(e.name.to_upper() + "  ·  " + phrase)
+ elif e.type == "death":
+  var hero = sim.find_unit(e.uid)
+  if not hero.is_empty() and not hero.summon: event_history.append(hero.hero.name + " has fallen")
+ if event_history.size() > 4: event_history.pop_front()
+ if e.type in ["cast", "death", "multikill"]: refresh_feed()
+
+func refresh_feed() -> void:
+ if not is_instance_valid(event_box): return
+ for child in event_box.get_children(): child.queue_free(); event_box.remove_child(child)
+ for line in event_history.slice(-3): label(event_box, line, 12, MUTED)
+
+func finish_battle() -> void:
+ if resolving: return
+ resolving = true
+ if not qa.is_empty(): return
+ if exhibition:
+  var rows = sim.report_rows()
+  campaign.state.report = {"winner":sim.winner,"opponent":"The Crown Challengers","gold":0,"duration":sim.time,"rows":rows}
+ else:
+  if not campaign.resolve(sim):
+   paused=true
+   var retry=AcceptDialog.new();ui.add_child(retry);retry.title="Match result not saved";retry.dialog_text=campaign.last_error+" Your result is still available. Retry saving to continue."
+   retry.get_ok_button().text="Retry save";retry.confirmed.connect(func():resolving=false;finish_battle());retry.popup_centered(Vector2i(560,180));return
+ phase = "result"; sound.scene_music("club"); sound.cue("victory" if sim.winner == 0 else "honor", true)
+ render()
+
+func build_result() -> void:
+ var report = campaign.state.report
+ if report.is_empty(): phase = "hub"; render(); return
+ var box = scroll_panel(Rect2(40, 130, 1520, 645))
+ box.add_theme_constant_override("separation",8)
+ label(box, "THE ARENA REPORT", 12, GOLD)
+ label(box, "Victory, earned." if report.winner == 0 else "A draw. A lesson." if report.winner == -1 else "The next win starts here.", 30)
+ label(box, "vs %s  ·  %.1fs" % [report.opponent,report.duration] if exhibition else "vs %s  ·  %.1fs  ·  +%d gold" % [report.opponent, report.duration, report.gold], 16, GOLD)
+ var fallen = report.rows.filter(func(r): return r.team == 0 and not r.alive).size()
+ if not exhibition and report.has("tour_level"):
+  label(box,"%s · Team level %d · %s" % [report.location,report.tour_level,report.get("stage","Match %d" % report.bout)],17,GOLD)
+  if report.get("chest",false):button(box,"Champion’s chest earned · Open vault",func():TournamentRewardsUI.open_screen(self,"vault"),true)
+  if report.has("tournament_won"):label(box,("TOURNAMENT WON · Gold chest earned" if report.tournament_won else "Cup over · You finished %s%s · On to the next cup" % [TournamentRewardsUI._place_text(int(report.get("place",0))), " · %s chest earned" % report.medal if report.has("medal") else ""]),20,GOLD)
+ label(box,"Exhibition · no campaign progress changed." if exhibition else "%d / 5 survived · All heroes recover · +%d XP per fielded hero" % [5-fallen,80 if report.winner==0 else 65],14,MUTED)
+ if report.has("ais"): impact_board(box, report)
+ divider(box)
+ var analytics = MatchAnalytics.new(); analytics.game = self; analytics.report = report; box.add_child(analytics)
+ var pending = campaign.pending_heroes().size()
+ if campaign.state.get("run_over", false) and not exhibition:
+  var over = label(box, "KNOCKED OUT · THE RUN IS OVER", 30, Color("ff8a7a"))
+  label(box, "%s runs must finish %s or better. Your guild finished %s." % [campaign.state.difficulty, TournamentRewardsUI._place_text(int(report.get("cutoff", 4))), TournamentRewardsUI._place_text(int(report.get("place", 0)))], 17, MUTED)
+  var end = panel(Rect2(400,792,800,85))
+  button(end, "See the guild's final record  →", func(): phase = "runover"; render(), true)
+  return
+ var footer = panel(Rect2(400,792,800,85))
+ button(footer, "Choose %d heroes' earned upgrades  →" % pending if pending else "Back to main menu  →" if exhibition else "Visit tournament outfitter  →" if campaign.state.has("tour") else "Return to the club  →", func():
+  if exhibition: quit_to_menu()
+  else: phase = "upgrade" if pending else "shop" if campaign.state.has("tour") else "hub"; tab = "overview"; render(), true)
+
+## Arena Impact Score for every creature in the match, with the MVP called out.
+func impact_board(box: Node, report: Dictionary) -> void:
+ var rows: Array = report.ais
+ var mvp = rows[0]
+ for r in rows:
+  if r.ais > mvp.ais: mvp = r
+ label(box, "ARENA IMPACT  ·  MVP %s (%s) · %d AIS" % [mvp.name, HeroData.species[mvp.sp].n, mvp.ais], 18, GOLD)
+ for team in [0, 1]:
+  var line = HBoxContainer.new(); line.add_theme_constant_override("separation", 14); box.add_child(line)
+  label(line, "YOU" if team == 0 else "RIVAL", 14, Color("86dbf2") if team == 0 else Color("ffa093"), false).custom_minimum_size.x = 60
+  var team_rows = rows.filter(func(r): return r.team == team)
+  team_rows.sort_custom(func(a, b): return a.ais > b.ais)
+  for r in team_rows:
+   var tile = VBoxContainer.new(); tile.custom_minimum_size.x = 250; line.add_child(tile)
+   var top = HBoxContainer.new(); tile.add_child(top)
+   var pic = SplashArt.make(top, r.sp, Vector2(48, 48))
+   var words = VBoxContainer.new(); top.add_child(words)
+   label(words, ("★ " if r == mvp else "") + r.name, 15, GOLD if r == mvp else WHITE, false)
+   label(words, "%d AIS  ·  %d OVR" % [r.ais, r.ovr], 15, Color("8fe08a") if r.ais >= 65 else Color("ff9a8a") if r.ais < 40 else MUTED, false)
+
+func build_upgrade() -> void:
+ var pending = campaign.pending_heroes()
+ if pending.is_empty(): phase = "shop" if campaign.state.get("tour",{}).get("shop",false) else "hub"; tab = "overview"; render(); return
+ var h = pending[0]
+ var box = panel(Rect2(65, 130, 1470, 740))
+ box.add_theme_constant_override("separation",10)
+ var identity = HBoxContainer.new(); identity.add_theme_constant_override("separation", 24); box.add_child(identity)
+ var portrait = SplashArt.make(identity, h.sp, Vector2(92, 116)); portrait.name = "UpgradeHeroPortrait"
+ var details = VBoxContainer.new(); details.add_theme_constant_override("separation",4); details.size_flags_horizontal = Control.SIZE_EXPAND_FILL; identity.add_child(details)
+ label(details, "ARENA LEVEL UP  ·  ONE HERO, ONE CHOICE", 14, GOLD)
+ var reward_level = h.rewards[0].level if not h.get("rewards", []).is_empty() else h.level
+ label(details, "%s · Level %d" % [h.name, reward_level], 28)
+ label(details, "%s  /  %s" % [HeroData.species[h.sp].n, HeroData.species[h.sp].role], 20, GOLD)
+ label(details, "Choose an evolution to define this hero’s build." if h.pending[0][0].type == "evolution" else "%d / %d abilities · Discover your kit, then rank up your chosen abilities." % [h.learned.size()+1, HeroData.ABILITY_SLOTS], 18, MUTED)
+ var row = HBoxContainer.new(); box.add_child(row)
+ for index in range(h.pending[0].size()):
+  var card = h.pending[0][index]
+  var shell = PanelContainer.new(); shell.size_flags_horizontal = Control.SIZE_EXPAND_FILL; shell.custom_minimum_size = Vector2(405, 510); row.add_child(shell)
+  shell.add_theme_stylebox_override("panel", style(Color("1c3440"), HeroData.evolution_color({"evolution":card.key}) if card.type == "evolution" else RarityStyle.color(card.rarity), 12, 17, 2))
+  var content = VBoxContainer.new(); content.add_theme_constant_override("separation",8); shell.add_child(content)
+  label(content, "LEVEL 10 · EVOLUTION" if card.type == "evolution" else card.rarity.to_upper() + ("  ·  NEW ABILITY" if card.type == "ability" and not h.learned.has(card.key) else "  ·  EVOLUTION" if card.type == "evolution" else "  ·  RANK UP" if card.type in ["ability", "signature"] else "  ·  MASTERY"), 12, GOLD)
+  var art = TextureRect.new(); art.name = "AbilityCardArt"; art.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS; art.texture = AbilityArt.texture(AbilityArt.card_key(h,card)); art.custom_minimum_size = Vector2(0,244); art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; content.add_child(art)
+  RarityStyle.decorate(art,card.rarity)
+  if card.get("rarity","") == "Legendary":
+   # A legendary drop is an event: the card lands with a golden flash and a banner.
+   var banner = label(content, "— LEGENDARY DROP —", 20, Color("ffd77a")); banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+   shell.pivot_offset = Vector2(202, 255); shell.scale = Vector2(0.86, 0.86); shell.modulate = Color(2.2, 1.8, 1.0)
+   var tw = create_tween().set_parallel(true)
+   tw.tween_property(shell, "scale", Vector2.ONE, 0.55).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+   tw.tween_property(shell, "modulate", Color.WHITE, 0.9)
+   var pulse = create_tween().set_loops(); pulse.tween_property(banner, "modulate:a", 0.55, 0.7); pulse.tween_property(banner, "modulate:a", 1.0, 0.7)
+   pulse.bind_node(banner)
+   sound.cue("upgrade", true)
+  label(content, card.name, 23)
+  var description = label(content, card.description, 15, MUTED); description.max_lines_visible = 4; description.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS; description.tooltip_text = card.description
+  var spacer = Control.new(); spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL; content.add_child(spacer)
+  button(content,"Preview in arena",func():
+   var demo=AbilityPreview.new();demo.game=self;demo.hero=h.duplicate(true);demo.card=card.duplicate(true);ui.add_child(demo);demo.build())
+  button(content, "Choose evolution" if card.type == "evolution" else "Learn ability" if card.type == "ability" and not h.learned.has(card.key) else "Choose upgrade", func():
+   if campaign.choose(h.id, index): sound.cue("upgrade", true); render()
+   else: toast(campaign.last_error), true)
+ label(box, "%d heroes awaiting their own choice. Wins slightly improve rarity." % pending.size(), 15, MUTED)
+
+func show_guide() -> void:
+ var dialog = AcceptDialog.new(); ui.add_child(dialog); dialog.title = "Your first match · three steps"
+ dialog.dialog_text = "1. DRAFT YOUR SQUAD\nSign a Legendary headliner (×3 cost), then build from the draft board: Epics cost ×2, Commons ×1. An elite four (2 Epics + 1 Common) gets the elite-squad bonus; a full five (1 Epic + 3 Commons) brings numbers.\n\n2. ARRANGE & SET TACTICS\nRoster → Arrange formation → drag your five into position.\nHero tactics → choose an approach and target priority.\n\n3. COMPETE, THEN DEVELOP\nEnter the arena. Fielded heroes earn XP; level-ups offer individual abilities.\n\nEach cup is a double-elimination bracket: lose twice and you're out. Every cup moves you on to the next; finish 1st, 2nd or 3rd for a Gold, Silver or Bronze chest.\n\n4. FORGE ITEMS\nBuy components at the outfitter after every match. Each champion carries 3 items; drop a second component on a champion holding one to forge a finished item (see the Recipe book). Trickster's Coin forges WILD items that change how a champion fights.\n\n5. TEMPERAMENT & SCALING\nEvery champion has a temperament (a strength and a weakness) and a scaling curve: early scalers dominate the first cups, late scalers start weak and take over. Gold text marks a champion's perfect role and ideal temperaments. Club → Settings changes difficulty."
+ dialog.popup_centered(Vector2i(650, 420))
+
+func toggle_music() -> void:
+ sound.set_music(not sound.music_enabled)
+ if not exhibition and not campaign.state.is_empty(): campaign.state.music = sound.music_enabled; campaign.save()
+ render()
+
+func toggle_effects() -> void:
+ sound.effects_enabled = not sound.effects_enabled
+ if not exhibition and not campaign.state.is_empty(): campaign.state.effects = sound.effects_enabled; campaign.save()
+ render()
+
+func quit_to_menu() -> void:
+ if exhibition:
+  exhibition = false; campaign = Campaign.new(); phase = "menu"; paused = false; render(); return
+ if not campaign.save(): toast(campaign.last_error); return
+ var was_battle = phase == "battle"
+ phase = "menu"; paused = false; sound.scene_music("club"); render()
+ if was_battle: toast("Campaign saved. The unfinished bout restarts from preparation.")
+
+func toast(text_value: String) -> void:
+ if is_instance_valid(toast_label):
+  toast_label.text = text_value; toast_label.modulate.a = 1.0
+  var t = create_tween(); t.tween_interval(4.0); t.tween_property(toast_label, "modulate:a", 0.0, 0.6)
+
+func _process(dt: float) -> void:
+ if phase == "battle" and sim and not resolving and countdown > 0.0:
+  # 3 · 2 · 1 · FIGHT! The camera sweeps in while both teams wait on their marks.
+  countdown = maxf(0.0, countdown - dt)
+  var k = 1.0 - countdown / COUNTDOWN
+  arena.target_yaw = lerpf(0.55, 0.0, smoothstep(0.0, 0.8, k))
+  arena.target_distance = (31.0 if tactical else 37.0) + 6.0 * (1.0 - smoothstep(0.0, 0.8, k))
+  arena.sync(sim, dt, 0.0)
+  update_countdown()
+  return
+ if phase == "battle" and sim and not resolving:
+  var dilation = 1.0
+  if legend_left > 0.0 and not paused:
+   legend_left = maxf(0.0, legend_left - dt)
+   var k = 1.0 - legend_left / legend_total
+   dilation = 0.3 + 0.7 * k * k
+  if not paused:
+   accumulator += minf(dt, 0.1) * speed * dilation
+   while accumulator >= 1.0 / 30.0 and not sim.finished:
+    sim.step(1.0 / 30.0); accumulator -= 1.0 / 30.0
+  arena.sync(sim, dt, 0.0 if paused else speed * dilation)
+  if is_instance_valid(match_label): match_label.text = "%d   —   %d      %02d:%02d%s" % [sim.living(0, false).size(), sim.living(1, false).size(), int(sim.time) / 60, int(sim.time) % 60, "  PAUSED" if paused else ""]
+  if sim.finished: call_deferred("finish_battle")
+ elif sim and phase in ["menu", "new", "hub", "prep"]: arena.sync(sim, dt)
+ if not qa.is_empty() and not qa_taken:
+  qa_elapsed += dt
+  if qa_elapsed > (12 if qa in ["arena", "evolved_arena", "exhibition", "tour_arena"] else 7 if qa=="intro" else 1.65 if qa in ["attacks_slam","attacks_weapon"] else 1.43 if qa.begins_with("attacks_") else 2 if qa.begins_with("particles_") else 3):
+   qa_taken = true
+   await RenderingServer.frame_post_draw
+   if not qa_capture.is_empty():
+    var image = get_viewport().get_texture().get_image(); image.save_png(qa_capture)
+    print("CAPTURED ", qa_capture, " FPS ", Engine.get_frames_per_second(), " AUDIO_CUES ", sound.played_cues)
+   close_game()
+
+func close_game() -> void:
+ sound.stop_all()
+ await get_tree().create_timer(0.3).timeout
+ get_tree().quit()
+
+func _notification(what: int) -> void:
+ if what == NOTIFICATION_WM_CLOSE_REQUEST:
+  if not exhibition and not campaign.state.is_empty() and qa.is_empty() and not campaign.save(): toast(campaign.last_error); return
+  close_game()
+
+func _input(event: InputEvent) -> void:
+ if event is InputEventMouseMotion and not dragged_id.is_empty() and phase == "prep":
+  var point = arena.ground_position(event.position)
+  point.x += drag_offset.x; point.z += drag_offset.y
+  for u in sim.units:
+   if u.hero.id == dragged_id: u.pos = Vector2(clampf(point.x, -10, -5), clampf(point.z, -6.2, 6.2))
+ if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed and not dragged_id.is_empty():
+  var point = arena.ground_position(event.position)
+  point.x += drag_offset.x; point.z += drag_offset.y
+  var columns = BattleSim.FORMATION_COLUMNS; var col = 0
+  for i in range(3):
+   if absf(point.x - columns[i]) < absf(point.x - columns[col]): col = i
+  var row = clampi(roundi(point.z / BattleSim.FORMATION_ROW_GAP + 2), 0, 4)
+  var id = dragged_id; dragged_id = ""; place_hero(id, row * 3 + col)
+
+func _unhandled_input(event: InputEvent) -> void:
+ if event is InputEventMouseButton and phase != "hub":
+  if event.button_index == MOUSE_BUTTON_RIGHT: orbiting = event.pressed
+  if event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_UP: arena.zoom(-1.8)
+  if event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_DOWN: arena.zoom(1.8)
+  if phase == "prep" and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+   var pos = arena.ground_position(event.position)
+   var best = 1.0
+   for u in sim.units:
+    var center = arena.camera.unproject_position(ArenaView.world_point(u.pos, 1.15))
+    var feet = arena.camera.unproject_position(ArenaView.world_point(u.pos, 0))
+    var radius = maxf(18.0, center.distance_to(feet) * 1.3)
+    var distance = event.position.distance_to(center) / radius
+    if u.team == 0 and distance < best:
+     dragged_id = u.hero.id; best = distance; drag_offset = u.pos - Vector2(pos.x, pos.z)
+   if event.double_click and not dragged_id.is_empty():
+    selected_id = dragged_id; dragged_id = ""; show_tactics(selected_id)
+ if event is InputEventMouseMotion and orbiting: arena.orbit(-event.relative.x * 0.005)
+ if event is InputEventKey and event.pressed and not event.echo:
+  if event.keycode == KEY_F11: DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN else DisplayServer.WINDOW_MODE_FULLSCREEN)
+  if event.keycode == KEY_SPACE and phase == "battle": paused = not paused; render()
+  if event.keycode == KEY_ENTER and phase=="intro":
+   var introduction=ui.find_children("*","ContestantIntro",true,false)
+   if not introduction.is_empty():introduction[0].launch()
+  if event.keycode == KEY_ESCAPE:
+   if phase=="intro":phase="prep";render()
+   elif phase=="starter":quit_to_menu()
+   elif phase == "battle": paused = not paused; render()
+   elif exhibition: quit_to_menu()
+   elif phase not in ["menu", "new"]: phase = "hub"; tab = "overview"; render()
+  if phase == "battle" and event.keycode in [KEY_1, KEY_2, KEY_4]: set_tactical(false); speed = {KEY_1: 1.0, KEY_2: 2.0, KEY_4: 4.0}[event.keycode]; render()
+  if phase == "battle" and event.keycode == KEY_T: set_tactical(not tactical)
+
+# Tactical view slows the fight to 0.75x and turns on the clarity overlay: stronger skill
+# footprints, who-is-attacking-whom lines, status tags and fewer small numbers.
+func set_tactical(on: bool) -> void:
+ tactical = on
+ if arena and arena.clarity: arena.clarity.tactical = on
+ if on:
+  speed = 0.75
+  if arena and arena.target_distance > 31: arena.target_distance = 31
+ elif speed < 1.0: speed = 1.0
+ render()
+
+func show_tactics(id: String) -> void:
+ if phase == "battle": return
+ var hero = campaign.hero_by_id(id)
+ if hero.is_empty(): return
+ var editor = TacticsMenu.new(); editor.game = self; editor.hero_id = id; ui.add_child(editor)
+
+func show_opponent_scout() -> void:
+ var opponent = campaign.opponent()
+ var dialog = AcceptDialog.new(); ui.add_child(dialog); dialog.title = opponent.name + " · Scouting"
+ var lines = []
+ for hero in opponent.roster:
+  var stats = HeroData.stats(hero, campaign.quality())
+  var details = "%s · %s · Level %d\n%d HP · %d ATK\n%s · Rank %d" % [hero.name, HeroData.species[hero.sp].n, hero.level, stats.hp, stats.attack, HeroData.species[hero.sp].ability_name, hero.signature_rank]
+  for key in hero.learned: details += "\n" + HeroData.learned_ability(hero.sp, int(key)).name + " · Rank " + str(hero.learned[key])
+  lines.append(details)
+ dialog.dialog_text = "\n\n".join(lines); dialog.popup_centered(Vector2i(650, 600))
+
+func start_exhibition() -> void:
+ exhibition = true; campaign = Campaign.new(); campaign.new_run("The Dawn Champions",99,7913)
+ campaign.state.roster = []; exhibition_rivals = []
+ for team in range(2):
+  for i in range(5):
+   var sp = ["golem","minotaur","direwolf","kirin","unicorn"][i] if team == 0 else ["yeti","owlbear","griffin","phoenix","naga"][i]
+   var h = HeroData.make_hero(sp,"show_%d_%d" % [team,i],HeroData.NAMES[team*5+i],10)
+   h.slot = Campaign.FORMATION[i]; h.learned = {"0":2,"1":2,"2":2}; h.signature_rank = 2
+   h.evolution = ["guardian","ravager","ravager","arcanist","guardian"][i]
+   if team == 0: campaign.state.roster.append(h)
+   else: exhibition_rivals.append(h)
+ selected_id = campaign.state.roster[0].id; begin_battle()

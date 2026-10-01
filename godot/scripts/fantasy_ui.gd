@@ -1,0 +1,100 @@
+class_name FantasyUI
+extends RefCounted
+static func menu(game: Node) -> void:
+ var title=game.label(game.ui,"MANITORIA",98,Color("ffe4a0"),false);title.position=Vector2(200,148);title.size=Vector2(1200,125);title.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+ title.add_theme_color_override("font_outline_color",Color("23172a"));title.add_theme_constant_override("outline_size",12);title.add_theme_color_override("font_shadow_color",Color("100b25"));title.add_theme_constant_override("shadow_offset_y",5)
+ var sub=game.label(game.ui,"THE LIVING ARENA",22,Color("fff5d2"),false);sub.position=Vector2(400,280);sub.size=Vector2(800,38);sub.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER;sub.add_theme_color_override("font_outline_color",Color("201a32"));sub.add_theme_constant_override("outline_size",5)
+ var latest=0;var modified=0
+ for slot in range(1,4):
+  if FileAccess.file_exists(Campaign.save_path(slot)) and FileAccess.get_modified_time(Campaign.save_path(slot))>modified:latest=slot;modified=FileAccess.get_modified_time(Campaign.save_path(slot))
+ var entries=[["Continue","victory",Color("69dba8"),func():game.load_campaign(latest)],["New club","summons",Color("cdb0ff"),func():game.phase="new";game.render()],["Exhibition","gore",Color("ffbd77"),game.start_exhibition]]
+ for i in range(3):
+  var entry=entries[i];var frame=FantasyFrame.new();game.ui.add_child(frame);frame.position=Vector2(358+i*302,405);frame.size=Vector2(280,332);frame.accent=entry[2]
+  frame.add_theme_stylebox_override("panel",game.style(Color(.055,.10,.12,.96),entry[2],5,16,2))
+  var box=VBoxContainer.new();frame.add_child(box);AbilityArt.icon(box,entry[1],196)
+  var button=game.button(box,entry[0],entry[3],true,i==0 and latest==0);button.custom_minimum_size.y=62;button.add_theme_font_size_override("font_size",23)
+  frame.mouse_entered.connect(func():frame.modulate=Color(1.13,1.13,1.13));frame.mouse_exited.connect(func():frame.modulate=Color.WHITE)
+ var saves=game.button(game.ui,"Saved campaigns",func():save_picker(game));saves.position=Vector2(620,767);saves.size=Vector2(360,46)
+ var version=game.label(game.ui,"Windows edition 0.36 · Gauntlet",14,Color("eee3cf"),false);version.position=Vector2(30,861)
+
+static func save_picker(game: Node) -> void:
+ var dialog=GearUI.modal(game,"Your campaigns")
+ for slot in range(1,4):
+  var saved=Campaign.new()
+  if saved.load_slot(slot):game.button(dialog.box,"%d · %s · Cup %d%s"%[slot,saved.state.name,saved.state.get("tour",{}).get("level",1)," · Fallen" if saved.state.get("run_over",false) else ""],func():game.load_campaign(slot),true)
+  else:game.label(dialog.box,"Slot %d · Empty"%slot,19,game.MUTED)
+
+static func header(game: Node) -> void:
+ if game.phase in ["menu","new"]:
+  var row=HBoxContainer.new();game.ui.add_child(row);row.position=Vector2(1452,28)
+  game.button(row,"♪",game.toggle_music).tooltip_text="Music on/off"
+  game.button(row,"Exit",game.close_game)
+  return
+ location_banner(game)
+
+## Immersive top banner: club on the left, the arena you're standing in at centre,
+## the World Tour road on the right.
+static func location_banner(game: Node) -> void:
+ var c=game.campaign;var touring=game.phase!="new" and not game.exhibition and c.state.has("tour")
+ var r=WorldTour.region(c) if touring else {}
+ var accent=Color(r.get("color","e8c27a"))
+ var band=ColorRect.new();game.ui.add_child(band);band.position=Vector2.ZERO;band.size=Vector2(1600,124);band.mouse_filter=Control.MOUSE_FILTER_IGNORE
+ var sh=Shader.new();sh.code="""shader_type canvas_item;
+uniform vec4 accent:source_color;
+void fragment(){
+ float fade=1.-smoothstep(.55,1.,UV.y);
+ float line=exp(-pow((UV.y-.86)*90.,2.))*(1.-smoothstep(.15,.5,abs(UV.x-.5)));
+ vec3 c=mix(vec3(.02,.025,.035),accent.rgb*.25,.25*(1.-smoothstep(0.,.35,abs(UV.x-.5))));
+ COLOR=vec4(mix(c,accent.rgb,line),max(fade*.86,line*.9));
+}"""
+ var m=ShaderMaterial.new();m.shader=sh;m.set_shader_parameter("accent",accent);band.material=m
+ # Left: club identity
+ var left=HBoxContainer.new();game.ui.add_child(left);left.position=Vector2(26,18)
+ var club_name=c.state.get("name","Manitoria") if game.phase!="new" else "Manitoria"
+ var crest=Crest.make(left,Crest.of_campaign(c),club_name,Vector2(58,66));crest.mouse_filter=Control.MOUSE_FILTER_PASS;crest.tooltip_text=club_name+("\n“%s”"%c.state.motto if str(c.state.get("motto",""))!="" else "")
+ var face=c.headliner() if game.phase!="new" else {}
+ if not face.is_empty():
+  var portrait=SplashArt.make(left,face.sp,Vector2(62,70));portrait.mouse_filter=Control.MOUSE_FILTER_PASS;portrait.tooltip_text="Headliner · "+face.name
+ var id=VBoxContainer.new();id.add_theme_constant_override("separation",0);left.add_child(id)
+ var nm=game.label(id,club_name,26,game.WHITE,false);nm.custom_minimum_size.x=280;nm.add_theme_color_override("font_outline_color",Color(0,0,0,.8));nm.add_theme_constant_override("outline_size",5)
+ if game.phase!="new":
+  var g=game.label(id,"◆ %d gold   ·   %d trophies"%[c.state.gold,int(c.state.get("trophies",0))],15,game.GOLD,false);g.tooltip_text="Gold and cups won"
+ # Centre: where we are
+ var mid=VBoxContainer.new();game.ui.add_child(mid);mid.position=Vector2(470,10);mid.size=Vector2(660,100);mid.add_theme_constant_override("separation",-2)
+ var kicker;var place;var stage
+ if game.phase=="new":kicker="THE FOUNDING CHARTER";place="Manitoria";stage="Name your club and claim a headliner"
+ elif game.exhibition:kicker="EXHIBITION";place="The Living Arena";stage="Champion showcase"
+ elif touring:
+  var t=c.state.tour
+  kicker="%s  ·  CUP %d OF %d"%[str(r.name).to_upper(),int(t.level),WorldTour.MAX_LEVEL]
+  place=str(r.place)
+  stage=_stage_text(c)
+ else:kicker="";place="Manitoria";stage=game.stage_label()
+ var k=game.label(mid,kicker,14,accent.lightened(.25),false);k.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+ k.add_theme_color_override("font_outline_color",Color(0,0,0,.8));k.add_theme_constant_override("outline_size",4)
+ var title=game.label(mid,place.to_upper(),34,Color("ffe9b8"),false);title.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+ title.add_theme_font_override("font",load(game.TITLE_FONT))
+ title.add_theme_color_override("font_outline_color",Color("1a0f14"));title.add_theme_constant_override("outline_size",8)
+ title.add_theme_color_override("font_shadow_color",Color(accent,.55));title.add_theme_constant_override("shadow_offset_y",3)
+ var st=game.label(mid,stage,16,game.WHITE,false);st.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+ st.add_theme_color_override("font_outline_color",Color(0,0,0,.85));st.add_theme_constant_override("outline_size",4)
+ # Right: the road and controls
+ if touring:
+  var road=TourPath.new();road.level=int(c.state.tour.level);game.ui.add_child(road);road.position=Vector2(1112,40);road.size=Vector2(312,62)
+  var cap=game.label(game.ui,"WORLD TOUR",11,Color(1,1,1,.6),false);cap.position=Vector2(1112,12);cap.size=Vector2(290,18);cap.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+ var tools=VBoxContainer.new();game.ui.add_child(tools);tools.position=Vector2(1446,14);tools.add_theme_constant_override("separation",6)
+ var row=HBoxContainer.new();row.add_theme_constant_override("separation",6);tools.add_child(row)
+ var mb=game.button(row,"♪",game.toggle_music);mb.tooltip_text="Music: "+("on" if game.sound.music_enabled else "off");mb.custom_minimum_size=Vector2(56,40)
+ var fb=game.button(row,"FX",game.toggle_effects);fb.tooltip_text="Sound effects: "+("on" if game.sound.effects_enabled else "off");fb.custom_minimum_size=Vector2(56,40)
+ var menu_button=game.button(tools,"Menu",game.quit_to_menu if game.phase!="new" else func():game.phase="menu";game.render());menu_button.custom_minimum_size=Vector2(118,40)
+
+static func _stage_text(c: Campaign) -> String:
+ var t=c.state.tour
+ if c.state.roster.is_empty():return "Draft your headliner to enter the cup"
+ if t.get("complete",false):return "World Tour complete"
+ var b=t.get("bracket",{})
+ if b.is_empty():return "Double elimination  ·  8 clubs  ·  opening round next"
+ if b.get("finished",false):
+  return "Cup decided  ·  next stop awaits"
+ var lost=WorldTour.losses(c,0)
+ return "%s  ·  %s"%[WorldTour.stage_label(c),"no losses" if lost==0 else "one life left"]

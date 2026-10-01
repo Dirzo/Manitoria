@@ -1,0 +1,35 @@
+MANITORIA 0.25 — CROWNS & EVOLUTIONS
+
+Launch Manitoria.exe from the extracted Windows folder.
+
+World Tour now contains eight-team knockout tournaments. Win the quarterfinal,
+semifinal and final to advance a team level. A defeat or draw ends the attempt;
+you keep arena XP and gold, visit the outfitter, and retry the same tournament.
+Rival matches are simulated and the bracket preserves their winners and lineups.
+Existing mid-tournament saves retain their current round when first migrated.
+
+Win a final to earn a Champion's Chest. Open it from the arena report or World
+Tour > Champion's vault. A chest unlocks one previously uncollected evolution,
+prioritizing your headliner, then your roster. It also grants +1% permanent
+health or attack until each reaches +5%. Rewards carry across local save slots
+and fresh teams in trophy_vault.json; opened chest IDs prevent duplicate claims.
+Unopened chests remain with the campaign that earned them. All-collection
+chests award a collectible honor entry instead of increasing stats further.
+
+Each of the 32 champions has a named ascended evolution. An unlocked champion
+can awaken in the vault at level 10 after finishing pending level-up choices.
+Awakening replaces its previous Guardian/Ravager/Arcanist path, keeps its four
+learned abilities, and adds a fifth automatic action on a 20-second cooldown.
+The tradeoff is -10% attack. Each species uses an appropriate combat effect:
+Kirin lightning, Owlbear physical cyclone, Treant roots, Unicorn shields, etc.
+Preview the action against clustered, lined-up or spread targets in the vault.
+Ascensions reuse the established combat effects and champion models with a
+larger silhouette and colored crest; they are not 32 newly sculpted meshes.
+
+Fantasy UI: EB Garamond body text, Cinzel controls and headings, warm ivory
+text, textured dark teal stone/vellum panels, brass details and softer shadows.
+The font licenses ship in the Godot assets/fonts folder.
+
+Validation: 58 tournament/legacy checks, 42 World Tour checks, 32 ascended
+combat actions, UI chest/awakening/preview flow, existing ability/roster/item
+regressions, and visual captures. Native Windows build checked separately.

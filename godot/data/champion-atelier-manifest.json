@@ -1,0 +1,551 @@
+{
+  "version": "0.24",
+  "champions": 32,
+  "total_details": 22236,
+  "reports": [
+    {
+      "species": "minotaur",
+      "before_vertices": 71531,
+      "after_vertices": 121808,
+      "bones": 19,
+      "materials": 27,
+      "details": 1217,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "e243876fd33ec2bb0c0d889a57d4f56f0e73393e5d8483f33078ebf8c9eeb87e",
+      "sha256": "7678ba52434dddb60643db5d0cb7ce96b8daee2b1e4b173300322b65892c4e86"
+    },
+    {
+      "species": "golem",
+      "before_vertices": 40442,
+      "after_vertices": 42302,
+      "bones": 16,
+      "materials": 7,
+      "details": 318,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "21b569322dd9ec3557d1929a8b9e99598f51f7bf8a999a7b1342d6c38016e8f1",
+      "sha256": "0828cfed64617c528fc24e6e2ccc4f70f08075bcc1571c6a66fe6f76970b8523"
+    },
+    {
+      "species": "troll",
+      "before_vertices": 32757,
+      "after_vertices": 35732,
+      "bones": 19,
+      "materials": 12,
+      "details": 65,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "6e5f5a51f725b3e543799f1311df22c3a0e512aa3dd7093e4c3f862350dc0ee2",
+      "sha256": "b87c1dfaacb632b2441816799875039cf949a9fe62f46815aa7871adde6ed1bd"
+    },
+    {
+      "species": "wendigo",
+      "before_vertices": 56922,
+      "after_vertices": 97277,
+      "bones": 19,
+      "materials": 12,
+      "details": 1215,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "ec26ccc653deee08c877afad64443db03092d42d95927c4d456e345c0dc2ae60",
+      "sha256": "d79608281ee8ca6537b4b0bb27903cd4c97f1e1a095096eff7b61acd48c41df2"
+    },
+    {
+      "species": "direwolf",
+      "before_vertices": 118295,
+      "after_vertices": 141345,
+      "bones": 24,
+      "materials": 14,
+      "details": 1150,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "5460ec513424368c6cfd95e12705fb4fd912fd2df40fd4654502aa44adb62460",
+      "sha256": "933ab28bd712f2a4746f1775f399dc817ae0d751e8fcaeaff096adfc31e65a68"
+    },
+    {
+      "species": "manticore",
+      "before_vertices": 83495,
+      "after_vertices": 109470,
+      "bones": 28,
+      "materials": 16,
+      "details": 1215,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "e553ebf41a7472c3576cca1c182d10bfaa89742a7f5b284528dd941e2732af04",
+      "sha256": "d15bd7c3c7cf31eab60dabf1c7d93d2694a86a9b15e5b51db5872204d40234e0"
+    },
+    {
+      "species": "griffin",
+      "before_vertices": 58277,
+      "after_vertices": 71427,
+      "bones": 94,
+      "materials": 20,
+      "details": 653,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "464dadad206f944a3da9301d7628a7b90c414c1d0a7468350b63f35ccf770d65",
+      "sha256": "a50ba791f1e3cb67cd0bbfc55d51ca894d6309f91e25caee545fc504e2ac7601"
+    },
+    {
+      "species": "kitsune",
+      "before_vertices": 115808,
+      "after_vertices": 146783,
+      "bones": 34,
+      "materials": 14,
+      "details": 1315,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "0dd4f67d9e0f6a7315205cee145ad40efb6b7a94487180f62c98f6b9d61096dc",
+      "sha256": "eca9b60d65b2197983492676c093fbf97d38706168bf761dc6583c089c80b65e"
+    },
+    {
+      "species": "wyvern",
+      "before_vertices": 34888,
+      "after_vertices": 36798,
+      "bones": 28,
+      "materials": 13,
+      "details": 318,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "1afe9f8a6cfdea448abe825f2d27782de521c674864187f22395092c5b49c14e",
+      "sha256": "52ed8705539edbf290817918eb4abe45928ab5d69b56f46b2ec8e26dd515d9e5"
+    },
+    {
+      "species": "harpy",
+      "before_vertices": 58211,
+      "after_vertices": 74286,
+      "bones": 89,
+      "materials": 16,
+      "details": 718,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "acdb0cd16e2292faecbf8eed109599cbfc117442574de88a5de869c8470919ca",
+      "sha256": "0daf6c1e0484cdc267e1458aeac2d864d28964477108687b5fda395f9605966c"
+    },
+    {
+      "species": "phoenix",
+      "before_vertices": 60533,
+      "after_vertices": 73683,
+      "bones": 83,
+      "materials": 20,
+      "details": 653,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "fa6657977b9654070837700bf0ab11a739ed57cc0abdebcd6fe92293f254f810",
+      "sha256": "92830ec7336add0518ca5c7dbf14f0a107f9272f7ad3878c43a3d3e6179736ae"
+    },
+    {
+      "species": "kirin",
+      "before_vertices": 152546,
+      "after_vertices": 162046,
+      "bones": 28,
+      "materials": 12,
+      "details": 200,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "e2af3d7a6079541f1f8e6edb46cda40be6e2f23ad30787e5046f6c0c91b83efb",
+      "sha256": "5282486b17c24e429e2fc5b8daf3554f04a4636b4c079992e02b043ca1eca4aa"
+    },
+    {
+      "species": "basilisk",
+      "before_vertices": 32276,
+      "after_vertices": 34186,
+      "bones": 24,
+      "materials": 10,
+      "details": 318,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "f5b5aa95542d9309348686ca5373a03b64c4df7b964c2b923641257588f66bdf",
+      "sha256": "4396d69445eaf8152408458c4c06c0b67fa153b8dbc50595e29a66d8baff80ca"
+    },
+    {
+      "species": "treant",
+      "before_vertices": 58050,
+      "after_vertices": 59960,
+      "bones": 19,
+      "materials": 11,
+      "details": 318,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "6e25ff241e4eb31e256bbc7224ae69760ef72c74291e893d2bc5faf846df5fc8",
+      "sha256": "f50c9ad658b25b993adacdd6c50e7230796785f1a05661853262724e85d93c64"
+    },
+    {
+      "species": "naga",
+      "before_vertices": 29750,
+      "after_vertices": 34475,
+      "bones": 18,
+      "materials": 13,
+      "details": 367,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "b723e7de3e67a48390d2a88c0e7227b65517185696643ea1bc5b79ef40c04706",
+      "sha256": "483cad627ecdc251c6baf2b3d49687acf10f0f83484ee3ac986b9eeb451cbe70"
+    },
+    {
+      "species": "unicorn",
+      "before_vertices": 23389,
+      "after_vertices": 44125,
+      "bones": 24,
+      "materials": 15,
+      "details": 202,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "89087dc28259f690ef4b71f49f2f71f8ce27a5a8986b6e4c6779c84e07f7c628",
+      "sha256": "d9444e99086acef15b1ea3bf48643e5aaeca4a19edceda0650e199bdff9cb99a"
+    },
+    {
+      "species": "cerberus",
+      "before_vertices": 98396,
+      "after_vertices": 121546,
+      "bones": 32,
+      "materials": 12,
+      "details": 1150,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "b4cf8369b5776e66270e62ca441f5e2460c73c7de84410c05b86fe2346f4aabd",
+      "sha256": "69a5caeb356071f043a20c60378d3ba3ba2cc835bbc7e9e44a14ada912c80f82"
+    },
+    {
+      "species": "nemean",
+      "before_vertices": 94267,
+      "after_vertices": 120492,
+      "bones": 24,
+      "materials": 15,
+      "details": 1217,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "e2b270d8fe22e4bf94b82fbb571300f7b617f0a0111d2b8657a530ddf6a6a6b4",
+      "sha256": "6352b92ca3aef124be6f0512ccdc986832628622d93ee369a89a1f85a3604377"
+    },
+    {
+      "species": "yeti",
+      "before_vertices": 88877,
+      "after_vertices": 114852,
+      "bones": 19,
+      "materials": 15,
+      "details": 1215,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "9e4982f4e42ffb9a77512c2af1fd0af6734d3403f9dfce499712cb86742daf14",
+      "sha256": "a3029ce3acd608fa45ed637d25edc8e6c9520ec7ce29b937e06fef3858274205"
+    },
+    {
+      "species": "zaratan",
+      "before_vertices": 42996,
+      "after_vertices": 44906,
+      "bones": 24,
+      "materials": 12,
+      "details": 318,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "4a8f26a7f3cd8a4d3c82e92a6cc2cc1204f3169059acfd775896a79c841fbf44",
+      "sha256": "09c3ee4795cc675d39e75b009de712cc2d4929e0413cdf3d8396c29534c0b526"
+    },
+    {
+      "species": "owlbear",
+      "before_vertices": 82624,
+      "after_vertices": 105774,
+      "bones": 24,
+      "materials": 15,
+      "details": 1153,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "2ec11c5fc754457a4fdae16f2d2643a01e89da876e3713050664dfa760831e76",
+      "sha256": "c6d1f4d20994ad45a4faf6dc46e474b7157c3abf89c991e19008ecbd8c8801fe"
+    },
+    {
+      "species": "hydra",
+      "before_vertices": 50810,
+      "after_vertices": 52820,
+      "bones": 32,
+      "materials": 10,
+      "details": 318,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "2edc2b2a098ae06922f2474cc171ac92a9ded9fbd58f23aabcb6d15bba8b3593",
+      "sha256": "b406620c0161bf6aba63e4c05bf7abc96107f6dc8ba12a90eee8b85e7ec270db"
+    },
+    {
+      "species": "chimera",
+      "before_vertices": 116475,
+      "after_vertices": 168384,
+      "bones": 28,
+      "materials": 16,
+      "details": 1215,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "1e4686cf34f6056aa3e80425aecd6b404508c8267356d9894f356be1e4c25bfc",
+      "sha256": "084d28b4d0d851cfabe9ca91e34862b457181f12066358c2e909c51d67b4ab32"
+    },
+    {
+      "species": "gargoyle",
+      "before_vertices": 30515,
+      "after_vertices": 32425,
+      "bones": 23,
+      "materials": 12,
+      "details": 318,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "705a541adde2af6099e3e664d899d48a3ee37eb72fd338e9cbda1d22503a00c5",
+      "sha256": "1d5a45c6f58eebba2e9dd749c7b297318f0b05074af31fa8e34ec4d807589f2a"
+    },
+    {
+      "species": "nekomata",
+      "before_vertices": 62614,
+      "after_vertices": 90664,
+      "bones": 29,
+      "materials": 13,
+      "details": 1250,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "30b1d0f0a55b93ed24a2e7c55b87b7965eb47b52e7de491bff4e068ebf76ba8a",
+      "sha256": "a2307ded90d97729f3ee07b925e67d89c25a30eb014b8eac0b8dc9ad9478e767"
+    },
+    {
+      "species": "jackalope",
+      "before_vertices": 65350,
+      "after_vertices": 88400,
+      "bones": 24,
+      "materials": 12,
+      "details": 1150,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "514cdd98f128fb4fa99f9708dfb3db32d597f6d9ca18d7427ada9fd13d4d3d86",
+      "sha256": "2840c75117ca303ac1fdf6b212c84fd3d247e33aab47cf7d6d9b09091b29110c"
+    },
+    {
+      "species": "cyclops",
+      "before_vertices": 40127,
+      "after_vertices": 43052,
+      "bones": 17,
+      "materials": 15,
+      "details": 65,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "401fe2cd54f477a29b31f6de033aa8996255e382f9c49315693b87aa5a08a49c",
+      "sha256": "89fba7c795a518dc9c01a9d3426eb4b598da1b678a4448a98101aa3a5576cedf"
+    },
+    {
+      "species": "thunderbird",
+      "before_vertices": 60533,
+      "after_vertices": 73683,
+      "bones": 83,
+      "materials": 14,
+      "details": 653,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "24a01b7f29fdc07b5a9d3cfdbfab73b14b1878456789c11f5ce7d7a50990556b",
+      "sha256": "424595980a75e084bda9b72b133e3210f09109e06d20027548f134ebd3f25439"
+    },
+    {
+      "species": "sphinx",
+      "before_vertices": 123279,
+      "after_vertices": 146579,
+      "bones": 94,
+      "materials": 21,
+      "details": 1152,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "8d80613c34bd7746c5f4b5ad4a3b4d3d4d5f9bcaf7b7d64c67d7c14a79bf2856",
+      "sha256": "d9f336421a4cc9df3030cad19a4b5dff55cdbe55dfa536b93cd815360d747406"
+    },
+    {
+      "species": "pegasus",
+      "before_vertices": 49218,
+      "after_vertices": 59018,
+      "bones": 94,
+      "materials": 18,
+      "details": 202,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "27848235fc1a9b57140312f7a724e0195a9349d665c1cbcb3880350656f7434c",
+      "sha256": "e0faa028b22f91c24b48f77508f155c0a27c3653f704dd75bd4e1618144b5e91"
+    },
+    {
+      "species": "arachne",
+      "before_vertices": 13543,
+      "after_vertices": 15043,
+      "bones": 13,
+      "materials": 6,
+      "details": 300,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "4f50de429b6284e02825f2459c7ea737908ccce801d6663c2508046a974c7a34",
+      "sha256": "25b9256a2ecb5f44ea0d4958dba189f5b32654251ed12ee18539a0ef0ea3b7fa"
+    },
+    {
+      "species": "salamander",
+      "before_vertices": 32436,
+      "after_vertices": 34346,
+      "bones": 24,
+      "materials": 11,
+      "details": 318,
+      "animations": [
+        "idle",
+        "walk",
+        "attack",
+        "cast",
+        "death"
+      ],
+      "baseline_sha256": "8037105667395eb439681fcef7453300cebc3259a92c2031e206f9e286c879b9",
+      "sha256": "29cbda47446470fc41fa9a4e26b1a53b8b05a9089cd0720d421b35fa6ae2cccb"
+    }
+  ]
+}

@@ -19,3 +19,9 @@ The whole game is a single file, `index.html`. Open it in a browser to play. The
 ## Saving
 
 Progress saves automatically in your browser's local storage. The Club office menu gives you a save code to back up or move a club between devices.
+
+## Godot edition
+
+The full Godot 4 project lives in [`godot/`](godot/). Open `godot/project.godot` with **Godot 4.7.2** (Compatibility renderer) to play from the editor or export your own build.
+
+A ready-to-play Windows build of version 0.36 is in [`builds/v0.36/`](builds/v0.36/): download the folder, run `JOIN-ME.bat`, then `Manitoria.exe`.

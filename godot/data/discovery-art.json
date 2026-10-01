@@ -1,0 +1,2050 @@
+[
+  {
+    "description": "Slam nearby enemies for 150% attack and stun for 0.8s.",
+    "effect": "quake",
+    "hero": "Minotaur",
+    "index": 0,
+    "name": "Labyrinth Quake",
+    "species": "minotaur"
+  },
+  {
+    "description": "Rally allies: +22% attack and speed for 4s, with a small shield.",
+    "effect": "rally",
+    "hero": "Minotaur",
+    "index": 1,
+    "name": "Blood of the Labyrinth",
+    "species": "minotaur"
+  },
+  {
+    "description": "Spin through nearby foes for 200% attack and gain a shield.",
+    "effect": "whirl",
+    "hero": "Minotaur",
+    "index": 2,
+    "name": "Minotaur Cyclone",
+    "species": "minotaur"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Minotaur",
+    "index": 3,
+    "name": "Minotaur Aegis",
+    "species": "minotaur"
+  },
+  {
+    "description": "Strike a wounded foe for 170% attack; heal for damage dealt.",
+    "effect": "drain",
+    "hero": "Minotaur",
+    "index": 4,
+    "name": "Minotaur Siphon",
+    "species": "minotaur"
+  },
+  {
+    "description": "Dread weakens nearby enemies' damage by 25% for 4s.",
+    "effect": "fear",
+    "hero": "Minotaur",
+    "index": 5,
+    "name": "Minotaur Dread",
+    "species": "minotaur"
+  },
+  {
+    "description": "Crack a line through foes for 150% attack and root for 1s.",
+    "effect": "fissure",
+    "hero": "Minotaur",
+    "index": 6,
+    "name": "Minotaur Rift",
+    "species": "minotaur"
+  },
+  {
+    "description": "Heal the three most wounded allies for 130% attack plus 8% health.",
+    "effect": "renew",
+    "hero": "Minotaur",
+    "index": 7,
+    "name": "Minotaur Restoration",
+    "species": "minotaur"
+  },
+  {
+    "description": "Crack a line through foes for 150% attack and root for 1s.",
+    "effect": "fissure",
+    "hero": "Stone Golem",
+    "index": 0,
+    "name": "Fault Line",
+    "species": "golem"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Stone Golem",
+    "index": 1,
+    "name": "Granite Covenant",
+    "species": "golem"
+  },
+  {
+    "description": "Spin through nearby foes for 200% attack and gain a shield.",
+    "effect": "whirl",
+    "hero": "Stone Golem",
+    "index": 2,
+    "name": "Stone Golem Cyclone",
+    "species": "golem"
+  },
+  {
+    "description": "Slam nearby enemies for 150% attack and stun for 0.8s.",
+    "effect": "quake",
+    "hero": "Stone Golem",
+    "index": 3,
+    "name": "Stone Golem Earthshaker",
+    "species": "golem"
+  },
+  {
+    "description": "Rally allies: +22% attack and speed for 4s, with a small shield.",
+    "effect": "rally",
+    "hero": "Stone Golem",
+    "index": 4,
+    "name": "Stone Golem War Cry",
+    "species": "golem"
+  },
+  {
+    "description": "Strike a wounded foe for 170% attack; heal for damage dealt.",
+    "effect": "drain",
+    "hero": "Stone Golem",
+    "index": 5,
+    "name": "Stone Golem Siphon",
+    "species": "golem"
+  },
+  {
+    "description": "Dread weakens nearby enemies' damage by 25% for 4s.",
+    "effect": "fear",
+    "hero": "Stone Golem",
+    "index": 6,
+    "name": "Stone Golem Dread",
+    "species": "golem"
+  },
+  {
+    "description": "Heal the three most wounded allies for 130% attack plus 8% health.",
+    "effect": "renew",
+    "hero": "Stone Golem",
+    "index": 7,
+    "name": "Stone Golem Restoration",
+    "species": "golem"
+  },
+  {
+    "description": "A falling projectile strikes a cluster for 180% attack and stuns.",
+    "effect": "meteor",
+    "hero": "Cave Troll",
+    "index": 0,
+    "name": "Boulder Barrage",
+    "species": "troll"
+  },
+  {
+    "description": "Heal the three most wounded allies for 130% attack plus 8% health.",
+    "effect": "renew",
+    "hero": "Cave Troll",
+    "index": 1,
+    "name": "Second Wind",
+    "species": "troll"
+  },
+  {
+    "description": "Spin through nearby foes for 200% attack and gain a shield.",
+    "effect": "whirl",
+    "hero": "Cave Troll",
+    "index": 2,
+    "name": "Cave Troll Cyclone",
+    "species": "troll"
+  },
+  {
+    "description": "Slam nearby enemies for 150% attack and stun for 0.8s.",
+    "effect": "quake",
+    "hero": "Cave Troll",
+    "index": 3,
+    "name": "Cave Troll Earthshaker",
+    "species": "troll"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Cave Troll",
+    "index": 4,
+    "name": "Cave Troll Aegis",
+    "species": "troll"
+  },
+  {
+    "description": "Rally allies: +22% attack and speed for 4s, with a small shield.",
+    "effect": "rally",
+    "hero": "Cave Troll",
+    "index": 5,
+    "name": "Cave Troll War Cry",
+    "species": "troll"
+  },
+  {
+    "description": "Strike a wounded foe for 170% attack; heal for damage dealt.",
+    "effect": "drain",
+    "hero": "Cave Troll",
+    "index": 6,
+    "name": "Cave Troll Siphon",
+    "species": "troll"
+  },
+  {
+    "description": "Dread weakens nearby enemies' damage by 25% for 4s.",
+    "effect": "fear",
+    "hero": "Cave Troll",
+    "index": 7,
+    "name": "Cave Troll Dread",
+    "species": "troll"
+  },
+  {
+    "description": "Strike a wounded foe for 170% attack; heal for damage dealt.",
+    "effect": "drain",
+    "hero": "Wendigo",
+    "index": 0,
+    "name": "Winter Hunger",
+    "species": "wendigo"
+  },
+  {
+    "description": "Dread weakens nearby enemies' damage by 25% for 4s.",
+    "effect": "fear",
+    "hero": "Wendigo",
+    "index": 1,
+    "name": "Dread of the Forest",
+    "species": "wendigo"
+  },
+  {
+    "description": "Spin through nearby foes for 200% attack and gain a shield.",
+    "effect": "whirl",
+    "hero": "Wendigo",
+    "index": 2,
+    "name": "Wendigo Cyclone",
+    "species": "wendigo"
+  },
+  {
+    "description": "Slam nearby enemies for 150% attack and stun for 0.8s.",
+    "effect": "quake",
+    "hero": "Wendigo",
+    "index": 3,
+    "name": "Wendigo Earthshaker",
+    "species": "wendigo"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Wendigo",
+    "index": 4,
+    "name": "Wendigo Aegis",
+    "species": "wendigo"
+  },
+  {
+    "description": "Rally allies: +22% attack and speed for 4s, with a small shield.",
+    "effect": "rally",
+    "hero": "Wendigo",
+    "index": 5,
+    "name": "Wendigo War Cry",
+    "species": "wendigo"
+  },
+  {
+    "description": "Crack a line through foes for 150% attack and root for 1s.",
+    "effect": "fissure",
+    "hero": "Wendigo",
+    "index": 6,
+    "name": "Wendigo Rift",
+    "species": "wendigo"
+  },
+  {
+    "description": "Heal the three most wounded allies for 130% attack plus 8% health.",
+    "effect": "renew",
+    "hero": "Wendigo",
+    "index": 7,
+    "name": "Wendigo Restoration",
+    "species": "wendigo"
+  },
+  {
+    "description": "Leap to a wounded foe for 190% attack; gain a brief shield.",
+    "effect": "ambush",
+    "hero": "Direwolf",
+    "index": 0,
+    "name": "Pack Ambush",
+    "species": "direwolf"
+  },
+  {
+    "description": "Rally allies: +22% attack and speed for 4s, with a small shield.",
+    "effect": "rally",
+    "hero": "Direwolf",
+    "index": 1,
+    "name": "Alpha's Challenge",
+    "species": "direwolf"
+  },
+  {
+    "description": "Strike for 140% attack, doubled against foes below 35% health.",
+    "effect": "execute",
+    "hero": "Direwolf",
+    "index": 2,
+    "name": "Direwolf Finisher",
+    "species": "direwolf"
+  },
+  {
+    "description": "Poison a cluster for 40% attack each second for 4s.",
+    "effect": "toxic",
+    "hero": "Direwolf",
+    "index": 3,
+    "name": "Direwolf Blight",
+    "species": "direwolf"
+  },
+  {
+    "description": "Spin through nearby foes for 200% attack and gain a shield.",
+    "effect": "whirl",
+    "hero": "Direwolf",
+    "index": 4,
+    "name": "Direwolf Cyclone",
+    "species": "direwolf"
+  },
+  {
+    "description": "Strike a wounded foe for 170% attack; heal for damage dealt.",
+    "effect": "drain",
+    "hero": "Direwolf",
+    "index": 5,
+    "name": "Direwolf Siphon",
+    "species": "direwolf"
+  },
+  {
+    "description": "A gust hits a cluster for 130% attack, pushing and slowing it.",
+    "effect": "gust",
+    "hero": "Direwolf",
+    "index": 6,
+    "name": "Direwolf Gale",
+    "species": "direwolf"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Direwolf",
+    "index": 7,
+    "name": "Direwolf Aegis",
+    "species": "direwolf"
+  },
+  {
+    "description": "Poison a cluster for 40% attack each second for 4s.",
+    "effect": "toxic",
+    "hero": "Manticore",
+    "index": 0,
+    "name": "Venom Volley",
+    "species": "manticore"
+  },
+  {
+    "description": "Strike for 140% attack, doubled against foes below 35% health.",
+    "effect": "execute",
+    "hero": "Manticore",
+    "index": 1,
+    "name": "Predator's Mark",
+    "species": "manticore"
+  },
+  {
+    "description": "Leap to a wounded foe for 190% attack; gain a brief shield.",
+    "effect": "ambush",
+    "hero": "Manticore",
+    "index": 2,
+    "name": "Manticore Pursuit",
+    "species": "manticore"
+  },
+  {
+    "description": "Spin through nearby foes for 200% attack and gain a shield.",
+    "effect": "whirl",
+    "hero": "Manticore",
+    "index": 3,
+    "name": "Manticore Cyclone",
+    "species": "manticore"
+  },
+  {
+    "description": "Strike a wounded foe for 170% attack; heal for damage dealt.",
+    "effect": "drain",
+    "hero": "Manticore",
+    "index": 4,
+    "name": "Manticore Siphon",
+    "species": "manticore"
+  },
+  {
+    "description": "A gust hits a cluster for 130% attack, pushing and slowing it.",
+    "effect": "gust",
+    "hero": "Manticore",
+    "index": 5,
+    "name": "Manticore Gale",
+    "species": "manticore"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Manticore",
+    "index": 6,
+    "name": "Manticore Aegis",
+    "species": "manticore"
+  },
+  {
+    "description": "Rally allies: +22% attack and speed for 4s, with a small shield.",
+    "effect": "rally",
+    "hero": "Manticore",
+    "index": 7,
+    "name": "Manticore War Cry",
+    "species": "manticore"
+  },
+  {
+    "description": "A gust hits a cluster for 130% attack, pushing and slowing it.",
+    "effect": "gust",
+    "hero": "Griffin",
+    "index": 0,
+    "name": "Razorwind",
+    "species": "griffin"
+  },
+  {
+    "description": "Slam nearby enemies for 150% attack and stun for 0.8s.",
+    "effect": "quake",
+    "hero": "Griffin",
+    "index": 1,
+    "name": "Royal Descent",
+    "species": "griffin"
+  },
+  {
+    "description": "Leap to a wounded foe for 190% attack; gain a brief shield.",
+    "effect": "ambush",
+    "hero": "Griffin",
+    "index": 2,
+    "name": "Griffin Pursuit",
+    "species": "griffin"
+  },
+  {
+    "description": "Strike for 140% attack, doubled against foes below 35% health.",
+    "effect": "execute",
+    "hero": "Griffin",
+    "index": 3,
+    "name": "Griffin Finisher",
+    "species": "griffin"
+  },
+  {
+    "description": "Poison a cluster for 40% attack each second for 4s.",
+    "effect": "toxic",
+    "hero": "Griffin",
+    "index": 4,
+    "name": "Griffin Blight",
+    "species": "griffin"
+  },
+  {
+    "description": "Spin through nearby foes for 200% attack and gain a shield.",
+    "effect": "whirl",
+    "hero": "Griffin",
+    "index": 5,
+    "name": "Griffin Cyclone",
+    "species": "griffin"
+  },
+  {
+    "description": "Strike a wounded foe for 170% attack; heal for damage dealt.",
+    "effect": "drain",
+    "hero": "Griffin",
+    "index": 6,
+    "name": "Griffin Siphon",
+    "species": "griffin"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Griffin",
+    "index": 7,
+    "name": "Griffin Aegis",
+    "species": "griffin"
+  },
+  {
+    "description": "Three spirit bolts seek separate enemies for 85% attack each.",
+    "effect": "wisps",
+    "hero": "Kitsune",
+    "index": 0,
+    "name": "Spirit Lanterns",
+    "species": "kitsune"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Kitsune",
+    "index": 1,
+    "name": "Moonlit Veil",
+    "species": "kitsune"
+  },
+  {
+    "description": "Leap to a wounded foe for 190% attack; gain a brief shield.",
+    "effect": "ambush",
+    "hero": "Kitsune",
+    "index": 2,
+    "name": "Kitsune Pursuit",
+    "species": "kitsune"
+  },
+  {
+    "description": "Strike for 140% attack, doubled against foes below 35% health.",
+    "effect": "execute",
+    "hero": "Kitsune",
+    "index": 3,
+    "name": "Kitsune Finisher",
+    "species": "kitsune"
+  },
+  {
+    "description": "Poison a cluster for 40% attack each second for 4s.",
+    "effect": "toxic",
+    "hero": "Kitsune",
+    "index": 4,
+    "name": "Kitsune Blight",
+    "species": "kitsune"
+  },
+  {
+    "description": "Spin through nearby foes for 200% attack and gain a shield.",
+    "effect": "whirl",
+    "hero": "Kitsune",
+    "index": 5,
+    "name": "Kitsune Cyclone",
+    "species": "kitsune"
+  },
+  {
+    "description": "Strike a wounded foe for 170% attack; heal for damage dealt.",
+    "effect": "drain",
+    "hero": "Kitsune",
+    "index": 6,
+    "name": "Kitsune Siphon",
+    "species": "kitsune"
+  },
+  {
+    "description": "A gust hits a cluster for 130% attack, pushing and slowing it.",
+    "effect": "gust",
+    "hero": "Kitsune",
+    "index": 7,
+    "name": "Kitsune Gale",
+    "species": "kitsune"
+  },
+  {
+    "description": "Poison a cluster for 40% attack each second for 4s.",
+    "effect": "toxic",
+    "hero": "Wyvern",
+    "index": 0,
+    "name": "Corrosive Rain",
+    "species": "wyvern"
+  },
+  {
+    "description": "A gust hits a cluster for 130% attack, pushing and slowing it.",
+    "effect": "gust",
+    "hero": "Wyvern",
+    "index": 1,
+    "name": "Wing Buffet",
+    "species": "wyvern"
+  },
+  {
+    "description": "A piercing lance hits every foe along its line for 180% attack.",
+    "effect": "beam",
+    "hero": "Wyvern",
+    "index": 2,
+    "name": "Wyvern Lance",
+    "species": "wyvern"
+  },
+  {
+    "description": "Lightning strikes three different foes for 110% attack each.",
+    "effect": "storm",
+    "hero": "Wyvern",
+    "index": 3,
+    "name": "Wyvern Tempest",
+    "species": "wyvern"
+  },
+  {
+    "description": "Three spirit bolts seek separate enemies for 85% attack each.",
+    "effect": "wisps",
+    "hero": "Wyvern",
+    "index": 4,
+    "name": "Wyvern Spirit Volley",
+    "species": "wyvern"
+  },
+  {
+    "description": "Deal 90% attack and silence a cluster's abilities for 2.5s.",
+    "effect": "silence",
+    "hero": "Wyvern",
+    "index": 5,
+    "name": "Wyvern Hush",
+    "species": "wyvern"
+  },
+  {
+    "description": "Freeze a cluster for 0.8s and deal 110% attack.",
+    "effect": "frost",
+    "hero": "Wyvern",
+    "index": 6,
+    "name": "Wyvern Binding",
+    "species": "wyvern"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Wyvern",
+    "index": 7,
+    "name": "Wyvern Aegis",
+    "species": "wyvern"
+  },
+  {
+    "description": "Fire five bolts at the current target, each for 45% attack.",
+    "effect": "barrage",
+    "hero": "Harpy",
+    "index": 0,
+    "name": "Featherstorm",
+    "species": "harpy"
+  },
+  {
+    "description": "Deal 90% attack and silence a cluster's abilities for 2.5s.",
+    "effect": "silence",
+    "hero": "Harpy",
+    "index": 1,
+    "name": "Siren's Lament",
+    "species": "harpy"
+  },
+  {
+    "description": "A piercing lance hits every foe along its line for 180% attack.",
+    "effect": "beam",
+    "hero": "Harpy",
+    "index": 2,
+    "name": "Harpy Lance",
+    "species": "harpy"
+  },
+  {
+    "description": "Lightning strikes three different foes for 110% attack each.",
+    "effect": "storm",
+    "hero": "Harpy",
+    "index": 3,
+    "name": "Harpy Tempest",
+    "species": "harpy"
+  },
+  {
+    "description": "Three spirit bolts seek separate enemies for 85% attack each.",
+    "effect": "wisps",
+    "hero": "Harpy",
+    "index": 4,
+    "name": "Harpy Spirit Volley",
+    "species": "harpy"
+  },
+  {
+    "description": "Freeze a cluster for 0.8s and deal 110% attack.",
+    "effect": "frost",
+    "hero": "Harpy",
+    "index": 5,
+    "name": "Harpy Binding",
+    "species": "harpy"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Harpy",
+    "index": 6,
+    "name": "Harpy Aegis",
+    "species": "harpy"
+  },
+  {
+    "description": "Heal the three most wounded allies for 130% attack plus 8% health.",
+    "effect": "renew",
+    "hero": "Harpy",
+    "index": 7,
+    "name": "Harpy Restoration",
+    "species": "harpy"
+  },
+  {
+    "description": "A piercing lance hits every foe along its line for 180% attack.",
+    "effect": "beam",
+    "hero": "Phoenix",
+    "index": 0,
+    "name": "Solar Lance",
+    "species": "phoenix"
+  },
+  {
+    "description": "Heal the three most wounded allies for 130% attack plus 8% health.",
+    "effect": "renew",
+    "hero": "Phoenix",
+    "index": 1,
+    "name": "Cinder Sanctuary",
+    "species": "phoenix"
+  },
+  {
+    "description": "Lightning strikes three different foes for 110% attack each.",
+    "effect": "storm",
+    "hero": "Phoenix",
+    "index": 2,
+    "name": "Phoenix Tempest",
+    "species": "phoenix"
+  },
+  {
+    "description": "Three spirit bolts seek separate enemies for 85% attack each.",
+    "effect": "wisps",
+    "hero": "Phoenix",
+    "index": 3,
+    "name": "Phoenix Spirit Volley",
+    "species": "phoenix"
+  },
+  {
+    "description": "Deal 90% attack and silence a cluster's abilities for 2.5s.",
+    "effect": "silence",
+    "hero": "Phoenix",
+    "index": 4,
+    "name": "Phoenix Hush",
+    "species": "phoenix"
+  },
+  {
+    "description": "Freeze a cluster for 0.8s and deal 110% attack.",
+    "effect": "frost",
+    "hero": "Phoenix",
+    "index": 5,
+    "name": "Phoenix Binding",
+    "species": "phoenix"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Phoenix",
+    "index": 6,
+    "name": "Phoenix Aegis",
+    "species": "phoenix"
+  },
+  {
+    "description": "Fire five bolts at the current target, each for 45% attack.",
+    "effect": "barrage",
+    "hero": "Phoenix",
+    "index": 7,
+    "name": "Phoenix Barrage",
+    "species": "phoenix"
+  },
+  {
+    "description": "Lightning strikes three different foes for 110% attack each.",
+    "effect": "storm",
+    "hero": "Storm Kirin",
+    "index": 0,
+    "name": "Thunderhead",
+    "species": "kirin"
+  },
+  {
+    "description": "Freeze a cluster for 0.8s and deal 110% attack.",
+    "effect": "frost",
+    "hero": "Storm Kirin",
+    "index": 1,
+    "name": "Static Prison",
+    "species": "kirin"
+  },
+  {
+    "description": "A piercing lance hits every foe along its line for 180% attack.",
+    "effect": "beam",
+    "hero": "Storm Kirin",
+    "index": 2,
+    "name": "Storm Kirin Lance",
+    "species": "kirin"
+  },
+  {
+    "description": "Three spirit bolts seek separate enemies for 85% attack each.",
+    "effect": "wisps",
+    "hero": "Storm Kirin",
+    "index": 3,
+    "name": "Storm Kirin Spirit Volley",
+    "species": "kirin"
+  },
+  {
+    "description": "Deal 90% attack and silence a cluster's abilities for 2.5s.",
+    "effect": "silence",
+    "hero": "Storm Kirin",
+    "index": 4,
+    "name": "Storm Kirin Hush",
+    "species": "kirin"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Storm Kirin",
+    "index": 5,
+    "name": "Storm Kirin Aegis",
+    "species": "kirin"
+  },
+  {
+    "description": "Fire five bolts at the current target, each for 45% attack.",
+    "effect": "barrage",
+    "hero": "Storm Kirin",
+    "index": 6,
+    "name": "Storm Kirin Barrage",
+    "species": "kirin"
+  },
+  {
+    "description": "Heal the three most wounded allies for 130% attack plus 8% health.",
+    "effect": "renew",
+    "hero": "Storm Kirin",
+    "index": 7,
+    "name": "Storm Kirin Restoration",
+    "species": "kirin"
+  },
+  {
+    "description": "Freeze a cluster for 0.8s and deal 110% attack.",
+    "effect": "frost",
+    "hero": "Basilisk",
+    "index": 0,
+    "name": "Obsidian Prison",
+    "species": "basilisk"
+  },
+  {
+    "description": "Poison a cluster for 40% attack each second for 4s.",
+    "effect": "toxic",
+    "hero": "Basilisk",
+    "index": 1,
+    "name": "Venomous Wake",
+    "species": "basilisk"
+  },
+  {
+    "description": "A piercing lance hits every foe along its line for 180% attack.",
+    "effect": "beam",
+    "hero": "Basilisk",
+    "index": 2,
+    "name": "Basilisk Lance",
+    "species": "basilisk"
+  },
+  {
+    "description": "Lightning strikes three different foes for 110% attack each.",
+    "effect": "storm",
+    "hero": "Basilisk",
+    "index": 3,
+    "name": "Basilisk Tempest",
+    "species": "basilisk"
+  },
+  {
+    "description": "Three spirit bolts seek separate enemies for 85% attack each.",
+    "effect": "wisps",
+    "hero": "Basilisk",
+    "index": 4,
+    "name": "Basilisk Spirit Volley",
+    "species": "basilisk"
+  },
+  {
+    "description": "Deal 90% attack and silence a cluster's abilities for 2.5s.",
+    "effect": "silence",
+    "hero": "Basilisk",
+    "index": 5,
+    "name": "Basilisk Hush",
+    "species": "basilisk"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Basilisk",
+    "index": 6,
+    "name": "Basilisk Aegis",
+    "species": "basilisk"
+  },
+  {
+    "description": "Fire five bolts at the current target, each for 45% attack.",
+    "effect": "barrage",
+    "hero": "Basilisk",
+    "index": 7,
+    "name": "Basilisk Barrage",
+    "species": "basilisk"
+  },
+  {
+    "description": "Root a cluster for 1.8s and deal 100% attack.",
+    "effect": "roots",
+    "hero": "Elder Treant",
+    "index": 0,
+    "name": "Bramble Prison",
+    "species": "treant"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Elder Treant",
+    "index": 1,
+    "name": "Heartwood Covenant",
+    "species": "treant"
+  },
+  {
+    "description": "Heal the three most wounded allies for 130% attack plus 8% health.",
+    "effect": "renew",
+    "hero": "Elder Treant",
+    "index": 2,
+    "name": "Elder Treant Restoration",
+    "species": "treant"
+  },
+  {
+    "description": "Rally allies: +22% attack and speed for 4s, with a small shield.",
+    "effect": "rally",
+    "hero": "Elder Treant",
+    "index": 3,
+    "name": "Elder Treant War Cry",
+    "species": "treant"
+  },
+  {
+    "description": "A gust hits a cluster for 130% attack, pushing and slowing it.",
+    "effect": "gust",
+    "hero": "Elder Treant",
+    "index": 4,
+    "name": "Elder Treant Gale",
+    "species": "treant"
+  },
+  {
+    "description": "A piercing lance hits every foe along its line for 180% attack.",
+    "effect": "beam",
+    "hero": "Elder Treant",
+    "index": 5,
+    "name": "Elder Treant Lance",
+    "species": "treant"
+  },
+  {
+    "description": "Deal 90% attack and silence a cluster's abilities for 2.5s.",
+    "effect": "silence",
+    "hero": "Elder Treant",
+    "index": 6,
+    "name": "Elder Treant Hush",
+    "species": "treant"
+  },
+  {
+    "description": "Three spirit bolts seek separate enemies for 85% attack each.",
+    "effect": "wisps",
+    "hero": "Elder Treant",
+    "index": 7,
+    "name": "Elder Treant Spirit Volley",
+    "species": "treant"
+  },
+  {
+    "description": "A gust hits a cluster for 130% attack, pushing and slowing it.",
+    "effect": "gust",
+    "hero": "Naga",
+    "index": 0,
+    "name": "Undertow",
+    "species": "naga"
+  },
+  {
+    "description": "Heal the three most wounded allies for 130% attack plus 8% health.",
+    "effect": "renew",
+    "hero": "Naga",
+    "index": 1,
+    "name": "Moonwell",
+    "species": "naga"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Naga",
+    "index": 2,
+    "name": "Naga Aegis",
+    "species": "naga"
+  },
+  {
+    "description": "Rally allies: +22% attack and speed for 4s, with a small shield.",
+    "effect": "rally",
+    "hero": "Naga",
+    "index": 3,
+    "name": "Naga War Cry",
+    "species": "naga"
+  },
+  {
+    "description": "Root a cluster for 1.8s and deal 100% attack.",
+    "effect": "roots",
+    "hero": "Naga",
+    "index": 4,
+    "name": "Naga Entanglement",
+    "species": "naga"
+  },
+  {
+    "description": "A piercing lance hits every foe along its line for 180% attack.",
+    "effect": "beam",
+    "hero": "Naga",
+    "index": 5,
+    "name": "Naga Lance",
+    "species": "naga"
+  },
+  {
+    "description": "Deal 90% attack and silence a cluster's abilities for 2.5s.",
+    "effect": "silence",
+    "hero": "Naga",
+    "index": 6,
+    "name": "Naga Hush",
+    "species": "naga"
+  },
+  {
+    "description": "Three spirit bolts seek separate enemies for 85% attack each.",
+    "effect": "wisps",
+    "hero": "Naga",
+    "index": 7,
+    "name": "Naga Spirit Volley",
+    "species": "naga"
+  },
+  {
+    "description": "A piercing lance hits every foe along its line for 180% attack.",
+    "effect": "beam",
+    "hero": "Unicorn",
+    "index": 0,
+    "name": "Astral Lance",
+    "species": "unicorn"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Unicorn",
+    "index": 1,
+    "name": "Dawn's Embrace",
+    "species": "unicorn"
+  },
+  {
+    "description": "Heal the three most wounded allies for 130% attack plus 8% health.",
+    "effect": "renew",
+    "hero": "Unicorn",
+    "index": 2,
+    "name": "Unicorn Restoration",
+    "species": "unicorn"
+  },
+  {
+    "description": "Rally allies: +22% attack and speed for 4s, with a small shield.",
+    "effect": "rally",
+    "hero": "Unicorn",
+    "index": 3,
+    "name": "Unicorn War Cry",
+    "species": "unicorn"
+  },
+  {
+    "description": "Root a cluster for 1.8s and deal 100% attack.",
+    "effect": "roots",
+    "hero": "Unicorn",
+    "index": 4,
+    "name": "Unicorn Entanglement",
+    "species": "unicorn"
+  },
+  {
+    "description": "A gust hits a cluster for 130% attack, pushing and slowing it.",
+    "effect": "gust",
+    "hero": "Unicorn",
+    "index": 5,
+    "name": "Unicorn Gale",
+    "species": "unicorn"
+  },
+  {
+    "description": "Deal 90% attack and silence a cluster's abilities for 2.5s.",
+    "effect": "silence",
+    "hero": "Unicorn",
+    "index": 6,
+    "name": "Unicorn Hush",
+    "species": "unicorn"
+  },
+  {
+    "description": "Three spirit bolts seek separate enemies for 85% attack each.",
+    "effect": "wisps",
+    "hero": "Unicorn",
+    "index": 7,
+    "name": "Unicorn Spirit Volley",
+    "species": "unicorn"
+  },
+  {
+    "description": "Burn a cluster for 120% attack plus 30% per second for 3s.",
+    "effect": "fire",
+    "hero": "Cerberus",
+    "index": 0,
+    "name": "Gates of Hades",
+    "species": "cerberus"
+  },
+  {
+    "description": "Leap to a wounded foe for 190% attack; gain a brief shield.",
+    "effect": "ambush",
+    "hero": "Cerberus",
+    "index": 1,
+    "name": "Hellhound Pursuit",
+    "species": "cerberus"
+  },
+  {
+    "description": "Spin through nearby foes for 200% attack and gain a shield.",
+    "effect": "whirl",
+    "hero": "Cerberus",
+    "index": 2,
+    "name": "Cerberus Cyclone",
+    "species": "cerberus"
+  },
+  {
+    "description": "Slam nearby enemies for 150% attack and stun for 0.8s.",
+    "effect": "quake",
+    "hero": "Cerberus",
+    "index": 3,
+    "name": "Cerberus Earthshaker",
+    "species": "cerberus"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Cerberus",
+    "index": 4,
+    "name": "Cerberus Aegis",
+    "species": "cerberus"
+  },
+  {
+    "description": "Rally allies: +22% attack and speed for 4s, with a small shield.",
+    "effect": "rally",
+    "hero": "Cerberus",
+    "index": 5,
+    "name": "Cerberus War Cry",
+    "species": "cerberus"
+  },
+  {
+    "description": "Strike a wounded foe for 170% attack; heal for damage dealt.",
+    "effect": "drain",
+    "hero": "Cerberus",
+    "index": 6,
+    "name": "Cerberus Siphon",
+    "species": "cerberus"
+  },
+  {
+    "description": "Dread weakens nearby enemies' damage by 25% for 4s.",
+    "effect": "fear",
+    "hero": "Cerberus",
+    "index": 7,
+    "name": "Cerberus Dread",
+    "species": "cerberus"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Nemean Lion",
+    "index": 0,
+    "name": "Lionheart Covenant",
+    "species": "nemean"
+  },
+  {
+    "description": "Rally allies: +22% attack and speed for 4s, with a small shield.",
+    "effect": "rally",
+    "hero": "Nemean Lion",
+    "index": 1,
+    "name": "Sovereign Challenge",
+    "species": "nemean"
+  },
+  {
+    "description": "Spin through nearby foes for 200% attack and gain a shield.",
+    "effect": "whirl",
+    "hero": "Nemean Lion",
+    "index": 2,
+    "name": "Nemean Lion Cyclone",
+    "species": "nemean"
+  },
+  {
+    "description": "Slam nearby enemies for 150% attack and stun for 0.8s.",
+    "effect": "quake",
+    "hero": "Nemean Lion",
+    "index": 3,
+    "name": "Nemean Lion Earthshaker",
+    "species": "nemean"
+  },
+  {
+    "description": "Strike a wounded foe for 170% attack; heal for damage dealt.",
+    "effect": "drain",
+    "hero": "Nemean Lion",
+    "index": 4,
+    "name": "Nemean Lion Siphon",
+    "species": "nemean"
+  },
+  {
+    "description": "Dread weakens nearby enemies' damage by 25% for 4s.",
+    "effect": "fear",
+    "hero": "Nemean Lion",
+    "index": 5,
+    "name": "Nemean Lion Dread",
+    "species": "nemean"
+  },
+  {
+    "description": "Crack a line through foes for 150% attack and root for 1s.",
+    "effect": "fissure",
+    "hero": "Nemean Lion",
+    "index": 6,
+    "name": "Nemean Lion Rift",
+    "species": "nemean"
+  },
+  {
+    "description": "Heal the three most wounded allies for 130% attack plus 8% health.",
+    "effect": "renew",
+    "hero": "Nemean Lion",
+    "index": 7,
+    "name": "Nemean Lion Restoration",
+    "species": "nemean"
+  },
+  {
+    "description": "A falling projectile strikes a cluster for 180% attack and stuns.",
+    "effect": "meteor",
+    "hero": "Yeti",
+    "index": 0,
+    "name": "Avalanche",
+    "species": "yeti"
+  },
+  {
+    "description": "Freeze a cluster for 0.8s and deal 110% attack.",
+    "effect": "frost",
+    "hero": "Yeti",
+    "index": 1,
+    "name": "Permafrost",
+    "species": "yeti"
+  },
+  {
+    "description": "Spin through nearby foes for 200% attack and gain a shield.",
+    "effect": "whirl",
+    "hero": "Yeti",
+    "index": 2,
+    "name": "Yeti Cyclone",
+    "species": "yeti"
+  },
+  {
+    "description": "Slam nearby enemies for 150% attack and stun for 0.8s.",
+    "effect": "quake",
+    "hero": "Yeti",
+    "index": 3,
+    "name": "Yeti Earthshaker",
+    "species": "yeti"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Yeti",
+    "index": 4,
+    "name": "Yeti Aegis",
+    "species": "yeti"
+  },
+  {
+    "description": "Rally allies: +22% attack and speed for 4s, with a small shield.",
+    "effect": "rally",
+    "hero": "Yeti",
+    "index": 5,
+    "name": "Yeti War Cry",
+    "species": "yeti"
+  },
+  {
+    "description": "Strike a wounded foe for 170% attack; heal for damage dealt.",
+    "effect": "drain",
+    "hero": "Yeti",
+    "index": 6,
+    "name": "Yeti Siphon",
+    "species": "yeti"
+  },
+  {
+    "description": "Dread weakens nearby enemies' damage by 25% for 4s.",
+    "effect": "fear",
+    "hero": "Yeti",
+    "index": 7,
+    "name": "Yeti Dread",
+    "species": "yeti"
+  },
+  {
+    "description": "Slam nearby enemies for 150% attack and stun for 0.8s.",
+    "effect": "quake",
+    "hero": "Zaratan",
+    "index": 0,
+    "name": "Tidal Quake",
+    "species": "zaratan"
+  },
+  {
+    "description": "Heal the three most wounded allies for 130% attack plus 8% health.",
+    "effect": "renew",
+    "hero": "Zaratan",
+    "index": 1,
+    "name": "Island Sanctuary",
+    "species": "zaratan"
+  },
+  {
+    "description": "Spin through nearby foes for 200% attack and gain a shield.",
+    "effect": "whirl",
+    "hero": "Zaratan",
+    "index": 2,
+    "name": "Zaratan Cyclone",
+    "species": "zaratan"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Zaratan",
+    "index": 3,
+    "name": "Zaratan Aegis",
+    "species": "zaratan"
+  },
+  {
+    "description": "Rally allies: +22% attack and speed for 4s, with a small shield.",
+    "effect": "rally",
+    "hero": "Zaratan",
+    "index": 4,
+    "name": "Zaratan War Cry",
+    "species": "zaratan"
+  },
+  {
+    "description": "Strike a wounded foe for 170% attack; heal for damage dealt.",
+    "effect": "drain",
+    "hero": "Zaratan",
+    "index": 5,
+    "name": "Zaratan Siphon",
+    "species": "zaratan"
+  },
+  {
+    "description": "Dread weakens nearby enemies' damage by 25% for 4s.",
+    "effect": "fear",
+    "hero": "Zaratan",
+    "index": 6,
+    "name": "Zaratan Dread",
+    "species": "zaratan"
+  },
+  {
+    "description": "Crack a line through foes for 150% attack and root for 1s.",
+    "effect": "fissure",
+    "hero": "Zaratan",
+    "index": 7,
+    "name": "Zaratan Rift",
+    "species": "zaratan"
+  },
+  {
+    "description": "Spin through nearby foes for 200% attack and gain a shield.",
+    "effect": "whirl",
+    "hero": "Owlbear",
+    "index": 0,
+    "name": "Rending Cyclone",
+    "species": "owlbear"
+  },
+  {
+    "description": "Strike for 140% attack, doubled against foes below 35% health.",
+    "effect": "execute",
+    "hero": "Owlbear",
+    "index": 1,
+    "name": "Hunter's Instinct",
+    "species": "owlbear"
+  },
+  {
+    "description": "Slam nearby enemies for 150% attack and stun for 0.8s.",
+    "effect": "quake",
+    "hero": "Owlbear",
+    "index": 2,
+    "name": "Owlbear Earthshaker",
+    "species": "owlbear"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Owlbear",
+    "index": 3,
+    "name": "Owlbear Aegis",
+    "species": "owlbear"
+  },
+  {
+    "description": "Rally allies: +22% attack and speed for 4s, with a small shield.",
+    "effect": "rally",
+    "hero": "Owlbear",
+    "index": 4,
+    "name": "Owlbear War Cry",
+    "species": "owlbear"
+  },
+  {
+    "description": "Strike a wounded foe for 170% attack; heal for damage dealt.",
+    "effect": "drain",
+    "hero": "Owlbear",
+    "index": 5,
+    "name": "Owlbear Siphon",
+    "species": "owlbear"
+  },
+  {
+    "description": "Dread weakens nearby enemies' damage by 25% for 4s.",
+    "effect": "fear",
+    "hero": "Owlbear",
+    "index": 6,
+    "name": "Owlbear Dread",
+    "species": "owlbear"
+  },
+  {
+    "description": "Crack a line through foes for 150% attack and root for 1s.",
+    "effect": "fissure",
+    "hero": "Owlbear",
+    "index": 7,
+    "name": "Owlbear Rift",
+    "species": "owlbear"
+  },
+  {
+    "description": "Poison a cluster for 40% attack each second for 4s.",
+    "effect": "toxic",
+    "hero": "Hydra",
+    "index": 0,
+    "name": "Venom of Five Heads",
+    "species": "hydra"
+  },
+  {
+    "description": "Heal the three most wounded allies for 130% attack plus 8% health.",
+    "effect": "renew",
+    "hero": "Hydra",
+    "index": 1,
+    "name": "Undying Vigor",
+    "species": "hydra"
+  },
+  {
+    "description": "Spin through nearby foes for 200% attack and gain a shield.",
+    "effect": "whirl",
+    "hero": "Hydra",
+    "index": 2,
+    "name": "Hydra Cyclone",
+    "species": "hydra"
+  },
+  {
+    "description": "Slam nearby enemies for 150% attack and stun for 0.8s.",
+    "effect": "quake",
+    "hero": "Hydra",
+    "index": 3,
+    "name": "Hydra Earthshaker",
+    "species": "hydra"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Hydra",
+    "index": 4,
+    "name": "Hydra Aegis",
+    "species": "hydra"
+  },
+  {
+    "description": "Rally allies: +22% attack and speed for 4s, with a small shield.",
+    "effect": "rally",
+    "hero": "Hydra",
+    "index": 5,
+    "name": "Hydra War Cry",
+    "species": "hydra"
+  },
+  {
+    "description": "Strike a wounded foe for 170% attack; heal for damage dealt.",
+    "effect": "drain",
+    "hero": "Hydra",
+    "index": 6,
+    "name": "Hydra Siphon",
+    "species": "hydra"
+  },
+  {
+    "description": "Dread weakens nearby enemies' damage by 25% for 4s.",
+    "effect": "fear",
+    "hero": "Hydra",
+    "index": 7,
+    "name": "Hydra Dread",
+    "species": "hydra"
+  },
+  {
+    "description": "Burn a cluster for 120% attack plus 30% per second for 3s.",
+    "effect": "fire",
+    "hero": "Chimera",
+    "index": 0,
+    "name": "Dragon's Breath",
+    "species": "chimera"
+  },
+  {
+    "description": "Root a cluster for 1.8s and deal 100% attack.",
+    "effect": "roots",
+    "hero": "Chimera",
+    "index": 1,
+    "name": "Serpent's Coil",
+    "species": "chimera"
+  },
+  {
+    "description": "Leap to a wounded foe for 190% attack; gain a brief shield.",
+    "effect": "ambush",
+    "hero": "Chimera",
+    "index": 2,
+    "name": "Chimera Pursuit",
+    "species": "chimera"
+  },
+  {
+    "description": "Strike for 140% attack, doubled against foes below 35% health.",
+    "effect": "execute",
+    "hero": "Chimera",
+    "index": 3,
+    "name": "Chimera Finisher",
+    "species": "chimera"
+  },
+  {
+    "description": "Poison a cluster for 40% attack each second for 4s.",
+    "effect": "toxic",
+    "hero": "Chimera",
+    "index": 4,
+    "name": "Chimera Blight",
+    "species": "chimera"
+  },
+  {
+    "description": "Spin through nearby foes for 200% attack and gain a shield.",
+    "effect": "whirl",
+    "hero": "Chimera",
+    "index": 5,
+    "name": "Chimera Cyclone",
+    "species": "chimera"
+  },
+  {
+    "description": "Strike a wounded foe for 170% attack; heal for damage dealt.",
+    "effect": "drain",
+    "hero": "Chimera",
+    "index": 6,
+    "name": "Chimera Siphon",
+    "species": "chimera"
+  },
+  {
+    "description": "A gust hits a cluster for 130% attack, pushing and slowing it.",
+    "effect": "gust",
+    "hero": "Chimera",
+    "index": 7,
+    "name": "Chimera Gale",
+    "species": "chimera"
+  },
+  {
+    "description": "A falling projectile strikes a cluster for 180% attack and stuns.",
+    "effect": "meteor",
+    "hero": "Gargoyle",
+    "index": 0,
+    "name": "Cathedral Collapse",
+    "species": "gargoyle"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Gargoyle",
+    "index": 1,
+    "name": "Stonewatch",
+    "species": "gargoyle"
+  },
+  {
+    "description": "Leap to a wounded foe for 190% attack; gain a brief shield.",
+    "effect": "ambush",
+    "hero": "Gargoyle",
+    "index": 2,
+    "name": "Gargoyle Pursuit",
+    "species": "gargoyle"
+  },
+  {
+    "description": "Strike for 140% attack, doubled against foes below 35% health.",
+    "effect": "execute",
+    "hero": "Gargoyle",
+    "index": 3,
+    "name": "Gargoyle Finisher",
+    "species": "gargoyle"
+  },
+  {
+    "description": "Poison a cluster for 40% attack each second for 4s.",
+    "effect": "toxic",
+    "hero": "Gargoyle",
+    "index": 4,
+    "name": "Gargoyle Blight",
+    "species": "gargoyle"
+  },
+  {
+    "description": "Spin through nearby foes for 200% attack and gain a shield.",
+    "effect": "whirl",
+    "hero": "Gargoyle",
+    "index": 5,
+    "name": "Gargoyle Cyclone",
+    "species": "gargoyle"
+  },
+  {
+    "description": "Strike a wounded foe for 170% attack; heal for damage dealt.",
+    "effect": "drain",
+    "hero": "Gargoyle",
+    "index": 6,
+    "name": "Gargoyle Siphon",
+    "species": "gargoyle"
+  },
+  {
+    "description": "A gust hits a cluster for 130% attack, pushing and slowing it.",
+    "effect": "gust",
+    "hero": "Gargoyle",
+    "index": 7,
+    "name": "Gargoyle Gale",
+    "species": "gargoyle"
+  },
+  {
+    "description": "Leap to a wounded foe for 190% attack; gain a brief shield.",
+    "effect": "ambush",
+    "hero": "Nekomata",
+    "index": 0,
+    "name": "Nightfall Ambush",
+    "species": "nekomata"
+  },
+  {
+    "description": "Strike a wounded foe for 170% attack; heal for damage dealt.",
+    "effect": "drain",
+    "hero": "Nekomata",
+    "index": 1,
+    "name": "Soul Reaver",
+    "species": "nekomata"
+  },
+  {
+    "description": "Strike for 140% attack, doubled against foes below 35% health.",
+    "effect": "execute",
+    "hero": "Nekomata",
+    "index": 2,
+    "name": "Nekomata Finisher",
+    "species": "nekomata"
+  },
+  {
+    "description": "Poison a cluster for 40% attack each second for 4s.",
+    "effect": "toxic",
+    "hero": "Nekomata",
+    "index": 3,
+    "name": "Nekomata Blight",
+    "species": "nekomata"
+  },
+  {
+    "description": "Spin through nearby foes for 200% attack and gain a shield.",
+    "effect": "whirl",
+    "hero": "Nekomata",
+    "index": 4,
+    "name": "Nekomata Cyclone",
+    "species": "nekomata"
+  },
+  {
+    "description": "A gust hits a cluster for 130% attack, pushing and slowing it.",
+    "effect": "gust",
+    "hero": "Nekomata",
+    "index": 5,
+    "name": "Nekomata Gale",
+    "species": "nekomata"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Nekomata",
+    "index": 6,
+    "name": "Nekomata Aegis",
+    "species": "nekomata"
+  },
+  {
+    "description": "Rally allies: +22% attack and speed for 4s, with a small shield.",
+    "effect": "rally",
+    "hero": "Nekomata",
+    "index": 7,
+    "name": "Nekomata War Cry",
+    "species": "nekomata"
+  },
+  {
+    "description": "Crack a line through foes for 150% attack and root for 1s.",
+    "effect": "fissure",
+    "hero": "Jackalope",
+    "index": 0,
+    "name": "Briar Stampede",
+    "species": "jackalope"
+  },
+  {
+    "description": "Rally allies: +22% attack and speed for 4s, with a small shield.",
+    "effect": "rally",
+    "hero": "Jackalope",
+    "index": 1,
+    "name": "Lucky Foot",
+    "species": "jackalope"
+  },
+  {
+    "description": "Leap to a wounded foe for 190% attack; gain a brief shield.",
+    "effect": "ambush",
+    "hero": "Jackalope",
+    "index": 2,
+    "name": "Jackalope Pursuit",
+    "species": "jackalope"
+  },
+  {
+    "description": "Strike for 140% attack, doubled against foes below 35% health.",
+    "effect": "execute",
+    "hero": "Jackalope",
+    "index": 3,
+    "name": "Jackalope Finisher",
+    "species": "jackalope"
+  },
+  {
+    "description": "Poison a cluster for 40% attack each second for 4s.",
+    "effect": "toxic",
+    "hero": "Jackalope",
+    "index": 4,
+    "name": "Jackalope Blight",
+    "species": "jackalope"
+  },
+  {
+    "description": "Spin through nearby foes for 200% attack and gain a shield.",
+    "effect": "whirl",
+    "hero": "Jackalope",
+    "index": 5,
+    "name": "Jackalope Cyclone",
+    "species": "jackalope"
+  },
+  {
+    "description": "Strike a wounded foe for 170% attack; heal for damage dealt.",
+    "effect": "drain",
+    "hero": "Jackalope",
+    "index": 6,
+    "name": "Jackalope Siphon",
+    "species": "jackalope"
+  },
+  {
+    "description": "A gust hits a cluster for 130% attack, pushing and slowing it.",
+    "effect": "gust",
+    "hero": "Jackalope",
+    "index": 7,
+    "name": "Jackalope Gale",
+    "species": "jackalope"
+  },
+  {
+    "description": "Slam nearby enemies for 150% attack and stun for 0.8s.",
+    "effect": "quake",
+    "hero": "Cyclops",
+    "index": 0,
+    "name": "Mountain Breaker",
+    "species": "cyclops"
+  },
+  {
+    "description": "A piercing lance hits every foe along its line for 180% attack.",
+    "effect": "beam",
+    "hero": "Cyclops",
+    "index": 1,
+    "name": "Unerring Eye",
+    "species": "cyclops"
+  },
+  {
+    "description": "Lightning strikes three different foes for 110% attack each.",
+    "effect": "storm",
+    "hero": "Cyclops",
+    "index": 2,
+    "name": "Cyclops Tempest",
+    "species": "cyclops"
+  },
+  {
+    "description": "Three spirit bolts seek separate enemies for 85% attack each.",
+    "effect": "wisps",
+    "hero": "Cyclops",
+    "index": 3,
+    "name": "Cyclops Spirit Volley",
+    "species": "cyclops"
+  },
+  {
+    "description": "Deal 90% attack and silence a cluster's abilities for 2.5s.",
+    "effect": "silence",
+    "hero": "Cyclops",
+    "index": 4,
+    "name": "Cyclops Hush",
+    "species": "cyclops"
+  },
+  {
+    "description": "Freeze a cluster for 0.8s and deal 110% attack.",
+    "effect": "frost",
+    "hero": "Cyclops",
+    "index": 5,
+    "name": "Cyclops Binding",
+    "species": "cyclops"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Cyclops",
+    "index": 6,
+    "name": "Cyclops Aegis",
+    "species": "cyclops"
+  },
+  {
+    "description": "Fire five bolts at the current target, each for 45% attack.",
+    "effect": "barrage",
+    "hero": "Cyclops",
+    "index": 7,
+    "name": "Cyclops Barrage",
+    "species": "cyclops"
+  },
+  {
+    "description": "Lightning strikes three different foes for 110% attack each.",
+    "effect": "storm",
+    "hero": "Thunderbird",
+    "index": 0,
+    "name": "Tempest Crown",
+    "species": "thunderbird"
+  },
+  {
+    "description": "A gust hits a cluster for 130% attack, pushing and slowing it.",
+    "effect": "gust",
+    "hero": "Thunderbird",
+    "index": 1,
+    "name": "Skybreaker",
+    "species": "thunderbird"
+  },
+  {
+    "description": "A piercing lance hits every foe along its line for 180% attack.",
+    "effect": "beam",
+    "hero": "Thunderbird",
+    "index": 2,
+    "name": "Thunderbird Lance",
+    "species": "thunderbird"
+  },
+  {
+    "description": "Three spirit bolts seek separate enemies for 85% attack each.",
+    "effect": "wisps",
+    "hero": "Thunderbird",
+    "index": 3,
+    "name": "Thunderbird Spirit Volley",
+    "species": "thunderbird"
+  },
+  {
+    "description": "Deal 90% attack and silence a cluster's abilities for 2.5s.",
+    "effect": "silence",
+    "hero": "Thunderbird",
+    "index": 4,
+    "name": "Thunderbird Hush",
+    "species": "thunderbird"
+  },
+  {
+    "description": "Freeze a cluster for 0.8s and deal 110% attack.",
+    "effect": "frost",
+    "hero": "Thunderbird",
+    "index": 5,
+    "name": "Thunderbird Binding",
+    "species": "thunderbird"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Thunderbird",
+    "index": 6,
+    "name": "Thunderbird Aegis",
+    "species": "thunderbird"
+  },
+  {
+    "description": "Fire five bolts at the current target, each for 45% attack.",
+    "effect": "barrage",
+    "hero": "Thunderbird",
+    "index": 7,
+    "name": "Thunderbird Barrage",
+    "species": "thunderbird"
+  },
+  {
+    "description": "Deal 90% attack and silence a cluster's abilities for 2.5s.",
+    "effect": "silence",
+    "hero": "Sphinx",
+    "index": 0,
+    "name": "Silence of Ages",
+    "species": "sphinx"
+  },
+  {
+    "description": "A falling projectile strikes a cluster for 180% attack and stuns.",
+    "effect": "meteor",
+    "hero": "Sphinx",
+    "index": 1,
+    "name": "Judgment of Stars",
+    "species": "sphinx"
+  },
+  {
+    "description": "A piercing lance hits every foe along its line for 180% attack.",
+    "effect": "beam",
+    "hero": "Sphinx",
+    "index": 2,
+    "name": "Sphinx Lance",
+    "species": "sphinx"
+  },
+  {
+    "description": "Lightning strikes three different foes for 110% attack each.",
+    "effect": "storm",
+    "hero": "Sphinx",
+    "index": 3,
+    "name": "Sphinx Tempest",
+    "species": "sphinx"
+  },
+  {
+    "description": "Three spirit bolts seek separate enemies for 85% attack each.",
+    "effect": "wisps",
+    "hero": "Sphinx",
+    "index": 4,
+    "name": "Sphinx Spirit Volley",
+    "species": "sphinx"
+  },
+  {
+    "description": "Freeze a cluster for 0.8s and deal 110% attack.",
+    "effect": "frost",
+    "hero": "Sphinx",
+    "index": 5,
+    "name": "Sphinx Binding",
+    "species": "sphinx"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Sphinx",
+    "index": 6,
+    "name": "Sphinx Aegis",
+    "species": "sphinx"
+  },
+  {
+    "description": "Fire five bolts at the current target, each for 45% attack.",
+    "effect": "barrage",
+    "hero": "Sphinx",
+    "index": 7,
+    "name": "Sphinx Barrage",
+    "species": "sphinx"
+  },
+  {
+    "description": "Heal the three most wounded allies for 130% attack plus 8% health.",
+    "effect": "renew",
+    "hero": "Pegasus",
+    "index": 0,
+    "name": "Dawnflight",
+    "species": "pegasus"
+  },
+  {
+    "description": "A gust hits a cluster for 130% attack, pushing and slowing it.",
+    "effect": "gust",
+    "hero": "Pegasus",
+    "index": 1,
+    "name": "Celestial Wake",
+    "species": "pegasus"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Pegasus",
+    "index": 2,
+    "name": "Pegasus Aegis",
+    "species": "pegasus"
+  },
+  {
+    "description": "Rally allies: +22% attack and speed for 4s, with a small shield.",
+    "effect": "rally",
+    "hero": "Pegasus",
+    "index": 3,
+    "name": "Pegasus War Cry",
+    "species": "pegasus"
+  },
+  {
+    "description": "Root a cluster for 1.8s and deal 100% attack.",
+    "effect": "roots",
+    "hero": "Pegasus",
+    "index": 4,
+    "name": "Pegasus Entanglement",
+    "species": "pegasus"
+  },
+  {
+    "description": "A piercing lance hits every foe along its line for 180% attack.",
+    "effect": "beam",
+    "hero": "Pegasus",
+    "index": 5,
+    "name": "Pegasus Lance",
+    "species": "pegasus"
+  },
+  {
+    "description": "Deal 90% attack and silence a cluster's abilities for 2.5s.",
+    "effect": "silence",
+    "hero": "Pegasus",
+    "index": 6,
+    "name": "Pegasus Hush",
+    "species": "pegasus"
+  },
+  {
+    "description": "Three spirit bolts seek separate enemies for 85% attack each.",
+    "effect": "wisps",
+    "hero": "Pegasus",
+    "index": 7,
+    "name": "Pegasus Spirit Volley",
+    "species": "pegasus"
+  },
+  {
+    "description": "Root a cluster for 1.8s and deal 100% attack.",
+    "effect": "roots",
+    "hero": "Arachne",
+    "index": 0,
+    "name": "Widow's Prison",
+    "species": "arachne"
+  },
+  {
+    "description": "Poison a cluster for 40% attack each second for 4s.",
+    "effect": "toxic",
+    "hero": "Arachne",
+    "index": 1,
+    "name": "Venomweb",
+    "species": "arachne"
+  },
+  {
+    "description": "A piercing lance hits every foe along its line for 180% attack.",
+    "effect": "beam",
+    "hero": "Arachne",
+    "index": 2,
+    "name": "Arachne Lance",
+    "species": "arachne"
+  },
+  {
+    "description": "Lightning strikes three different foes for 110% attack each.",
+    "effect": "storm",
+    "hero": "Arachne",
+    "index": 3,
+    "name": "Arachne Tempest",
+    "species": "arachne"
+  },
+  {
+    "description": "Three spirit bolts seek separate enemies for 85% attack each.",
+    "effect": "wisps",
+    "hero": "Arachne",
+    "index": 4,
+    "name": "Arachne Spirit Volley",
+    "species": "arachne"
+  },
+  {
+    "description": "Deal 90% attack and silence a cluster's abilities for 2.5s.",
+    "effect": "silence",
+    "hero": "Arachne",
+    "index": 5,
+    "name": "Arachne Hush",
+    "species": "arachne"
+  },
+  {
+    "description": "Freeze a cluster for 0.8s and deal 110% attack.",
+    "effect": "frost",
+    "hero": "Arachne",
+    "index": 6,
+    "name": "Arachne Binding",
+    "species": "arachne"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Arachne",
+    "index": 7,
+    "name": "Arachne Aegis",
+    "species": "arachne"
+  },
+  {
+    "description": "Burn a cluster for 120% attack plus 30% per second for 3s.",
+    "effect": "fire",
+    "hero": "Salamander",
+    "index": 0,
+    "name": "Cinder Spit",
+    "species": "salamander"
+  },
+  {
+    "description": "A piercing lance hits every foe along its line for 180% attack.",
+    "effect": "beam",
+    "hero": "Salamander",
+    "index": 1,
+    "name": "Molten Lance",
+    "species": "salamander"
+  },
+  {
+    "description": "Lightning strikes three different foes for 110% attack each.",
+    "effect": "storm",
+    "hero": "Salamander",
+    "index": 2,
+    "name": "Salamander Tempest",
+    "species": "salamander"
+  },
+  {
+    "description": "Three spirit bolts seek separate enemies for 85% attack each.",
+    "effect": "wisps",
+    "hero": "Salamander",
+    "index": 3,
+    "name": "Salamander Spirit Volley",
+    "species": "salamander"
+  },
+  {
+    "description": "Deal 90% attack and silence a cluster's abilities for 2.5s.",
+    "effect": "silence",
+    "hero": "Salamander",
+    "index": 4,
+    "name": "Salamander Hush",
+    "species": "salamander"
+  },
+  {
+    "description": "Freeze a cluster for 0.8s and deal 110% attack.",
+    "effect": "frost",
+    "hero": "Salamander",
+    "index": 5,
+    "name": "Salamander Binding",
+    "species": "salamander"
+  },
+  {
+    "description": "Shield allies in range for 22% of your maximum health for 5s.",
+    "effect": "ward",
+    "hero": "Salamander",
+    "index": 6,
+    "name": "Salamander Aegis",
+    "species": "salamander"
+  },
+  {
+    "description": "Fire five bolts at the current target, each for 45% attack.",
+    "effect": "barrage",
+    "hero": "Salamander",
+    "index": 7,
+    "name": "Salamander Barrage",
+    "species": "salamander"
+  }
+]
