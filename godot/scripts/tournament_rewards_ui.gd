@@ -56,7 +56,6 @@ const TILE := Vector2(255, 66)
 func bracket() -> void:
  var c=game.campaign;WorldTour.ensure_bracket(c);var b=c.state.tour.bracket
  var canvas=Control.new();canvas.custom_minimum_size=Vector2(1410,600);body.add_child(canvas);canvas_ref=canvas;tiles={};rows={}
- board_backing(canvas)
  for cap in [["GRAND FINAL",Vector2(1140,234),game.GOLD]]:
   var l=game.label(canvas,cap[0],18,cap[2],false);l.position=cap[1]
   l.add_theme_font_override("font",load(game.TITLE_FONT));l.add_theme_color_override("font_outline_color",Color(0,0,0,.8));l.add_theme_constant_override("outline_size",5)
@@ -67,23 +66,20 @@ func bracket() -> void:
    var mid=(from.x+to.x)*0.5
    var pts=PackedVector2Array([from,Vector2(mid,from.y),Vector2(mid,to.y),to])
    # Brass rails pinned to the board, with a carved shadow beneath.
-   var shadow=Line2D.new();shadow.width=6;shadow.default_color=Color(0,0,0,.45);shadow.points=pts;shadow.position=Vector2(2,3);canvas.add_child(shadow)
-   var line=Line2D.new();line.width=4;line.default_color=Color("b08d57") if not (src==6 and target==12) else Color("8a4a3a");line.points=pts;canvas.add_child(line)
-   var hi=Line2D.new();hi.width=1;hi.default_color=Color(1,.92,.7,.5);hi.points=pts;hi.position=Vector2(0,-1);canvas.add_child(hi)
+   var accent=Color(WorldTour.region(c).color) if c.state.has("tour") else Color("dfe8ec")
+   var line=Line2D.new();line.width=3;line.default_color=Color(accent.lightened(0.3),0.55) if not (src==6 and target==12) else Color("ff8a7a",0.45);line.points=pts;canvas.add_child(line)
  var next=WorldTour.current_match(c) if not b.finished else {}
  for i in range(b.matches.size()):
   var m=b.matches[i]
   if i==14 and m.skipped:continue
   var panel=PanelContainer.new();canvas.add_child(panel);panel.position=POS[i];panel.size=TILE;tiles[i]=panel;rows[i]={}
   var is_next=not next.is_empty() and next==m
-  # Each match is a brass-framed wooden plaque, riveted to the board.
-  var plaque=StyleBoxFlat.new();plaque.bg_color=Color("2a1a10") if not is_next else Color("5a3d14");plaque.set_corner_radius_all(6)
+  # Each match is a card floating over the region scenery.
+  # Dark glass cards floating over the scenery; the next match glows warmer.
+  var plaque=StyleBoxFlat.new();plaque.bg_color=Color(0.03,0.05,0.07,0.82) if not is_next else Color(0.22,0.17,0.05,0.9);plaque.set_corner_radius_all(10)
+  plaque.shadow_color=Color(0,0,0,0.45);plaque.shadow_size=10;plaque.shadow_offset=Vector2(0,4)
   for side_m in [SIDE_LEFT,SIDE_RIGHT,SIDE_TOP,SIDE_BOTTOM]:plaque.set_content_margin(side_m,8)
-  plaque.shadow_color=Color(0,0,0,.6);plaque.shadow_size=6;plaque.shadow_offset=Vector2(3,4)
   panel.add_theme_stylebox_override("panel",plaque)
-  for corner in [Vector2(3,3),Vector2(TILE.x-9,3),Vector2(3,TILE.y-9),Vector2(TILE.x-9,TILE.y-9)]:
-   var rivet=Panel.new();rivet.mouse_filter=Control.MOUSE_FILTER_IGNORE;rivet.size=Vector2(6,6);rivet.position=POS[i]+corner;rivet.z_index=1;canvas.add_child(rivet)
-   rivet.add_theme_stylebox_override("panel",game.style(Color("d9b36a"),Color("5a3e1a"),3,0,1))
   if is_next:
    var lamp=create_tween().set_loops();lamp.tween_property(panel,"modulate",Color(1.25,1.15,0.9),0.8);lamp.tween_property(panel,"modulate",Color.WHITE,0.8)
   var box=VBoxContainer.new();box.add_theme_constant_override("separation",2);panel.add_child(box)
