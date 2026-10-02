@@ -19,8 +19,7 @@ const COUNTDOWN = 2.8
 ## Base combat tempo: "1x" plays this much faster than the simulation clock (pure presentation; balance is unchanged).
 const TEMPO = 1.3
 ## Which recorded battle call plays for each moment (the four shouted lines from the voice-over recording).
-const BATTLE_CALLS := {"first_blood": "call_1", "double": "call_2", "triple": "call_3", "victory": "call_4"}
-var first_blood_called := false
+const STREAK_CALLS := {2: "call_1", 3: "call_2", 4: "call_3", 5: "call_4"}   # double, triple, quadra, penta kill
 var freeze_left = 0.0 # hit-stop: a few frames of near-freeze on heavy blows and knock-outs
 var countdown = 0.0
 var countdown_shown = -1
@@ -195,6 +194,7 @@ func _ready() -> void:
    for bout in range(rounds):
     if campaign.state.tour.get("bracket",{}).get("finished",false): break
     if campaign.state.tour.shop: WorldTour.leave_shop(campaign)
+    WorldTour.end_intermission(campaign)
     var test_sim = BattleSim.new(); test_sim.silent = true
     test_sim.setup(campaign.lineup(), campaign.opponent().roster, campaign.match_seed(), campaign.quality()); test_sim.run_to_end(); campaign.resolve(test_sim)
     for h in campaign.state.roster: h.pending = []; h.rewards = []
@@ -232,7 +232,7 @@ func _ready() -> void:
     await get_tree().process_frame
     for sc in ui.find_children("*","ScrollContainer",true,false): sc.scroll_vertical=int(get_meta("qa_scroll"))
  else: render()
- sound.scene_music(SoundDesign.music_for_phase(phase))
+ sound.scene_music(music_now())
  get_tree().auto_accept_quit = false
 
 const TITLE_FONT = "res://assets/fonts/uncialantiqua.ttf"
@@ -314,6 +314,11 @@ func initials(name_value: String) -> String:
  for w in words.slice(0, 3): text_value += w[0].to_upper()
  return text_value if not text_value.is_empty() else "M"
 
+## Shop music also plays through the break between cups.
+func music_now() -> String:
+ if phase == "hub" and not campaign.state.is_empty() and campaign.state.get("tour", {}).get("intermission", false): return "shop"
+ return SoundDesign.music_for_phase(phase)
+
 func render() -> void:
  if phase != last_rendered_phase:
   if presentation_tween: presentation_tween.kill()
@@ -321,13 +326,18 @@ func render() -> void:
   presentation_tween = create_tween(); presentation_tween.tween_property(ui,"modulate:a",1.0,0.20)
   last_rendered_phase = phase
  sound.set_combat_paused(phase == "battle" and paused)
- sound.scene_music(SoundDesign.music_for_phase(phase))
+ sound.scene_music(music_now())
  for child in ui.get_children(): child.queue_free(); ui.remove_child(child)
  match_label = null; event_box = null
  arena.visible = phase not in ["hub", "menu", "new", "shop", "starter", "intro", "runover"]
  if phase in ["hub", "menu", "new", "shop", "starter", "intro", "runover"]:
   sim = null
   var backdrop=ClubBackdrop.new();backdrop.theme_name=ClubBackdrop.theme_for(self);backdrop.shade=.08 if phase=="menu" else .30;ui.add_child(backdrop)
+ # Between cups: land on the recruit board with the new champions (once per break).
+ var tour_state = campaign.state.get("tour", {}) if not campaign.state.is_empty() else {}
+ if phase == "hub" and tour_state.get("intermission", false) and not tour_state.get("intermission_seen", false):
+  tour_state.intermission_seen = true; tab = "market"
+  get_tree().process_frame.connect(func(): FlowUI.banner(self, "NEW RECRUITS", Color("ffd36e"), "Recruit, set your roster and tactics, then start the next cup"), CONNECT_ONE_SHOT)
  if phase == "hub" and campaign.state.get("goto_roster", false):
   campaign.state.erase("goto_roster"); tab = "roster"
   get_tree().process_frame.connect(func(): FlowUI.banner(self, "SQUAD READY", Color("ffd36e"), "Set formation, tactics and XP focus"), CONNECT_ONE_SHOT)
@@ -361,9 +371,10 @@ func stage_label() -> String:
 var welcomed = false
 func build_menu() -> void:
  FantasyUI.menu(self)
+ remove_meta("guild_called") if has_meta("guild_called") else null
  if not welcomed and qa.is_empty():
   welcomed = true
-  get_tree().create_timer(0.6).timeout.connect(func(): sound.announce_chain(["title", "welcome"]))
+  get_tree().create_timer(0.6).timeout.connect(func(): sound.announce("welcome"))
 
 func build_showcase() -> void:
  var gallery = ["kirin", "minotaur", "phoenix", "griffin", "unicorn", "golem"]
@@ -382,7 +393,8 @@ func build_showcase() -> void:
  button(row,"Next →",func(): showcase_index = (showcase_index+1)%gallery.size(); render())
 
 func build_new() -> void:
- if not has_meta("guild_called") and qa.is_empty(): set_meta("guild_called", true); sound.announce("guild")
+ # Starting a new guild: the guild line plays once each time you arrive from the menu.
+ if not has_meta("guild_called") and qa.is_empty(): set_meta("guild_called", true); sound.announce("guild", true)
  if new_crest.is_empty(): new_crest = Crest.default_for(new_club_draft)
  # The great title.
  var title = Title3D.new(); ui.add_child(title); title.position = Vector2(150, 8); title.size = Vector2(1300, 180)
@@ -519,6 +531,7 @@ func controls_hint() -> void:
  l.position = Vector2(400, 820); l.size = Vector2(790, 25); l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 func prepare_match() -> void:
+ if campaign.state.has("tour"): WorldTour.end_intermission(campaign)
  if not campaign.pending_heroes().is_empty(): phase = "upgrade"; render(); return
  if campaign.state.get("tour",{}).get("shop",false): phase="shop"; render(); return
  if campaign.state.get("tour",{}).get("complete",false) or (not campaign.state.has("tour") and campaign.state.round >= 17): tab = "overview"; phase = "hub"; render(); return
@@ -604,6 +617,7 @@ func demo_stage() -> void:
 # The contestant intro screen is retired: matches start straight in the arena with a countdown.
 func introduce_match() -> void:
  if not campaign.lineup_ready() or not campaign.pending_heroes().is_empty():return
+ if campaign.state.has("tour"): WorldTour.end_intermission(campaign)
  if campaign.state.get("tour",{}).get("shop",false) or campaign.state.get("tour",{}).get("complete",false):return
  # Every tour fight walks up to the tournament board first, then the matchup, then the arena.
  var t = campaign.state.get("tour", {})
@@ -633,7 +647,6 @@ func begin_battle() -> void:
   sim = BattleSim.new(); sim.action.connect(on_battle_event)
   sim.setup(campaign.lineup(), exhibition_rivals if exhibition else campaign.opponent().roster, campaign.match_seed(), 1.0 if exhibition else campaign.quality())
   sound.announce("battle", true)
-  first_blood_called = false
   countdown = COUNTDOWN; countdown_shown = -1; arena.target_yaw = 0.55; arena.camera_yaw = 0.55; arena.target_distance += 6.0
   arena.sync(sim, 1.0); render(); sound.scene_music("arena"); pass # Music supplies the arena entrance; avoid a competing pitched stinger.
  else: toast(campaign.last_error)
@@ -688,14 +701,12 @@ func on_battle_event(e: Dictionary) -> void:
   var h = sim.find_unit(e.uid)
   event_history.append(h.hero.name + " · " + e.name)
  elif e.type == "multikill":
-  sound.announce(BATTLE_CALLS.double if e.count == 2 else BATTLE_CALLS.triple, true)
-  var phrase = ["", "", "DOUBLE KILL", "TRIPLE KILL", "QUADRA KILL", "TEAM WIPE"][mini(5, e.count)]
+  sound.announce(STREAK_CALLS[mini(5, int(e.count))], true)
+  var phrase = ["", "", "DOUBLE KILL", "TRIPLE KILL", "QUADRA KILL", "PENTA KILL"][mini(5, e.count)]
   event_history.append(e.name + " · " + phrase); sound.cue("multikill", true)
   toast(e.name.to_upper() + "  ·  " + phrase)
  elif e.type == "death":
   var hero = sim.find_unit(e.uid)
-  if not hero.is_empty() and not hero.summon and not first_blood_called:
-   first_blood_called = true; sound.announce(BATTLE_CALLS.first_blood, true)
   if not hero.is_empty() and not hero.summon: event_history.append(hero.hero.name + " has fallen")
  if event_history.size() > 4: event_history.pop_front()
  if e.type in ["cast", "death", "multikill"]: refresh_feed()
@@ -705,6 +716,9 @@ func refresh_feed() -> void:
  for child in event_box.get_children(): child.queue_free(); event_box.remove_child(child)
  for line in event_history.slice(-3): label(event_box, line, 12, MUTED)
 
+var resolve_thread: Thread
+var resolve_wait := 0.0
+
 func finish_battle() -> void:
  if resolving: return
  resolving = true
@@ -712,13 +726,26 @@ func finish_battle() -> void:
  if exhibition:
   var rows = sim.report_rows()
   campaign.state.report = {"winner":sim.winner,"opponent":"The Crown Challengers","gold":0,"duration":sim.time,"rows":rows}
- else:
-  if not campaign.resolve(sim):
-   paused=true
-   var retry=AcceptDialog.new();ui.add_child(retry);retry.title="Match result not saved";retry.dialog_text=campaign.last_error+" Your result is still available. Retry saving to continue."
-   retry.get_ok_button().text="Retry save";retry.confirmed.connect(func():resolving=false;finish_battle());retry.popup_centered(Vector2i(560,180));return
+  show_result(); return
+ # Recording the result also plays out the rest of the bracket (several full simulations). That runs
+ # on a worker thread so the arena keeps animating instead of freezing before the stats screen.
+ resolve_wait = 0.0
+ resolve_thread = Thread.new(); resolve_thread.start(campaign.resolve.bind(sim))
+
+func poll_resolve(dt: float) -> void:
+ if resolve_thread == null: return
+ resolve_wait += dt
+ if resolve_wait > 0.5 and is_instance_valid(match_label) and not match_label.text.ends_with("…"): match_label.text += "   ·   Tallying results…"
+ if resolve_thread.is_alive(): return
+ var ok = resolve_thread.wait_to_finish(); resolve_thread = null
+ if not ok:
+  paused=true
+  var retry=AcceptDialog.new();ui.add_child(retry);retry.title="Match result not saved";retry.dialog_text=campaign.last_error+" Your result is still available. Retry saving to continue."
+  retry.get_ok_button().text="Retry save";retry.confirmed.connect(func():resolving=false;finish_battle());retry.popup_centered(Vector2i(560,180));return
+ show_result()
+
+func show_result() -> void:
  phase = "result"; sound.scene_music("club"); sound.cue("victory" if sim.winner == 0 else "honor", true)
- if sim.winner == 0: sound.announce(BATTLE_CALLS.victory, true)
  render()
  FlowUI.banner(self, "VICTORY" if sim.winner == 0 else "DRAW" if sim.winner == -1 else "DEFEAT", Color("ffd36e") if sim.winner == 0 else Color("ff8a7a"))
 
@@ -784,7 +811,8 @@ func show_bracket_then_shop() -> void:
   if phase == "shop": FlowUI.banner(self, "SHOP", Color("c8ff9d"))
  var cup_over = campaign.state.tour.get("bracket",{}).get("finished",false)
  campaign.state.tour.board_seen = int(campaign.state.tour.get("serial", 0))
- var after = (func(): render(); TournamentRewardsUI.open_screen(self, "progress", to_shop, "Shop  ▶")) if cup_over else to_shop
+ var next_text = "New recruits  ▶" if campaign.state.tour.get("intermission", false) else "Shop  ▶"
+ var after = (func(): render(); TournamentRewardsUI.open_screen(self, "progress", to_shop, next_text)) if cup_over else to_shop
  render()
  TournamentRewardsUI.open_screen(self, "bracket", after, "Cup results  ▶" if cup_over else "Shop  ▶", true)
 
@@ -912,6 +940,9 @@ func _process(dt: float) -> void:
   arena.sync(sim, dt, 0.0 if paused else speed * dilation)
   if is_instance_valid(match_label): match_label.text = "%d   —   %d      %02d:%02d%s" % [sim.living(0, false).size(), sim.living(1, false).size(), int(sim.time) / 60, int(sim.time) % 60, "  PAUSED" if paused else ""]
   if sim.finished: call_deferred("finish_battle")
+ elif phase == "battle" and sim and resolving:
+  # Fight over: the survivors keep breathing while the results are tallied.
+  arena.sync(sim, dt, 1.0); poll_resolve(dt)
  elif sim and phase in ["menu", "new", "hub", "prep"]: arena.sync(sim, dt)
  if not qa.is_empty() and not qa_taken:
   qa_elapsed += dt
@@ -934,6 +965,7 @@ func _notification(what: int) -> void:
   close_game()
 
 func _input(event: InputEvent) -> void:
+ if resolve_thread != null: get_viewport().set_input_as_handled(); return   # results are being written; ignore input for that moment
  if event is InputEventMouseMotion and not dragged_id.is_empty() and phase == "prep":
   var point = arena.ground_position(event.position)
   point.x += drag_offset.x; point.z += drag_offset.y

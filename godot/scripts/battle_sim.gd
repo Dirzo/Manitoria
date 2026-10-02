@@ -276,7 +276,8 @@ func hurt(source: Dictionary, target: Dictionary, amount: float, magical: bool =
   var killer = find_unit(source.owner) if source.summon else source
   if killer.is_empty(): killer = source
   killer.kills += 1
-  killer.kill_chain = killer.kill_chain + 1 if time - killer.last_kill < 6 else 1
+  # A streak counts last hits by the same champion, each within 15 s of the previous one.
+  killer.kill_chain = killer.kill_chain + 1 if time - killer.last_kill < 15.0 else 1
   killer.last_kill = time
   if killer.kill_chain >= 2: emit({"type": "multikill", "uid": killer.uid, "count": killer.kill_chain, "name": killer.hero.name, "team": killer.team})
   Forge.on_kill(self, killer, target)

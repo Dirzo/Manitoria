@@ -181,7 +181,7 @@ func _process(dt: float) -> void:
    if nxt != scene_name: _crossfade_to(nxt)
  announce_cooldown = maxf(0, announce_cooldown - dt)
  var bus = AudioServer.get_bus_index("Music")
- var goal = music_mix - ((9.0 if announcer and announcer.playing else 3.0) if duck_remaining > 0 else 0.0)
+ var goal = music_mix - (3.0 if duck_remaining > 0 else 0.0)
  AudioServer.set_bus_volume_db(bus, lerpf(AudioServer.get_bus_volume_db(bus), goal, 1.0 - exp(-dt * 9.0)))
 
 # Announcer: recorded voice lines in res://assets/audio/announcer/<key>.ogg
@@ -211,8 +211,7 @@ func announce(key: String, force: bool = false) -> void:
  if announcer == null or not effects_enabled or not announcer_lines.has(key): return
  if not force and key == last_announce and announce_cooldown > 0.0: return
  announcer.stop(); announcer.stream = announcer_lines[key]; announcer.play()
- last_announce = key; announce_cooldown = 1.2
- duck_remaining = maxf(duck_remaining, announcer_lines[key].get_length())
+ last_announce = key; announce_cooldown = 1.2   # music keeps playing at full level under the announcer
 
 func cue(key: String, strong: bool = false) -> void:
  play_sample(key.get_slice("|", 0), -2 if strong else -7, 3 if strong else 2)

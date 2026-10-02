@@ -97,10 +97,22 @@ static func resolve(c: Campaign, sim: BattleSim) -> bool:
  else:t.bout=mini(16,int(t.bout)+1)
  report.gold=reward;c.state.gold+=reward;c.state.earned_gold+=reward
  c.state.report=report;c.state.archive.append(report.duplicate(true))
- t.shop=not c.state.get("run_over",false);t.rerolls=0;t.stock=stock(c) if t.shop else []
+ # Between cups there is no item shop: the guild returns to its roster and a fresh recruit board.
+ var cup_break=bracket.finished and not c.state.get("run_over",false) and not t.complete
+ if cup_break:
+  t.intermission=true;c.create_market()
+  c.add_news("New recruits","Fresh champions have arrived for the next cup. Recruit, reshape your formation and tactics, then start the cup.")
+ t.shop=not c.state.get("run_over",false) and not cup_break;t.rerolls=0;t.stock=stock(c) if t.shop else []
  c.add_news("Tournament match complete", "%s · %s · %dg. Visit the outfitter before your next match." % [r.place,m.label,reward])
  if c.save(): return true
  c.state=before;return false
+
+## Leave the between-cups break: draw the next cup's bracket.
+static func end_intermission(c: Campaign) -> bool:
+ if not c.state.has("tour") or not c.state.tour.get("intermission",false): return false
+ c.state.tour.erase("intermission"); c.state.tour.erase("intermission_seen")
+ if c.state.tour.get("bracket",{}).get("finished",false) and not c.state.tour.complete:c.state.tour.erase("bracket");ensure_bracket(c)
+ return c.save()
 
 static func leave_shop(c: Campaign) -> bool:
  if not c.state.tour.shop: return false

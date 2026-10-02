@@ -36,6 +36,7 @@ func build() -> void:
  var spacer = Control.new(); spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL; row.add_child(spacer)
  var next = "Draft squad  ▶" if state.roster.size() < Campaign.MIN_SQUAD else "Fight  ▶"
  if state.get("tour",{}).get("shop",false): next = "Shop  ▶"
+ if state.get("tour",{}).get("intermission",false): next = "Start next cup  ▶"
  if state.get("tour",{}).get("complete",false): next = "Tour complete"
  if not campaign.pending_heroes().is_empty(): next = "Level ups  ▶"
  elif not state.has("tour") and state.round >= 17: next = "Next season  ▶"
