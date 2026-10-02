@@ -24,7 +24,7 @@ const SPECIES_NAMES := {
  "cyclops": ["Oculus", "Monoclus", "Boulderhurl", "Polyph", "Glaucus", "Thunderbrow", "Ogle", "Brontes", "Squint", "Arges", "Rockeye", "Lidless", "Peeper", "Steropes"],
  "naga": ["Nerissa", "Tidecoil", "Serpentina", "Mira", "Coralyn", "Ripple", "Pearl", "Marisol", "Undina", "Sirena", "Lagoon", "Kaimana", "Wavelet", "Shelly", "Thalassa"],
  "pegasus": ["Skydancer", "Zephyrine", "Cloudmane", "Aurora", "Pegs", "Starhoof", "Gust", "Nimbus", "Featherfoot", "Celeste", "Breeze", "Halcyon", "Wingbeat", "Stratus", "Glory", "Swiftwind"],
- "jackalope": ["Hoppsworth", "Antlers", "Jackie", "Thumper", "Bramblehop", "Lopsy", "Twitch", "Bounder", "Nibbler", "Fernhop", "Dash", "Clover", "Skippit", "Juniper", "Bunbun"],
+ "jackalope": ["Otis", "Hoppsworth", "Antlers", "Jackie", "Thumper", "Bramblehop", "Lopsy", "Twitch", "Bounder", "Nibbler", "Fernhop", "Dash", "Clover", "Skippit", "Juniper", "Bunbun"],
  "zaratan": ["Shellbrook", "Isleback", "Barnacle", "Terrapin", "Atollus", "Moss", "Archelon", "Leviaturt", "Driftshell", "Reefus", "Slowtide", "Kelp", "Islard", "Brineback", "Tortuga"],
  "hydra": ["Lernia", "Manyhead", "Hydrina", "Hisslings", "Venomcoil", "Regrow", "Septis", "Hydrax", "Seven", "Coilmaw", "Serpentrix", "Ladon", "Splitfang", "Murkmaw", "Twinsy", "Hissy"],
  "cerberus": ["Threeheads", "Garmr", "Blazeguard", "Hellhound", "Orthrus", "Ashmaw", "Gatewarden", "Brimstone", "Spot", "Pyrodog", "Underbark", "Grimmy", "Kerb", "Fangtrio", "Molossus"],
