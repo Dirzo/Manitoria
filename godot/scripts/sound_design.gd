@@ -3,7 +3,15 @@ extends Node
 
 const SPECIES_FAMILY = {"minotaur":"beast", "golem":"stone", "troll":"stone", "wendigo":"shadow", "direwolf":"beast", "manticore":"venom", "griffin":"wing", "kitsune":"spirit", "wyvern":"venom", "harpy":"wing", "phoenix":"fire", "kirin":"lightning", "basilisk":"venom", "treant":"nature", "naga":"water", "unicorn":"holy", "cerberus":"beast", "nemean":"beast", "yeti":"ice", "zaratan":"shield", "owlbear":"claw", "hydra":"nature", "chimera":"fire", "gargoyle":"stone", "nekomata":"shadow", "jackalope":"nature", "cyclops":"quake", "thunderbird":"lightning", "sphinx":"spirit", "pegasus":"wing", "arachne":"venom", "salamander":"fire"}
 const EFFECT_FAMILY = {"gore":"beast", "bulwark":"shield", "smash":"stone", "hunger":"shadow", "howl":"beast", "venom":"venom", "skystrike":"wing", "foxfire":"spirit", "acid":"venom", "shriek":"wing", "flamewave":"fire", "chain":"lightning", "gaze":"venom", "rootbloom":"nature", "tidal":"water", "radiance":"holy", "triplebite":"claw", "prideroar":"beast", "frostroar":"ice", "shellup":"shield", "maul":"claw", "regrowth":"nature", "threefold":"fire", "stonedive":"stone", "vanish":"shadow", "antlerrush":"nature", "boulder":"quake", "stormcall":"lightning", "riddle":"spirit", "tailwind":"wing", "brood":"venom", "magma":"fire", "quake":"quake", "ward":"shield", "meteor":"quake", "renew":"heal", "drain":"shadow", "fear":"shadow", "ambush":"claw", "toxic":"venom", "execute":"metal", "gust":"wing", "wisps":"spirit", "barrage":"bow", "silence":"shadow", "beam":"holy", "storm":"lightning", "frost":"ice", "roots":"nature", "fire":"fire", "whirl":"metal", "fissure":"stone", "rally":"holy", "rebirth":"fire"}
-const MUSIC_GAIN = {"club": -2.0, "preparation": -1.0, "arena": -4.0}
+const MUSIC_GAIN = {"club": -2.0, "preparation": -1.0, "arena": -4.0, "battle": -3.0, "shop": -1.0}
+## "Unleash War Spirits": three battle tracks, each an opening that falls into a seamless loop
+## (seconds into the file where the loop restarts).
+const BATTLE_TRACKS := {"battle_1": 28.55, "battle_2": 35.96, "battle_3": 0.0}
+## Fantasy shopkeeper songs: played as a playlist that crossfades from one song to the next.
+const SHOP_TRACKS := ["shop_1", "shop_2", "shop_3", "shop_4", "shop_5"]
+const SHOP_CROSSFADE := 4.0
+var battle_index := -1
+var shop_index := -1
 var music_player: AudioStreamPlayer
 var music_players: Array = []
 var active_music = 0
@@ -41,6 +49,14 @@ func _ready() -> void:
    var stream = load(path).duplicate()
    stream.loop = true
    music_cache[track] = stream
+ for track in BATTLE_TRACKS:
+  var bp = "res://assets/audio/music/" + track + ".ogg"
+  if ResourceLoader.exists(bp):
+   var bs = load(bp).duplicate(); bs.loop = true; bs.loop_offset = BATTLE_TRACKS[track]; music_cache[track] = bs
+ for track in SHOP_TRACKS:
+  var sp = "res://assets/audio/music/" + track + ".ogg"
+  if ResourceLoader.exists(sp):
+   var ss = load(sp).duplicate(); ss.loop = false; music_cache[track] = ss
  # Decode/load outside combat so the first spell cannot stall a fight.
  var keys = []
  var families = []
@@ -66,11 +82,35 @@ func _ready() -> void:
  AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Effects"), effects_mix)
 
 static func music_for_phase(phase: String) -> String:
- return "arena" if phase == "battle" else "preparation" if phase in ["prep","intro"] else "club"
+ return "arena" if phase == "battle" else "preparation" if phase in ["prep","intro"] else "shop" if phase == "shop" else "club"
+
+## Scene names map to concrete tracks: every battle picks the next war track, the shop runs its playlist.
+func resolve_track(which: String) -> String:
+ if which == "arena":
+  var keys = BATTLE_TRACKS.keys().filter(func(k): return music_cache.has(k))
+  if keys.is_empty(): return "arena"
+  if scene_name.begins_with("battle_"): return scene_name
+  battle_index = (battle_index + 1 + randi() % 2) % keys.size() if battle_index >= 0 else randi() % keys.size()
+  return keys[battle_index]
+ if which == "shop":
+  var songs = SHOP_TRACKS.filter(func(k): return music_cache.has(k))
+  if songs.is_empty(): return "club"
+  if scene_name.begins_with("shop_"): return scene_name
+  shop_index = (shop_index + 1) % songs.size() if shop_index >= 0 else randi() % songs.size()
+  return songs[shop_index]
+ return which
+
+func gain_for(track: String) -> float:
+ return MUSIC_GAIN.get("battle" if track.begins_with("battle_") else "shop" if track.begins_with("shop_") else track, 0.0)
 
 func scene_music(which: String) -> void:
+ which = resolve_track(which)
  if scene_name == which or not music_cache.has(which): return
- if scene_name == "arena" and which != "arena":
+ _crossfade_to(which)
+
+func _crossfade_to(which: String) -> void:
+ if not music_cache.has(which): return
+ if (scene_name == "arena" or scene_name.begins_with("battle_")) and not (which == "arena" or which.begins_with("battle_")):
   for voice in voices: voice.stop()
   last_event.clear()
  var previous_scene = scene_name
@@ -84,17 +124,21 @@ func scene_music(which: String) -> void:
  active_music = next; music_player = incoming
  if not music_enabled: return
  var aligned = previous_scene in ["preparation", "arena"] and which in ["preparation", "arena"]
+ var song_to_song = which.begins_with("shop_") and previous_scene.begins_with("shop_")
+ # Song-to-song in the shop overlaps (a DJ-style blend); entering or leaving the shop eases over 2 s.
+ var fade_time = SHOP_CROSSFADE if song_to_song else (2.0 if which.begins_with("shop_") or previous_scene.begins_with("shop_") else 1.1)
+ aligned = aligned or song_to_song
  if not incoming.playing:
-  incoming.play(outgoing.get_playback_position() if aligned and outgoing.playing else 0.0)
+  incoming.play(outgoing.get_playback_position() if aligned and not song_to_song and outgoing.playing else 0.0)
  var start_in = db_to_linear(incoming.volume_db); var start_out = db_to_linear(outgoing.volume_db)
- var target_gain = db_to_linear(MUSIC_GAIN[which])
+ var target_gain = db_to_linear(gain_for(which))
  music_transition = create_tween()
  music_transition.tween_method(func(t):
   # Aligned stems use a linear blend; unrelated music fades through silence.
   var blend_in = t if aligned else maxf(0.0, (t - 0.5) * 2.0)
   var blend_out = 1.0 - t if aligned else maxf(0.0, 1.0 - t * 2.0)
   incoming.volume_db = linear_to_db(maxf(0.0001, lerpf(start_in, target_gain, blend_in)))
-  outgoing.volume_db = linear_to_db(maxf(0.0001, start_out * blend_out)), 0.0, 1.0, 1.1)
+  outgoing.volume_db = linear_to_db(maxf(0.0001, start_out * blend_out)), 0.0, 1.0, fade_time)
  music_transition.tween_callback(func(): outgoing.stop())
 
 func set_music(enabled: bool) -> void:
@@ -103,7 +147,7 @@ func set_music(enabled: bool) -> void:
  if not enabled:
   for player in music_players: player.stop()
  elif music_player.stream:
-  music_player.volume_db = MUSIC_GAIN.get(scene_name, 0.0); music_player.play()
+  music_player.volume_db = gain_for(scene_name); music_player.play()
 
 func set_combat_paused(value: bool) -> void:
  combat_paused = value
@@ -128,6 +172,13 @@ func _process(dt: float) -> void:
   for voice in voices:
    if voice.playing: voice.stream_paused = true
  duck_remaining = maxf(0, duck_remaining - dt)
+ # Shop playlist: begin the crossfade into the next song a few seconds before this one ends.
+ if music_enabled and scene_name.begins_with("shop_") and music_player and music_player.playing and music_player.stream:
+  if music_player.get_playback_position() >= music_player.stream.get_length() - SHOP_CROSSFADE:
+   var songs = SHOP_TRACKS.filter(func(k): return music_cache.has(k))
+   shop_index = (shop_index + 1) % songs.size()
+   var nxt = songs[shop_index]
+   if nxt != scene_name: _crossfade_to(nxt)
  announce_cooldown = maxf(0, announce_cooldown - dt)
  var bus = AudioServer.get_bus_index("Music")
  var goal = music_mix - ((9.0 if announcer and announcer.playing else 3.0) if duck_remaining > 0 else 0.0)
@@ -144,8 +195,17 @@ var announce_cooldown := 0.0
 func setup_announcer() -> void:
  announcer = AudioStreamPlayer.new(); announcer.bus = "Effects"; announcer.volume_db = 1.0; add_child(announcer)
  var dir = "res://assets/audio/announcer/"
- for key in ["welcome", "battle"] + SPECIES_FAMILY.keys():
+ for key in ["title", "welcome", "guild", "found_guild", "battle", "count_3", "count_2", "count_1", "fight", "call_1", "call_2", "call_3", "call_4"] + SPECIES_FAMILY.keys():
   if ResourceLoader.exists(dir + key + ".ogg"): announcer_lines[key] = load(dir + key + ".ogg")
+
+## Play several lines back to back (e.g. the title call, then the welcome).
+func announce_chain(keys: Array, gap: float = 0.15) -> void:
+ var t = 0.0
+ for k in keys:
+  if not announcer_lines.has(k): continue
+  var key = k
+  get_tree().create_timer(t).timeout.connect(func(): announce(key, true))
+  t += announcer_lines[k].get_length() + gap
 
 func announce(key: String, force: bool = false) -> void:
  if announcer == null or not effects_enabled or not announcer_lines.has(key): return

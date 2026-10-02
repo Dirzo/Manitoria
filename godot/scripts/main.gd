@@ -18,6 +18,9 @@ var speed = 1.0
 const COUNTDOWN = 2.8
 ## Base combat tempo: "1x" plays this much faster than the simulation clock (pure presentation; balance is unchanged).
 const TEMPO = 1.3
+## Which recorded battle call plays for each moment (the four shouted lines from the voice-over recording).
+const BATTLE_CALLS := {"first_blood": "call_1", "double": "call_2", "triple": "call_3", "victory": "call_4"}
+var first_blood_called := false
 var freeze_left = 0.0 # hit-stop: a few frames of near-freeze on heavy blows and knock-outs
 var countdown = 0.0
 var countdown_shown = -1
@@ -360,7 +363,7 @@ func build_menu() -> void:
  FantasyUI.menu(self)
  if not welcomed and qa.is_empty():
   welcomed = true
-  get_tree().create_timer(0.6).timeout.connect(func(): sound.announce("welcome"))
+  get_tree().create_timer(0.6).timeout.connect(func(): sound.announce_chain(["title", "welcome"]))
 
 func build_showcase() -> void:
  var gallery = ["kirin", "minotaur", "phoenix", "griffin", "unicorn", "golem"]
@@ -379,6 +382,7 @@ func build_showcase() -> void:
  button(row,"Next →",func(): showcase_index = (showcase_index+1)%gallery.size(); render())
 
 func build_new() -> void:
+ if not has_meta("guild_called") and qa.is_empty(): set_meta("guild_called", true); sound.announce("guild")
  if new_crest.is_empty(): new_crest = Crest.default_for(new_club_draft)
  # The great title.
  var title = Title3D.new(); ui.add_child(title); title.position = Vector2(150, 8); title.size = Vector2(1300, 180)
@@ -481,6 +485,7 @@ func build_runover() -> void:
  button(actions, "Main menu", func(): phase = "menu"; render()).size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 func found_club() -> void:
+ sound.announce("found_guild", true)
  var name_value = new_name.text
  if FileAccess.file_exists(Campaign.save_path(new_slot)):
   var dialog = ConfirmationDialog.new(); ui.add_child(dialog)
@@ -628,6 +633,7 @@ func begin_battle() -> void:
   sim = BattleSim.new(); sim.action.connect(on_battle_event)
   sim.setup(campaign.lineup(), exhibition_rivals if exhibition else campaign.opponent().roster, campaign.match_seed(), 1.0 if exhibition else campaign.quality())
   sound.announce("battle", true)
+  first_blood_called = false
   countdown = COUNTDOWN; countdown_shown = -1; arena.target_yaw = 0.55; arena.camera_yaw = 0.55; arena.target_distance += 6.0
   arena.sync(sim, 1.0); render(); sound.scene_music("arena"); pass # Music supplies the arena entrance; avoid a competing pitched stinger.
  else: toast(campaign.last_error)
@@ -646,6 +652,7 @@ func update_countdown() -> void:
   tw.tween_property(countdown_label, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
   if step <= 0: tw.tween_property(countdown_label, "modulate:a", 0.0, 0.7).set_delay(0.25)
   sound.cue("contest_versus" if step <= 0 else "contest_reveal", step <= 0)
+  sound.announce("fight" if step <= 0 else "count_%d" % step, true)
 
 func build_battle_hud() -> void:
  var dashboard = BattleDashboard.new(); dashboard.game = self; ui.add_child(dashboard)
@@ -681,11 +688,14 @@ func on_battle_event(e: Dictionary) -> void:
   var h = sim.find_unit(e.uid)
   event_history.append(h.hero.name + " · " + e.name)
  elif e.type == "multikill":
+  sound.announce(BATTLE_CALLS.double if e.count == 2 else BATTLE_CALLS.triple, true)
   var phrase = ["", "", "DOUBLE KILL", "TRIPLE KILL", "QUADRA KILL", "TEAM WIPE"][mini(5, e.count)]
   event_history.append(e.name + " · " + phrase); sound.cue("multikill", true)
   toast(e.name.to_upper() + "  ·  " + phrase)
  elif e.type == "death":
   var hero = sim.find_unit(e.uid)
+  if not hero.is_empty() and not hero.summon and not first_blood_called:
+   first_blood_called = true; sound.announce(BATTLE_CALLS.first_blood, true)
   if not hero.is_empty() and not hero.summon: event_history.append(hero.hero.name + " has fallen")
  if event_history.size() > 4: event_history.pop_front()
  if e.type in ["cast", "death", "multikill"]: refresh_feed()
@@ -708,6 +718,7 @@ func finish_battle() -> void:
    var retry=AcceptDialog.new();ui.add_child(retry);retry.title="Match result not saved";retry.dialog_text=campaign.last_error+" Your result is still available. Retry saving to continue."
    retry.get_ok_button().text="Retry save";retry.confirmed.connect(func():resolving=false;finish_battle());retry.popup_centered(Vector2i(560,180));return
  phase = "result"; sound.scene_music("club"); sound.cue("victory" if sim.winner == 0 else "honor", true)
+ if sim.winner == 0: sound.announce(BATTLE_CALLS.victory, true)
  render()
  FlowUI.banner(self, "VICTORY" if sim.winner == 0 else "DRAW" if sim.winner == -1 else "DEFEAT", Color("ffd36e") if sim.winner == 0 else Color("ff8a7a"))
 
