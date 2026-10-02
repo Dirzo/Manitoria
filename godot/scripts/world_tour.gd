@@ -26,7 +26,7 @@ static func seeded_team(c: Campaign, entrant: int) -> Dictionary:
   experience-=HeroData.xp_needed(level);level+=1
  for i in range(5):
   var sp=REGIONS[(int(t.level)-1+entrant/2)%REGIONS.size()].roster[i]
-  var h=HeroData.make_hero(sp,"tour_%d_%d_%d" % [t.level,entrant,i],HeroData.NAMES[(i+int(t.level)*3+entrant*5)%HeroData.NAMES.size()],level)
+  var h=HeroData.make_hero(sp,"tour_%d_%d_%d" % [t.level,entrant,i],HeroData.themed_name(sp,"tour_%d_%d_%d" % [t.level,entrant,i]),level)
   h.slot=Campaign.FORMATION[i]
   for k in range(mini(3,maxi(0,level-1))): h.learned[str(k)]=2 if level>=8 else 1
   if level>=5: h.signature_rank=2

@@ -997,7 +997,7 @@ func start_exhibition() -> void:
  for team in range(2):
   for i in range(5):
    var sp = ["golem","minotaur","direwolf","kirin","unicorn"][i] if team == 0 else ["yeti","owlbear","griffin","phoenix","naga"][i]
-   var h = HeroData.make_hero(sp,"show_%d_%d" % [team,i],HeroData.NAMES[team*5+i],10)
+   var h = HeroData.make_hero(sp,"show_%d_%d" % [team,i],HeroData.themed_name(sp,"show_%d_%d" % [team,i]),10)
    h.slot = Campaign.FORMATION[i]; h.learned = {"0":2,"1":2,"2":2}; h.signature_rank = 2
    h.evolution = ["guardian","ravager","ravager","arcanist","guardian"][i]
    if team == 0: campaign.state.roster.append(h)

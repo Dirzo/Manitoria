@@ -272,7 +272,7 @@ static func draft_club(name: String, headliner: String, rng: RandomNumberGenerat
 	var order = _lane_order(picks)
 	var roster = []
 	for i in range(order.size()):
-		var h = HeroData.make_hero(order[i], "%s_%d" % [id_prefix, i], HeroData.NAMES[rng.randi_range(0, HeroData.NAMES.size() - 1)])
+		var h = HeroData.make_hero(order[i], "%s_%d" % [id_prefix, i], HeroData.themed_name(order[i], "%s_%d_%d" % [id_prefix, i, rng.randi()]))
 		h.slot = Campaign.FORMATION[i]; h.price = cost(order[i])
 		roster.append(h)
 	return {"name": name, "roster": roster, "wins": 0, "losses": 0, "draws": 0, "headliner": roster[order.find(headliner)].id, "elite": elite}

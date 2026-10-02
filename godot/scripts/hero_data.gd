@@ -5,6 +5,46 @@ static var species: Dictionary = {}
 const FRONT = ["Tank", "Bruiser", "Warden"]
 const FLANK = ["Skirmisher", "Assassin", "Diver", "Trickster", "Duelist"]
 const NAMES = ["Ash", "Briar", "Cinder", "Dusk", "Ember", "Fable", "Grit", "Halo", "Iris", "Jinx", "Knell", "Lumen", "Morrow", "Nyx", "Onyx", "Pike", "Quill", "Rook", "Sable", "Thorn", "Umber", "Vale", "Wisp", "Zephyr", "Aldric", "Bramble", "Corvin", "Dagny", "Elowen", "Fenwick", "Gorm", "Hollis", "Isolde", "Jareth", "Kestrel", "Lark", "Mabry", "Nettle", "Orrin", "Pyre", "Quarry", "Rune", "Saffron", "Talon", "Ulla", "Vesper", "Wren", "Yarrow", "Alder", "Barrow", "Cobalt", "Dagger", "Ebony", "Flint", "Gale", "Hawthorn", "Ingot", "Jasper", "Kindle", "Loam", "Mist", "North", "Oriel", "Pebble", "Quartz", "Riven", "Sorrel", "Tansy", "Urchin", "Vigil", "Whisper", "Yew", "Amber", "Bastion", "Cairn", "Drift", "Echo", "Frost", "Gloam", "Harrow", "Ivy", "Juniper", "Kairo", "Lyric", "Marrow", "Nimbus", "Opal", "Puck", "Rowan", "Shale", "Tempest", "Valor", "Warden", "Xylo", "Yonder", "Zinnia", "Brisket", "Clover", "Dandelion", "Fizz", "Gumbo", "Hiccup", "Noodle", "Pip", "Scruff", "Tumble", "Waffle", "Biscuit"]
+## Creature-flavoured names: a yeti is a Frezi or a Snorri, a phoenix a Solara or a Pyra.
+const SPECIES_NAMES := {
+ "yeti": ["Frezi", "Nuki", "Snorri", "Brrok", "Yumi", "Ploof", "Glacio", "Tundra", "Mumbo", "Krisp", "Shiver", "Bjork", "Flurry", "Pemmi", "Hoarfrost", "Sleetbeard"],
+ "wendigo": ["Hollowmaw", "Skraeth", "Gaunt", "Wither", "Antlerghast", "Nethic", "Starvel", "Rimeclaw", "Mourne", "Ichor", "Pale", "Cadaver", "Vesk", "Chillgrip", "Ghast", "Ebbis"],
+ "golem": ["Bouldur", "Granitor", "Pebbleton", "Slab", "Cairn", "Rubble", "Basalt", "Monolith", "Gravlok", "Obbo", "Flint", "Tor", "Quarrion", "Stonebrow", "Marbo", "Kollos"],
+ "troll": ["Grubnak", "Moss", "Gorrk", "Bogwart", "Snaggle", "Mudbelly", "Thokk", "Hagrim", "Lumpo", "Brakka", "Gristle", "Ogg", "Bridgewort", "Stumpf", "Grunda"],
+ "owlbear": ["Hoot", "Bramble", "Fuzzclaw", "Hootsworth", "Ruffle", "Barkhoo", "Tuftbear", "Mauler", "Owlric", "Pinecone", "Grizhoot", "Feathermaw", "Nibbs", "Bruin", "Talonpaw", "Hootch"],
+ "direwolf": ["Fang", "Howl", "Grimtooth", "Ashpelt", "Lupa", "Varg", "Shadowmane", "Rend", "Skoll", "Moonbay", "Fenra", "Ghostpaw", "Ripper", "Wulfric", "Snarl", "Hati"],
+ "nekomata": ["Mikan", "Kuro", "Twintail", "Nyako", "Yoru", "Shiori", "Tama", "Kage", "Suzu", "Mochi", "Hanabi", "Nekoyo", "Rin", "Yami", "Kitsuko", "Soot"],
+ "gargoyle": ["Grotesk", "Cornice", "Spire", "Gargle", "Crag", "Belfry", "Stonewing", "Vigil", "Rookstone", "Gable", "Chimney", "Grimbald", "Parapet", "Rainspout", "Sculk", "Ledge"],
+ "chimera": ["Trice", "Hydrix", "Manewing", "Tripla", "Gorgo", "Flamevine", "Brimbeast", "Tryx", "Chimerra", "Tarsk", "Splice", "Kimber", "Threefold", "Gnasha", "Volka", "Tangle"],
+ "manticore": ["Stingrah", "Venox", "Scorpra", "Barbtail", "Mantix", "Spinejaw", "Vex", "Toxira", "Quillmaw", "Raptor", "Dread", "Skorr", "Thornlash", "Venomane", "Sabra", "Kesh"],
+ "wyvern": ["Wyrmlet", "Acidra", "Gloomwing", "Skorch", "Vorrax", "Venomwyrm", "Blight", "Sludge", "Corrode", "Drakka", "Wyrrin", "Fizzle", "Tarnish", "Sizzle", "Viridax", "Bile"],
+ "harpy": ["Screech", "Shrilla", "Talona", "Aello", "Celaena", "Gale", "Scrawk", "Plume", "Keening", "Shrike", "Ravena", "Ocypa", "Squall", "Kyra", "Cackle", "Swoop"],
+ "salamander": ["Ember", "Sizzle", "Magmo", "Pyrrik", "Scorchy", "Cinderling", "Blaze", "Flicker", "Molten", "Ignis", "Charr", "Smoulder", "Kindle", "Slagtail", "Lavalle", "Sparky"],
+ "basilisk": ["Glare", "Stonegaze", "Serpis", "Hiss", "Petra", "Medusine", "Gorgal", "Coilfang", "Sslith", "Basil", "Graveeye", "Venomgaze", "Sloth", "Marbleye", "Ssark"],
+ "cyclops": ["Oculus", "Monoclus", "Boulderhurl", "Polyph", "Glaucus", "Thunderbrow", "Ogle", "Brontes", "Squint", "Arges", "Rockeye", "Lidless", "Peeper", "Steropes"],
+ "naga": ["Nerissa", "Tidecoil", "Serpentina", "Mira", "Coralyn", "Ripple", "Pearl", "Marisol", "Undina", "Sirena", "Lagoon", "Kaimana", "Wavelet", "Shelly", "Thalassa"],
+ "pegasus": ["Skydancer", "Zephyrine", "Cloudmane", "Aurora", "Pegs", "Starhoof", "Gust", "Nimbus", "Featherfoot", "Celeste", "Breeze", "Halcyon", "Wingbeat", "Stratus", "Glory", "Swiftwind"],
+ "jackalope": ["Hoppsworth", "Antlers", "Jackie", "Thumper", "Bramblehop", "Lopsy", "Twitch", "Bounder", "Nibbler", "Fernhop", "Dash", "Clover", "Skippit", "Juniper", "Bunbun"],
+ "zaratan": ["Shellbrook", "Isleback", "Barnacle", "Terrapin", "Atollus", "Moss", "Archelon", "Leviaturt", "Driftshell", "Reefus", "Slowtide", "Kelp", "Islard", "Brineback", "Tortuga"],
+ "hydra": ["Lernia", "Manyhead", "Hydrina", "Hisslings", "Venomcoil", "Regrow", "Septis", "Hydrax", "Seven", "Coilmaw", "Serpentrix", "Ladon", "Splitfang", "Murkmaw", "Twinsy", "Hissy"],
+ "cerberus": ["Threeheads", "Garmr", "Blazeguard", "Hellhound", "Orthrus", "Ashmaw", "Gatewarden", "Brimstone", "Spot", "Pyrodog", "Underbark", "Grimmy", "Kerb", "Fangtrio", "Molossus"],
+ "phoenix": ["Solara", "Pyra", "Ashborn", "Rekindle", "Cinderwing", "Ignatia", "Aurelia", "Flarewing", "Sunfire", "Embra", "Rebirth", "Phoebe", "Firebird", "Helia", "Kindra"],
+ "thunderbird": ["Thunderclap", "Voltwing", "Stormcaller", "Skyroar", "Kaboom", "Zap", "Fulgor", "Tempest", "Boom", "Thundra", "Bolt", "Squallwing", "Crackle", "Arcwing"],
+ "unicorn": ["Starlight", "Moonbeam", "Glimmer", "Sparkle", "Pearlhorn", "Twinkle", "Lumina", "Dreamer", "Prism", "Silverhorn", "Opaline", "Seraphine", "Dazzle", "Halo", "Glitter"],
+ "sphinx": ["Riddleus", "Sphinxa", "Nefer", "Sandmind", "Amunet", "Enigma", "Ankh", "Sekhmet", "Ponder", "Pharos", "Akhet", "Oracle", "Riddler", "Dune", "Khafra", "Mystery"],
+ "minotaur": ["Bullrog", "Asterion", "Hornbreaker", "Taurus", "Maze", "Bovric", "Goremane", "Brawn", "Stampede", "Hoofrage", "Labyrinth", "Bullock", "Minos", "Rampage", "Charger", "Moogar"],
+ "nemean": ["Leo", "Goldmane", "Nemea", "Pride", "Aurex", "Lionheart", "Regal", "Sunclaw", "Rex", "Valor", "Majesty", "Kingsley", "Ironhide", "Roar"],
+ "griffin": ["Talonis", "Skyclaw", "Gryphis", "Aquila", "Featherking", "Swoopclaw", "Stormbeak", "Griff", "Altair", "Beakmaw", "Highwing", "Eyrie", "Regalis", "Clawdia", "Aero", "Gryffo"],
+ "kitsune": ["Kitsu", "Ninetails", "Inari", "Yuki", "Kohaku", "Foxfire", "Tamamo", "Akari", "Hoshi", "Fubuki", "Momiji", "Sora", "Kitsuko", "Hikari"],
+ "kirin": ["Qilin", "Jade", "Celestine", "Lumos", "Kai", "Ryuu", "Tenshi", "Kirra", "Lanshan", "Thunderhoof", "Meiling", "Sorin", "Yushan", "Tianma"],
+ "treant": ["Oakheart", "Barkley", "Rootwise", "Elderbough", "Sylvan", "Grovewarden", "Thornwood", "Mossbeard", "Timber", "Willowmere", "Ashgrove", "Fernroot", "Birchy", "Burl", "Hollowoak"],
+ "arachne": ["Silkweaver", "Webba", "Spindle", "Arachna", "Weavira", "Loom", "Venomsilk", "Tarantia", "Skitter", "Widow", "Gossamer", "Threadra", "Lacey", "Spinnie"],
+}
+
+## A fitting name for this creature, stable for a given key (hero id) within a run.
+static func themed_name(sp: String, key: String) -> String:
+ var pool: Array = SPECIES_NAMES.get(sp, NAMES)
+ return str(pool[abs(hash(key + "|" + run_salt + "|" + sp)) % pool.size()])
 # Two legacy discovery IDs per species; ability_pool extends each to eight options.
 # Mechanics are shared primitives; names, targeting, and combinations belong to that hero.
 const DISCOVERIES = {

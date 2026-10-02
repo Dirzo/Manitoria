@@ -36,7 +36,7 @@ func create_market(_rng: RandomNumberGenerator = null) -> void:
   for sp in League.tiers()[t]: state.market.append(draft_prospect(sp))
 
 func draft_prospect(sp: String) -> Dictionary:
- var h = HeroData.make_hero(sp, "h%d" % state.next_id, HeroData.NAMES[(int(state.next_id) - 100) % HeroData.NAMES.size()])
+ var h = HeroData.make_hero(sp, "h%d" % state.next_id, HeroData.themed_name(sp, "h%d" % state.next_id))
  state.next_id += 1
  h.price = League.cost(sp)
  return h
@@ -309,9 +309,16 @@ func ensure_unique_names() -> void:
    var n = str(h.get("name", ""))
    if n == "" or taken.has(n):
     var k = abs(hash(str(h.get("id", "")) + "|name"))
-    for step in range(HeroData.NAMES.size()):
-     var cand = HeroData.NAMES[(k + step * 7) % HeroData.NAMES.size()]
-     if not taken.has(cand): n = cand; break
+    var pool: Array = HeroData.SPECIES_NAMES.get(str(h.get("sp", "")), HeroData.NAMES)
+    var found = false
+    for step in range(pool.size()):
+     var cand = str(pool[(k + step * 7) % pool.size()])
+     if not taken.has(cand): n = cand; found = true; break
+    if not found:
+     # Pool exhausted: add a numeral (Frezi II, Frezi III, ...).
+     var root = str(pool[k % pool.size()])
+     for r in ["II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"]:
+      if not taken.has(root + " " + r): n = root + " " + r; break
     h.name = n
    taken[n] = true
 
@@ -1398,7 +1405,7 @@ func legend_pool() -> Dictionary:
  if not state.has("legends") or not state.legends is Dictionary or state.legends.is_empty():
   state.legends={}
   for sp in League.tiers().Legendary:
-   var h=HeroData.make_hero(sp,"h%d"%state.next_id,HeroData.NAMES[(int(state.next_id)-100)%HeroData.NAMES.size()]);state.next_id+=1
+   var h=HeroData.make_hero(sp,"h%d"%state.next_id,HeroData.themed_name(sp,"h%d"%state.next_id));state.next_id+=1
    h.price=League.cost(sp);state.legends[sp]=h
  return state.legends
 
@@ -1412,7 +1419,7 @@ func choose_starter(sp: String) -> bool:
  if hero.is_empty() and legend_pool().has(sp):hero=legend_pool()[sp];state.legends.erase(sp)
  elif not hero.is_empty():state.market.erase(hero)
  if hero.is_empty():
-  hero=HeroData.make_hero(sp,"h%d"%state.next_id,HeroData.NAMES[(int(state.next_id)-100)%HeroData.NAMES.size()]);state.next_id+=1
+  hero=HeroData.make_hero(sp,"h%d"%state.next_id,HeroData.themed_name(sp,"h%d"%state.next_id));state.next_id+=1
  hero.slot={"Front":FORMATION[0],"Flank":FORMATION[2],"Back":FORMATION[3]}[HeroData.line(sp)];hero.price=League.cost(sp);state.roster.append(hero)
  state.headliner=hero.id;state.selected=hero.id;state.gold-=hero.price
  draft_rivals()
