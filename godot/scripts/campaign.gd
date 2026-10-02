@@ -107,8 +107,8 @@ func choose(id: String, index: int) -> bool:
 
 func quality() -> float:
  if state.has("tour"):
-  var base=0.90 if state.difficulty=="Keeper" else (1.02+minf(0.06,0.012*(int(state.tour.level)-1))) if state.difficulty=="Champion" else 1.0
-  if state.difficulty=="Keeper" and state.tour.level==4:base-=0.18
+  var base=0.95 if state.difficulty=="Keeper" else (1.06+minf(0.08,0.014*(int(state.tour.level)-1))) if state.difficulty=="Champion" else 1.0
+  if state.difficulty=="Keeper" and state.tour.level==4:base-=0.10
   return base+mini(3,int(state.tour.bout))*0.025
  if state.difficulty == "Keeper": return minf(0.96, 0.90 + state.round * 0.004)
  if state.difficulty == "Champion": return 1.08

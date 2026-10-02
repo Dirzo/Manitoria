@@ -29,7 +29,7 @@ const SPECIES := {
 	"zaratan":     {"score": 5, "calling": "Unbreakable anchor", "ideal": ["Courageous", "Stoic"]},
 	"hydra":       {"score": 8, "calling": "Late-game regenerating bruiser", "ideal": ["Patient", "Proud"]},
 	"cerberus":    {"score": 4, "calling": "Early lockdown warden", "ideal": ["Courageous", "Eager"]},
-	"phoenix":     {"score": 9, "calling": "Hyper-scaling fire caster", "ideal": ["Patient", "Shy"]},
+	"phoenix":     {"score": 8, "calling": "Hyper-scaling fire caster", "ideal": ["Patient", "Shy"]},
 	"thunderbird": {"score": 7, "calling": "Late storm artillery", "ideal": ["Cunning", "Shy"]},
 	"unicorn":     {"score": 6, "calling": "Team-sustain support", "ideal": ["Gentle", "Steadfast"]},
 	"sphinx":      {"score": 8, "calling": "Late-game control engine", "ideal": ["Cunning", "Patient"]},

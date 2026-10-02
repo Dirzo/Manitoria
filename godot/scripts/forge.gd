@@ -10,17 +10,17 @@ const COMPONENT_PRICE := 70
 const ITEM_PRICE := 190
 
 const COMPONENTS := {
-	"fang":     {"name": "Sharpened Fang", "art": "comp:fang", "attack": 0.10, "short": "+10% damage"},
-	"hide":     {"name": "Troll Hide", "art": "comp:hide", "hp": 0.12, "short": "+12% health"},
-	"plate":    {"name": "Bronze Plate", "art": "comp:plate", "armor": 0.04, "short": "+4 armor"},
-	"feather":  {"name": "Roc Feather", "art": "comp:feather", "haste": 0.10, "short": "+10% attack speed"},
-	"ember":    {"name": "Ember Shard", "art": "comp:ember", "potency": 0.12, "short": "+12% ability strength"},
-	"moon":     {"name": "Moonstone", "art": "comp:moon", "cd": 0.92, "short": "8% faster skills"},
+	"fang":     {"name": "Sharpened Fang", "art": "comp:fang", "attack": 0.15, "short": "+15% damage"},
+	"hide":     {"name": "Troll Hide", "art": "comp:hide", "hp": 0.10, "short": "+10% health"},
+	"plate":    {"name": "Bronze Plate", "art": "comp:plate", "armor": 0.05, "short": "+5 armor"},
+	"feather":  {"name": "Roc Feather", "art": "comp:feather", "haste": 0.09, "short": "+9% attack speed"},
+	"ember":    {"name": "Ember Shard", "art": "comp:ember", "potency": 0.14, "short": "+14% ability strength"},
+	"moon":     {"name": "Moonstone", "art": "comp:moon", "cd": 0.88, "short": "12% faster skills"},
 	"seed":     {"name": "Sapling Heart", "art": "comp:seed", "hp": 0.05, "potency": 0.06, "short": "+5% health, +6% ability strength"},
 	"storm":    {"name": "Storm Glass", "art": "comp:storm", "crit": 0.12, "short": "+12% critical strike chance"},
 	"silk":     {"name": "Shadow Silk", "art": "comp:silk", "dodge": 0.10, "short": "+10% chance to dodge basic attacks"},
 	"venom":    {"name": "Venom Gland", "art": "comp:venom", "lifesteal": 0.06, "short": "+6% lifesteal on all damage"},
-	"relic":    {"name": "Holy Relic", "art": "comp:relic", "tenacity": 0.25, "hp": 0.04, "short": "+25% crowd-control resistance, +4% health"},
+	"relic":    {"name": "Holy Relic", "art": "comp:relic", "tenacity": 0.30, "hp": 0.07, "short": "+30% crowd-control resistance, +7% health"},
 	"coin":     {"name": "Trickster's Coin", "art": "comp:coin", "attack": 0.04, "hp": 0.04, "short": "+4% damage and health · forges wild items"},
 }
 const COMPONENT_ORDER := ["fang", "hide", "plate", "feather", "ember", "moon", "seed", "storm", "silk", "venom", "relic", "coin"]
@@ -34,26 +34,26 @@ const ITEMS := {
 	"spellblade":  {"recipe": ["fang", "ember"], "name": "Spellblade", "art": "beam", "text": "After casting a skill, your next basic attack deals 120% bonus damage."},
 	"executioner": {"recipe": ["fang", "moon"], "name": "Executioner's Edge", "art": "execute", "text": "+50% basic damage to enemies under 30% health. Kills instantly ready your signature."},
 	"thornlash":   {"recipe": ["fang", "seed"], "name": "Thornroot Lash", "art": "roots", "text": "Every fourth basic attack roots the target for 0.8s."},
-	"berserker":   {"recipe": ["fang", "coin"], "name": "Berserker's Totem", "art": "maul", "wild": true, "x": {"attack": 0.25, "speed": 0.20}, "text": "WILD: ignores tactics and always charges the nearest enemy. +25% damage, +20% move speed, but heals on you are 30% weaker."},
+	"berserker":   {"recipe": ["fang", "coin"], "name": "Berserker's Totem", "art": "maul", "wild": true, "x": {"attack": 0.20, "speed": 0.20}, "text": "WILD: ignores tactics and always charges the nearest enemy. +20% damage, +20% move speed, but heals on you are 30% weaker."},
 	"colossus":    {"recipe": ["hide", "hide"], "name": "Colossus Heart", "art": "vigor", "x": {"hp": 0.15}, "text": "+15% more health. Regenerate 1.2% health per second after 3s without being hit."},
-	"bastion":     {"recipe": ["hide", "plate"], "name": "Bastion Shell", "art": "shellup", "text": "The first time you fall below 50% health, gain a shield of 30% max health."},
-	"drum":        {"recipe": ["hide", "feather"], "name": "Rhythm Drum", "art": "rally", "text": "Every 6s, nearby allies gain Rally (+22% damage and speed) for 2.5s."},
+	"bastion":     {"recipe": ["hide", "plate"], "name": "Bastion Shell", "art": "shellup", "text": "The first time you fall below 50% health, gain a shield of 24% max health."},
+	"drum":        {"recipe": ["hide", "feather"], "name": "Rhythm Drum", "art": "rally", "text": "Every 7s, nearby allies gain Rally (+22% damage and speed) for 2.5s."},
 	"phoenixember":{"recipe": ["hide", "ember"], "name": "Phoenix Ember", "art": "rebirth", "wild": true, "text": "WILD: the first time you would die, burst back to life at 25% health."},
 	"bell":        {"recipe": ["hide", "moon"], "name": "Taunting Bell", "art": "shriek", "text": "Every 8s, enemies within 3.5m must attack you for 2s, and you gain an 8% shield."},
-	"lifebloom":   {"recipe": ["hide", "seed"], "name": "Lifebloom", "art": "regrowth", "text": "Every 4s, heal the most wounded nearby ally for 2.5% of your max health."},
+	"lifebloom":   {"recipe": ["hide", "seed"], "name": "Lifebloom", "art": "regrowth", "text": "Every 5s, heal the most wounded nearby ally for 1.6% of your max health."},
 	"giant":       {"recipe": ["hide", "coin"], "name": "Giant's Draught", "art": "boulder", "wild": true, "x": {"hp": 0.25, "attack": 0.10, "speed": -0.15}, "text": "WILD: grow huge. +25% health and +10% damage, but 15% slower."},
-	"mirror":      {"recipe": ["plate", "plate"], "name": "Mirror Carapace", "art": "ward", "text": "Reflect 25% of ability damage taken back at the caster."},
-	"spikes":      {"recipe": ["plate", "feather"], "name": "Spiked Gauntlet", "art": "whirl", "text": "When hit by a basic attack, 35% chance to stun the attacker for 0.6s (3s cooldown)."},
+	"mirror":      {"recipe": ["plate", "plate"], "name": "Mirror Carapace", "art": "ward", "x": {"hp": 0.08}, "text": "+8% more health. Reflect 40% of ability damage taken back at the caster."},
+	"spikes":      {"recipe": ["plate", "feather"], "name": "Spiked Gauntlet", "art": "whirl", "text": "When hit by a basic attack, 45% chance to stun the attacker for 0.8s (3s cooldown)."},
 	"runeward":    {"recipe": ["plate", "ember"], "name": "Runeward", "art": "radiance", "text": "Negate the first enemy ability that hits you every 8 seconds."},
 	"stoneskin":   {"recipe": ["plate", "moon"], "name": "Stoneskin", "art": "stonedive", "x": {"hp": 0.10}, "text": "+10% health. Immune to stun, root and silence while above 50% health."},
-	"ironbark":    {"recipe": ["plate", "seed"], "name": "Ironbark", "art": "guardian", "text": "Take 15% less damage from every source."},
+	"ironbark":    {"recipe": ["plate", "seed"], "name": "Ironbark", "art": "guardian", "text": "Take 12% less damage from every source."},
 	"turtle":      {"recipe": ["plate", "coin"], "name": "Turtle Shell", "art": "shellup", "wild": true, "text": "WILD: below 40% health, hide in your shell for 3s (invulnerable, can't act, heal 18%), then burst out with Rally for 7s."},
 	"tempest":     {"recipe": ["feather", "feather"], "name": "Tempest Talons", "art": "skystrike", "text": "Basic attacks bounce to a second enemy for 40% damage."},
-	"quiver":      {"recipe": ["feather", "ember"], "name": "Arcane Quiver", "art": "barrage", "text": "Every third basic attack explodes for 80% damage around the target."},
+	"quiver":      {"recipe": ["feather", "ember"], "name": "Arcane Quiver", "art": "barrage", "text": "Every third basic attack explodes for 60% damage around the target."},
 	"quicksilver": {"recipe": ["feather", "moon"], "name": "Quicksilver", "art": "gust", "text": "Each basic attack shortens all your skill cooldowns by 0.4s."},
 	"hunter":      {"recipe": ["feather", "seed"], "name": "Hunter's Mark", "art": "ambush", "text": "Basic attacks Weaken the target (-25% damage) for 2s."},
 	"sugarrush":   {"recipe": ["feather", "coin"], "name": "Sugar Rush", "art": "tailwind", "wild": true, "x": {"haste": 0.60, "speed": 0.30}, "text": "WILD: +60% attack speed and +30% move speed, but lose 1% max health every second (stops at 15%)."},
-	"archmage":    {"recipe": ["ember", "ember"], "name": "Archmage Orb", "art": "arcanist", "x": {"potency": 0.25}, "text": "+25% more ability strength."},
+	"archmage":    {"recipe": ["ember", "ember"], "name": "Archmage Orb", "art": "arcanist", "x": {"potency": 0.32}, "text": "+32% more ability strength."},
 	"crown":       {"recipe": ["ember", "moon"], "name": "Blue Crown", "art": "stormcall", "x": {"cd": 0.78}, "text": "Skills recharge 22% faster."},
 	"scepter":     {"recipe": ["ember", "seed"], "name": "Verdant Scepter", "art": "renew", "text": "Ability damage also heals your most wounded ally for 25% of it."},
 	"chaos":       {"recipe": ["ember", "coin"], "name": "Chaos Die", "art": "riddle", "wild": true, "text": "WILD: every skill rolls the die: a free extra blast, a team-wide heal, or a fizzle that stuns you."},
@@ -66,20 +66,20 @@ const ITEMS := {
 	"thundercleaver": {"recipe": ["storm", "fang"], "name": "Thundercleaver", "art": "chain", "text": "Critical strikes arc lightning to 2 nearby enemies for 50% of the hit."},
 	"stormmantle":    {"recipe": ["storm", "hide"], "name": "Stormhide Mantle", "art": "stormcall", "text": "Every 5s, zap the nearest enemy for 60% attack."},
 	"lightningrod":   {"recipe": ["storm", "plate"], "name": "Lightning Rod", "art": "storm", "text": "When an enemy ability hits you, zap the caster for 80% attack (2s cooldown)."},
-	"galetalons":     {"recipe": ["storm", "feather"], "name": "Gale Talons", "art": "skystrike", "text": "Critical strikes grant Rally for 1.5s."},
+	"galetalons":     {"recipe": ["storm", "feather"], "name": "Gale Talons", "art": "skystrike", "x": {"crit": 0.10}, "text": "+10% more crit chance. Critical strikes grant Rally for 3s."},
 	"stormorb":       {"recipe": ["storm", "ember"], "name": "Stormcaller Orb", "art": "storm", "text": "Your abilities can critically strike."},
-	"overcharge":     {"recipe": ["storm", "moon"], "name": "Overcharge Crown", "art": "beam", "text": "Critical strikes shorten your skill cooldowns by 1s."},
+	"overcharge":     {"recipe": ["storm", "moon"], "name": "Overcharge Crown", "art": "beam", "x": {"crit": 0.08}, "text": "+8% more crit chance. Critical strikes shorten your skill cooldowns by 1.5s."},
 	"rainbringer":    {"recipe": ["storm", "seed"], "name": "Rainbringer", "art": "tidal", "text": "Critical strikes heal your most wounded ally for 30% of the damage."},
-	"bottle":         {"recipe": ["storm", "coin"], "name": "Lightning in a Bottle", "art": "stormcall", "wild": true, "text": "WILD: every 7s a bolt strikes a random enemy for 150% attack... and sometimes an ally."},
-	"tempestcrown":   {"recipe": ["storm", "storm"], "name": "Tempest Crown", "art": "stormcall", "x": {"crit": 0.25}, "text": "+25% more crit chance. Your critical strikes deal double damage."},
-	"flicker":        {"recipe": ["storm", "silk"], "name": "Flicker Strike", "art": "ambush", "text": "Critical strikes blink you behind your target."},
-	"galvanic":       {"recipe": ["storm", "venom"], "name": "Galvanic Venom", "art": "acid", "text": "Critical strikes on poisoned enemies deal +40% damage."},
-	"judgement":      {"recipe": ["storm", "relic"], "name": "Judgement Bolt", "art": "radiance", "text": "Every 6s, smite the weakest enemy for 100% attack."},
+	"bottle":         {"recipe": ["storm", "coin"], "name": "Lightning in a Bottle", "art": "stormcall", "wild": true, "text": "WILD: every 7s a bolt strikes a random enemy for 120% attack... and sometimes an ally."},
+	"tempestcrown":   {"recipe": ["storm", "storm"], "name": "Tempest Crown", "art": "stormcall", "x": {"crit": 0.18}, "text": "+18% more crit chance. Your critical strikes deal 180% damage."},
+	"flicker":        {"recipe": ["storm", "silk"], "name": "Flicker Strike", "art": "ambush", "x": {"crit": 0.12, "attack": 0.08}, "text": "+12% more crit chance, +8% damage. Critical strikes blink you behind your target."},
+	"galvanic":       {"recipe": ["storm", "venom"], "name": "Galvanic Venom", "art": "acid", "x": {"crit": 0.10}, "text": "+10% more crit chance. Critical strikes on poisoned enemies deal +70% damage."},
+	"judgement":      {"recipe": ["storm", "relic"], "name": "Judgement Bolt", "art": "radiance", "text": "Every 7s, smite the weakest enemy for 75% attack."},
 	# ---- Shadow Silk
 	"shadowblade":    {"recipe": ["silk", "fang"], "name": "Shadowblade", "art": "vanish", "text": "After dodging, your next basic attack deals +100% damage."},
 	"phantomcloak":   {"recipe": ["silk", "hide"], "name": "Phantom Cloak", "art": "wisps", "text": "Dodging an attack heals you for 3% max health."},
 	"smokeplate":     {"recipe": ["silk", "plate"], "name": "Smoke Bomb Plate", "art": "fear", "text": "The first time you fall below 50% health, vanish for 2s and shake off stuns and roots."},
-	"windwalker":     {"recipe": ["silk", "feather"], "name": "Windwalker Sash", "art": "gust", "x": {"speed": 0.15}, "text": "+15% move speed. Dodging grants Rally for 1s."},
+	"windwalker":     {"recipe": ["silk", "feather"], "name": "Windwalker Sash", "art": "gust", "x": {"speed": 0.20, "dodge": 0.05}, "text": "+20% move speed, +5% dodge. Dodging grants Rally for 2s."},
 	"illusion":       {"recipe": ["silk", "ember"], "name": "Illusionist's Veil", "art": "foxfire", "text": "Casting a skill turns you invisible for 1s."},
 	"eclipse":        {"recipe": ["silk", "moon"], "name": "Eclipse Mask", "art": "silence", "text": "Dodging shortens your skill cooldowns by 0.5s."},
 	"wispshroud":     {"recipe": ["silk", "seed"], "name": "Will-o'-Wisp Shroud", "art": "wisps", "text": "Dodging heals your most wounded ally for 2% of your max health."},
@@ -88,26 +88,26 @@ const ITEMS := {
 	"assassinkit":    {"recipe": ["silk", "venom"], "name": "Assassin's Kit", "art": "ambush", "text": "Your first hit on each enemy deals +80% damage."},
 	"wardshroud":     {"recipe": ["silk", "relic"], "name": "Ward Shroud", "art": "ward", "text": "Your dodge chance also works against abilities."},
 	# ---- Venom Gland
-	"viperfang":      {"recipe": ["venom", "fang"], "name": "Viper Fang", "art": "venom", "text": "Basic attacks poison the target for 30% attack over 3s."},
+	"viperfang":      {"recipe": ["venom", "fang"], "name": "Viper Fang", "art": "venom", "text": "Basic attacks poison the target for 18% attack over 3s."},
 	"leechhide":      {"recipe": ["venom", "hide"], "name": "Leech Hide", "art": "drain", "text": "Your lifesteal is doubled below 40% health."},
 	"acidshell":      {"recipe": ["venom", "plate"], "name": "Acid Shell", "art": "acid", "text": "Enemies who hit you with basic attacks are poisoned."},
 	"needles":        {"recipe": ["venom", "feather"], "name": "Needle Storm", "art": "barrage", "text": "Every fourth basic attack fires 3 venom darts at random enemies (40% each)."},
 	"plaguetome":     {"recipe": ["venom", "ember"], "name": "Plague Tome", "art": "toxic", "text": "Your abilities also poison for 40% of their damage over 4s."},
-	"witherbloom":    {"recipe": ["venom", "moon"], "name": "Witherbloom", "art": "brood", "text": "Your abilities Weaken their targets (-25% damage) for 3s."},
+	"witherbloom":    {"recipe": ["venom", "moon"], "name": "Witherbloom", "art": "brood", "x": {"potency": 0.06, "cd": 0.95}, "text": "+6% ability strength, 5% faster skills. Your abilities Weaken their targets (-25% damage) for 4s."},
 	"grievous":       {"recipe": ["venom", "seed"], "name": "Grievous Thorns", "art": "roots", "text": "Your hits cut enemy healing by 35% for 3s."},
 	"bloodfeast":     {"recipe": ["venom", "coin"], "name": "Bloodfeast", "art": "hunger", "wild": true, "text": "WILD: every kill fully heals you. Heals from allies are 50% weaker."},
-	"hydravenom":     {"recipe": ["venom", "venom"], "name": "Hydra Venom", "art": "venom", "text": "All of your hits poison for 36% attack over 3s."},
-	"antidote":       {"recipe": ["venom", "relic"], "name": "Antidote Charm", "art": "renew", "text": "Poisons and burns on you wear off twice as fast; regenerate 1% health per second while afflicted."},
+	"hydravenom":     {"recipe": ["venom", "venom"], "name": "Hydra Venom", "art": "venom", "text": "All of your hits poison for 27% attack over 3s."},
+	"antidote":       {"recipe": ["venom", "relic"], "name": "Antidote Charm", "art": "renew", "x": {"hp": 0.12}, "text": "+12% health. Poisons and burns on you wear off three times as fast; regenerate 2% health per second while afflicted."},
 	# ---- Holy Relic
 	"crusader":       {"recipe": ["relic", "fang"], "name": "Crusader's Edge", "art": "execute", "text": "+25% damage while you are above 70% health."},
 	"martyr":         {"recipe": ["relic", "hide"], "name": "Martyr's Heart", "art": "renew", "text": "While above 50% health, heal allies within 4m for 1% of your max health each second."},
 	"aegis":          {"recipe": ["relic", "plate"], "name": "Sanctified Aegis", "art": "bulwark", "text": "Start every fight by shielding all allies for 8% of your max health."},
 	"pilgrim":        {"recipe": ["relic", "feather"], "name": "Pilgrim's Boots", "art": "tailwind", "x": {"speed": 0.12}, "text": "+12% move speed. Immune to slows."},
-	"halo":           {"recipe": ["relic", "ember"], "name": "Halo of Dawn", "art": "radiance", "text": "Your skills cleanse stuns, roots and silences from the nearest ally."},
+	"halo":           {"recipe": ["relic", "ember"], "name": "Halo of Dawn", "art": "radiance", "x": {"potency": 0.10, "hp": 0.05}, "text": "+10% ability strength, +5% health. Your skills cleanse stuns, roots and silences from the nearest ally."},
 	"rosary":         {"recipe": ["relic", "moon"], "name": "Saint's Rosary", "art": "rally", "text": "Your first skill of the fight heals the whole team for 6%."},
-	"chalice":        {"recipe": ["relic", "seed"], "name": "Chalice of Renewal", "art": "regrowth", "text": "Heals you give are 25% stronger."},
+	"chalice":        {"recipe": ["relic", "seed"], "name": "Chalice of Renewal", "art": "regrowth", "x": {"potency": 0.08}, "text": "+8% more ability strength. Heals you give are 40% stronger."},
 	"divine":         {"recipe": ["relic", "coin"], "name": "Divine Intervention", "art": "guardian", "wild": true, "text": "WILD: once per fight, the first ally to fall below 15% becomes invulnerable for 2.5s."},
-	"grail":          {"recipe": ["relic", "relic"], "name": "Holy Grail", "art": "radiance", "x": {"tenacity": 0.35}, "text": "+35% more crowd-control resistance. Regenerate 1.5% health per second."},
+	"grail":          {"recipe": ["relic", "relic"], "name": "Holy Grail", "art": "radiance", "x": {"tenacity": 0.35}, "text": "+35% more crowd-control resistance. Regenerate 0.9% health per second."},
 	"idol":        {"recipe": ["coin", "coin"], "name": "Golden Idol", "art": "victory", "wild": true, "text": "WILD: +60 gold after every match you win, but the bearer takes 10% more damage."},
 }
 
@@ -201,7 +201,7 @@ static func tick(sim: BattleSim, u: Dictionary, dt: float) -> void:
 	if has(u, "colossus") and t - u.fx.last_hit > 3.0 and u.hp < u.max_hp: sim.heal(u, u, u.max_hp * 0.012 * dt, "item:colossus")
 	if has(u, "worldtree") and u.hp < u.max_hp: sim.heal(u, u, u.max_hp * 0.008 * dt, "item:worldtree")
 	if has(u, "sugarrush") and u.hp > u.max_hp * 0.15: u.hp = maxf(u.max_hp * 0.15, u.hp - u.max_hp * 0.01 * dt)
-	if has(u, "drum") and ready(sim, u, "drum", 6.0):
+	if has(u, "drum") and ready(sim, u, "drum", 7.0):
 		for a in sim.living(u.team, false):
 			if a.pos.distance_to(u.pos) <= 5.0: sim.status(a, "rally", 2.5)
 		proc(sim, u, "drum", u)
@@ -213,9 +213,9 @@ static func tick(sim: BattleSim, u: Dictionary, dt: float) -> void:
 			proc(sim, u, "bell", u)
 	if has(u, "lifebloom"):
 		var hurt = sim.living(u.team, false).filter(func(a): return a.hp < a.max_hp and a.pos.distance_to(u.pos) <= 6.0)
-		if not hurt.is_empty() and ready(sim, u, "lifebloom", 4.0):
+		if not hurt.is_empty() and ready(sim, u, "lifebloom", 5.0):
 			hurt.sort_custom(func(a, b): return a.hp / a.max_hp < b.hp / b.max_hp)
-			sim.heal(u, hurt[0], u.max_hp * 0.025, "item:lifebloom"); proc(sim, u, "lifebloom", hurt[0])
+			sim.heal(u, hurt[0], u.max_hp * 0.016, "item:lifebloom"); proc(sim, u, "lifebloom", hurt[0])
 	if has(u, "swap") and float(u.items.get("swap", -1.0)) <= t:
 		for a in sim.living(u.team, false):
 			if a.uid != u.uid and a.hp / a.max_hp < 0.25 and a.pos.distance_to(u.pos) < 12.0 and u.hp / u.max_hp > 0.4:
@@ -237,21 +237,21 @@ static func tick(sim: BattleSim, u: Dictionary, dt: float) -> void:
 			sim.hurt(u, near[0], u.attack * 0.6, true, "item:stormmantle"); proc(sim, u, "stormmantle", near[0])
 	if has(u, "judgement") and t > 1.0:
 		var foes = sim.foes(u)
-		if not foes.is_empty() and ready(sim, u, "judgement", 6.0):
+		if not foes.is_empty() and ready(sim, u, "judgement", 7.0):
 			foes.sort_custom(func(a, b): return a.hp / a.max_hp < b.hp / b.max_hp)
-			sim.hurt(u, foes[0], u.attack * 1.0, true, "item:judgement"); proc(sim, u, "judgement", foes[0])
+			sim.hurt(u, foes[0], u.attack * 0.75, true, "item:judgement"); proc(sim, u, "judgement", foes[0])
 	if has(u, "bottle") and t > 1.0 and ready(sim, u, "bottle", 7.0):
 		var pool = sim.foes(u) if sim.rng.randf() > 0.12 else sim.living(u.team, false)
 		if not pool.is_empty():
 			var victim = pool[sim.rng.randi_range(0, pool.size() - 1)]
-			sim.hurt(u, victim, u.attack * 1.5, true, "item:bottle"); proc(sim, u, "bottle", victim)
-	if has(u, "grail") and u.hp < u.max_hp: sim.heal(u, u, u.max_hp * 0.015 * dt, "item:grail")
+			sim.hurt(u, victim, u.attack * 1.2, true, "item:bottle"); proc(sim, u, "bottle", victim)
+	if has(u, "grail") and u.hp < u.max_hp: sim.heal(u, u, u.max_hp * 0.009 * dt, "item:grail")
 	if has(u, "martyr") and u.hp / u.max_hp > 0.5:
 		for a in sim.living(u.team, false):
 			if a.uid != u.uid and a.hp < a.max_hp and a.pos.distance_to(u.pos) <= 4.0: sim.heal(u, a, u.max_hp * 0.01 * dt, "item:martyr")
 	if has(u, "antidote") and not u.dots.is_empty():
-		for d in u.dots: d.remaining -= dt
-		sim.heal(u, u, u.max_hp * 0.01 * dt, "item:antidote")
+		for d in u.dots: d.remaining -= dt * 2.0
+		sim.heal(u, u, u.max_hp * 0.02 * dt, "item:antidote")
 	if has(u, "divine") and not u.fx.get("divine_used", false):
 		for a in sim.living(u.team, false):
 			if a.hp / a.max_hp < 0.15:
@@ -280,7 +280,7 @@ static func damage_mod(sim: BattleSim, source: Dictionary, target: Dictionary, a
 		target.fx.dodged = true
 		if has(target, "shadowblade"): target.fx.shadow_primed = true
 		if has(target, "phantomcloak"): sim.heal(target, target, target.max_hp * 0.03, "item:phantomcloak")
-		if has(target, "windwalker"): sim.status(target, "rally", 1.0)
+		if has(target, "windwalker"): sim.status(target, "rally", 2.0)
 		if has(target, "eclipse"):
 			target.cd = maxf(0.0, target.cd - 0.5)
 			for k in target.ability_cds: target.ability_cds[k] = maxf(0.0, float(target.ability_cds[k]) - 0.5)
@@ -294,8 +294,8 @@ static func damage_mod(sim: BattleSim, source: Dictionary, target: Dictionary, a
 		source.fx.last_crit = false
 		if (basic or has(source, "stormorb")) and sim.rng.randf() < float(source.fx.crit):
 			source.fx.last_crit = true
-			amount *= 2.0 if has(source, "tempestcrown") else 1.5
-			if has(source, "galvanic") and target.get("status", {}).get("poison", 0.0) > 0.0: amount *= 1.4
+			amount *= 1.8 if has(source, "tempestcrown") else 1.5
+			if has(source, "galvanic") and target.get("status", {}).get("poison", 0.0) > 0.0: amount *= 1.7
 	if not source.get("forge", []).is_empty() and not item_hit:
 		if has(source, "crusader") and source.hp / source.max_hp > 0.7: amount *= 1.25
 		if has(source, "assassinkit") and not source.fx.struck.has(target.uid): source.fx.struck[target.uid] = true; amount *= 1.8
@@ -308,7 +308,7 @@ static func damage_mod(sim: BattleSim, source: Dictionary, target: Dictionary, a
 			amount *= 1.0 + target.armor * 0.3
 			if target.shield > 0: amount *= 1.6
 	if not target.get("forge", []).is_empty():
-		if has(target, "ironbark"): amount *= 0.85
+		if has(target, "ironbark"): amount *= 0.88
 		if has(target, "idol"): amount *= 1.10
 		if magical and not basic and not credit.begins_with("item:") and has(target, "runeward") and ready(sim, target, "runeward", 8.0):
 			proc(sim, target, "runeward", source); return 0.0
@@ -322,11 +322,11 @@ static func after_hit(sim: BattleSim, source: Dictionary, target: Dictionary, ac
 		if has(target, "titan") and target.fx.titan < 25 and ready(sim, target, "titan", 0.4):
 			target.fx.titan += 1; target.attack *= 1.02; target.attack_basic = target.get("attack_basic", target.attack) * 1.02
 		if has(target, "bastion") and target.hp / target.max_hp < 0.5 and not target.fx.get("bastion", false):
-			target.fx.bastion = true; sim.shield(target, target.max_hp * 0.30); proc(sim, target, "bastion", target)
-		if basic and has(target, "spikes") and source.alive and sim.rng.randf() < 0.35 and ready(sim, target, "spikes", 3.0):
-			sim.status(source, "stun", 0.6); proc(sim, target, "spikes", source)
+			target.fx.bastion = true; sim.shield(target, target.max_hp * 0.24); proc(sim, target, "bastion", target)
+		if basic and has(target, "spikes") and source.alive and sim.rng.randf() < 0.45 and ready(sim, target, "spikes", 3.0):
+			sim.status(source, "stun", 0.8); proc(sim, target, "spikes", source)
 		if not basic and not credit.begins_with("item:") and has(target, "mirror") and source.alive and not source.summon:
-			sim.hurt(target, source, actual * 0.25, true, "item:mirror")
+			sim.hurt(target, source, actual * 0.40, true, "item:mirror")
 		if not basic and not credit.begins_with("item:") and has(target, "lightningrod") and source.alive and ready(sim, target, "lightningrod", 2.0):
 			sim.hurt(target, source, target.attack * 0.8, true, "item:lightningrod"); proc(sim, target, "lightningrod", source)
 		if basic and has(target, "acidshell") and source.alive: sim.poison(target, source, 3.0, target.attack * 0.08, "poison")
@@ -354,10 +354,10 @@ static func after_hit(sim: BattleSim, source: Dictionary, target: Dictionary, ac
 			if has(source, "thundercleaver"):
 				var arcs = sim.foes(source).filter(func(e): return e.uid != target.uid and e.pos.distance_to(target.pos) <= 3.5)
 				for e in arcs.slice(0, 2): sim.hurt(source, e, actual * 0.5, true, "item:thundercleaver")
-			if has(source, "galetalons"): sim.status(source, "rally", 1.5)
+			if has(source, "galetalons"): sim.status(source, "rally", 3.0)
 			if has(source, "overcharge"):
-				source.cd = maxf(0.0, source.cd - 1.0)
-				for k in source.ability_cds: source.ability_cds[k] = maxf(0.0, float(source.ability_cds[k]) - 1.0)
+				source.cd = maxf(0.0, source.cd - 1.5)
+				for k in source.ability_cds: source.ability_cds[k] = maxf(0.0, float(source.ability_cds[k]) - 1.5)
 			if has(source, "rainbringer"):
 				var hurt = sim.living(source.team, false).filter(func(a): return a.hp < a.max_hp)
 				if not hurt.is_empty():
@@ -366,12 +366,12 @@ static func after_hit(sim: BattleSim, source: Dictionary, target: Dictionary, ac
 				var dir = (target.pos - source.pos).normalized()
 				source.pos = (target.pos + dir * (target.radius + source.radius)).clamp(-BattleSim.BOUNDS, BattleSim.BOUNDS)
 		if has(source, "grievous") and target.alive: target.scorch_source = source.uid; sim.status(target, "scorch", 3.0)
-		if has(source, "hydravenom") and target.alive: sim.poison(source, target, 3.0, source.attack * 0.12, "poison")
+		if has(source, "hydravenom") and target.alive: sim.poison(source, target, 3.0, source.attack * 0.09, "poison")
 		if not basic:
 			if has(source, "plaguetome") and target.alive: sim.poison(source, target, 4.0, actual * 0.1, "poison")
-			if has(source, "witherbloom") and target.alive: sim.status(target, "weaken", 3.0)
+			if has(source, "witherbloom") and target.alive: sim.status(target, "weaken", 4.0)
 	if basic:
-		if has(source, "viperfang") and target.alive: sim.poison(source, target, 3.0, source.attack * 0.10, "poison")
+		if has(source, "viperfang") and target.alive: sim.poison(source, target, 3.0, source.attack * 0.06, "poison")
 		if has(source, "needles") and (source.fx.hits + 1) % 4 == 0:
 			var pool = sim.foes(source)
 			for i in range(mini(3, pool.size())): sim.hurt(source, pool[sim.rng.randi_range(0, pool.size() - 1)], source.attack * 0.4, false, "item:needles")
@@ -389,7 +389,7 @@ static func after_hit(sim: BattleSim, source: Dictionary, target: Dictionary, ac
 			var others = sim.foes(source).filter(func(e): return e.uid != target.uid and e.pos.distance_to(target.pos) <= 3.0)
 			if not others.is_empty(): sim.hurt(source, others[0], actual * 0.4, false, "item:tempest")
 		if has(source, "quiver") and source.fx.hits % 3 == 0:
-			for e in sim.near_foes(source, target.pos, 1.6): sim.hurt(source, e, source.attack * 0.8, true, "item:quiver")
+			for e in sim.near_foes(source, target.pos, 1.6): sim.hurt(source, e, source.attack * 0.6, true, "item:quiver")
 			proc(sim, source, "quiver", target)
 	elif not credit.begins_with("item:") and has(source, "scepter"):
 		var hurt = sim.living(source.team, false).filter(func(a): return a.hp < a.max_hp)
@@ -454,7 +454,7 @@ static func status_mod(u: Dictionary, key: String, seconds: float) -> float:
 	return seconds
 
 static func heal_mod(target: Dictionary, amount: float, source: Dictionary = {}) -> float:
-	if has(source, "chalice"): amount *= 1.25
+	if has(source, "chalice"): amount *= 1.40
 	if has(target, "bloodfeast") and source.get("uid", -1) != target.get("uid", -2): amount *= 0.5
 	if has(target, "worldtree"): amount *= 1.3
 	if has(target, "berserker"): amount *= 0.7
@@ -474,7 +474,7 @@ static func forced_target(sim: BattleSim, u: Dictionary, all: Array) -> Dictiona
 ## Rival clubs: deterministic loadouts that grow with the tour level.
 ## Difficulty shifts how early rivals get their kit: Keeper is two cups behind; Champion also unlocks WILD items for rivals from cup 8.
 static func rival_loadout(hero: Dictionary, level: int, difficulty: String = "Standard") -> Dictionary:
-	var eff = level + {"Keeper": -2, "Standard": 0, "Champion": 0}.get(difficulty, 0)
+	var eff = level + {"Keeper": -1, "Standard": 0, "Champion": 1}.get(difficulty, 0)
 	var n = 0 if eff < 2 else (1 if eff < 6 else (2 if eff < 12 else 3))
 	var role = HeroData.line(hero.sp)
 	var pool = {"Front": ["bastion", "ironbark", "colossus", "bell", "stoneskin", "titan", "mirror", "aegis", "grail", "acidshell", "smokeplate", "lightningrod"],
