@@ -15,7 +15,7 @@ static func menu(game: Node) -> void:
   var button=game.button(box,entry[0],entry[3],true,i==0 and latest==0);button.custom_minimum_size.y=62;button.add_theme_font_size_override("font_size",23)
   frame.mouse_entered.connect(func():frame.modulate=Color(1.13,1.13,1.13));frame.mouse_exited.connect(func():frame.modulate=Color.WHITE)
  var saves=game.button(game.ui,"Saved campaigns",func():save_picker(game));saves.position=Vector2(620,767);saves.size=Vector2(360,46)
- var version=game.label(game.ui,"Windows edition 0.37 · Rolls",14,Color("eee3cf"),false);version.position=Vector2(30,861)
+ var version=game.label(game.ui,"Windows edition 0.38 · Flow",14,Color("eee3cf"),false);version.position=Vector2(30,861)
 
 static func save_picker(game: Node) -> void:
  var dialog=GearUI.modal(game,"Your campaigns")
@@ -57,8 +57,7 @@ void fragment(){
   var portrait=SplashArt.make(left,face.sp,Vector2(62,70));portrait.mouse_filter=Control.MOUSE_FILTER_PASS;portrait.tooltip_text="Headliner · "+face.name
  var id=VBoxContainer.new();id.add_theme_constant_override("separation",0);left.add_child(id)
  var nm=game.label(id,club_name,26,game.WHITE,false);nm.custom_minimum_size.x=280;nm.add_theme_color_override("font_outline_color",Color(0,0,0,.8));nm.add_theme_constant_override("outline_size",5)
- if game.phase!="new":
-  var g=game.label(id,"◆ %d gold   ·   %d trophies"%[c.state.gold,int(c.state.get("trophies",0))],15,game.GOLD,false);g.tooltip_text="Gold and cups won"
+ if game.phase!="new":FlowUI.run_bar(game,id)
  # Centre: where we are
  var mid=VBoxContainer.new();game.ui.add_child(mid);mid.position=Vector2(470,10);mid.size=Vector2(660,100);mid.add_theme_constant_override("separation",-2)
  var kicker;var place;var stage
@@ -90,11 +89,10 @@ void fragment(){
 
 static func _stage_text(c: Campaign) -> String:
  var t=c.state.tour
- if c.state.roster.is_empty():return "Draft your headliner to enter the cup"
+ if c.state.roster.is_empty():return "Draft your headliner"
  if t.get("complete",false):return "World Tour complete"
  var b=t.get("bracket",{})
- if b.is_empty():return "Double elimination  ·  8 clubs  ·  opening round next"
+ if b.is_empty():return "Opening round"
  if b.get("finished",false):
-  return "Cup decided  ·  next stop awaits"
- var lost=WorldTour.losses(c,0)
- return "%s  ·  %s"%[WorldTour.stage_label(c),"no losses" if lost==0 else "one life left"]
+  return "Cup decided"
+ return WorldTour.stage_label(c)

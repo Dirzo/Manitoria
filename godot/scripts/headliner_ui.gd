@@ -20,7 +20,7 @@ static func starter(game: Node) -> void:
  if League.tier(chosen)!="Legendary":chosen="jackalope"
  var hero=HeroData.make_hero(chosen,"preview","Your headliner")
  var heading=game.label(game.ui,"SIGN YOUR LEGENDARY HEADLINER",36,game.GOLD,false);heading.position=Vector2(34,132)
- var hint=game.label(game.ui,"Eight legends, one per club. The other seven become your rivals' headliners. Headliners cost ×3 (%dg)."%League.cost(chosen),18,game.WHITE,false);hint.position=Vector2(35,183)
+ var hint=game.label(game.ui,"Pick one. The rest lead your rivals.",18,game.WHITE,false);hint.position=Vector2(35,183)
  var left=game.scroll_panel(Rect2(26,230,970,645));var grid=GridContainer.new();grid.columns=4;grid.add_theme_constant_override("h_separation",10);grid.add_theme_constant_override("v_separation",12);left.add_child(grid)
  for sp in League.TIERS.Legendary:
   var box=VBoxContainer.new();box.custom_minimum_size.x=225;grid.add_child(box)
@@ -38,10 +38,10 @@ static func starter(game: Node) -> void:
  TraitUI.species_line(game,detail,chosen)
  SplashArt.make(detail,chosen,Vector2(0,250),true)
  ChampionKit.build(game,detail,hero,220)
- var pick=game.button(game.ui,"Sign headliner · %dg →"%League.cost(chosen),func():
+ var pick=FlowUI.cta(game,game.ui,"Sign  ·  %d gold  ▶"%League.cost(chosen),func():
   if game.campaign.choose_starter(chosen):
-   game.selected_id=game.campaign.state.selected;game.sound.cue("contest_lock");game.phase="hub";game.tab="market";game.render();game.toast("Headliner signed. Rival clubs have drafted. Fill your four open slots from the draft board.")
-  else:game.toast(game.campaign.last_error if not game.campaign.last_error.is_empty() else "Could not sign this champion."),true)
+   game.selected_id=game.campaign.state.selected;game.sound.cue("contest_lock");game.phase="hub";game.tab="market";game.render();FlowUI.banner(game,"DRAFT YOUR SQUAD",Color("ffd36e"))
+  else:game.toast(game.campaign.last_error if not game.campaign.last_error.is_empty() else "Could not sign this champion."))
  pick.position=Vector2(1016,798);pick.size=Vector2(558,66)
 
 static func rival_face(c: Campaign, rival: Dictionary) -> Dictionary:
@@ -81,12 +81,7 @@ static func overview(desk: ManagementDesk) -> void:
    button.pressed.connect(func():desk.profile(h,side==0));button.tooltip_text=HeroData.species[h.sp].n+" · Inspect abilities and equipment"
    desk.text(tile,h.name,16,desk.GOLD if h.id==leader.get("id","") else desk.WHITE)
    desk.text(tile,League.rating_badge_text(h),14,League.tier_color(h.sp))
- var footer=desk.horizontal(desk.body)
  var delta=League.team_ovr(home)-League.team_ovr(away)
- desk.text(footer,"EVENLY MATCHED" if delta==0 else ("YOUR TEAM" if delta>0 else "RIVALS")+" RATED %d OVR HIGHER"%abs(delta),17,desk.GOLD).size_flags_horizontal=Control.SIZE_EXPAND_FILL
- desk.action(footer,"Enter the arena →",game.introduce_match,true,not c.lineup_ready() or t.shop or not c.pending_heroes().is_empty())
- var steps=desk.horizontal(desk.body)
- var lost=WorldTour.losses(c,0)
- for info in [["CUP RECORD","%d W  ·  %d L"%[int(t.wins),lost]],["BRACKET",("Winners side" if lost==0 else "Losers side · one more loss and you are out")],["NEXT",WorldTour.stage_label(c)]]:
-  var tile=desk.card(steps);desk.text(tile,info[0],12,desk.GOLD);desk.text(tile,info[1],19,Color(region.color))
+ var edge=desk.text(desk.body,"EVEN MATCH" if delta==0 else ("YOU +%d" if delta>0 else "RIVALS +%d")%abs(delta),26,Color("6fe08a") if delta>0 else (Color("ff8a7a") if delta<0 else desk.GOLD))
+ edge.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER;edge.tooltip_text="Team rating difference (average power of the starters)";edge.mouse_filter=Control.MOUSE_FILTER_STOP
  if not c.state.report.is_empty():desk.action(desk.body,"Last match · Damage & healing",func():desk.report_dialog(c.state.report))

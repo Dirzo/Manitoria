@@ -32,17 +32,21 @@ func build() -> void:
  var dock = FantasyFrame.new(); add_child(dock); dock.position = Vector2(26, 827); dock.size = Vector2(1548, 61)
  dock.add_theme_stylebox_override("panel", game.style(Color(.055,.10,.12,.97),Color("aa8c60"),4,8,2))
  var row = horizontal(dock)
- action(row, "Keeper's guide", game.show_guide)
- var hint = text(row, "%d fielded · squads of 4 or 5" % campaign.lineup().size(), 16, MUTED)
- hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL; hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
- var next = "Draft your squad  →" if state.roster.size() < Campaign.MIN_SQUAD else "Prepare next match  →"
- if state.get("tour",{}).get("shop",false): next = "Visit tournament outfitter  →"
- if state.get("tour",{}).get("complete",false): next = "World Tour complete"
- if not campaign.pending_heroes().is_empty(): next = "Choose earned upgrades  →"
- elif not state.has("tour") and state.round >= 17: next = "Begin next season  →"
- action(row, next, func():
+ var help = action(row, "?", game.show_guide); help.tooltip_text = "Keeper's guide"; help.custom_minimum_size.x = 48
+ var spacer = Control.new(); spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL; row.add_child(spacer)
+ var next = "Draft squad  ▶" if state.roster.size() < Campaign.MIN_SQUAD else "Fight  ▶"
+ if state.get("tour",{}).get("shop",false): next = "Shop  ▶"
+ if state.get("tour",{}).get("complete",false): next = "Tour complete"
+ if not campaign.pending_heroes().is_empty(): next = "Level ups  ▶"
+ elif not state.has("tour") and state.round >= 17: next = "Next season  ▶"
+ if state.roster.size() < Campaign.MIN_SQUAD and game.tab != "market":
+  # Point at the draft board rather than a match the player can't play yet.
+  FlowUI.cta(game, row, next, func(): navigate("market"))
+  return
+ if state.roster.size() < Campaign.MIN_SQUAD: next = "Sign %d more" % (Campaign.MIN_SQUAD - state.roster.size())
+ FlowUI.cta(game, row, next, func():
   if not state.has("tour") and state.round >= 17 and campaign.pending_heroes().is_empty(): campaign.new_season(); game.render()
-  else: game.prepare_match(), true)
+  else: game.prepare_match(), state.roster.size() < Campaign.MIN_SQUAD or state.get("tour",{}).get("complete",false))
 
 func navigate(tab: String) -> void:
  game.tab = tab; game.render()
@@ -177,15 +181,14 @@ func filters(parent: Node, key: String, values: Array) -> void:
   action(row, value.capitalize(), func(): prefs[key] = value; game.render(), prefs[key] == value)
 
 func market() -> void:
- heading("DRAFT BOARD", "Legendary headliners cost ×3 · Epics ×2 · Commons ×1. Clubs field an elite four or a full five.")
- var banner = card(body); var row = horizontal(banner)
- var info = column(row)
+ text(body, "DRAFT BOARD", 32)
  var open_slots = maxi(0, Campaign.MAX_SQUAD - campaign.lineup().size())
- text(info, "%d GOLD AVAILABLE    /    %d OPEN STARTING SLOT%s    /    %d OF 12 CONTRACTS" % [state.gold, open_slots, "" if open_slots == 1 else "S", state.roster.size()], 20, GOLD)
  var counts = {"Front": 0, "Flank": 0, "Back": 0}
  for h in campaign.lineup(): counts[HeroData.line(h.sp)] += 1
- text(info, "Starting five:  %d front  ·  %d flank  ·  %d back    |    Common %dg  ·  Epic %dg  ·  Legendary %dg" % [counts.Front, counts.Flank, counts.Back, League.COST_UNIT, League.COST_UNIT * 2, League.COST_UNIT * 3], 16, MUTED)
- text(info, "After your headliner, %dg buys an ELITE FOUR (2 Epics + 1 Common) or a FULL FIVE (1 Epic + 3 Commons). Four-creature squads fight with the elite-squad bonus." % (League.START_GOLD - League.COST_UNIT * 3), 14, MUTED)
+ var info = horizontal(card(body))
+ var slots_label = text(info, "%d open slot%s  ·  %d front · %d flank · %d back  ·  %d/12 signed" % [open_slots, "" if open_slots == 1 else "s", counts.Front, counts.Flank, counts.Back, state.roster.size()], 18, GOLD)
+ slots_label.mouse_filter = Control.MOUSE_FILTER_STOP
+ slots_label.tooltip_text = "Common %dg · Epic %dg · Legendary %dg\nAfter your headliner, %dg buys an elite four (2 Epics + 1 Common, elite-squad bonus) or a full five (1 Epic + 3 Commons)." % [League.COST_UNIT, League.COST_UNIT * 2, League.COST_UNIT * 3, League.START_GOLD - League.COST_UNIT * 3]
  var bars = horizontal(body)
  filters(bars, "role", ["All", "Front", "Flank", "Back"])
  var gap = Control.new(); gap.custom_minimum_size.x = 30; bars.add_child(gap)
@@ -204,9 +207,6 @@ func market() -> void:
    text(top, "%s  /  %s" % [HeroData.species[h.sp].role.to_upper(), HeroData.line(h.sp).to_upper()], 12, TEAL).size_flags_horizontal = Control.SIZE_EXPAND_FILL
    var pw = HeroData.power(h); text(top, "%d PWR" % pw, 16, TraitUI.power_color(pw))
    var art = portrait(box, h.sp, 250); art.caption = HeroData.species[h.sp].n
-   text(box, League.NICHE.get(h.sp, ""), 14, Color(League.TIER_COLOR[t]))
-   var r = League.ratings(h)
-   text(box, "POW %d   DUR %d   SPD %d   SKL %d" % [r.POW, r.DUR, r.SPD, r.SKL], 13, MUTED)
    TraitUI.line(game, box, h, true)
    TraitUI.rolls(game, box, h, true)
    text(box, HeroData.species[h.sp].ability_name, 17, GOLD)

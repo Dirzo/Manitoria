@@ -212,6 +212,7 @@ static func record_player(c: Campaign, won: bool) -> void:
 
 static func losses(c: Campaign, team: int) -> int:
  var n=0
+ if not c.state.tour.has("bracket") or not c.state.tour.bracket.has("matches"):return 0
  for m in c.state.tour.bracket.matches:
   if int(m.loser)==team:n+=1
  return n

@@ -6,12 +6,10 @@ static func build(game: Node) -> void:
  if not c.state.has("tour") or not c.state.tour.shop:game.phase="hub";game.render();return
  var hero=GearUI.selected(game)
  if hero.is_empty():return
- var title=game.label(game.ui,"THE OUTFITTER",36,game.WHITE,false);title.position=Vector2(40,128)
- var hint=game.label(game.ui,"Drag gear onto a champion",17,game.GOLD,false);hint.position=Vector2(425,148)
- var tabs=HBoxContainer.new();game.ui.add_child(tabs);tabs.position=Vector2(26,191);tabs.size=Vector2(950,44)
- game.label(tabs,"Components forge in pairs. Drop a second component on a champion holding one to forge a finished item.",15,game.MUTED,true).size_flags_horizontal=Control.SIZE_EXPAND_FILL
- game.button(tabs,"Recipe book",func():GearUI.recipe_book(game))
- var left=game.scroll_panel(Rect2(26,249,950,438));left.add_theme_constant_override("separation",8)
+ var tabs=HBoxContainer.new();game.ui.add_child(tabs);tabs.position=Vector2(26,140);tabs.size=Vector2(950,60)
+ var title=game.label(tabs,"SHOP",40,game.WHITE,false);title.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+ title.mouse_filter=Control.MOUSE_FILTER_STOP;title.tooltip_text="Drag gear onto a champion. Two components on one champion forge a finished item."
+ var left=game.scroll_panel(Rect2(26,212,950,475));left.add_theme_constant_override("separation",8)
  var grid=GridContainer.new();grid.columns=3;grid.add_theme_constant_override("h_separation",12);grid.add_theme_constant_override("v_separation",12);left.add_child(grid)
  for index in range(c.state.tour.stock.size()):offer(game,grid,hero,index)
  var right=game.panel(Rect2(993,130,581,626));right.add_theme_constant_override("separation",10)
@@ -30,17 +28,22 @@ static func build(game: Node) -> void:
  TraitUI.rolls(game,gear,hero,true)
  ChampionKit.build(game,right,hero,235)
  var bag=game.panel(Rect2(26,703,950,178));bag.add_theme_constant_override("separation",8);GearUI.bag(game,bag,hero)
- var actions=VBoxContainer.new();game.ui.add_child(actions);actions.position=Vector2(1200,770);actions.size=Vector2(374,80);actions.add_theme_constant_override("separation",8)
+ var actions=HBoxContainer.new();game.ui.add_child(actions);actions.position=Vector2(993,780);actions.size=Vector2(581,62);actions.add_theme_constant_override("separation",10)
  var cost=25+15*int(c.state.tour.get("rerolls",0))
- var row=HBoxContainer.new();actions.add_child(row)
- game.button(row,"Refresh · %dg"%cost,func():
-  if c.reroll_shop():game.render()
-  else:game.toast(c.last_error),false,c.state.gold<cost).tooltip_text="Refresh all offers. Costs 15g more each time this stop."
- game.button(row,"Scout",func():
+ var roll=game.button(actions,"",func():
+  if c.reroll_shop():game.sound.cue("upgrade");game.render()
+  else:game.toast(c.last_error),false,c.state.gold<cost)
+ roll.custom_minimum_size=Vector2(150,58);roll.tooltip_text="Roll new offers · %d gold (costs 15 more each roll)"%cost
+ var rr=HBoxContainer.new();rr.mouse_filter=Control.MOUSE_FILTER_IGNORE;rr.alignment=BoxContainer.ALIGNMENT_CENTER;roll.add_child(rr);rr.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+ FlowUI.glyph(rr,"roll",26);game.label(rr,"Roll",22,game.WHITE,false).mouse_filter=Control.MOUSE_FILTER_IGNORE
+ FlowUI.glyph(rr,"coin",18);game.label(rr,str(cost),18,Color("ffdf7e"),false).mouse_filter=Control.MOUSE_FILTER_IGNORE
+ var scout_b=game.button(actions,"Scout",func():
   var dialog=GearUI.modal(game,"Next opponent");game.label(dialog.box,scout(c),24);game.label(dialog.box,WorldTour.next_opponent(c).name,19,game.GOLD))
- game.button(actions,"Ready for the arena →",func():
-  if WorldTour.leave_shop(c):game.phase="hub";game.tab="overview";game.render()
-  else:game.toast(c.last_error),true)
+ scout_b.custom_minimum_size=Vector2(96,58)
+ var go=FlowUI.cta(game,actions,"Ready  ▶",func():
+  if WorldTour.leave_shop(c):game.phase="hub";game.tab="overview";game.render();game.prepare_match()
+  else:game.toast(c.last_error),false,300)
+ go.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 
 static func offer(game: Node,parent: Node,hero: Dictionary,index: int) -> void:
  var c: Campaign=game.campaign;var id=str(c.state.tour.stock[index]);var sold=id==""

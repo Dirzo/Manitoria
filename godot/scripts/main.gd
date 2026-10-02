@@ -450,9 +450,7 @@ func prepare_match() -> void:
 
 func build_prep() -> void:
  var box = scroll_panel(Rect2(26, 135, 350, 602))
- label(box, "5v5  ·  THE OPENING MATTERS", 13, GOLD)
- label(box, "Arrange your five.", 28)
- label(box, "Drag heroes or names to move them. Select a hero, then click a tile. Double-click a beast for tactics.", 16, MUTED)
+ label(box, "Formation", 28)
  var select = OptionButton.new()
  for h in campaign.state.roster:
   select.add_item(h.name + " · " + HeroData.species[h.sp].n)
@@ -472,20 +470,18 @@ func build_prep() -> void:
   cell.pressed.connect(func(): place_hero(selected_id, slot))
   grid.add_child(cell)
  var footer = panel(Rect2(26, 749, 350, 127))
- label(footer, "%d / 5 READY  ·  %s" % [campaign.lineup().size(), campaign.state.difficulty.to_upper()], 15, GOLD)
  var actions = HBoxContainer.new(); footer.add_child(actions)
- button(actions, "Back", func(): phase = "hub"; render())
- var enter = button(actions, "Enter the arena →", introduce_match, true, not campaign.lineup_ready())
+ button(actions, "◀", func(): phase = "hub"; render()).tooltip_text = "Back"
+ var enter = FlowUI.cta(self, actions, "FIGHT  ▶", introduce_match, not campaign.lineup_ready(), 250)
  enter.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ enter.tooltip_text = "%d / 5 ready · %s" % [campaign.lineup().size(), campaign.state.difficulty]
  var opp = campaign.opponent()
  var scout = panel(Rect2(406, 126, 784, 86))
  var scout_heading = HBoxContainer.new(); scout.add_child(scout_heading)
  label(scout_heading, "NEXT  /  " + opp.name.to_upper(), 15, GOLD, false).size_flags_horizontal = Control.SIZE_EXPAND_FILL
  button(scout_heading, "Scout rivals", show_opponent_scout)
- label(scout, "5v5 · Rival health / attack %d%% · Set your formation and individual orders." % roundi(campaign.quality() * 100), 15, MUTED)
  var orders = scroll_panel(Rect2(1220, 135, 354, 741))
- label(orders, "YOUR FIVE  /  BATTLE ORDERS", 14, GOLD)
- label(orders, "Tactics for every starter", 24)
+ label(orders, "ORDERS", 24)
  for hero in campaign.lineup():
   var card = PanelContainer.new(); orders.add_child(card)
   card.add_theme_stylebox_override("panel", style(Color("17303b"), Color("365662"), 10, 10))
@@ -627,24 +623,42 @@ func finish_battle() -> void:
    retry.get_ok_button().text="Retry save";retry.confirmed.connect(func():resolving=false;finish_battle());retry.popup_centered(Vector2i(560,180));return
  phase = "result"; sound.scene_music("club"); sound.cue("victory" if sim.winner == 0 else "honor", true)
  render()
+ FlowUI.banner(self, "VICTORY" if sim.winner == 0 else "DRAW" if sim.winner == -1 else "DEFEAT", Color("ffd36e") if sim.winner == 0 else Color("ff8a7a"))
 
 func build_result() -> void:
  var report = campaign.state.report
  if report.is_empty(): phase = "hub"; render(); return
  var box = scroll_panel(Rect2(40, 130, 1520, 645))
  box.add_theme_constant_override("separation",8)
- label(box, "THE ARENA REPORT", 12, GOLD)
- label(box, "Victory, earned." if report.winner == 0 else "A draw. A lesson." if report.winner == -1 else "The next win starts here.", 30)
- label(box, "vs %s  ·  %.1fs" % [report.opponent,report.duration] if exhibition else "vs %s  ·  %.1fs  ·  +%d gold" % [report.opponent, report.duration, report.gold], 16, GOLD)
+ var won = report.winner == 0; var draw = report.winner == -1
+ var verdict = label(box, "VICTORY" if won else "DRAW" if draw else "DEFEAT", 64, Color("ffd36e") if won else Color("c9d6dc") if draw else Color("ff8a7a"))
+ verdict.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; verdict.add_theme_font_override("font", load(TITLE_FONT))
+ verdict.add_theme_color_override("font_outline_color", Color("1a0f14")); verdict.add_theme_constant_override("outline_size", 10)
  var fallen = report.rows.filter(func(r): return r.team == 0 and not r.alive).size()
+ var chips = HBoxContainer.new(); chips.alignment = BoxContainer.ALIGNMENT_CENTER; chips.add_theme_constant_override("separation", 34); box.add_child(chips)
+ FlowUI.chip(self, chips, "swords", "vs " + str(report.opponent), "%.0f second fight" % report.duration)
+ if not exhibition:
+  FlowUI.chip(self, chips, "coin", "+%d" % report.gold, "Gold earned", Color("ffdf7e"))
+  FlowUI.chip(self, chips, "heart", "%d/5 alive" % (5 - fallen), "Survivors · everyone recovers before the next fight", Color("ff9aa5"))
+  var xp = label(chips, "+%d XP" % (80 if won else 65), 21, Color("9fd8ff"), false); xp.tooltip_text = "XP for every fielded hero"; xp.mouse_filter = Control.MOUSE_FILTER_STOP
  if not exhibition and report.has("tour_level"):
-  label(box,"%s · Team level %d · %s" % [report.location,report.tour_level,report.get("stage","Match %d" % report.bout)],17,GOLD)
-  if report.get("chest",false):button(box,"Champion’s chest earned · Open vault",func():TournamentRewardsUI.open_screen(self,"vault"),true)
-  if report.has("tournament_won"):label(box,("TOURNAMENT WON · Gold chest earned" if report.tournament_won else "Cup over · You finished %s%s · On to the next cup" % [TournamentRewardsUI._place_text(int(report.get("place",0))), " · %s chest earned" % report.medal if report.has("medal") else ""]),20,GOLD)
- label(box,"Exhibition · no campaign progress changed." if exhibition else "%d / 5 survived · All heroes recover · +%d XP per fielded hero" % [5-fallen,80 if report.winner==0 else 65],14,MUTED)
+  if report.has("tournament_won"):
+   var cup = label(box, ("CUP WON · GOLD CHEST" if report.tournament_won else "CUP OVER · %s%s" % [TournamentRewardsUI._place_text(int(report.get("place",0))).to_upper(), " · %s CHEST" % str(report.medal).to_upper() if report.has("medal") else ""]), 26, GOLD)
+   cup.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+  if report.get("chest",false):
+   var crow = HBoxContainer.new(); crow.alignment = BoxContainer.ALIGNMENT_CENTER; box.add_child(crow)
+   FlowUI.cta(self, crow, "Open chest  ▶", func():TournamentRewardsUI.open_screen(self,"vault"), false, 320)
  if report.has("ais"): impact_board(box, report)
- divider(box)
- var analytics = MatchAnalytics.new(); analytics.game = self; analytics.report = report; box.add_child(analytics)
+ var stats_row = HBoxContainer.new(); box.add_child(stats_row)
+ var holder = VBoxContainer.new(); box.add_child(holder)
+ var toggle = button(stats_row, "Match stats  ▾", func(): pass)
+ toggle.pressed.connect(func():
+  if holder.get_child_count() > 0:
+   for ch in holder.get_children(): ch.queue_free()
+   toggle.text = uncial_text("Match stats  ▾")
+  else:
+   var analytics = MatchAnalytics.new(); analytics.game = self; analytics.report = report; holder.add_child(analytics)
+   toggle.text = uncial_text("Hide stats  ▴"))
  var pending = campaign.pending_heroes().size()
  if campaign.state.get("run_over", false) and not exhibition:
   var over = label(box, "KNOCKED OUT · THE RUN IS OVER", 30, Color("ff8a7a"))
@@ -652,10 +666,12 @@ func build_result() -> void:
   var end = panel(Rect2(400,792,800,85))
   button(end, "See the guild's final record  →", func(): phase = "runover"; render(), true)
   return
- var footer = panel(Rect2(400,792,800,85))
- button(footer, "Choose %d heroes' earned upgrades  →" % pending if pending else "Back to main menu  →" if exhibition else "Visit tournament outfitter  →" if campaign.state.has("tour") else "Return to the club  →", func():
+ var footer = HBoxContainer.new(); ui.add_child(footer); footer.position = Vector2(560, 800); footer.size = Vector2(480, 62); footer.alignment = BoxContainer.ALIGNMENT_CENTER
+ FlowUI.cta(self, footer, ("Level ups (%d)  ▶" % pending) if pending else "Menu  ▶" if exhibition else "Shop  ▶" if campaign.state.has("tour") else "Continue  ▶", func():
   if exhibition: quit_to_menu()
-  else: phase = "upgrade" if pending else "shop" if campaign.state.has("tour") else "hub"; tab = "overview"; render(), true)
+  else:
+   phase = "upgrade" if pending else "shop" if campaign.state.has("tour") else "hub"; tab = "overview"; render()
+   if phase == "shop": FlowUI.banner(self, "SHOP", Color("c8ff9d")), false, 480)
 
 ## Arena Impact Score for every creature in the match, with the MVP called out.
 func impact_board(box: Node, report: Dictionary) -> void:
@@ -663,7 +679,7 @@ func impact_board(box: Node, report: Dictionary) -> void:
  var mvp = rows[0]
  for r in rows:
   if r.ais > mvp.ais: mvp = r
- label(box, "ARENA IMPACT  ·  MVP %s (%s) · %d AIS" % [mvp.name, HeroData.species[mvp.sp].n, mvp.ais], 18, GOLD)
+ label(box, "★ MVP  %s  ·  %d impact" % [mvp.name, mvp.ais], 20, GOLD).tooltip_text = "%s · Arena Impact Score" % HeroData.species[mvp.sp].n
  for team in [0, 1]:
   var line = HBoxContainer.new(); line.add_theme_constant_override("separation", 14); box.add_child(line)
   label(line, "YOU" if team == 0 else "RIVAL", 14, Color("86dbf2") if team == 0 else Color("ffa093"), false).custom_minimum_size.x = 60
