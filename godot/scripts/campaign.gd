@@ -12,6 +12,7 @@ const MAX_SQUAD = 5
 func new_run(club_name: String, slot: int, seed_value: int = 0, difficulty: String = "Keeper") -> void:
  HeroData.load_data()
  var seed_used = seed_value if seed_value else int(Time.get_unix_time_from_system())
+ HeroData.run_salt = str(seed_used) + ("" if seed_value else "|" + str(randi()))
  state = {"version": SAVE_VERSION, "name": club_name.strip_edges().left(36) if not club_name.strip_edges().is_empty() else "Ravenmoor Menagerie", "slot": slot, "seed": seed_used, "season": 1, "round": 0, "gold": League.START_GOLD, "earned_gold": 0, "roster": [], "market": [], "clubs": [], "schedule": [], "report": {}, "wins": 0, "losses": 0, "draws": 0, "difficulty": difficulty, "selected": "", "trophies": 0, "history": [], "next_id": 100, "music": true, "effects": true, "guide_seen": false}
  var rng = RandomNumberGenerator.new(); rng.seed = seed_used
  create_market(rng)
@@ -21,6 +22,7 @@ func new_run(club_name: String, slot: int, seed_value: int = 0, difficulty: Stri
  state.league_wins = 0; state.league_losses = 0; state.league_draws = 0
  ensure_management()
  state.run_id=Crypto.new().generate_random_bytes(16).hex_encode()
+ state.salt=HeroData.run_salt
  WorldTour.start(self)
  add_news("Club founded", "Your %d gold founding fund is ready. Sign a Legendary headliner, then draft four more creatures." % League.START_GOLD)
 
@@ -289,6 +291,7 @@ func load_slot(slot: int) -> bool:
   if FileAccess.file_exists(path + ".backup"): data = JSON.parse_string(FileAccess.get_file_as_string(path + ".backup"))
   if not valid(data): last_error = "This save cannot be read. Its files have been kept."; return false
  state = data; state.slot = slot
+ HeroData.run_salt = str(state.get("salt", state.get("seed", "")))
  ensure_management()
  return true
 

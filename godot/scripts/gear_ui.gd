@@ -77,7 +77,56 @@ static func token(game: Node,parent: Node,item: Dictionary,pixels: int=72) -> Ge
    var pip=AbilityArt.icon(button,Forge.COMPONENTS[item.recipe[i]].art,0);pip.mouse_filter=Control.MOUSE_FILTER_IGNORE
    var ps=pixels*0.3;pip.position=Vector2(pixels-ps-2-i*(ps-2),pixels-ps-2);pip.size=Vector2(ps,ps)
  button.tooltip_text=tip(item)
+ if item.get("kind","")=="component" and pixels>=56:button.hint_pixels=pixels;button.call_deferred("add_combo_hint")
  return button
+
+## What a component would forge with components you already own: the selected champion's loose
+## components first (dropping it there forges instantly), then the rest of the roster, then the bag.
+static func owned_combos(game: Node,id: String,payload: Dictionary={}) -> Array:
+ if game==null or game.campaign==null or not Forge.is_component(id):return []
+ var c: Campaign=game.campaign;var out=[];var seen={}
+ var heroes=[];var sel=selected(game)
+ if not sel.is_empty():heroes.append(sel)
+ for h in c.state.roster:
+  if h!=sel:heroes.append(h)
+ for h in heroes:
+  for k in h.get("equipment",{}):
+   if payload.get("kind","")=="equipped" and str(payload.get("owner",""))==str(h.id) and str(payload.get("slot",""))==str(k):continue
+   var p=str(h.equipment[k])
+   if not Forge.is_component(p):continue
+   var m=Forge.combine(id,p)
+   if m=="" or seen.has(m):continue
+   seen[m]=true;out.append({"partner":p,"made":m,"where":"on "+str(h.name)})
+ var bag_ids=[]
+ for p in c.state.inventory:
+  if Forge.is_component(str(p)) and str(p) not in bag_ids:bag_ids.append(str(p))
+ for p in bag_ids:
+  if p==id and payload.get("kind","")=="bag" and c.state.inventory.count(p)<2:continue
+  var m=Forge.combine(id,p)
+  if m=="" or seen.has(m):continue
+  seen[m]=true;out.append({"partner":p,"made":m,"where":"in bag"})
+ return out
+
+static func combo_text(id: String,combos: Array) -> String:
+ var t="\n\nFORGES WITH WHAT YOU OWN:" if not combos.is_empty() else "\n\nYou own no component that pairs with this yet."
+ for o in combos:t+="\n + %s (%s)  →  %s%s"%[Forge.COMPONENTS[o.partner].name,o.where,Forge.ITEMS[o.made].name," · WILD" if Forge.ITEMS[o.made].get("wild",false) else ""]
+ t+="\n\nAll recipes:"
+ for other in Forge.COMPONENT_ORDER:
+  var m=Forge.combine(id,other)
+  if m!="":t+="\n + %s  →  %s"%[Forge.COMPONENTS[other].name,Forge.ITEMS[m].name]
+ return t
+
+## A small round badge showing an item, used for "this makes…" hints.
+static func result_badge(game: Node,parent: Control,made: String,size_px: float,pos: Vector2,arrow: bool=true) -> Control:
+ var wild=Forge.ITEMS[made].get("wild",false)
+ var holder=Control.new();holder.name="ComboHint";holder.mouse_filter=Control.MOUSE_FILTER_IGNORE;holder.position=pos;holder.size=Vector2(size_px,size_px);parent.add_child(holder)
+ var ring=Panel.new();ring.mouse_filter=Control.MOUSE_FILTER_IGNORE;ring.size=Vector2(size_px,size_px);holder.add_child(ring)
+ ring.add_theme_stylebox_override("panel",game.style(Color("120d1c"),Color("ff9be0") if wild else Color("ffd36e"),int(size_px),3,2))
+ var icon=AbilityArt.icon(holder,Forge.ITEMS[made].art,0);icon.mouse_filter=Control.MOUSE_FILTER_IGNORE;icon.position=Vector2(3,3);icon.size=Vector2(size_px-6,size_px-6)
+ if arrow:
+  var a=Label.new();a.text="⚒";a.mouse_filter=Control.MOUSE_FILTER_IGNORE;a.add_theme_font_size_override("font_size",int(size_px*0.42));a.add_theme_color_override("font_color",Color("ffd36e"));a.add_theme_color_override("font_outline_color",Color.BLACK);a.add_theme_constant_override("outline_size",4)
+  a.position=Vector2(-size_px*0.34,size_px*0.42);holder.add_child(a)
+ return holder
 
 static func tip(item: Dictionary) -> String:
  if not item.has("id"):return item.get("name","")

@@ -27,6 +27,7 @@ static func build(game: Node) -> void:
  for key in GearUI.SLOT_KEYS:
   GearUI.slot(game,slots,hero,key,62)
  TraitUI.line(game,gear,hero)
+ TraitUI.rolls(game,gear,hero,true)
  ChampionKit.build(game,right,hero,235)
  var bag=game.panel(Rect2(26,703,950,178));bag.add_theme_constant_override("separation",8);GearUI.bag(game,bag,hero)
  var actions=VBoxContainer.new();game.ui.add_child(actions);actions.position=Vector2(1200,770);actions.size=Vector2(374,80);actions.add_theme_constant_override("separation",8)
@@ -57,6 +58,12 @@ static func offer(game: Node,parent: Node,hero: Dictionary,index: int) -> void:
  game.label(info,item.name,18)
  game.label(info,("WILD ITEM" if item.get("wild",false) else "FINISHED ITEM") if item.kind=="item" else "COMPONENT",12,tint)
  game.label(info,Forge.stat_line(id) if item.kind=="item" else item.short,13,game.MUTED)
+ if item.kind=="component":
+  var combos=GearUI.owned_combos(game,id,data)
+  if not combos.is_empty():
+   var o=combos[0];var wild=Forge.ITEMS[o.made].get("wild",false)
+   var hint=game.label(info,"⚒ %s · %s %s%s"%[Forge.ITEMS[o.made].name,Forge.COMPONENTS[o.partner].name.split(" ")[-1],o.where.replace("in bag","(bag)").replace("on ","@"),"  +%d"%(combos.size()-1) if combos.size()>1 else ""],12,Color("ff9be0") if wild else Color("c8ff9d"),true)
+   hint.tooltip_text=GearUI.combo_text(id,combos)
  game.button(box,"Buy & equip · %d gold"%item.price,func():GearUI.apply_drop(game,data,hero.id),true,c.state.gold<item.price or not GearUI.fits(hero,id)).tooltip_text=GearUI.tip(item)
  tile.tooltip_text=GearUI.tip(item)
 

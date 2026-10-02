@@ -14,9 +14,10 @@ static func build(desk: ManagementDesk) -> void:
   var empty=FantasyFrame.new();empty.custom_minimum_size=Vector2(286,338);row.add_child(empty)
   var box=VBoxContainer.new();empty.add_child(box);game.label(box,"+",62,game.GOLD).horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
   game.button(box,"Recruit",func():desk.navigate("market"))
- var bench=c.state.roster.filter(func(h):return h.slot<0)
+ var bench=TraitUI.sorted(c.state.roster.filter(func(h):return h.slot<0),game.desk_state.get("sort","Board"))
  if not bench.is_empty():
   var reserve=HBoxContainer.new();desk.body.add_child(reserve);game.label(reserve,"RESERVES",15,game.GOLD)
+  TraitUI.sort_bar(game,reserve)
   for h in bench:
    var button=GearUI.hero_button(game,reserve,h,60,false)
    button.tooltip_text="Click to field or replace a starter. Drop gear here to equip."
@@ -38,6 +39,7 @@ static func champion(desk: ManagementDesk,parent: Node,h: Dictionary) -> void:
  preview_holder.add_theme_stylebox_override("normal",StyleBoxEmpty.new());preview_holder.pressed.connect(func():game.selected_id=h.id;game.render())
  var preview=SplashArt.new();preview.sp=h.sp;preview_holder.add_child(preview);preview.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT);preview.mouse_filter=Control.MOUSE_FILTER_IGNORE
  var role=game.label(box,HeroData.species[h.sp].n+"  ·  "+("★ " if Traits.is_ideal(h) else "")+Traits.trait_of(h),15,TraitUI.IDEAL if Traits.is_ideal(h) else game.MUTED);role.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER;role.tooltip_text=Traits.describe(h)+"\n"+Traits.scaling_text(h.sp)+" · "+Traits.info(h.sp).calling
+ TraitUI.rolls(game,box,h,true)
  var slots=HBoxContainer.new();slots.alignment=BoxContainer.ALIGNMENT_CENTER;slots.add_theme_constant_override("separation",12);box.add_child(slots)
  for key in GearUI.SLOT_KEYS:GearUI.slot(game,slots,h,key,62)
  var actions=HBoxContainer.new();actions.alignment=BoxContainer.ALIGNMENT_CENTER;box.add_child(actions)
@@ -45,11 +47,14 @@ static func champion(desk: ManagementDesk,parent: Node,h: Dictionary) -> void:
  game.button(actions,"Details",func():desk.profile(h,true)).add_theme_font_size_override("font_size",14)
  var bench=game.button(actions,"↓",func():game.campaign.bench(h.id);game.render());bench.tooltip_text="Move to reserves"
 
+static func game_sort(desk: ManagementDesk) -> String:
+ return desk.game.desk_state.get("sort","Board")
+
 static func performance(desk: ManagementDesk) -> void:
  var dialog=desk.overlay("Champion statistics")
  var table=GridContainer.new();table.columns=6;table.add_theme_constant_override("h_separation",40);dialog.body.add_child(table)
  for title in ["HERO","LEVEL","POWER","KILLS","IMPACT / MATCH","COMPARE"]:desk.text(table,title,14,desk.GOLD)
- for h in desk.state.roster:
+ for h in TraitUI.sorted(desk.state.roster,game_sort(desk)):
   desk.action(table,h.name,func():dialog.root.queue_free();desk.profile(h,true))
   desk.text(table,str(h.level));desk.text(table,str(HeroData.power(h)));desk.text(table,str(h.kills));desk.text(table,"%.1f"%(h.impact/maxf(1,h.bouts)))
 

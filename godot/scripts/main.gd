@@ -47,7 +47,7 @@ var qa_level = 1
 var qa_elapsed = 0.0
 var qa_taken = false
 var resolving = false
-var desk_state = {"role": "All", "sort": "Power", "metric": "impact", "per_bout": true, "intel": "Rankings", "club": "Identity", "compare": []}
+var desk_state = {"role": "All", "sort": "Board", "metric": "impact", "per_bout": true, "intel": "Rankings", "club": "Identity", "compare": []}
 
 func _ready() -> void:
  HeroData.load_data()

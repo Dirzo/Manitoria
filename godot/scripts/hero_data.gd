@@ -83,7 +83,87 @@ static func line(sp: String) -> String:
 
 static func make_hero(sp: String, id: String, nickname: String, level: int = 1) -> Dictionary:
  load_data()
- return {"id": id, "sp": sp, "name": nickname, "level": level, "xp": 0, "signature_rank": 1, "learned": {}, "vigor": 0, "force": 0, "slot": -1, "bouts": 0, "wins": 0, "kills": 0, "impact": 0.0, "pending": [], "history": [], "evolution": "", "rewards": [], "last_offers": [], "progression_version": 2, "trait": Traits.ORDER[abs(hash(id + "|temper")) % Traits.ORDER.size()]}
+ var h = {"id": id, "sp": sp, "name": nickname, "level": level, "xp": 0, "signature_rank": 1, "learned": {}, "vigor": 0, "force": 0, "slot": -1, "bouts": 0, "wins": 0, "kills": 0, "impact": 0.0, "pending": [], "history": [], "evolution": "", "rewards": [], "last_offers": [], "progression_version": 2}
+ # Every champion is rolled fresh each run: a random temperament and random stat genes.
+ var rng = RandomNumberGenerator.new(); rng.seed = hash(id + "|identity|" + run_salt)
+ h.trait = Traits.roll(rng)
+ h.rolls = roll_stats(rng)
+ return h
+
+# ---------------------------------------------------------------- stat genes
+## Set once per run (from the campaign seed) so every new game deals different traits and rolls.
+static var run_salt := ""
+const ROLL_KEYS = ["hp", "attack", "armor", "haste", "speed", "potency"]
+const ROLL_NAMES = {"hp": "Health", "attack": "Damage", "armor": "Armor", "haste": "Attack speed", "speed": "Move speed", "potency": "Ability power"}
+const ROLL_MAX = 31
+## How much each stat matters to a role. Power level only rewards the rolls a role actually uses,
+## so a tank with great damage rolls but poor health and armor is still a poor tank.
+const ROLE_WEIGHTS = {
+ "Tank": {"hp": 0.4, "armor": 0.4, "speed": 0.1, "potency": 0.1},
+ "Warden": {"hp": 0.35, "armor": 0.35, "potency": 0.2, "speed": 0.1},
+ "Bruiser": {"hp": 0.3, "attack": 0.3, "armor": 0.2, "haste": 0.1, "speed": 0.1},
+ "Support": {"potency": 0.5, "hp": 0.2, "speed": 0.15, "armor": 0.15},
+ "Caster": {"potency": 0.5, "attack": 0.2, "haste": 0.1, "hp": 0.1, "speed": 0.1},
+ "Controller": {"potency": 0.45, "hp": 0.2, "attack": 0.15, "speed": 0.1, "armor": 0.1},
+ "Summoner": {"potency": 0.5, "hp": 0.2, "attack": 0.15, "speed": 0.15},
+ "Artillery": {"attack": 0.4, "haste": 0.3, "potency": 0.15, "hp": 0.15},
+ "Ranged": {"attack": 0.4, "haste": 0.35, "speed": 0.1, "hp": 0.15},
+ "Assassin": {"attack": 0.4, "haste": 0.2, "speed": 0.3, "hp": 0.1},
+ "Diver": {"attack": 0.3, "speed": 0.3, "hp": 0.2, "haste": 0.2},
+ "Skirmisher": {"attack": 0.3, "haste": 0.3, "speed": 0.25, "hp": 0.15},
+ "Duelist": {"attack": 0.35, "haste": 0.3, "hp": 0.2, "armor": 0.15},
+ "Trickster": {"potency": 0.3, "speed": 0.3, "attack": 0.25, "haste": 0.15},
+}
+
+static func roll_stats(rng: RandomNumberGenerator) -> Dictionary:
+ var r = {}
+ for k in ROLL_KEYS: r[k] = rng.randi_range(0, ROLL_MAX)
+ return r
+
+static func rolls(hero: Dictionary) -> Dictionary:
+ var r = hero.get("rolls", {})
+ if r is Dictionary and r.size() == ROLL_KEYS.size(): return r
+ # Older saves and generated stand-ins: stable rolls from the champion's id.
+ var rng = RandomNumberGenerator.new(); rng.seed = hash(str(hero.get("id", "")) + "|rolls|" + run_salt)
+ return roll_stats(rng)
+
+## -1 (worst roll) .. +1 (perfect roll)
+static func roll_norm(hero: Dictionary, key: String) -> float:
+ return (float(rolls(hero).get(key, 15.5)) - 15.5) / 15.5
+
+static func roll_mult(hero: Dictionary, key: String) -> float:
+ var spread = {"hp": 0.18, "attack": 0.18, "haste": 0.12, "speed": 0.10, "potency": 0.18}.get(key, 0.15)
+ return 1.0 + roll_norm(hero, key) * spread
+
+static func roll_total(hero: Dictionary) -> int:
+ var t = 0
+ for k in ROLL_KEYS: t += int(rolls(hero).get(k, 0))
+ return t
+
+static func role_weights(sp: String) -> Dictionary:
+ load_data()
+ return ROLE_WEIGHTS.get(species[sp].role, {"hp": 0.25, "attack": 0.25, "haste": 0.2, "speed": 0.15, "potency": 0.15})
+
+## Role fit of the rolls: -1 .. +1, only counting the stats this creature's role relies on.
+static func roll_fit(hero: Dictionary) -> float:
+ var w = role_weights(hero.sp); var t = 0.0
+ for k in w: t += roll_norm(hero, k) * w[k]
+ return t
+
+## Colour for a single roll (0..31): red, orange, yellow, green, gold for perfect.
+static func roll_color(v: int) -> Color:
+ if v >= 30: return Color("ffd36e")
+ if v >= 24: return Color("6fe08a")
+ if v >= 16: return Color("d6e86a")
+ if v >= 8: return Color("ffa451")
+ return Color("ff5e5e")
+
+static func roll_grade(v: int) -> String:
+ if v >= 30: return "S"
+ if v >= 24: return "A"
+ if v >= 16: return "B"
+ if v >= 8: return "C"
+ return "D"
 
 static func stats(hero: Dictionary, quality: float = 1.0) -> Dictionary:
  load_data()
@@ -99,6 +179,9 @@ static func stats(hero: Dictionary, quality: float = 1.0) -> Dictionary:
   result.interval /= 1.0 + item.get("haste", 0.0)
   result.armor += item.get("armor", 0.0)
  # Temperament, scaling curve and forged items.
+ result.hp *= roll_mult(hero, "hp"); result.attack *= roll_mult(hero, "attack")
+ result.armor += roll_norm(hero, "armor") * 0.03
+ result.interval /= roll_mult(hero, "haste"); result.speed *= roll_mult(hero, "speed")
  var curve = Traits.curve(hero)
  result.hp *= Traits.mod(hero, "hp") * curve
  result.attack *= Traits.mod(hero, "attack") * curve
@@ -117,9 +200,9 @@ static func stats(hero: Dictionary, quality: float = 1.0) -> Dictionary:
  if hero.get("evolution","")=="ascended":result.attack*=0.9
  return result
 
+## Power level, shown in the UI. Same scale as OVR so sorting and comparisons agree.
 static func power(hero: Dictionary) -> int:
- var s = stats(hero)
- return roundi(s.hp / 5.0 + s.attack * 3.0 / s.interval + hero.learned.size() * 25 + hero.signature_rank * 10)
+ return League.ovr(hero)
 
 const ABILITY_SLOTS = 4
 const DISCOVERY_CHOICES = 12 # Preserve indices 0–7; expand fresh discovery choices.
@@ -166,7 +249,7 @@ static func cooldown_factor(hero: Dictionary) -> float:
  return (0.85 if hero.get("evolution", "") == "arcanist" else 1.0) * Traits.mod(hero, "cd") * Forge.totals(hero).cd
 
 static func spell_factor(hero: Dictionary) -> float:
- return (1.20 if hero.get("evolution", "") == "arcanist" else 1.0) * Traits.mod(hero, "potency") * (1.0 + Forge.totals(hero).potency)
+ return (1.20 if hero.get("evolution", "") == "arcanist" else 1.0) * roll_mult(hero, "potency") * Traits.mod(hero, "potency") * (1.0 + Forge.totals(hero).potency)
 
 static func choices(hero: Dictionary, won: bool, rng: RandomNumberGenerator, reward_level: int = -1) -> Array:
  var out = []

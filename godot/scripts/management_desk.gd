@@ -186,10 +186,13 @@ func market() -> void:
  for h in campaign.lineup(): counts[HeroData.line(h.sp)] += 1
  text(info, "Starting five:  %d front  ·  %d flank  ·  %d back    |    Common %dg  ·  Epic %dg  ·  Legendary %dg" % [counts.Front, counts.Flank, counts.Back, League.COST_UNIT, League.COST_UNIT * 2, League.COST_UNIT * 3], 16, MUTED)
  text(info, "After your headliner, %dg buys an ELITE FOUR (2 Epics + 1 Common) or a FULL FIVE (1 Epic + 3 Commons). Four-creature squads fight with the elite-squad bonus." % (League.START_GOLD - League.COST_UNIT * 3), 14, MUTED)
- filters(body, "role", ["All", "Front", "Flank", "Back"])
+ var bars = horizontal(body)
+ filters(bars, "role", ["All", "Front", "Flank", "Back"])
+ var gap = Control.new(); gap.custom_minimum_size.x = 30; bars.add_child(gap)
+ TraitUI.sort_bar(game, bars)
  var shown = 0
  for t in ["Epic", "Common"]:
-  var heroes = state.market.filter(func(h): return League.tier(h.sp) == t and (prefs.role == "All" or HeroData.line(h.sp) == prefs.role))
+  var heroes = TraitUI.sorted(state.market.filter(func(h): return League.tier(h.sp) == t and (prefs.role == "All" or HeroData.line(h.sp) == prefs.role)), prefs.get("sort", "Board"))
   if heroes.is_empty(): continue
   text(body, "%s  ·  ×%d COST  ·  %dg" % [t.to_upper(), League.TIER_COST[t], League.cost(heroes[0].sp)], 20, Color(League.TIER_COLOR[t]))
   var grid = GridContainer.new(); grid.columns = 4; grid.add_theme_constant_override("h_separation", 16); grid.add_theme_constant_override("v_separation", 16); body.add_child(grid)
@@ -199,12 +202,13 @@ func market() -> void:
    box.get_parent().add_theme_stylebox_override("panel", game.style(Color("15262e"), Color(League.TIER_COLOR[t]), 10, 14, 2))
    var top = horizontal(box)
    text(top, "%s  /  %s" % [HeroData.species[h.sp].role.to_upper(), HeroData.line(h.sp).to_upper()], 12, TEAL).size_flags_horizontal = Control.SIZE_EXPAND_FILL
-   text(top, "%d OVR" % League.ovr(h), 16, Color(League.TIER_COLOR[t]))
+   var pw = HeroData.power(h); text(top, "%d PWR" % pw, 16, TraitUI.power_color(pw))
    var art = portrait(box, h.sp, 250); art.caption = HeroData.species[h.sp].n
    text(box, League.NICHE.get(h.sp, ""), 14, Color(League.TIER_COLOR[t]))
    var r = League.ratings(h)
    text(box, "POW %d   DUR %d   SPD %d   SKL %d" % [r.POW, r.DUR, r.SPD, r.SKL], 13, MUTED)
    TraitUI.line(game, box, h, true)
+   TraitUI.rolls(game, box, h, true)
    text(box, HeroData.species[h.sp].ability_name, 17, GOLD)
    var buttons = horizontal(box)
    var scout = action(buttons, "Scout", func(): game.sound.announce(h.sp); profile(h, false)); scout.tooltip_text = HeroData.species[h.sp].ability_description
@@ -250,6 +254,7 @@ func profile(h: Dictionary, yours: bool) -> void:
  var stats = HeroData.stats(h)
  text(left, "LEVEL %d  /  %s  /  %s" % [h.level, HeroData.species[h.sp].role.to_upper(), League.tier(h.sp).to_upper()], 16, TEAL)
  TraitUI.line(game, left, h)
+ TraitUI.rolls(game, left, h)
  var rr = League.ratings(h)
  text(left, "%s    POW %d · DUR %d · SPD %d · SKL %d · IMP %d" % [League.rating_badge_text(h), rr.POW, rr.DUR, rr.SPD, rr.SKL, rr.IMP], 17, League.tier_color(h.sp))
  if h.has("ais_history"): text(left, "Arena Impact form: %d  ·  last match %d  ·  %d matches" % [roundi(League.form(h)), int(h.get("ais_last", 0)), int(h.get("ais_games", 0))], 15, GOLD)

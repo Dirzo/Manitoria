@@ -129,6 +129,11 @@ static func ratings(h: Dictionary) -> Dictionary:
 	var spd = 45.0 + (d.mv - 42.0) * 0.55 + (d["as"] - 0.55) * 22.0 + lvl * 0.5
 	var skl = 55.0 + skill_points(h) * 2.2 + (4.0 if not h.get("evolution", "").is_empty() else 0.0) + lvl * 0.6
 	var imp = 40.0 + (form(h) - 30.0) * 0.9 if h.has("ais_history") else 60.0 + lvl * 0.4
+	# Stat genes: each rating moves with the rolls behind it.
+	pow_ += HeroData.roll_norm(h, "attack") * 7.0 + HeroData.roll_norm(h, "haste") * 4.0
+	dur += HeroData.roll_norm(h, "hp") * 7.0 + HeroData.roll_norm(h, "armor") * 5.0
+	spd += HeroData.roll_norm(h, "speed") * 7.0 + HeroData.roll_norm(h, "haste") * 3.0
+	skl += HeroData.roll_norm(h, "potency") * 7.0
 	var r = {"POW": pow_, "DUR": dur, "SPD": spd, "SKL": skl, "IMP": imp}
 	for k in r: r[k] = clampi(roundi(r[k]), 40, 99)
 	return r
@@ -145,6 +150,11 @@ static func ovr(h: Dictionary) -> int:
 	var attr = 0.0
 	for k in w: attr += r[k] * w[k]
 	base = base * 0.8 + (attr + (TIER_BASE[tier(h.sp)] - 70) * 0.6) * 0.2
+	# Power level: only the rolls the role uses count (a tank with great damage rolls is still a weak
+	# tank), plus temperament fit and where the champion sits on its scaling curve right now.
+	base += HeroData.roll_fit(h) * 7.0
+	base += 2.0 if Traits.is_ideal(h) else 0.0
+	base += (Traits.curve(h) - 1.0) * 22.0
 	return clampi(roundi(base), 40, 99)
 
 static func team_ovr(heroes: Array) -> int:

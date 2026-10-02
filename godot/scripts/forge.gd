@@ -10,18 +10,18 @@ const COMPONENT_PRICE := 70
 const ITEM_PRICE := 190
 
 const COMPONENTS := {
-	"fang":     {"name": "Sharpened Fang", "art": "triplebite", "attack": 0.10, "short": "+10% damage"},
-	"hide":     {"name": "Troll Hide", "art": "shellup", "hp": 0.12, "short": "+12% health"},
-	"plate":    {"name": "Bronze Plate", "art": "bulwark", "armor": 0.04, "short": "+4 armor"},
-	"feather":  {"name": "Roc Feather", "art": "tailwind", "haste": 0.10, "short": "+10% attack speed"},
-	"ember":    {"name": "Ember Shard", "art": "fire", "potency": 0.12, "short": "+12% ability strength"},
-	"moon":     {"name": "Moonstone", "art": "focus", "cd": 0.92, "short": "8% faster skills"},
-	"seed":     {"name": "Sapling Heart", "art": "rootbloom", "hp": 0.05, "potency": 0.06, "short": "+5% health, +6% ability strength"},
-	"storm":    {"name": "Storm Glass", "art": "chain", "crit": 0.12, "short": "+12% critical strike chance"},
-	"silk":     {"name": "Shadow Silk", "art": "vanish", "dodge": 0.10, "short": "+10% chance to dodge basic attacks"},
-	"venom":    {"name": "Venom Gland", "art": "venom", "lifesteal": 0.06, "short": "+6% lifesteal on all damage"},
-	"relic":    {"name": "Holy Relic", "art": "radiance", "tenacity": 0.25, "hp": 0.04, "short": "+25% crowd-control resistance, +4% health"},
-	"coin":     {"name": "Trickster's Coin", "art": "riddle", "attack": 0.04, "hp": 0.04, "short": "+4% damage and health · forges wild items"},
+	"fang":     {"name": "Sharpened Fang", "art": "comp:fang", "attack": 0.10, "short": "+10% damage"},
+	"hide":     {"name": "Troll Hide", "art": "comp:hide", "hp": 0.12, "short": "+12% health"},
+	"plate":    {"name": "Bronze Plate", "art": "comp:plate", "armor": 0.04, "short": "+4 armor"},
+	"feather":  {"name": "Roc Feather", "art": "comp:feather", "haste": 0.10, "short": "+10% attack speed"},
+	"ember":    {"name": "Ember Shard", "art": "comp:ember", "potency": 0.12, "short": "+12% ability strength"},
+	"moon":     {"name": "Moonstone", "art": "comp:moon", "cd": 0.92, "short": "8% faster skills"},
+	"seed":     {"name": "Sapling Heart", "art": "comp:seed", "hp": 0.05, "potency": 0.06, "short": "+5% health, +6% ability strength"},
+	"storm":    {"name": "Storm Glass", "art": "comp:storm", "crit": 0.12, "short": "+12% critical strike chance"},
+	"silk":     {"name": "Shadow Silk", "art": "comp:silk", "dodge": 0.10, "short": "+10% chance to dodge basic attacks"},
+	"venom":    {"name": "Venom Gland", "art": "comp:venom", "lifesteal": 0.06, "short": "+6% lifesteal on all damage"},
+	"relic":    {"name": "Holy Relic", "art": "comp:relic", "tenacity": 0.25, "hp": 0.04, "short": "+25% crowd-control resistance, +4% health"},
+	"coin":     {"name": "Trickster's Coin", "art": "comp:coin", "attack": 0.04, "hp": 0.04, "short": "+4% damage and health · forges wild items"},
 }
 const COMPONENT_ORDER := ["fang", "hide", "plate", "feather", "ember", "moon", "seed", "storm", "silk", "venom", "relic", "coin"]
 
