@@ -1332,6 +1332,16 @@ func headliner() -> Dictionary:
   if h.id==state.get("headliner",""):return h
  return state.roster[0] if not state.get("roster",[]).is_empty() else {}
 
+## The eight Legendary headliners for this run, rolled once (trait + stat genes) so the
+## signing screen shows the exact champion you'd get.
+func legend_pool() -> Dictionary:
+ if not state.has("legends") or not state.legends is Dictionary or state.legends.is_empty():
+  state.legends={}
+  for sp in League.TIERS.Legendary:
+   var h=HeroData.make_hero(sp,"h%d"%state.next_id,HeroData.NAMES[(int(state.next_id)-100)%HeroData.NAMES.size()]);state.next_id+=1
+   h.price=League.cost(sp);state.legends[sp]=h
+ return state.legends
+
 func choose_starter(sp: String) -> bool:
  if not state.roster.is_empty() or not HeroData.species.has(sp) or League.tier(sp)!="Legendary":last_error="Choose one of the eight Legendary headliners.";return false
  if state.gold<League.cost(sp):last_error="Not enough gold.";return false
@@ -1339,9 +1349,10 @@ func choose_starter(sp: String) -> bool:
  var hero={}
  for h in state.market:
   if h.sp==sp:hero=h;break
+ if hero.is_empty() and legend_pool().has(sp):hero=legend_pool()[sp];state.legends.erase(sp)
+ elif not hero.is_empty():state.market.erase(hero)
  if hero.is_empty():
   hero=HeroData.make_hero(sp,"h%d"%state.next_id,HeroData.NAMES[(int(state.next_id)-100)%HeroData.NAMES.size()]);state.next_id+=1
- else:state.market.erase(hero)
  hero.slot={"Front":FORMATION[0],"Flank":FORMATION[2],"Back":FORMATION[3]}[HeroData.line(sp)];hero.price=League.cost(sp);state.roster.append(hero)
  state.headliner=hero.id;state.selected=hero.id;state.gold-=hero.price
  draft_rivals()

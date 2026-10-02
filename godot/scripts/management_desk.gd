@@ -192,31 +192,27 @@ func market() -> void:
  var bars = horizontal(body)
  filters(bars, "role", ["All", "Front", "Flank", "Back"])
  var gap = Control.new(); gap.custom_minimum_size.x = 30; bars.add_child(gap)
- TraitUI.sort_bar(game, bars)
- var shown = 0
- for t in ["Epic", "Common"]:
-  var heroes = TraitUI.sorted(state.market.filter(func(h): return League.tier(h.sp) == t and (prefs.role == "All" or HeroData.line(h.sp) == prefs.role)), prefs.get("sort", "Board"))
-  if heroes.is_empty(): continue
-  text(body, "%s  ·  ×%d COST  ·  %dg" % [t.to_upper(), League.TIER_COST[t], League.cost(heroes[0].sp)], 20, Color(League.TIER_COLOR[t]))
-  var grid = GridContainer.new(); grid.columns = 4; grid.add_theme_constant_override("h_separation", 16); grid.add_theme_constant_override("v_separation", 16); body.add_child(grid)
-  for h in heroes:
-   shown += 1
-   var box = card(grid); box.get_parent().custom_minimum_size.x = 363
-   box.get_parent().add_theme_stylebox_override("panel", game.style(Color("15262e"), Color(League.TIER_COLOR[t]), 10, 14, 2))
-   var top = horizontal(box)
-   text(top, "%s  /  %s" % [HeroData.species[h.sp].role.to_upper(), HeroData.line(h.sp).to_upper()], 12, TEAL).size_flags_horizontal = Control.SIZE_EXPAND_FILL
-   var pw = HeroData.power(h); text(top, "%d PWR" % pw, 16, TraitUI.power_color(pw))
-   var art = portrait(box, h.sp, 250); art.caption = HeroData.species[h.sp].n
-   TraitUI.line(game, box, h, true)
-   TraitUI.rolls(game, box, h, true)
-   text(box, HeroData.species[h.sp].ability_name, 17, GOLD)
-   var buttons = horizontal(box)
-   var scout = action(buttons, "Scout", func(): game.sound.announce(h.sp); profile(h, false)); scout.tooltip_text = HeroData.species[h.sp].ability_description
-   var buy = action(buttons, "Draft · %dg" % h.price, func():
+ DraftBoard.view_bar(game, bars)
+ var sort = prefs.get("sort", "Board")
+ var pool = state.market.filter(func(h): return prefs.role == "All" or HeroData.line(h.sp) == prefs.role)
+ if pool.is_empty(): text(body, "No creatures in this role. Choose another filter.", 20, MUTED); return
+ var opts = func(h):
+  return {"on_scout": func(): game.sound.announce(h.sp); profile(h, false),
+   "draft_text": "Draft · %d gold" % h.price if DraftBoard.view(game) == "Grid" else "%d gold" % h.price,
+   "on_draft": func():
     if campaign.recruit(h.id): game.selected_id = h.id; game.sound.cue("upgrade", true); game.sound.announce(h.sp, true); game.render()
-    else: game.toast(campaign.last_error if not campaign.last_error.is_empty() else "Not enough gold or your roster is full."), true, state.gold < h.price or state.roster.size() >= 12 or state.roster.is_empty())
-   buy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
- if shown == 0: text(body, "No creatures in this role. Choose another filter.", 20, MUTED)
+    else: game.toast(campaign.last_error if not campaign.last_error.is_empty() else "Not enough gold or your roster is full."),
+   "draft_disabled": state.gold < h.price or state.roster.size() >= 12 or state.roster.is_empty()}
+ if DraftBoard.view(game) == "Table":
+  var ordered = []
+  for t in ["Epic", "Common"]: ordered.append_array(pool.filter(func(h): return League.tier(h.sp) == t))
+  DraftBoard.table(game, body, TraitUI.sorted(ordered, sort), opts)
+  return
+ for t in ["Epic", "Common"]:
+  var heroes = TraitUI.sorted(pool.filter(func(h): return League.tier(h.sp) == t), sort)
+  if heroes.is_empty(): continue
+  text(body, "%s  ·  %d gold" % [t.to_upper(), League.cost(heroes[0].sp)], 22, Color(League.TIER_COLOR[t]))
+  DraftBoard.grid(game, body, heroes, opts, 4, 372, 220)
 
 func roster() -> void:
  ChampionWardrobe.build(self)

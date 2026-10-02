@@ -273,3 +273,27 @@ static func recipe_book(game: Node) -> void:
   for b in Forge.COMPONENT_ORDER:
    var made=Forge.combine(a,b);var t=token(game,grid,Forge.info(made),50)
    t.pressed.connect(func():inspect(game,Forge.info(made)))
+
+## The whole team at a glance: every champion with their three item slots. Slots are live drop
+## targets (and forge on drop); clicking a portrait selects that champion.
+static func team_strip(game: Node,parent: Node,slot_px: int=34) -> void:
+ var c: Campaign=game.campaign
+ var scroll=ScrollContainer.new();scroll.vertical_scroll_mode=ScrollContainer.SCROLL_MODE_DISABLED;scroll.custom_minimum_size.y=slot_px+112;parent.add_child(scroll)
+ var row=HBoxContainer.new();row.add_theme_constant_override("separation",4);scroll.add_child(row)
+ var heroes=c.lineup().duplicate()
+ for h in c.state.roster:
+  if h not in heroes:heroes.append(h)
+ for h in heroes:
+  var sel=h.id==game.selected_id;var starter=h in c.lineup()
+  var card=PanelContainer.new();row.add_child(card)
+  card.add_theme_stylebox_override("panel",game.style(Color(.08,.06,.14,.95) if starter else Color(.05,.05,.08,.85),game.GOLD if sel else (Color("557879") if starter else Color("33404a")),6,3,3 if sel else 1))
+  var box=VBoxContainer.new();box.add_theme_constant_override("separation",3);card.add_child(box)
+  var face=GearToken.new();face.game=game;face.target_hero=h.id;face.name="Team_"+h.id;face.custom_minimum_size=Vector2(slot_px*3+6,62);box.add_child(face)
+  for st in ["normal","hover","pressed","focus"]:face.add_theme_stylebox_override(st,StyleBoxEmpty.new())
+  var art=SplashArt.new();art.sp=h.sp;art.mouse_filter=Control.MOUSE_FILTER_IGNORE;face.add_child(art);art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+  if not starter:art.modulate=Color(.6,.6,.66)
+  face.tooltip_text="%s · %s%s\nClick to select · drop items here"%[h.name,HeroData.species[h.sp].n,"" if starter else " (reserve)"]
+  face.pressed.connect(func():game.selected_id=h.id;game.render())
+  var nm=game.label(box,h.name,12,game.GOLD if sel else game.WHITE,false);nm.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER;nm.clip_text=true;nm.custom_minimum_size.x=slot_px*3+6
+  var slots=HBoxContainer.new();slots.add_theme_constant_override("separation",3);box.add_child(slots)
+  for key in SLOT_KEYS:slot(game,slots,h,key,slot_px)

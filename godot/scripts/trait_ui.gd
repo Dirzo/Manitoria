@@ -78,6 +78,18 @@ static func sorted(list: Array, mode: String) -> Array:
 			var fa = HeroData.roll_fit(a); var fb = HeroData.roll_fit(b)
 			if absf(fa - fb) > 0.001: return fa > fb
 			return HeroData.power(a) > HeroData.power(b))
+	elif mode in HeroData.ROLL_KEYS:
+		out.sort_custom(func(a, b): return int(HeroData.rolls(a)[mode]) > int(HeroData.rolls(b)[mode]))
+	elif mode == "Stats":
+		out.sort_custom(func(a, b): return HeroData.roll_total(a) > HeroData.roll_total(b))
+	elif mode == "Fit":
+		out.sort_custom(func(a, b): return HeroData.roll_fit(a) > HeroData.roll_fit(b))
+	elif mode == "Scale":
+		out.sort_custom(func(a, b): return Traits.score(a) > Traits.score(b))
+	elif mode == "Price":
+		out.sort_custom(func(a, b): return int(a.get("price", 0)) < int(b.get("price", 0)))
+	elif mode == "Role":
+		out.sort_custom(func(a, b): return str(HeroData.species[a.sp].role) < str(HeroData.species[b.sp].role))
 	return out
 
 ## A "Sort:" row of toggle buttons bound to game.desk_state.sort.
@@ -88,3 +100,27 @@ static func sort_bar(game: Node, parent: Node, modes: Array = ["Board", "Power",
 	for m in modes:
 		var b = game.button(row, names.get(m, m), func(): game.desk_state.sort = m; game.render(), game.desk_state.get("sort", "Board") == m)
 		b.tooltip_text = {"Board": "Original order", "Power": "Highest power level first", "Ideal": "Champions with their ideal temperament first, then the best role fit of their stat rolls"}.get(m, "")
+
+## Just the six colour-coded stat chips (key stats for the role marked with a dot).
+static func roll_chips(game: Node, parent: Node, hero: Dictionary, font := 11, flow := false) -> Container:
+	var r = HeroData.rolls(hero); var w = HeroData.role_weights(hero.sp)
+	var row: Container = HFlowContainer.new() if flow else HBoxContainer.new()
+	row.add_theme_constant_override("separation" if not flow else "h_separation", 3)
+	if flow: row.add_theme_constant_override("v_separation", 3); row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	parent.add_child(row)
+	for k in HeroData.ROLL_KEYS:
+		var v = int(r[k]); var chip = PanelContainer.new(); row.add_child(chip)
+		chip.add_theme_stylebox_override("panel", game.style(HeroData.roll_color(v).darkened(0.72), HeroData.roll_color(v) if w.has(k) else HeroData.roll_color(v).darkened(0.45), 5, 3, 1))
+		game.label(chip, "%s%s %d" % ["•" if w.has(k) else "", ROLL_SHORT[k], v], font, HeroData.roll_color(v), false)
+		chip.tooltip_text = "%s roll %d/%d (%s)%s" % [HeroData.ROLL_NAMES[k], v, HeroData.ROLL_MAX, HeroData.roll_grade(v), "\nKey stat for this role" if w.has(k) else ""]
+	return row
+
+static func scale_color(s: float) -> Color:
+	return Color("ffa451") if s <= 3.5 else (Color("c99bff") if s >= 6.5 else Color("7fe0d0"))
+
+static func fit_info(hero: Dictionary) -> Array:
+	var fit = HeroData.roll_fit(hero)
+	if fit >= 0.35: return ["GREAT", Color("ffd36e")]
+	if fit >= 0.1: return ["GOOD", Color("6fe08a")]
+	if fit <= -0.25: return ["POOR", Color("ff5e5e")]
+	return ["OK", Color("d6e86a")]

@@ -47,7 +47,7 @@ var qa_level = 1
 var qa_elapsed = 0.0
 var qa_taken = false
 var resolving = false
-var desk_state = {"role": "All", "sort": "Board", "metric": "impact", "per_bout": true, "intel": "Rankings", "club": "Identity", "compare": []}
+var desk_state = {"role": "All", "sort": "Board", "view": "Grid", "metric": "impact", "per_bout": true, "intel": "Rankings", "club": "Identity", "compare": []}
 
 func _ready() -> void:
  HeroData.load_data()
@@ -62,6 +62,7 @@ func _ready() -> void:
   if arg.begins_with("--qa="): qa = arg.trim_prefix("--qa=")
   if arg.begins_with("--capture="): qa_capture = arg.trim_prefix("--capture=")
   if arg.begins_with("--qa_level="): qa_level = int(arg.trim_prefix("--qa_level="))
+  if arg.begins_with("--qa_view="): desk_state.view = arg.trim_prefix("--qa_view=")
  if not qa.is_empty():
   campaign.new_run("Ravenmoor Menagerie", 97, 731)
   # QA club: Jackalope headliner plus a full five from the draft board (exactly the 8-unit budget).

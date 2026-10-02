@@ -18,26 +18,25 @@ static func portrait(parent: Node,hero: Dictionary,pixels: int) -> Control:
 static func starter(game: Node) -> void:
  var chosen=str(game.get_meta("starter_species","jackalope"))
  if League.tier(chosen)!="Legendary":chosen="jackalope"
- var hero=HeroData.make_hero(chosen,"preview","Your headliner")
- var heading=game.label(game.ui,"SIGN YOUR LEGENDARY HEADLINER",36,game.GOLD,false);heading.position=Vector2(34,132)
- var hint=game.label(game.ui,"Pick one. The rest lead your rivals.",18,game.WHITE,false);hint.position=Vector2(35,183)
- var left=game.scroll_panel(Rect2(26,230,970,645));var grid=GridContainer.new();grid.columns=4;grid.add_theme_constant_override("h_separation",10);grid.add_theme_constant_override("v_separation",12);left.add_child(grid)
- for sp in League.TIERS.Legendary:
-  var box=VBoxContainer.new();box.custom_minimum_size.x=225;grid.add_child(box)
-  var b=Button.new();box.add_child(b);b.custom_minimum_size=Vector2(225,262)
-  for state in ["normal","hover","pressed","focus"]:b.add_theme_stylebox_override(state,game.style(Color(0,0,0,0),game.GOLD if sp==chosen else Color(0,0,0,0),4,0,4 if sp==chosen else 0))
-  b.tooltip_text=HeroData.species[sp].role+" · "+HeroData.species[sp].ability_name
-  var art=SplashArt.new();art.sp=sp;art.caption=HeroData.species[sp].n;art.mouse_filter=Control.MOUSE_FILTER_IGNORE;b.add_child(art);art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-  if sp!=chosen:art.modulate=Color(0.78,0.78,0.82)
-  b.mouse_entered.connect(func():art.modulate=Color(1.08,1.08,1.08));b.mouse_exited.connect(func():art.modulate=Color.WHITE if sp==chosen else Color(0.78,0.78,0.82))
-  b.pressed.connect(func():game.set_meta("starter_species",sp);game.sound.cue("contest_reveal");game.sound.announce(sp);game.render())
-  var niche=game.label(box,League.NICHE.get(sp,""),14,game.GOLD if sp==chosen else game.MUTED);niche.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
- var detail=game.panel(Rect2(1016,132,558,645));game.label(detail,HeroData.species[chosen].n,30,game.GOLD)
- game.label(detail,"LEGENDARY HEADLINER · %s · %s"%[HeroData.species[chosen].role,League.NICHE.get(chosen,"")],15,Color(League.TIER_COLOR.Legendary))
- game.label(detail,"Starting rating %d OVR"%League.ovr(hero),17)
- TraitUI.species_line(game,detail,chosen)
- SplashArt.make(detail,chosen,Vector2(0,250),true)
- ChampionKit.build(game,detail,hero,220)
+ var pool=game.campaign.legend_pool()
+ var hero=pool.get(chosen,HeroData.make_hero(chosen,"preview","Your headliner"))
+ var heading=game.label(game.ui,"SIGN YOUR HEADLINER",36,game.GOLD,false);heading.position=Vector2(34,128)
+ var bar=HBoxContainer.new();game.ui.add_child(bar);bar.position=Vector2(34,180);bar.size=Vector2(960,44)
+ DraftBoard.view_bar(game,bar)
+ var left=game.scroll_panel(Rect2(26,232,970,645))
+ var legends=TraitUI.sorted(League.TIERS.Legendary.map(func(sp):return pool.get(sp,{})).filter(func(h):return not h.is_empty()),str(game.desk_state.get("sort","Board")))
+ var opts=func(h):
+  return {"selected":h.sp==chosen,"on_select":func():game.set_meta("starter_species",h.sp);game.sound.cue("contest_reveal");game.sound.announce(h.sp);game.render()}
+ if DraftBoard.view(game)=="Table":
+  DraftBoard.table(game,left,legends,opts,[["","",56],["Champion","Board",176],["Power","Power",64],["Trait","Ideal",122],["Scale","Scale",80],["HP","hp",48],["DMG","attack",48],["ARM","armor",48],["AS","haste",48],["MOV","speed",48],["AP","potency",48],["","",96]])
+ else:
+  DraftBoard.grid(game,left,legends,opts,4,200,166)
+ var detail=game.panel(Rect2(1016,128,558,652));game.label(detail,hero.name+"  ·  "+HeroData.species[chosen].n,28,game.GOLD)
+ game.label(detail,"%s  ·  %s"%[HeroData.species[chosen].role.to_upper(),League.NICHE.get(chosen,"")],15,Color(League.TIER_COLOR.Legendary))
+ SplashArt.make(detail,chosen,Vector2(0,200),true)
+ TraitUI.line(game,detail,hero,true)
+ TraitUI.rolls(game,detail,hero)
+ ChampionKit.build(game,detail,hero,160)
  var pick=FlowUI.cta(game,game.ui,"Sign  ·  %d gold  ▶"%League.cost(chosen),func():
   if game.campaign.choose_starter(chosen):
    game.selected_id=game.campaign.state.selected;game.sound.cue("contest_lock");game.phase="hub";game.tab="market";game.render();FlowUI.banner(game,"DRAFT YOUR SQUAD",Color("ffd36e"))
