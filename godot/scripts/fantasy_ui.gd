@@ -9,12 +9,12 @@ static func menu(game: Node) -> void:
  var entries=[["Continue","victory",Color("69dba8"),func():game.load_campaign(latest)],["New club","summons",Color("cdb0ff"),func():game.phase="new";game.render()],["Exhibition","gore",Color("ffbd77"),game.start_exhibition]]
  for i in range(3):
   var entry=entries[i];var frame=FantasyFrame.new();game.ui.add_child(frame);frame.position=Vector2(358+i*302,405);frame.size=Vector2(280,332);frame.accent=entry[2]
-  frame.add_theme_stylebox_override("panel",game.style(Color(.055,.10,.12,.96),entry[2],5,16,2))
+  frame.add_theme_stylebox_override("panel",game.style(Color(.055,.10,.12,.9),entry[2],12,16,0))
   var box=VBoxContainer.new();frame.add_child(box);AbilityArt.icon(box,entry[1],196)
   var button=game.button(box,entry[0],entry[3],true,i==0 and latest==0);button.custom_minimum_size.y=62;button.add_theme_font_size_override("font_size",23)
   frame.mouse_entered.connect(func():frame.modulate=Color(1.13,1.13,1.13));frame.mouse_exited.connect(func():frame.modulate=Color.WHITE)
  var saves=game.button(game.ui,"Saved campaigns",func():save_picker(game));saves.position=Vector2(620,767);saves.size=Vector2(360,46)
- var version=game.label(game.ui,"Windows edition 0.43 · Spectacle",14,Color("eee3cf"),false);version.position=Vector2(30,861)
+ var version=game.label(game.ui,"Windows edition 0.44 · Clean",14,Color("eee3cf"),false);version.position=Vector2(30,861)
 
 static func save_picker(game: Node) -> void:
  var dialog=GearUI.modal(game,"Your campaigns")

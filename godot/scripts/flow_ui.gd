@@ -73,9 +73,9 @@ static func run_bar(game: Node, parent: Node) -> void:
 static func cta(game: Node, parent: Node, text: String, callback: Callable, disabled := false, width := 360.0) -> Button:
 	var b = game.button(parent, text, callback, true, disabled)
 	b.custom_minimum_size = Vector2(width, 58); b.add_theme_font_size_override("font_size", 26)
-	b.add_theme_stylebox_override("normal", game.style(Color("2b8a57"), Color("ffe7a6"), 6, 14, 3))
-	b.add_theme_stylebox_override("hover", game.style(Color("36a86a"), Color("fff3cf"), 6, 14, 3))
-	b.add_theme_stylebox_override("pressed", game.style(Color("1f6b43"), Color("ffe7a6"), 6, 14, 3))
+	b.add_theme_stylebox_override("normal", game.style(Color("2b8a57"), Color("ffe7a6"), 10, 14, 0))
+	b.add_theme_stylebox_override("hover", game.style(Color("36a86a"), Color("fff3cf"), 10, 14, 0))
+	b.add_theme_stylebox_override("pressed", game.style(Color("1f6b43"), Color("ffe7a6"), 10, 14, 0))
 	if not disabled:
 		var t = b.create_tween().set_loops(); t.set_trans(Tween.TRANS_SINE)
 		t.tween_property(b, "modulate", Color(1.14, 1.14, 1.06), 0.9); t.tween_property(b, "modulate", Color.WHITE, 0.9)

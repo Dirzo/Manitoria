@@ -227,8 +227,11 @@ func make_theme() -> Theme:
 func style(fill: Color, border: Color, radius: int, margin: int, width: int = 1) -> StyleBoxFlat:
  var s = StyleBoxFlat.new(); s.bg_color = fill; s.border_color = border
  if margin>=10 and fill.a>.5:
-  s.shadow_color=Color(0.01,0.02,0.025,0.3);s.shadow_size=4;s.shadow_offset=Vector2(0,3)
- s.set_border_width_all(width); s.set_corner_radius_all(radius)
+  s.shadow_color=Color(0.0,0.0,0.0,0.35);s.shadow_size=10;s.shadow_offset=Vector2(0,4)
+ # Clean look: no decorative outlines. Only emphasis survives (thick rims, or vivid accents
+ # like selection gold), everything else is soft filled shapes.
+ if width < 3 and (border.s < 0.45 or border.v < 0.7): width = 0
+ s.set_border_width_all(width); s.set_corner_radius_all(maxi(radius, 8))
  s.content_margin_left = margin; s.content_margin_right = margin; s.content_margin_top = margin; s.content_margin_bottom = margin
  return s
 

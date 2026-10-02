@@ -13,12 +13,22 @@ var body: VBoxContainer
 func _ready() -> void:
  set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
  mouse_filter=Control.MOUSE_FILTER_STOP
- var shade=ColorRect.new();shade.color=Color(0.015,0.025,0.07,0.97);shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT);add_child(shade)
- var frame=FantasyFrame.new();frame.position=Vector2(50,105);frame.size=Vector2(1500,755);add_child(frame)
- frame.add_theme_stylebox_override("panel",game.style(Color("12282e"),game.GOLD,14,24,2))
+ var immersive=mode=="bracket" and game.campaign.state.has("tour")
+ if immersive:
+  # The current stop's own scenery, dimmed, behind the board.
+  var r=WorldTour.region(game.campaign)
+  var bg=TextureRect.new();bg.texture=load("res://assets/ui/regions/%s.jpg"%str(r.theme).to_lower());bg.expand_mode=TextureRect.EXPAND_IGNORE_SIZE;bg.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_COVERED
+  bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT);bg.mouse_filter=Control.MOUSE_FILTER_IGNORE;add_child(bg)
+  var dim=ColorRect.new();dim.color=Color(Color(r.color).darkened(0.85),0.62);dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT);dim.mouse_filter=Control.MOUSE_FILTER_IGNORE;add_child(dim)
+ else:
+  var shade=ColorRect.new();shade.color=Color(0.015,0.025,0.07,0.97);shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT);add_child(shade)
+ var frame=FantasyFrame.new();frame.position=Vector2(50,105) if not immersive else Vector2(40,40);frame.size=Vector2(1500,755) if not immersive else Vector2(1520,820);add_child(frame)
+ frame.add_theme_stylebox_override("panel",game.style(Color("12282e"),game.GOLD,14,24,2) if not immersive else StyleBoxEmpty.new())
  var layout=VBoxContainer.new();layout.add_theme_constant_override("separation",16);frame.add_child(layout)
  var header=HBoxContainer.new();layout.add_child(header)
- game.label(header,{"bracket":"THE TOURNAMENT BOARD","progress":"WORLD TOUR PROGRESS"}.get(mode,"CHAMPION'S VAULT"),30,game.GOLD).size_flags_horizontal=Control.SIZE_EXPAND_FILL
+ var head=game.label(header,"" if immersive else {"bracket":"THE TOURNAMENT BOARD","progress":"WORLD TOUR PROGRESS"}.get(mode,"CHAMPION'S VAULT"),30,game.GOLD);head.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+ if immersive:
+  head.text=str(WorldTour.region(game.campaign).name).to_upper();head.add_theme_font_override("font",load(game.TITLE_FONT));head.add_theme_color_override("font_color",Color(WorldTour.region(game.campaign).color).lightened(0.3))
  if on_continue.is_valid():
   var go=FlowUI.cta(game,header,continue_text,func():on_continue.call(),false,300)
  else:game.button(header,"Close",func():game.render())
@@ -45,10 +55,9 @@ const TILE := Vector2(255, 66)
 
 func bracket() -> void:
  var c=game.campaign;WorldTour.ensure_bracket(c);var b=c.state.tour.bracket
- game.label(body,"%s · Level %d · Double elimination — lose twice and you're out. The losers' champion must win the grand final twice."%[WorldTour.REGIONS[(int(b.level)-1)%6].name,b.level],17,game.GOLD)
  var canvas=Control.new();canvas.custom_minimum_size=Vector2(1410,600);body.add_child(canvas);canvas_ref=canvas;tiles={};rows={}
  board_backing(canvas)
- for cap in [["WINNERS BRACKET",Vector2(0,6),Color("8fd7ff")],["LOSERS BRACKET",Vector2(0,386),Color("ffa98f")],["GRAND FINAL",Vector2(1140,234),game.GOLD]]:
+ for cap in [["GRAND FINAL",Vector2(1140,234),game.GOLD]]:
   var l=game.label(canvas,cap[0],18,cap[2],false);l.position=cap[1]
   l.add_theme_font_override("font",load(game.TITLE_FONT));l.add_theme_color_override("font_outline_color",Color(0,0,0,.8));l.add_theme_constant_override("outline_size",5)
  # connectors
@@ -68,7 +77,8 @@ func bracket() -> void:
   var panel=PanelContainer.new();canvas.add_child(panel);panel.position=POS[i];panel.size=TILE;tiles[i]=panel;rows[i]={}
   var is_next=not next.is_empty() and next==m
   # Each match is a brass-framed wooden plaque, riveted to the board.
-  var plaque=game.style(Color("2a1a10") if not is_next else Color("3d2a12"),Color("ffd36e") if is_next else Color("8c6a3c"),4,8,3)
+  var plaque=StyleBoxFlat.new();plaque.bg_color=Color("2a1a10") if not is_next else Color("5a3d14");plaque.set_corner_radius_all(6)
+  for side_m in [SIDE_LEFT,SIDE_RIGHT,SIDE_TOP,SIDE_BOTTOM]:plaque.set_content_margin(side_m,8)
   plaque.shadow_color=Color(0,0,0,.6);plaque.shadow_size=6;plaque.shadow_offset=Vector2(3,4)
   panel.add_theme_stylebox_override("panel",plaque)
   for corner in [Vector2(3,3),Vector2(TILE.x-9,3),Vector2(3,TILE.y-9),Vector2(TILE.x-9,TILE.y-9)]:
@@ -80,9 +90,7 @@ func bracket() -> void:
   for side in ["a","b"]:
    var team=int(m["team_"+side]);var row=HBoxContainer.new();row.add_theme_constant_override("separation",6);box.add_child(row);rows[i][side]=row
    if team<0:
-    game.label(row,_source_text(m[side]),13,game.MUTED,false);continue
-   var seed=b.seeds.find(team)+1
-   game.label(row,str(seed),12,game.MUTED,false).custom_minimum_size.x=14
+    game.label(row,"—",13,Color(1,1,1,0.25),false);continue
    var roster=WorldTour.team_roster(c,team)
    var face=c.headliner() if team==0 else HeadlinerUI.rival_face(c,{"club":team,"roster":roster})
    if not face.is_empty():HeadlinerUI.portrait(row,face,22)
@@ -98,7 +106,7 @@ func bracket() -> void:
   var place=WorldTour.placement(c,0)
   game.label(foot,"Your finish: %s"%_place_text(place),20,Color("86dbf2"),false)
  else:
-  game.label(foot,"Next: %s  ·  Your record %d–%d  ·  Outfitter between every match  ·  Podium finishes earn Gold, Silver or Bronze chests; every club moves on to the next cup"%[next.get("label",""),int(c.state.tour.wins),WorldTour.losses(c,0)],16,game.MUTED,false)
+  game.label(foot,"NEXT  ·  %s"%str(next.get("label","")).to_upper(),18,game.GOLD,false)
 
 # ---------------------------------------------------------------- cup progress
 ## After a cup ends: where you finished, how far along the World Tour you are, and how the team grew.
@@ -232,9 +240,7 @@ void fragment(){
 }"""
  var m=ShaderMaterial.new();m.shader=sh;wood.material=m
  # Iron frame around the board.
- var frame=Panel.new();frame.mouse_filter=Control.MOUSE_FILTER_IGNORE;canvas.add_child(frame);frame.position=wood.position;frame.size=wood.size
- var fs=StyleBoxFlat.new();fs.bg_color=Color(0,0,0,0);fs.border_color=Color("3a2614");fs.set_border_width_all(10);fs.set_corner_radius_all(6)
- fs.shadow_color=Color(0,0,0,.5);fs.shadow_size=10;frame.add_theme_stylebox_override("panel",fs)
+ if game.campaign.state.has("tour"):wood.modulate=Color(1,1,1).lerp(Color(WorldTour.region(game.campaign).color),0.25)
 
 func _source_text(src: Dictionary) -> String:
  if src.has("w"):return "Winner of %s"%_short(int(src.w))

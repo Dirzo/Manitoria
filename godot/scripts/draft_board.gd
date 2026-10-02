@@ -25,7 +25,7 @@ static func view_bar(game: Node, parent: Node) -> HBoxContainer:
 
 static func _badge(game: Node, parent: Control, text: String, color: Color, font: int, pos: Vector2, fill := Color(0.03, 0.03, 0.06, 0.82)) -> PanelContainer:
 	var p = PanelContainer.new(); p.mouse_filter = Control.MOUSE_FILTER_IGNORE; parent.add_child(p); p.position = pos
-	p.add_theme_stylebox_override("panel", game.style(fill, color, 6, 5, 2))
+	p.add_theme_stylebox_override("panel", game.style(Color(color.darkened(0.78), 0.88) if fill.a > 0.85 and fill.r < 0.1 else fill, color, 8, 6, 0))
 	var l = game.label(p, text, font, color, false); l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	l.add_theme_color_override("font_outline_color", Color.BLACK); l.add_theme_constant_override("outline_size", 4)
 	return p
@@ -54,7 +54,7 @@ static func card(game: Node, parent: Node, h: Dictionary, o: Dictionary, width :
 	var row = HBoxContainer.new(); box.add_child(row)
 	var nm = game.label(row, h.name, 19, game.WHITE, false); nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL; nm.clip_text = true
 	var s = Traits.score(h)
-	var sc = PanelContainer.new(); row.add_child(sc); sc.add_theme_stylebox_override("panel", game.style(TraitUI.scale_color(s).darkened(0.7), TraitUI.scale_color(s), 6, 3, 1))
+	var sc = PanelContainer.new(); row.add_child(sc); sc.add_theme_stylebox_override("panel", game.style(TraitUI.scale_color(s).darkened(0.7), TraitUI.scale_color(s), 6, 4, 0))
 	game.label(sc, "%s %d" % [Traits.scaling_type(s).to_upper(), int(round(s))], 12, TraitUI.scale_color(s), false)
 	sc.tooltip_text = "%s scaler · %s" % [Traits.scaling_type(s), Traits.info(h.sp).calling]
 	# Temperament

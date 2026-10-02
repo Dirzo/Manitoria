@@ -7,7 +7,8 @@ func _ready() -> void:
  resized.connect(queue_redraw)
 func _draw() -> void:
  if surface==null and ResourceLoader.exists("res://assets/ui/arena-vellum.png"):surface=load("res://assets/ui/arena-vellum.png")
- if surface!=null:draw_texture_rect(surface,Rect2(Vector2(4,4),size-Vector2(8,8)),true,Color(0.76,0.69,0.48,0.15))
+ if surface!=null:draw_texture_rect(surface,Rect2(Vector2(4,4),size-Vector2(8,8)),true,Color(0.76,0.69,0.48,0.07))
+ return
  var c=accent; c.a=.8
  for pos in [Vector2(8,8),Vector2(size.x-8,8),Vector2(8,size.y-8),Vector2(size.x-8,size.y-8)]:
   var sx=1.0 if pos.x<size.x*.5 else -1.0

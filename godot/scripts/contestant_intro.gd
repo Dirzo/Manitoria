@@ -17,7 +17,7 @@ func build() -> void:
   var heroes=home if side==0 else away;var leader=HeadlinerUI.strongest(heroes);var face=c.headliner() if side==0 else leader
   if face.is_empty():continue
   var frame=FantasyFrame.new();add_child(frame);frame.position=Vector2(36 if side==0 else 852,226);frame.size=Vector2(712,532);frame.accent=Color("72dbff") if side==0 else Color("ff9989")
-  frame.add_theme_stylebox_override("panel",game.style(Color(.045,.06,.16,.96),frame.accent,6,18,3))
+  frame.add_theme_stylebox_override("panel",game.style(Color(frame.accent.darkened(0.88),.9),frame.accent,14,18,0))
   var column=VBoxContainer.new();column.add_theme_constant_override("separation",8);frame.add_child(column)
   FlowUI.fit_label(game.label(column,c.state.name if side==0 else rival.name,24,frame.accent,false),650,24,12)
   var banner=HBoxContainer.new();column.add_child(banner)
@@ -82,7 +82,7 @@ func scout_row(column: Node,heroes: Array,side: int) -> void:
    if Forge.ITEMS.has(str(v)) and Forge.ITEMS[str(v)].get("wild",false):wild+=1
  var row=HFlowContainer.new();row.add_theme_constant_override("h_separation",8);row.add_theme_constant_override("v_separation",4);column.add_child(row)
  var chip=func(text: String,col: Color,tip: String):
-  var p=PanelContainer.new();row.add_child(p);p.add_theme_stylebox_override("panel",game.style(col.darkened(.75),col,6,4,1));p.tooltip_text=tip
+  var p=PanelContainer.new();row.add_child(p);p.add_theme_stylebox_override("panel",game.style(col.darkened(.75),col,8,5,0));p.tooltip_text=tip
   game.label(p,text,14,col,false)
  chip.call("%d front · %d flank · %d back"%[counts.Front,counts.Flank,counts.Back],Color("dfe8ec"),"Formation lines")
  chip.call("%d healer%s"%[healers,"" if healers==1 else "s"],Color("8cff9a") if healers>0 else Color("9fb0b8"),"Champions that heal or sustain")

@@ -53,7 +53,7 @@ static func offer(game: Node,parent: Node,hero: Dictionary,index: int) -> void:
  var item=Forge.info(id) if not sold else {}
  var tint=Color("6c818b") if sold else (Color("ff9be0") if item.get("wild",false) else (Color("9fd4c6") if item.kind=="component" else Color("ffd36e")))
  var tile=FantasyFrame.new();tile.accent=tint;tile.custom_minimum_size=Vector2(290,190);parent.add_child(tile)
- tile.add_theme_stylebox_override("panel",game.style(Color(.09,.06,.17,.94),tint.darkened(.25),4,10,2))
+ tile.add_theme_stylebox_override("panel",game.style(Color(.09,.06,.17,.94),tint,10,10,0))
  var box=VBoxContainer.new();box.add_theme_constant_override("separation",5);tile.add_child(box)
  if sold:
   game.label(box,"SOLD",22,game.MUTED);game.label(box,"Refresh for new offers.",14,game.MUTED);return

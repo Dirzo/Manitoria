@@ -17,7 +17,7 @@ func _ready() -> void:
 	var env = WorldEnvironment.new(); var e = Environment.new()
 	e.background_mode = Environment.BG_CLEAR_COLOR
 	var sky = Sky.new(); var sm = ProceduralSkyMaterial.new()
-	sm.sky_top_color = Color(0.25, 0.2, 0.15); sm.sky_horizon_color = Color(1.0, 0.85, 0.55); sm.ground_bottom_color = Color(0.45, 0.3, 0.15); sm.ground_horizon_color = Color(0.85, 0.65, 0.35)
+	sm.sky_top_color = Color(0.25, 0.2, 0.15); sm.sky_horizon_color = Color(1.0, 0.85, 0.55); sm.ground_bottom_color = Color(0.02, 0.015, 0.01); sm.ground_horizon_color = Color(0.5, 0.4, 0.25)
 	sky.sky_material = sm; e.sky = sky
 	e.ambient_light_source = Environment.AMBIENT_SOURCE_SKY; e.ambient_light_energy = 0.5
 	e.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
@@ -25,7 +25,7 @@ func _ready() -> void:
 	env.environment = e; vp.add_child(env)
 	cam = Camera3D.new(); cam.fov = 22; cam.position = Vector3(0, 0, 9.5); vp.add_child(cam); cam.current = true
 	var key = DirectionalLight3D.new(); key.rotation_degrees = Vector3(-30, -25, 0); key.light_energy = 1.4; key.light_color = Color(1, 0.92, 0.78); vp.add_child(key)
-	var rim = DirectionalLight3D.new(); rim.rotation_degrees = Vector3(-10, 160, 0); rim.light_energy = 2.5; rim.light_color = Color(1.0, 0.6, 0.25); vp.add_child(rim)
+	var rim = DirectionalLight3D.new(); rim.rotation_degrees = Vector3(-10, 160, 0); rim.light_energy = 1.2; rim.light_color = Color(1.0, 0.95, 0.85); vp.add_child(rim)
 	var fill = DirectionalLight3D.new(); fill.rotation_degrees = Vector3(-8, 0, 0); fill.light_energy = 0.7; fill.light_color = Color(1, 0.9, 0.7); vp.add_child(fill)
 	glint = OmniLight3D.new(); glint.light_energy = 6.0; glint.omni_range = 3.0; glint.light_color = Color(1, 0.95, 0.8); glint.position = Vector3(-6, 0.4, 1.2); vp.add_child(glint)
 	pivot = Node3D.new(); vp.add_child(pivot)
@@ -38,7 +38,7 @@ func _ready() -> void:
 	var fm = MeshInstance3D.new(); fm.mesh = face; fm.material_override = gold; pivot.add_child(fm)
 	# Dark bronze backing, slightly larger and deeper: reads as a bevelled outline.
 	var back = TextMesh.new(); back.text = text; back.font = font; back.font_size = 64; back.depth = 0.30; back.pixel_size = 0.012; back.curve_step = 0.5
-	var bronze = StandardMaterial3D.new(); bronze.albedo_color = Color(0.32, 0.15, 0.06); bronze.metallic = 0.9; bronze.roughness = 0.45
+	var bronze = StandardMaterial3D.new(); bronze.albedo_color = Color(0.03, 0.02, 0.02); bronze.metallic = 0.0; bronze.roughness = 0.9
 	var bm = MeshInstance3D.new(); bm.mesh = back; bm.material_override = bronze; bm.position = Vector3(0.035, -0.045, -0.16); pivot.add_child(bm)
 	resized.connect(func(): fit())
 	fit()

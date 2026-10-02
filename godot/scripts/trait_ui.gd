@@ -50,7 +50,7 @@ static func rolls(game: Node, parent: Node, hero: Dictionary, compact := false) 
 		var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 4); parent.add_child(row)
 		for k in HeroData.ROLL_KEYS:
 			var v = int(r[k]); var chip = PanelContainer.new(); row.add_child(chip)
-			chip.add_theme_stylebox_override("panel", game.style(HeroData.roll_color(v).darkened(0.72), HeroData.roll_color(v) if w.has(k) else HeroData.roll_color(v).darkened(0.45), 5, 3, 1))
+			chip.add_theme_stylebox_override("panel", game.style(HeroData.roll_color(v).darkened(0.55 if w.has(k) else 0.8), HeroData.roll_color(v), 5, 3, 0))
 			var l = game.label(chip, "%s%s %d" % ["•" if w.has(k) else "", ROLL_SHORT[k], v], 11, HeroData.roll_color(v), false)
 			chip.tooltip_text = "%s roll %d/%d (%s)%s" % [HeroData.ROLL_NAMES[k], v, HeroData.ROLL_MAX, HeroData.roll_grade(v), "\nKey stat for this role" if w.has(k) else ""]
 		return
@@ -111,7 +111,7 @@ static func roll_chips(game: Node, parent: Node, hero: Dictionary, font := 11, f
 	parent.add_child(row)
 	for k in HeroData.ROLL_KEYS:
 		var v = int(r[k]); var chip = PanelContainer.new(); row.add_child(chip)
-		chip.add_theme_stylebox_override("panel", game.style(HeroData.roll_color(v).darkened(0.72), HeroData.roll_color(v) if w.has(k) else HeroData.roll_color(v).darkened(0.45), 5, 3, 1))
+		chip.add_theme_stylebox_override("panel", game.style(HeroData.roll_color(v).darkened(0.55 if w.has(k) else 0.8), HeroData.roll_color(v), 5, 3, 0))
 		game.label(chip, "%s%s %d" % ["•" if w.has(k) else "", ROLL_SHORT[k], v], font, HeroData.roll_color(v), false)
 		chip.tooltip_text = "%s roll %d/%d (%s)%s" % [HeroData.ROLL_NAMES[k], v, HeroData.ROLL_MAX, HeroData.roll_grade(v), "\nKey stat for this role" if w.has(k) else ""]
 	return row
