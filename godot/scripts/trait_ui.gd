@@ -24,7 +24,10 @@ static func species_line(game: Node, parent: Node, sp: String) -> void:
 
 const ROLL_SHORT := {"hp": "HP", "attack": "DMG", "armor": "ARM", "haste": "AS", "speed": "MOV", "potency": "AP"}
 
-static func power_color(p: int) -> Color:
+## Colour for a Power number. Pass the champion (or a team's average quality): the colour reflects how
+## good the champion is for its level (rarity, rolls, fit), not the raw number, which grows with level.
+static func power_color(x) -> Color:
+	var p = HeroData.power_quality(x) if x is Dictionary else float(x)
 	if p >= 85: return Color("ffd36e")
 	if p >= 76: return Color("6fe08a")
 	if p >= 68: return Color("d6e86a")
@@ -38,7 +41,7 @@ static func rolls(game: Node, parent: Node, hero: Dictionary, compact := false) 
 	var total = HeroData.roll_total(hero); var p = HeroData.power(hero)
 	var fit = HeroData.roll_fit(hero)
 	var head = HBoxContainer.new(); head.add_theme_constant_override("separation", 10); parent.add_child(head)
-	var pw = game.label(head, "POWER %d" % p, 15, power_color(p), false)
+	var pw = game.label(head, "POWER %d" % p, 15, power_color(hero), false)
 	pw.tooltip_text = "Power level: tier, level, abilities, how well the rolls suit a %s, temperament fit and scaling." % HeroData.species[hero.sp].role
 	var tc = HeroData.roll_color(roundi(float(total) / HeroData.ROLL_KEYS.size()))
 	game.label(head, "STATS %d/%d" % [total, HeroData.ROLL_MAX * HeroData.ROLL_KEYS.size()], 13, tc, false).tooltip_text = "Sum of all six stat rolls."

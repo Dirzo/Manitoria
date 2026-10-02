@@ -46,7 +46,7 @@ static func card(game: Node, parent: Node, h: Dictionary, o: Dictionary, width :
 	if click.is_valid(): art_button.pressed.connect(click)
 	art_button.tooltip_text = HeroData.species[h.sp].ability_name + " · " + HeroData.species[h.sp].ability_description
 	var pw = HeroData.power(h)
-	var pb = _badge(game, art_button, "%d" % pw, TraitUI.power_color(pw), 26, Vector2(width - 78, 6))
+	var pb = _badge(game, art_button, "%d" % pw, TraitUI.power_color(h), 26, Vector2(width - 78, 6))
 	pb.tooltip_text = "Power level"
 	_badge(game, art_button, HeroData.species[h.sp].role.to_upper(), tc, 12, Vector2(8, 8))
 	if Traits.is_ideal(h): _badge(game, art_button, "★ IDEAL", TraitUI.IDEAL, 12, Vector2(8, 42), Color(0.25, 0.17, 0.02, 0.9))
@@ -141,7 +141,7 @@ static func _row(game: Node, list: Node, h: Dictionary, o: Dictionary, columns: 
 			"Role":
 				game.label(c, HeroData.species[h.sp].role, 14, tc, false)
 			"Power":
-				var p = HeroData.power(h); game.label(c, str(p), 24, TraitUI.power_color(p), false)
+				var p = HeroData.power(h); game.label(c, str(p), 24, TraitUI.power_color(h), false)
 			"Ideal":
 				var t = Traits.trait_of(h)
 				var l = game.label(c, ("★ " if ideal else "") + t, 14, TraitUI.IDEAL if ideal else Color("c9d6dc"), false)

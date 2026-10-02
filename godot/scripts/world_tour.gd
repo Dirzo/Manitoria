@@ -65,7 +65,7 @@ static func resolve(c: Campaign, sim: BattleSim) -> bool:
  var rival_club=club(c,int(m.team_b) if int(m.team_a)==0 else int(m.team_a))
  if not rival_club.is_empty():c.record_team(rival_club.roster,sim,1,false,rng);c.record_club(rival_club,1 if sim.winner==0 else 0 if sim.winner==1 else -1)
  var report={"winner":sim.winner,"gold":reward,"duration":sim.time,"rows":sim.report_rows(),"opponent":rival.name,"round":t.serial,"season":c.state.season,"tour_level":t.level,"location":r.place,"bout":t.bout+1,"stage":m.label}
- report.ais=sim.units.filter(func(u):return not u.summon).map(func(u):return {"uid":u.uid,"team":u.team,"name":u.hero.name,"sp":u.hero.sp,"ais":League.ais(sim,u),"ovr":League.ovr(u.hero)})
+ report.ais=sim.units.filter(func(u):return not u.summon).map(func(u):return {"uid":u.uid,"team":u.team,"name":u.hero.name,"sp":u.hero.sp,"ais":League.ais(sim,u),"ovr":League.ovr(u.hero),"power":HeroData.power(u.hero)})
  record_player(c,sim.winner==0)
  if sim.winner==0:
   for h in c.lineup():
@@ -100,7 +100,7 @@ static func resolve(c: Campaign, sim: BattleSim) -> bool:
  # Between cups there is no item shop: the guild returns to its roster and a fresh recruit board.
  var cup_break=bracket.finished and not c.state.get("run_over",false) and not t.complete
  if cup_break:
-  t.intermission=true;c.create_market()
+  t.intermission=true;c.state.market_wave=int(c.state.get("market_wave",0))+1;c.create_market()
   c.add_news("New recruits","Fresh champions have arrived for the next cup. Recruit, reshape your formation and tactics, then start the cup.")
  t.shop=not c.state.get("run_over",false) and not cup_break;t.rerolls=0;t.stock=stock(c) if t.shop else []
  c.add_news("Tournament match complete", "%s · %s · %dg. Visit the outfitter before your next match." % [r.place,m.label,reward])
@@ -178,7 +178,10 @@ static func ensure_bracket(c: Campaign) -> void:
  t.bracket={"format":"double","seeds":teams,"matches":matches,"finished":false,"level":t.level,"champion":-1}
  t.start_levels={}
  for h in c.state.roster:t.start_levels[h.id]=int(h.level)
- for i in range(8):t.bracket["ovr_%d"%i]=League.team_ovr(team_roster(c,i))
+ for i in range(8):
+  var tr=team_roster(c,i); var ps=0.0; var qs=0.0
+  for h in tr: ps+=HeroData.power(h); qs+=HeroData.power_quality(h)
+  t.bracket["ovr_%d"%i]=roundi(ps/maxf(1,tr.size())); t.bracket["q_%d"%i]=roundi(qs/maxf(1,tr.size()))
  step(c)
 
 static func _resolve_source(b: Dictionary, src: Dictionary) -> int:

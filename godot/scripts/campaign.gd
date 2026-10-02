@@ -36,10 +36,27 @@ func create_market(_rng: RandomNumberGenerator = null) -> void:
   for sp in League.tiers()[t]: state.market.append(draft_prospect(sp))
 
 func draft_prospect(sp: String) -> Dictionary:
- var h = HeroData.make_hero(sp, "h%d" % state.next_id, HeroData.themed_name(sp, "h%d" % state.next_id))
+ var wave = int(state.get("market_wave", 0))
+ # Recruit boards after the first cup bring seasoned champions who arrive near your squad's level.
+ var lvl = 1
+ if wave > 0 and not lineup().is_empty():
+  var total = 0
+  for o in lineup(): total += int(o.level)
+  lvl = clampi(roundi(float(total) / lineup().size()) - 1, 1, 18)
+ var h = HeroData.make_hero(sp, "h%d" % state.next_id, HeroData.themed_name(sp, "h%d" % state.next_id), lvl)
  state.next_id += 1
- h.price = League.cost(sp)
+ for k in range(mini(3, maxi(0, lvl - 1))): h.learned[str(k)] = 1
+ if lvl >= 5: h.signature_rank = 2
+ h.price = League.cost(sp) if wave == 0 else value_price(h)
  return h
+
+## Value pricing for later recruit boards: rarity sets the base, then the stat rolls (overall and
+## for the champion's role) and its level push the price up or down.
+func value_price(h: Dictionary) -> int:
+ var rolls = float(HeroData.roll_total(h)) / float(HeroData.ROLL_MAX * HeroData.ROLL_KEYS.size())   # 0..1, about 0.5 on average
+ var q = 0.7 + 0.6 * rolls + 0.25 * clampf(HeroData.roll_fit(h), -1.0, 1.0)
+ var lvl = 1.0 + 0.06 * (int(h.level) - 1)
+ return maxi(60, roundi(League.cost(h.sp) * q * lvl / 5.0) * 5)
 
 func recruit(id: String) -> bool:
  if state.roster.size() >= 12: return false

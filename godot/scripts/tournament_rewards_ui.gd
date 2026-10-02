@@ -94,7 +94,7 @@ func bracket() -> void:
    var name=game.label(row,WorldTour.team_name(c,team),14,game.GOLD if won else Color("86dbf2") if team==0 else (game.MUTED if lost else game.WHITE),false)
    name.size_flags_horizontal=Control.SIZE_EXPAND_FILL;name.clip_text=true
    var pw=int(b.get("ovr_%d"%team,0))
-   game.label(row,"✓" if won else str(pw),14,game.GOLD if won else TraitUI.power_color(pw),false).tooltip_text="Team power"
+   game.label(row,"✓" if won else str(pw),14,game.GOLD if won else TraitUI.power_color(float(b.get("q_%d"%team,70))),false).tooltip_text="Team power"
   panel.tooltip_text=m.label
  var foot=HBoxContainer.new();foot.add_theme_constant_override("separation",30);body.add_child(foot)
  if b.finished:
@@ -136,7 +136,7 @@ func progress() -> void:
   SplashArt.make(col,h.sp,Vector2(120,130))
   var gained=int(h.level)-int(start.get(h.id,h.level))
   var l=game.label(col,"%s  Lv %d%s"%[h.name,int(h.level),("  ▲%d"%gained) if gained>0 else ""],15,Color("6fe08a") if gained>0 else game.WHITE,false);l.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
-  var pw=HeroData.power(h);var p=game.label(col,"%d power"%pw,14,TraitUI.power_color(pw),false);p.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+  var pw=HeroData.power(h);var p=game.label(col,"%d power"%pw,14,TraitUI.power_color(h),false);p.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
  if won:FlowUI.banner(game,"CHAMPIONS!",game.GOLD,"%s conquers %s"%[c.state.name,last.location])
 
 # ---------------------------------------------------------------- drama

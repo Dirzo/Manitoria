@@ -120,6 +120,28 @@ static func detail_toggle(game: Node, parent: Node) -> CheckBox:
 		game.campaign.state.detailed = on; game.campaign.save(); game.render())
 	parent.add_child(cb); return cb
 
+## Settings: volume sliders for music, sound effects and the announcer (saved for every campaign).
+static func settings(game: Node) -> void:
+	var dialog = GearUI.modal(game, "Settings", Vector2(660, 400))
+	dialog.box.add_theme_constant_override("separation", 14)
+	for row_def in [["music", "Music"], ["effects", "Sound effects"], ["voice", "Announcer"]]:
+		var key: String = row_def[0]
+		var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 16); dialog.box.add_child(row)
+		var l = game.label(row, row_def[1], 20, game.WHITE, false); l.custom_minimum_size.x = 170
+		var slider = HSlider.new(); slider.min_value = 0; slider.max_value = 100; slider.step = 1
+		slider.value = roundi(float(game.sound.levels[key]) * 100.0); slider.custom_minimum_size = Vector2(330, 30)
+		slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER; row.add_child(slider)
+		var v = game.label(row, "%d%%" % roundi(slider.value), 18, Color("ffd36e"), false); v.custom_minimum_size.x = 60
+		slider.value_changed.connect(func(value):
+			v.text = "%d%%" % roundi(value); game.sound.set_level(key, value / 100.0))
+		slider.drag_ended.connect(func(_c):
+			game.sound.save_settings()
+			if key == "voice": game.sound.announce("fight", true)
+			elif key == "effects": game.sound.cue("contest_reveal", true))
+	game.label(dialog.box, "Saved for every campaign. The ♪ and FX buttons still mute music and effects.", 14, Color("9fb0b8"), true)
+	var done_row = HBoxContainer.new(); done_row.alignment = BoxContainer.ALIGNMENT_END; dialog.box.add_child(done_row)
+	game.button(done_row, "Done", func(): game.sound.save_settings(); dialog.root.queue_free(), true).custom_minimum_size = Vector2(160, 50)
+
 ## A styled yes/no popup. on_yes runs only if the player confirms.
 static func confirm(game: Node, title: String, body: String, yes_text: String, on_yes: Callable, no_text := "Cancel") -> void:
 	var dialog = GearUI.modal(game, title, Vector2(720, 330))

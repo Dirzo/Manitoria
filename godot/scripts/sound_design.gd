@@ -73,6 +73,7 @@ func _ready() -> void:
   if ResourceLoader.exists(path): cache[key] = load(path)
   else: push_error("Missing combat audio: " + path)
  setup_announcer()
+ load_settings()
  print("Audio loaded: ", music_cache.size(), " tracks; ", cache.size(), " effects")
  var master = AudioServer.get_bus_index("Master")
  if AudioServer.get_bus_effect_count(master) == 0:
@@ -193,9 +194,14 @@ var last_announce := ""
 var announce_cooldown := 0.0
 
 func setup_announcer() -> void:
- announcer = AudioStreamPlayer.new(); announcer.bus = "Effects"; announcer.volume_db = 1.0; add_child(announcer)
+ # The announcer has its own bus so its volume is independent of music and effects.
+ if AudioServer.get_bus_index("Voice") < 0:
+  AudioServer.add_bus(); var vb = AudioServer.bus_count - 1
+  AudioServer.set_bus_name(vb, "Voice"); AudioServer.set_bus_send(vb, "Master")
+ announcer = AudioStreamPlayer.new(); announcer.bus = "Voice"; announcer.volume_db = 1.0; add_child(announcer)
  var dir = "res://assets/audio/announcer/"
- for key in ["title", "welcome", "guild", "found_guild", "battle", "count_3", "count_2", "count_1", "fight", "call_1", "call_2", "call_3", "call_4"] + SPECIES_FAMILY.keys():
+ # Menu line, new-guild line, the battle countdown and the kill-streak calls. (No champion-name lines.)
+ for key in ["guild", "found_guild", "count_3", "count_2", "count_1", "fight", "call_1", "call_2", "call_3", "call_4"]:
   if ResourceLoader.exists(dir + key + ".ogg"): announcer_lines[key] = load(dir + key + ".ogg")
 
 ## Play several lines back to back (e.g. the title call, then the welcome).
@@ -276,6 +282,29 @@ func battle_event(e: Dictionary, unit: Dictionary, pan: float = 0.0) -> void:
  last_event[gate] = now
  var variant = 0.97 + float(int(e.get("uid", 0)) % 5) * 0.015
  play_sample(sound.key, sound.gain, sound.priority, pan, variant)
+
+# ---------------------------------------------------------------- volume settings (global, saved)
+const SETTINGS_PATH := "user://settings.cfg"
+var levels := {"music": 0.5, "effects": 0.5, "voice": 0.85}
+
+func load_settings() -> void:
+ var cfg = ConfigFile.new()
+ if cfg.load(SETTINGS_PATH) == OK:
+  for k in levels: levels[k] = clampf(float(cfg.get_value("audio", k, levels[k])), 0.0, 1.0)
+ apply_levels()
+
+func save_settings() -> void:
+ var cfg = ConfigFile.new()
+ for k in levels: cfg.set_value("audio", k, levels[k])
+ cfg.save(SETTINGS_PATH)
+
+func set_level(kind: String, value: float) -> void:
+ levels[kind] = clampf(value, 0.0, 1.0); apply_levels()
+
+func apply_levels() -> void:
+ set_mix(levels.music, levels.effects)
+ var vb = AudioServer.get_bus_index("Voice")
+ if vb >= 0: AudioServer.set_bus_volume_db(vb, linear_to_db(maxf(0.0001, levels.voice)))
 
 func set_mix(music_volume: float, effects_volume: float) -> void:
  music_mix = linear_to_db(maxf(0.0001,clampf(music_volume,0,1)))

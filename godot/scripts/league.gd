@@ -174,6 +174,10 @@ static func ratings(h: Dictionary) -> Dictionary:
 	return r
 
 static func ovr(h: Dictionary) -> int:
+	return clampi(roundi(ovr_raw(h)), 40, 99)
+
+## The rating before the 40-99 clamp (used for the 1-100 Power scale).
+static func ovr_raw(h: Dictionary) -> float:
 	var base = TIER_BASE[tier(h.sp)] + (int(h.level) - 1) * 1.05 + skill_points(h) * 0.55
 	base += 2.0 if not h.get("evolution", "").is_empty() else 0.0
 	base += (form(h) - 50.0) * 0.12 if h.has("ais_history") else 0.0
@@ -190,7 +194,7 @@ static func ovr(h: Dictionary) -> int:
 	base += HeroData.roll_fit(h) * 7.0
 	base += 2.0 if Traits.is_ideal(h) else 0.0
 	base += (Traits.curve(h) - 1.0) * 22.0
-	return clampi(roundi(base), 40, 99)
+	return base
 
 static func team_ovr(heroes: Array) -> int:
 	if heroes.is_empty(): return 0
@@ -199,12 +203,20 @@ static func team_ovr(heroes: Array) -> int:
 	return roundi(s / heroes.size())
 
 static func rating_badge_text(h: Dictionary) -> String:
-	var delta = ovr(h) - int(h.get("ovr_week", ovr(h)))
-	return "%d OVR%s" % [ovr(h), (" +%d" % delta) if delta > 0 else (" -%d" % -delta) if delta < 0 else ""]
+	var p = HeroData.power(h)
+	var delta = p - int(h.get("power_week", p))
+	return "%d power%s" % [p, (" +%d" % delta) if delta > 0 else (" -%d" % -delta) if delta < 0 else ""]
+
+## A team's average Power (the 1-100 scale shown everywhere in the UI).
+static func team_power(heroes: Array) -> int:
+	if heroes.is_empty(): return 0
+	var s = 0.0
+	for h in heroes: s += HeroData.power(h)
+	return roundi(s / heroes.size())
 
 ## Snapshot every league creature's rating at the start of a week so movement can be shown.
 static func week_snapshot(c: Campaign) -> void:
-	for h in all_heroes(c): h.ovr_week = ovr(h)
+	for h in all_heroes(c): h.ovr_week = ovr(h); h.power_week = HeroData.power(h)
 
 static func all_heroes(c: Campaign) -> Array:
 	var out = c.state.roster.duplicate()

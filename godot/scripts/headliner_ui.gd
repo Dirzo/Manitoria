@@ -65,7 +65,7 @@ static func overview(desk: ManagementDesk) -> void:
   var heroes=home if side==0 else away;var leader=strongest(heroes);var face=c.headliner() if side==0 else rival_face(c,rival)
   var panel=desk.card(panels);panel.get_parent().custom_minimum_size.x=755
   var title=desk.horizontal(panel);Crest.make(title,Crest.of_campaign(c) if side==0 else Crest.default_for(rival.name),c.state.name if side==0 else rival.name,Vector2(34,40));var tl=desk.text(title,c.state.name if side==0 else rival.name,24,Color("7ddcf2") if side==0 else Color("ffa093"));FlowUI.fit_label(tl,520,24,12);tl.size_flags_horizontal=Control.SIZE_EXPAND_FILL
-  desk.text(title,"%d OVR"%League.team_ovr(heroes),22,desk.GOLD).tooltip_text="Team rating: the average OVR of the five starters. Matchups and tactics still matter."
+  desk.text(title,"%d power"%League.team_power(heroes),22,desk.GOLD).tooltip_text="Team power: the average Power of the five starters. Matchups and tactics still matter."
   if not face.is_empty():
    var banner=desk.horizontal(panel);portrait(banner,face,124)
    var words=desk.column(banner);desk.text(words,"YOUR HEADLINER" if side==0 else "RIVAL HEADLINER",12,desk.GOLD);desk.text(words,face.name+" · "+HeroData.species[face.sp].n,24)
@@ -80,7 +80,7 @@ static func overview(desk: ManagementDesk) -> void:
    button.pressed.connect(func():desk.profile(h,side==0));button.tooltip_text=HeroData.species[h.sp].n+" · Inspect abilities and equipment"
    desk.text(tile,h.name,16,desk.GOLD if h.id==leader.get("id","") else desk.WHITE)
    desk.text(tile,League.rating_badge_text(h),14,League.tier_color(h.sp))
- var delta=League.team_ovr(home)-League.team_ovr(away)
+ var delta=League.team_power(home)-League.team_power(away)
  var edge=desk.text(desk.body,"EVEN MATCH" if delta==0 else ("YOU +%d" if delta>0 else "RIVALS +%d")%abs(delta),26,Color("6fe08a") if delta>0 else (Color("ff8a7a") if delta<0 else desk.GOLD))
  edge.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER;edge.tooltip_text="Team rating difference (average power of the starters)";edge.mouse_filter=Control.MOUSE_FILTER_STOP
  if not c.state.report.is_empty():desk.action(desk.body,"Last match · Damage & healing",func():desk.report_dialog(c.state.report))

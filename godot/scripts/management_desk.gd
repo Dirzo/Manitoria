@@ -214,7 +214,9 @@ func market() -> void:
  for t in tier_order:
   var heroes = TraitUI.sorted(pool.filter(func(h): return League.tier(h.sp) == t), sort)
   if heroes.is_empty(): continue
-  text(body, "%s  ·  %d gold" % [t.to_upper(), League.cost(heroes[0].sp)], 22, Color(League.TIER_COLOR[t]))
+  var prices = heroes.map(func(x): return int(x.price))
+  var price_text = "%d gold" % prices.min() if prices.min() == prices.max() else "%d–%d gold · priced by rolls & level" % [prices.min(), prices.max()]
+  text(body, "%s  ·  %s" % [t.to_upper(), price_text], 22, Color(League.TIER_COLOR[t]))
   DraftBoard.grid(game, body, heroes, opts, 4, 372, 220)
 
 ## Warn when a pick would leave too little gold to field a full five.
@@ -453,8 +455,8 @@ func league_page() -> void:
    text(info, "Headliner: %s  ·  Record %d–%d" % [HeroData.species[face[0].sp].n if not face.is_empty() else "—", cl.wins, cl.losses], 15, MUTED)
    var strip = horizontal(row)
    for h in cl.roster:
-    var tile = column(strip); thumb(tile, h.sp, 46); text(tile, str(League.ovr(h)), 13, League.tier_color(h.sp))
-   text(row, "%d OVR" % League.team_ovr(cl.roster), 28, GOLD)
+    var tile = column(strip); thumb(tile, h.sp, 46); text(tile, str(HeroData.power(h)), 13, TraitUI.power_color(h))
+   text(row, "%d power" % League.team_power(cl.roster), 28, GOLD)
   return
  if prefs.intel == "Impact":
   var box = card(body)
@@ -483,7 +485,7 @@ func league_page() -> void:
  var heroes = League.all_heroes(campaign)
  heroes.sort_custom(func(a, b): return League.ovr(a) > League.ovr(b))
  var grid = GridContainer.new(); grid.columns = 10; grid.add_theme_constant_override("h_separation", 22); grid.add_theme_constant_override("v_separation", 8); box.add_child(grid)
- for caption in ["#", "", "CREATURE", "CLUB", "TIER", "OVR", "POW", "DUR", "SPD", "SKL / IMP"]: text(grid, caption, 13, GOLD)
+ for caption in ["#", "", "CREATURE", "CLUB", "TIER", "POWER", "POW", "DUR", "SPD", "SKL / IMP"]: text(grid, caption, 13, GOLD)
  for i in range(mini(30, heroes.size())):
   var h = heroes[i]; var r = League.ratings(h); var cl = League.club_of(campaign, h)
   text(grid, str(i + 1), 17, GOLD)
@@ -512,13 +514,7 @@ func club_page() -> void:
   text(box, "Keeper offers a gentler start. Standard uses equal base stats. Champion strengthens the opposition. Current rival health and attack: %d%%." % roundi(campaign.quality() * 100), 19, MUTED)
   action(box, "Music: " + ("On" if game.sound.music_enabled else "Off"), game.toggle_music)
   action(box, "Battle sounds: " + ("On" if game.sound.effects_enabled else "Off"), game.toggle_effects)
-  for setting in [["music_volume","Music level"],["effects_volume","Battle effects level"]]:
-   text(box,setting[1],15,GOLD)
-   var slider = HSlider.new(); slider.min_value = 0; slider.max_value = 100; slider.step = 1; slider.value = state.get(setting[0],0.5)*100; slider.custom_minimum_size.y = 24; box.add_child(slider)
-   slider.value_changed.connect(func(value):
-    state[setting[0]] = value/100.0
-    game.sound.set_mix(state.get("music_volume",0.5),state.get("effects_volume",0.5)))
-   slider.drag_ended.connect(func(_changed): campaign.save())
+  action(box, "⚙  Audio settings", func(): FlowUI.settings(game))
   action(box, "Save campaign", func(): game.toast("Campaign saved." if campaign.save() else campaign.last_error))
   action(box, "Save & return to main menu", game.quit_to_menu)
   text(box, "Start a fresh club or load one of three saved campaigns from the main menu. Replacing an occupied save slot asks first.", 17, MUTED)

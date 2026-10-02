@@ -32,7 +32,7 @@ func build() -> void:
   for i in range(heroes.size()):
    var h=heroes[i];var tile=VBoxContainer.new();tile.custom_minimum_size.x=124;strip.add_child(tile)
    HeadlinerUI.portrait(tile,h,106);var n=game.label(tile,h.name,16,game.GOLD if h.id==leader.id else game.WHITE,false);n.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
-   var pw=HeroData.power(h);var p=game.label(tile,"%d"%pw,22,TraitUI.power_color(pw),false);p.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER;p.tooltip_text="Power";p.mouse_filter=Control.MOUSE_FILTER_STOP
+   var pw=HeroData.power(h);var p=game.label(tile,"%d"%pw,22,TraitUI.power_color(h),false);p.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER;p.tooltip_text="Power";p.mouse_filter=Control.MOUSE_FILTER_STOP
    tile.modulate.a=0;timeline.tween_property(tile,"modulate:a",1.0,.22).set_delay(.5+i*.32+side*.12)
    if side==0:timeline.tween_callback(func():game.sound.play_sample("contest_reveal",-12,2,-.4 if i%2==0 else .4,1.0+i*.055);revealed+=1).set_delay(.5+i*.32)
   scout_row(column,heroes,side)

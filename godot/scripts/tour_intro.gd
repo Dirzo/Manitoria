@@ -57,7 +57,7 @@ func build() -> void:
 		var nm = game.label(col, WorldTour.team_name(c, team), 15, Color("86dbf2") if team == 0 else Color.WHITE, false); nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		FlowUI.fit_label(nm, 160, 15, 10); nm.custom_minimum_size.x = 160
 		var pw = int(b.get("ovr_%d" % team, 0))
-		var p = game.label(col, "Seed %d  ·  %d power" % [k + 1, pw], 13, TraitUI.power_color(pw), false); p.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		var p = game.label(col, "Seed %d  ·  %d power" % [k + 1, pw], 13, TraitUI.power_color(float(b.get("q_%d" % team, 70))), false); p.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		col.modulate.a = 0; col.position.y = 30
 		tl.tween_property(col, "modulate:a", 1.0, 0.3).set_delay(2.0 + k * 0.12)
 	var holder2 = HBoxContainer.new(); add_child(holder2); holder2.position = Vector2(560, 760); holder2.size = Vector2(480, 64); holder2.alignment = BoxContainer.ALIGNMENT_CENTER

@@ -240,9 +240,16 @@ static func stats(hero: Dictionary, quality: float = 1.0) -> Dictionary:
  if hero.get("evolution","")=="ascended":result.attack*=0.9
  return result
 
-## Power level, shown in the UI. Same scale as OVR so sorting and comparisons agree.
+## Power on a 1-100 scale that grows through the run: level-1 champions sit in the teens to high 30s,
+## and only the best champions near level 20 approach 100. The colour of a Power number shows
+## quality (rarity, rolls, temperament) instead, via power_quality(), so a strong roll reads green early.
 static func power(hero: Dictionary) -> int:
- return League.ovr(hero)
+ var lvl = int(hero.get("level", 1))
+ return clampi(roundi((power_quality(hero) - 40.0) * 0.8 + (lvl - 1) * 3.15), 1, 100)
+
+## Level-neutral quality on the old 40-99 rating scale (what the Power colour is based on).
+static func power_quality(hero: Dictionary) -> float:
+ return League.ovr_raw(hero) - (int(hero.get("level", 1)) - 1) * 0.84
 
 const ABILITY_SLOTS = 4
 const MAX_RANK = 3

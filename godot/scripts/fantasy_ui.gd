@@ -6,7 +6,7 @@ static func menu(game: Node) -> void:
  var latest=0;var modified=0
  for slot in range(1,4):
   if FileAccess.file_exists(Campaign.save_path(slot)) and FileAccess.get_modified_time(Campaign.save_path(slot))>modified:latest=slot;modified=FileAccess.get_modified_time(Campaign.save_path(slot))
- var entries=[["Continue","victory",Color("69dba8"),func():game.load_campaign(latest)],["New club","summons",Color("cdb0ff"),func():game.phase="new";game.render()],["Exhibition","gore",Color("ffbd77"),game.start_exhibition]]
+ var entries=[["Continue","victory",Color("69dba8"),func():game.load_campaign(latest)],["New club","summons",Color("cdb0ff"),func():game.sound.announce("found_guild",true);game.phase="new";game.render()],["Exhibition","gore",Color("ffbd77"),game.start_exhibition]]
  for i in range(3):
   var entry=entries[i];var frame=FantasyFrame.new();game.ui.add_child(frame);frame.position=Vector2(358+i*302,405);frame.size=Vector2(280,332);frame.accent=entry[2]
   frame.add_theme_stylebox_override("panel",game.style(Color(.055,.10,.12,.9),entry[2],12,16,0))
@@ -26,7 +26,9 @@ static func save_picker(game: Node) -> void:
 static func header(game: Node) -> void:
  if game.phase in ["menu","new"]:
   var row=HBoxContainer.new();game.ui.add_child(row);row.position=Vector2(1452,28)
+  row.position=Vector2(1390,28)
   game.button(row,"♪",game.toggle_music).tooltip_text="Music on/off"
+  game.button(row,"⚙",func():FlowUI.settings(game)).tooltip_text="Settings: music, effects and announcer volume"
   game.button(row,"Exit",game.close_game)
   return
  location_banner(game)
@@ -85,7 +87,9 @@ void fragment(){
  var row=HBoxContainer.new();row.add_theme_constant_override("separation",6);tools.add_child(row)
  var mb=game.button(row,"♪",game.toggle_music);mb.tooltip_text="Music: "+("on" if game.sound.music_enabled else "off");mb.custom_minimum_size=Vector2(56,40)
  var fb=game.button(row,"FX",game.toggle_effects);fb.tooltip_text="Sound effects: "+("on" if game.sound.effects_enabled else "off");fb.custom_minimum_size=Vector2(56,40)
- var menu_button=game.button(tools,"Menu",game.quit_to_menu if game.phase!="new" else func():game.phase="menu";game.render());menu_button.custom_minimum_size=Vector2(118,40)
+ var row2=HBoxContainer.new();row2.add_theme_constant_override("separation",6);tools.add_child(row2)
+ var sb=game.button(row2,"⚙",func():FlowUI.settings(game));sb.tooltip_text="Settings: music, effects and announcer volume";sb.custom_minimum_size=Vector2(44,40)
+ var menu_button=game.button(row2,"Menu",game.quit_to_menu if game.phase!="new" else func():game.phase="menu";game.render());menu_button.custom_minimum_size=Vector2(68,40)
 
 static func _stage_text(c: Campaign) -> String:
  var t=c.state.tour

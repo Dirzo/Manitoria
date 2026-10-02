@@ -228,6 +228,7 @@ func _ready() -> void:
     campaign.state.roster_intro=true;campaign.state.roster[0].xp_priority="focus";campaign.state.roster[0].level=4;campaign.state.roster[0].xp=90;campaign.state.roster[3].xp_priority="rest"
     campaign.save_formation(0)
    render()
+   if qa == "settings": FlowUI.settings(self)
    if has_meta("qa_scroll"):
     await get_tree().process_frame
     for sc in ui.find_children("*","ScrollContainer",true,false): sc.scroll_vertical=int(get_meta("qa_scroll"))
@@ -371,10 +372,9 @@ func stage_label() -> String:
 var welcomed = false
 func build_menu() -> void:
  FantasyUI.menu(self)
- remove_meta("guild_called") if has_meta("guild_called") else null
  if not welcomed and qa.is_empty():
   welcomed = true
-  get_tree().create_timer(0.6).timeout.connect(func(): sound.announce("welcome"))
+  get_tree().create_timer(0.6).timeout.connect(func(): sound.announce("guild"))
 
 func build_showcase() -> void:
  var gallery = ["kirin", "minotaur", "phoenix", "griffin", "unicorn", "golem"]
@@ -393,8 +393,6 @@ func build_showcase() -> void:
  button(row,"Next →",func(): showcase_index = (showcase_index+1)%gallery.size(); render())
 
 func build_new() -> void:
- # Starting a new guild: the guild line plays once each time you arrive from the menu.
- if not has_meta("guild_called") and qa.is_empty(): set_meta("guild_called", true); sound.announce("guild", true)
  if new_crest.is_empty(): new_crest = Crest.default_for(new_club_draft)
  # The great title.
  var title = Title3D.new(); ui.add_child(title); title.position = Vector2(150, 8); title.size = Vector2(1300, 180)
@@ -497,7 +495,6 @@ func build_runover() -> void:
  button(actions, "Main menu", func(): phase = "menu"; render()).size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 func found_club() -> void:
- sound.announce("found_guild", true)
  var name_value = new_name.text
  if FileAccess.file_exists(Campaign.save_path(new_slot)):
   var dialog = ConfirmationDialog.new(); ui.add_child(dialog)
@@ -519,7 +516,7 @@ func load_campaign(slot: int) -> void:
  if not campaign.load_slot(slot): toast(campaign.last_error); return
  desk_state.compare = []; desk_state.role = "All"
  sound.set_music(campaign.state.get("music", true)); sound.effects_enabled = campaign.state.get("effects", true)
- sound.set_mix(campaign.state.get("music_volume",0.5),campaign.state.get("effects_volume",0.5))
+ sound.apply_levels()
  selected_id = campaign.state.get("selected", "")
  phase = "upgrade" if not campaign.pending_heroes().is_empty() else "shop" if campaign.state.get("tour",{}).get("shop",false) else "hub"
  if campaign.state.roster.is_empty() and campaign.state.has("tour"):phase="starter"
@@ -834,7 +831,7 @@ func impact_board(box: Node, report: Dictionary) -> void:
    var pic = SplashArt.make(top, r.sp, Vector2(48, 48))
    var words = VBoxContainer.new(); top.add_child(words)
    label(words, ("★ " if r == mvp else "") + r.name, 15, GOLD if r == mvp else WHITE, false)
-   label(words, "%d AIS  ·  %d OVR" % [r.ais, r.ovr], 15, Color("8fe08a") if r.ais >= 65 else Color("ff9a8a") if r.ais < 40 else MUTED, false)
+   label(words, "%d AIS  ·  %d power" % [r.ais, int(r.get("power", r.ovr))], 15, Color("8fe08a") if r.ais >= 65 else Color("ff9a8a") if r.ais < 40 else MUTED, false)
 
 func build_upgrade() -> void:
  var pending = campaign.pending_heroes()
