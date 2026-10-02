@@ -7,7 +7,7 @@ extends RefCounted
 const TABLE_COLS := [
 	["", "", 56], ["Champion", "Board", 200], ["Role", "Role", 104], ["Power", "Power", 74], ["Trait", "Ideal", 132],
 	["Scale", "Scale", 84], ["HP", "hp", 54], ["DMG", "attack", 54], ["ARM", "armor", 54], ["AS", "haste", 54],
-	["MOV", "speed", 54], ["AP", "potency", 54], ["Fit", "Fit", 70], ["Cost", "Price", 66], ["", "", 128],
+	["MOV", "speed", 54], ["AP", "potency", 54], ["Fit", "Fit", 200], ["Cost", "Price", 66], ["", "", 128],
 ]
 
 static func view(game: Node) -> String:
@@ -65,8 +65,8 @@ static func card(game: Node, parent: Node, h: Dictionary, o: Dictionary, width :
 	var stats = HBoxContainer.new(); box.add_child(stats); stats.custom_minimum_size.x = width - 20
 	TraitUI.roll_chips(game, stats, h, 12 if width >= 300 else 10, width < 260)
 	var fi = TraitUI.fit_info(h)
-	var fit = game.label(box, "%s FIT  ·  %d/%d stats" % [fi[0], HeroData.roll_total(h), HeroData.ROLL_MAX * 6], 12, fi[1], false)
-	fit.mouse_filter = Control.MOUSE_FILTER_STOP; fit.tooltip_text = "How well the rolls suit a %s (dotted stats)" % HeroData.species[h.sp].role
+	var fit = game.label(box, "%s FIT · %s" % [fi[0], TraitUI.fit_reason(h, true)], 12, fi[1], false); fit.clip_text = true
+	fit.mouse_filter = Control.MOUSE_FILTER_STOP; fit.tooltip_text = TraitUI.fit_reason(h) + "\n%d/%d total stat points" % [HeroData.roll_total(h), HeroData.ROLL_MAX * 6]
 	# Actions
 	if o.has("on_draft") or o.has("on_scout"):
 		var actions = HBoxContainer.new(); actions.add_theme_constant_override("separation", 6); box.add_child(actions)
@@ -83,17 +83,22 @@ static func grid(game: Node, parent: Node, heroes: Array, opts: Callable, column
 	return g
 
 # ---------------------------------------------------------------- table
-static func _cell(parent: Node, w: float) -> Control:
-	var c = HBoxContainer.new(); c.custom_minimum_size.x = w; c.alignment = BoxContainer.ALIGNMENT_CENTER; parent.add_child(c); return c
+## Fixed-width cell: content can never push a column wider, so headers and rows line up.
+static func _cell(parent: Node, w: float, h := 56.0) -> HBoxContainer:
+	var holder = Control.new(); holder.custom_minimum_size = Vector2(w, h); holder.clip_contents = true; parent.add_child(holder)
+	var c = HBoxContainer.new(); holder.add_child(c); c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	c.alignment = BoxContainer.ALIGNMENT_CENTER
+	c.child_entered_tree.connect(func(n): if n is Control: n.size_flags_vertical = Control.SIZE_SHRINK_CENTER)
+	return c
 
 static func table(game: Node, parent: Node, heroes: Array, opts: Callable, columns: Array = TABLE_COLS) -> VBoxContainer:
 	var list = VBoxContainer.new(); list.add_theme_constant_override("separation", 4); parent.add_child(list)
 	var sort = str(game.desk_state.get("sort", "Board"))
 	var head_panel = PanelContainer.new(); list.add_child(head_panel)
-	head_panel.add_theme_stylebox_override("panel", game.style(Color(.03, .04, .06, .94), Color("aa8c60"), 6, 3, 1))
+	head_panel.add_theme_stylebox_override("panel", game.style(Color(.03, .04, .06, .94), Color("aa8c60"), 6, 3, 2))
 	var head = HBoxContainer.new(); head.add_theme_constant_override("separation", 4); head_panel.add_child(head)
 	for col in columns:
-		var c = _cell(head, col[2])
+		var c = _cell(head, col[2], 34)
 		if col[1] == "Board": c.alignment = BoxContainer.ALIGNMENT_BEGIN
 		if col[0] == "": continue
 		if col[1] == "":
@@ -115,12 +120,12 @@ static func table(game: Node, parent: Node, heroes: Array, opts: Callable, colum
 static func _row(game: Node, list: Node, h: Dictionary, o: Dictionary, columns: Array, best: Dictionary) -> void:
 	var tier = League.tier(h.sp); var tc = Color(League.TIER_COLOR[tier]); var sel = o.get("selected", false); var ideal = Traits.is_ideal(h)
 	var panel = PanelContainer.new(); list.add_child(panel)
-	panel.add_theme_stylebox_override("panel", game.style(Color(.06, .09, .12, .95) if not sel else Color(.12, .11, .06, .95), game.GOLD if sel else (TraitUI.IDEAL.darkened(0.3) if ideal else tc.darkened(0.55)), 6, 3, 2 if sel or ideal else 1))
+	panel.add_theme_stylebox_override("panel", game.style(Color(.06, .09, .12, .95) if not sel else Color(.12, .11, .06, .95), game.GOLD if sel else (TraitUI.IDEAL.darkened(0.3) if ideal else tc.darkened(0.55)), 6, 3, 2))
 	var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 4); panel.add_child(row)
 	var r = HeroData.rolls(h); var w = HeroData.role_weights(h.sp)
 	for col in columns:
-		var c = _cell(row, col[2])
-		match col[1] if col[0] != "" or col[1] != "" else ("art" if c.get_index() == 0 else "action"):
+		var c = _cell(row, col[2], 58)
+		match col[1] if col[0] != "" or col[1] != "" else ("art" if c.get_parent().get_index() == 0 else "action"):
 			"art":
 				var b = Button.new(); b.custom_minimum_size = Vector2(52, 52); c.add_child(b)
 				for st in ["normal", "hover", "pressed", "focus"]: b.add_theme_stylebox_override(st, StyleBoxEmpty.new())
@@ -146,7 +151,11 @@ static func _row(game: Node, list: Node, h: Dictionary, o: Dictionary, columns: 
 				var l = game.label(c, "%s %d" % [Traits.scaling_type(s), int(round(s))], 14, TraitUI.scale_color(s), false)
 				l.mouse_filter = Control.MOUSE_FILTER_STOP; l.tooltip_text = Traits.info(h.sp).calling
 			"Fit":
-				var fi = TraitUI.fit_info(h); game.label(c, fi[0], 14, fi[1], false)
+				var fi = TraitUI.fit_info(h); var fv = VBoxContainer.new(); fv.add_theme_constant_override("separation", -2); c.add_child(fv)
+				fv.mouse_filter = Control.MOUSE_FILTER_STOP; fv.tooltip_text = TraitUI.fit_reason(h)
+				game.label(fv, fi[0], 14, fi[1], false).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+				if c.get_parent().custom_minimum_size.x > 120:
+					var why = game.label(fv, TraitUI.fit_reason(h, true), 11, fi[1].darkened(0.1), false); why.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			"Price":
 				game.label(c, "%d" % int(h.get("price", 0)), 15, Color("ffdf7e"), false)
 			"action":

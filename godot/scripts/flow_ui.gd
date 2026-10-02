@@ -99,3 +99,52 @@ static func banner(game: Node, text: String, color := Color("ffe9b8"), sub := ""
 	t.tween_property(holder, "modulate:a", 1.0, 0.18); t.parallel().tween_property(holder, "scale", Vector2.ONE, 0.32)
 	t.tween_interval(0.9); t.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	t.tween_property(holder, "modulate:a", 0.0, 0.35); t.tween_callback(holder.queue_free)
+
+## A styled yes/no popup. on_yes runs only if the player confirms.
+static func confirm(game: Node, title: String, body: String, yes_text: String, on_yes: Callable, no_text := "Cancel") -> void:
+	var dialog = GearUI.modal(game, title, Vector2(720, 330))
+	var l = game.label(dialog.box, body, 20, game.WHITE, true); l.custom_minimum_size.x = 660
+	var spacer = Control.new(); spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL; dialog.box.add_child(spacer)
+	var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 14); row.alignment = BoxContainer.ALIGNMENT_END; dialog.box.add_child(row)
+	game.button(row, no_text, func(): dialog.root.queue_free()).custom_minimum_size = Vector2(170, 52)
+	var yes = game.button(row, yes_text, func(): dialog.root.queue_free(); on_yes.call(), true); yes.custom_minimum_size = Vector2(240, 52)
+
+## Quick read of the last fight: result, damage race, carry, threat, and what to buy about it.
+static func fight_insights(c: Campaign) -> Dictionary:
+	var rep = c.state.get("report", {})
+	if rep.is_empty() or not rep.has("rows"): return {}
+	var ours = rep.rows.filter(func(r): return r.team == 0); var theirs = rep.rows.filter(func(r): return r.team == 1)
+	var sum = func(rows, k): return rows.reduce(func(a, r): return a + float(r.get(k, 0)), 0.0)
+	var dmg0 = sum.call(ours, "damage"); var dmg1 = sum.call(theirs, "damage")
+	var heal0 = sum.call(ours, "healing"); var heal1 = sum.call(theirs, "healing")
+	var deaths = ours.filter(func(r): return not r.alive).size()
+	var carry = {}; var threat = {}
+	for r in ours:
+		if carry.is_empty() or r.damage > carry.damage: carry = r
+	for r in theirs:
+		if threat.is_empty() or r.damage > threat.damage: threat = r
+	var tips = []
+	if heal1 > maxf(heal0 * 1.5, dmg0 * 0.15): tips.append("They out-healed you (%d vs %d). Burst them: Sharpened Fang, Storm Glass, Ember Shard." % [heal1, heal0])
+	if deaths >= 3: tips.append("%d of yours fell. Toughen up: Troll Hide, Bronze Plate, Holy Relic." % deaths)
+	if not threat.is_empty() and dmg1 > 0 and threat.damage / dmg1 > 0.33: tips.append("%s did %d%% of their damage. Set Tactics → target their carry." % [threat.name, roundi(threat.damage / dmg1 * 100)])
+	if not carry.is_empty() and dmg0 > 0 and carry.damage / dmg0 > 0.35: tips.append("%s carried (%d%% of your damage). Stack items on it." % [carry.name, roundi(carry.damage / dmg0 * 100)])
+	if float(rep.get("duration", 0)) > 60: tips.append("Long fight (%ds): late scalers and healers shine." % int(rep.duration))
+	if tips.is_empty(): tips.append("Even fight. Forge a finished item on your top damage dealer.")
+	return {"won": rep.winner == 0, "opponent": rep.get("opponent", ""), "dmg0": dmg0, "dmg1": dmg1, "heal0": heal0, "heal1": heal1, "deaths": deaths, "carry": carry, "threat": threat, "tips": tips}
+
+static func fight_summary(game: Node, parent: Node) -> void:
+	var f = fight_insights(game.campaign)
+	if f.is_empty(): return
+	var panel = PanelContainer.new(); parent.add_child(panel); panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.add_theme_stylebox_override("panel", game.style(Color(.04, .06, .09, .92), Color("ffd36e") if f.won else Color("ff8a7a"), 6, 6, 1))
+	var box = VBoxContainer.new(); box.add_theme_constant_override("separation", 0); panel.add_child(box)
+	var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 14); box.add_child(row)
+	game.label(row, ("WON" if f.won else "LOST") + " vs " + str(f.opponent), 15, Color("ffd36e") if f.won else Color("ff8a7a"), false)
+	var total = maxf(1.0, f.dmg0 + f.dmg1)
+	var bar = ProgressBar.new(); bar.max_value = 1.0; bar.value = f.dmg0 / total; bar.show_percentage = false; bar.custom_minimum_size = Vector2(150, 10); bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER; row.add_child(bar)
+	bar.add_theme_stylebox_override("background", game.style(Color("c0574a"), Color.TRANSPARENT, 4, 0, 0)); bar.add_theme_stylebox_override("fill", game.style(Color("5fb7d9"), Color.TRANSPARENT, 4, 0, 0))
+	bar.tooltip_text = "Damage race: you %d · them %d" % [f.dmg0, f.dmg1]
+	game.label(row, "%dk vs %dk dmg" % [roundi(f.dmg0 / 1000.0), roundi(f.dmg1 / 1000.0)], 13, game.WHITE, false)
+	if not f.carry.is_empty(): game.label(row, "★ " + str(f.carry.name), 13, game.GOLD, false).tooltip_text = "Your top damage"
+	var tip = game.label(box, "→ " + f.tips[0], 13, Color("c8ff9d"), false); tip.clip_text = true; tip.custom_minimum_size.x = 640
+	panel.tooltip_text = "LAST FIGHT\n" + "\n".join(f.tips.map(func(t): return "• " + t))

@@ -3,6 +3,12 @@ extends Control
 var game: Node
 var mode="bracket"
 var reveal: Dictionary={}
+var animate:=false            # play the matches that just resolved
+var on_continue:=Callable()   # when set, a big continue button replaces Close
+var continue_text:="Continue  ▶"
+var tiles:={}
+var rows:={}
+var canvas_ref:Control
 var body: VBoxContainer
 func _ready() -> void:
  set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -12,14 +18,17 @@ func _ready() -> void:
  frame.add_theme_stylebox_override("panel",game.style(Color("12282e"),game.GOLD,14,24,2))
  var layout=VBoxContainer.new();layout.add_theme_constant_override("separation",16);frame.add_child(layout)
  var header=HBoxContainer.new();layout.add_child(header)
- game.label(header,"THE TOURNAMENT" if mode=="bracket" else "CHAMPION'S VAULT",30,game.GOLD).size_flags_horizontal=Control.SIZE_EXPAND_FILL
- game.button(header,"Close",func():game.render())
+ game.label(header,{"bracket":"THE TOURNAMENT","progress":"WORLD TOUR PROGRESS"}.get(mode,"CHAMPION'S VAULT"),30,game.GOLD).size_flags_horizontal=Control.SIZE_EXPAND_FILL
+ if on_continue.is_valid():
+  var go=FlowUI.cta(game,header,continue_text,func():on_continue.call(),false,300)
+ else:game.button(header,"Close",func():game.render())
  var scroll=ScrollContainer.new();scroll.custom_minimum_size=Vector2(1435,650);scroll.size_flags_vertical=Control.SIZE_EXPAND_FILL;layout.add_child(scroll)
  body=VBoxContainer.new();body.size_flags_horizontal=Control.SIZE_EXPAND_FILL;body.add_theme_constant_override("separation",18);scroll.add_child(body)
  refresh()
 func refresh() -> void:
  for child in body.get_children():body.remove_child(child);child.queue_free()
  if mode=="bracket":bracket()
+ elif mode=="progress":progress()
  else:vault()
 func tile(parent: Node) -> VBoxContainer:
  var panel=FantasyFrame.new();parent.add_child(panel);panel.size_flags_horizontal=Control.SIZE_EXPAND_FILL
@@ -37,7 +46,7 @@ const TILE := Vector2(255, 66)
 func bracket() -> void:
  var c=game.campaign;WorldTour.ensure_bracket(c);var b=c.state.tour.bracket
  game.label(body,"%s · Level %d · Double elimination — lose twice and you're out. The losers' champion must win the grand final twice."%[WorldTour.REGIONS[(int(b.level)-1)%6].name,b.level],17,game.GOLD)
- var canvas=Control.new();canvas.custom_minimum_size=Vector2(1410,600);body.add_child(canvas)
+ var canvas=Control.new();canvas.custom_minimum_size=Vector2(1410,600);body.add_child(canvas);canvas_ref=canvas;tiles={};rows={}
  for cap in [["WINNERS BRACKET",Vector2(0,6),Color("8fd7ff")],["LOSERS BRACKET",Vector2(0,386),Color("ffa98f")],["GRAND FINAL",Vector2(1140,234),game.GOLD]]:
   var l=game.label(canvas,cap[0],18,cap[2],false);l.position=cap[1]
  # connectors
@@ -51,12 +60,12 @@ func bracket() -> void:
  for i in range(b.matches.size()):
   var m=b.matches[i]
   if i==14 and m.skipped:continue
-  var panel=PanelContainer.new();canvas.add_child(panel);panel.position=POS[i];panel.size=TILE
+  var panel=PanelContainer.new();canvas.add_child(panel);panel.position=POS[i];panel.size=TILE;tiles[i]=panel;rows[i]={}
   var is_next=not next.is_empty() and next==m
   panel.add_theme_stylebox_override("panel",game.style(Color("1d3238") if not is_next else Color("3a3220"),game.GOLD if is_next else Color("57738c"),6,8,2 if is_next else 1))
   var box=VBoxContainer.new();box.add_theme_constant_override("separation",2);panel.add_child(box)
   for side in ["a","b"]:
-   var team=int(m["team_"+side]);var row=HBoxContainer.new();row.add_theme_constant_override("separation",6);box.add_child(row)
+   var team=int(m["team_"+side]);var row=HBoxContainer.new();row.add_theme_constant_override("separation",6);box.add_child(row);rows[i][side]=row
    if team<0:
     game.label(row,_source_text(m[side]),13,game.MUTED,false);continue
    var seed=b.seeds.find(team)+1
@@ -67,7 +76,8 @@ func bracket() -> void:
    var won=int(m.winner)==team;var lost=int(m.loser)==team
    var name=game.label(row,WorldTour.team_name(c,team),14,game.GOLD if won else Color("86dbf2") if team==0 else (game.MUTED if lost else game.WHITE),false)
    name.size_flags_horizontal=Control.SIZE_EXPAND_FILL;name.clip_text=true
-   game.label(row,"✓" if won else str(b.get("ovr_%d"%team,"")),13,game.GOLD if won else game.MUTED,false)
+   var pw=int(b.get("ovr_%d"%team,0))
+   game.label(row,"✓" if won else str(pw),14,game.GOLD if won else TraitUI.power_color(pw),false).tooltip_text="Team power"
   panel.tooltip_text=m.label
  var foot=HBoxContainer.new();foot.add_theme_constant_override("separation",30);body.add_child(foot)
  if b.finished:
@@ -76,6 +86,119 @@ func bracket() -> void:
   game.label(foot,"Your finish: %s"%_place_text(place),20,Color("86dbf2"),false)
  else:
   game.label(foot,"Next: %s  ·  Your record %d–%d  ·  Outfitter between every match  ·  Podium finishes earn Gold, Silver or Bronze chests; every club moves on to the next cup"%[next.get("label",""),int(c.state.tour.wins),WorldTour.losses(c,0)],16,game.MUTED,false)
+
+# ---------------------------------------------------------------- cup progress
+## After a cup ends: where you finished, how far along the World Tour you are, and how the team grew.
+func progress() -> void:
+ var c=game.campaign;var t=c.state.tour
+ if t.history.is_empty():game.label(body,"No cups finished yet.",20);return
+ var last=t.history[-1];var place=int(last.get("place",0));var won=place==1
+ var head=game.label(body,"CUP WON!" if won else "FINISHED %s"%_place_text(place).to_upper(),70,game.GOLD if won else Color("dfe8ec"))
+ head.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER;head.add_theme_font_override("font",load(game.TITLE_FONT))
+ head.add_theme_color_override("font_outline_color",Color("1a0f14"));head.add_theme_constant_override("outline_size",10)
+ head.pivot_offset=Vector2(700,40);head.scale=Vector2(0.6,0.6);var pop=create_tween();pop.tween_property(head,"scale",Vector2.ONE,0.5).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+ var sub=game.label(body,"%s  ·  Cup %d of %d  ·  %d wins"%[last.location,int(last.level),WorldTour.MAX_LEVEL,int(last.wins)],20,game.WHITE);sub.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+ # The road: the finished cup lights up, the next stop pulses.
+ var holder=CenterContainer.new();holder.custom_minimum_size=Vector2(1400,200);body.add_child(holder)
+ var box=Control.new();box.custom_minimum_size=Vector2(312*2.6,62*2.6);holder.add_child(box)
+ var road=TourPath.new();road.level=int(t.level);road.size=Vector2(312,62);road.scale=Vector2(2.6,2.6);box.add_child(road)
+ var chips=HBoxContainer.new();chips.alignment=BoxContainer.ALIGNMENT_CENTER;chips.add_theme_constant_override("separation",40);body.add_child(chips)
+ FlowUI.chip(game,chips,"trophy","%d cups won"%int(c.state.get("trophies",0)),"Total cups won this run",game.GOLD)
+ FlowUI.chip(game,chips,"coin","%d gold"%int(c.state.gold),"Gold in the bank",Color("ffdf7e"))
+ var done=0
+ for hh in t.history:done+=1
+ FlowUI.chip(game,chips,"swords","%d / %d cups played"%[done,WorldTour.MAX_LEVEL],"World Tour progress")
+ if not t.complete and not c.state.get("run_over",false):
+  var nxt=WorldTour.region(c)
+  var nl=game.label(body,"NEXT STOP  ·  %s  ·  %s"%[str(nxt.name).to_upper(),nxt.place],22,Color(nxt.get("color","e8c27a")));nl.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+ # Team growth this cup.
+ var grow=HBoxContainer.new();grow.alignment=BoxContainer.ALIGNMENT_CENTER;grow.add_theme_constant_override("separation",18);body.add_child(grow)
+ var start=last.get("start_levels",{})
+ for h in c.lineup():
+  var col=VBoxContainer.new();grow.add_child(col)
+  SplashArt.make(col,h.sp,Vector2(120,130))
+  var gained=int(h.level)-int(start.get(h.id,h.level))
+  var l=game.label(col,"%s  Lv %d%s"%[h.name,int(h.level),("  ▲%d"%gained) if gained>0 else ""],15,Color("6fe08a") if gained>0 else game.WHITE,false);l.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+  var pw=HeroData.power(h);var p=game.label(col,"%d power"%pw,14,TraitUI.power_color(pw),false);p.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+ if won:FlowUI.banner(game,"CHAMPIONS!",game.GOLD,"%s conquers %s"%[c.state.name,last.location])
+
+# ---------------------------------------------------------------- drama
+## Replays the matches that just resolved: winners fly gold to their next tile, losers tumble
+## down into the losers bracket (or off the board entirely).
+func play_results() -> void:
+ var c=game.campaign;var anim=c.state.tour.get("last_anim",{})
+ var b=c.state.tour.get("bracket",{})
+ if anim.is_empty() or b.is_empty() or int(anim.get("level",-1))!=int(b.get("level",-2)):return
+ c.state.tour.erase("last_anim")
+ var seq:Array=anim.matches
+ # Hide arrivals so they can land.
+ var hidden=[]
+ for idx in seq:
+  for j in tiles:
+   for side in ["a","b"]:
+    var src=b.matches[j][side]
+    if (int(src.get("w",-1))==idx or int(src.get("l",-1))==idx) and rows[j].has(side):rows[j][side].modulate.a=0.0;hidden.append([j,side,idx])
+ var t=create_tween();var delay=0.5
+ for k in range(seq.size()):
+  var idx=int(seq[k]);var mine=idx==int(anim.player);var dur=0.9 if mine else 0.38
+  var m=b.matches[idx]
+  t.tween_callback(func():_resolve_one(b,idx,mine,hidden,dur)).set_delay(delay if k==0 else (1.6 if k==1 else 0.45))
+  if mine:t.tween_interval(0.2)
+ t.tween_callback(func():
+  for h in hidden:
+   if rows[h[0]].has(h[1]):rows[h[0]][h[1]].modulate.a=1.0)
+
+func _resolve_one(b: Dictionary,idx: int,mine: bool,hidden: Array,dur: float) -> void:
+ if not tiles.has(idx):return
+ var m=b.matches[idx];var panel:Control=tiles[idx]
+ var flash=create_tween();flash.tween_property(panel,"modulate",Color(1.8,1.6,1.1),0.12);flash.tween_property(panel,"modulate",Color.WHITE,0.3)
+ var c=game.campaign
+ for outcome in ["w","l"]:
+  var team=int(m.winner if outcome=="w" else m.loser);if team<0:continue
+  var dest=-1;var dest_side=""
+  for j in tiles:
+   for side in ["a","b"]:
+    if int(b.matches[j][side].get(outcome,-1))==idx:dest=j;dest_side=side
+  var ghost=PanelContainer.new();canvas_ref.add_child(ghost);ghost.z_index=20
+  var col=game.GOLD if outcome=="w" else Color("ff6b5e")
+  ghost.add_theme_stylebox_override("panel",game.style(Color(.1,.08,.04,.95) if outcome=="w" else Color(.14,.03,.03,.95),col,6,6,3 if mine else 2))
+  game.label(ghost,WorldTour.team_name(c,team),16 if mine else 13,col,false)
+  var side_row=rows[idx].get("a" if int(m.team_a)==team else "b")
+  ghost.position=panel.position+(side_row.position if side_row else Vector2.ZERO);ghost.pivot_offset=Vector2(60,12)
+  var tw=create_tween()
+  if outcome=="w":
+   var to=tiles[dest].position+Vector2(6,6 if dest_side=="a" else 36) if dest>=0 else panel.position+Vector2(TILE.x+40,0)
+   tw.tween_property(ghost,"scale",Vector2(1.25,1.25),dur*0.25).set_trans(Tween.TRANS_BACK)
+   tw.tween_property(ghost,"position",to,dur).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+   tw.parallel().tween_property(ghost,"scale",Vector2.ONE,dur)
+  else:
+   if dest>=0:
+    var to=tiles[dest].position+Vector2(6,6 if dest_side=="a" else 36)
+    tw.tween_property(ghost,"rotation",0.25,dur*0.2)
+    tw.tween_property(ghost,"position",to,dur*1.2).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+    tw.parallel().tween_property(ghost,"rotation",0.0,dur*1.2)
+   else:
+    # Eliminated: the name falls off the board.
+    tw.tween_property(ghost,"position",ghost.position+Vector2(30,520),dur*1.6).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+    tw.parallel().tween_property(ghost,"rotation",1.4,dur*1.6)
+    tw.parallel().tween_property(ghost,"modulate:a",0.0,dur*1.6)
+  tw.tween_callback(func():
+   for h in hidden:
+    if h[0]==dest and h[1]==dest_side and h[2]==idx and rows[dest].has(dest_side):
+     rows[dest][dest_side].modulate.a=1.0
+     var pop=create_tween();pop.tween_property(tiles[dest],"scale",Vector2(1.06,1.06),0.08);pop.tween_property(tiles[dest],"scale",Vector2.ONE,0.15)
+   if outcome=="w" or dest>=0:ghost.queue_free())
+ if mine:
+  var won=int(m.winner)==0;var out=not won and WorldTour.losses(c,0)>=2
+  game.sound.cue("victory" if won else "honor",true)
+  if not won:
+   var shake=create_tween()
+   for k in range(6):shake.tween_property(canvas_ref,"position:x",(8.0 if k%2==0 else -8.0)*(1.0-k/6.0),0.05)
+   shake.tween_property(canvas_ref,"position:x",0.0,0.05)
+  var b2=c.state.tour.bracket
+  var text="ADVANCES!" if won else ("ELIMINATED" if out else "DROPPED TO LOSERS")
+  if b2.finished and int(b2.champion)==0:text="CHAMPIONS!"
+  FlowUI.banner(game,text,game.GOLD if won else Color("ff6b5e"),WorldTour.team_name(c,int(m.winner))+" beat "+WorldTour.team_name(c,int(m.loser)))
 
 func _source_text(src: Dictionary) -> String:
  if src.has("w"):return "Winner of %s"%_short(int(src.w))
@@ -137,5 +260,7 @@ func vault() -> void:
     else:game.toast(c.last_error),ready,not ready)
 func _unhandled_key_input(event: InputEvent) -> void:
  if event.is_action_pressed("ui_cancel"):get_viewport().set_input_as_handled();game.render()
-static func open_screen(game_node: Node,screen: String) -> void:
- var view=TournamentRewardsUI.new();view.game=game_node;view.mode=screen;game_node.ui.add_child(view)
+static func open_screen(game_node: Node,screen: String,then:=Callable(),then_text:="Continue  ▶",play:=false) -> TournamentRewardsUI:
+ var view=TournamentRewardsUI.new();view.game=game_node;view.mode=screen;view.on_continue=then;view.continue_text=then_text;view.animate=play;game_node.ui.add_child(view)
+ if play and screen=="bracket":view.play_results()
+ return view

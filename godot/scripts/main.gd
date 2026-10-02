@@ -33,6 +33,7 @@ var last_rendered_phase = ""
 var presentation_tween: Tween
 var showcase_index = 0
 var new_slot = 1
+var new_difficulty = "Keeper"
 var new_name: LineEdit
 var new_club_draft = "Ravenmoor Menagerie"
 var new_crest: Dictionary = {}
@@ -146,6 +147,24 @@ func _ready() -> void:
    for i in range(campaign.state.roster.size()):
     var h = campaign.state.roster[i]; h.level = 10; h.learned = {"0":2, "2":2, "4":2}; h.evolution = HeroData.EVOLUTIONS.keys()[i%3]
    phase = "prep"; begin_battle()
+  elif qa == "levelup":
+   var h = campaign.state.roster[0]; h.learned = {"0": 1}; h.level = 3; h.pending = []; h.rewards = []
+   HeroData.queue_reward(h, 3, true, 4242)
+   phase = "upgrade"; preview_team(); render()
+  elif qa in ["bracket_anim", "cup_progress", "shop_after"]:
+   for h in campaign.state.roster: h.pending = []; h.rewards = []
+   var rounds = 1 if qa == "bracket_anim" else 6
+   for bout in range(rounds):
+    if campaign.state.tour.get("bracket",{}).get("finished",false): break
+    if campaign.state.tour.shop: WorldTour.leave_shop(campaign)
+    var test_sim = BattleSim.new(); test_sim.silent = true
+    test_sim.setup(campaign.lineup(), campaign.opponent().roster, campaign.match_seed(), campaign.quality()); test_sim.run_to_end(); campaign.resolve(test_sim)
+    for h in campaign.state.roster: h.pending = []; h.rewards = []
+   if qa == "shop_after": campaign.state.run_over = false; campaign.state.tour.shop = true; campaign.state.tour.stock = WorldTour.stock(campaign)
+   phase = "shop" if qa == "shop_after" else "result"; render()
+   if qa == "bracket_anim": show_bracket_then_shop()
+   elif qa == "shop_after": pass
+   else: TournamentRewardsUI.open_screen(self, "progress", func(): pass, "Shop  ▶")
   elif qa in ["result", "upgrade", "report_abilities", "report_healing"]:
    for bout in range(2 if qa == "upgrade" else 1):
     var test_sim = BattleSim.new(); test_sim.silent = true
@@ -316,45 +335,49 @@ func build_showcase() -> void:
 func build_new() -> void:
  if new_crest.is_empty(): new_crest = Crest.default_for(new_club_draft)
  # The great title.
- var title = label(ui, "MANITORIA", 150, Color("ffe4a0"), false)
- title.position = Vector2(0, 26); title.size = Vector2(1600, 190); title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+ var title = label(ui, "MANITORIA", 128, Color("ffe4a0"), false)
+ title.position = Vector2(0, 20); title.size = Vector2(1600, 170); title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
  title.add_theme_color_override("font_outline_color", Color("2a160c")); title.add_theme_constant_override("outline_size", 18)
  title.add_theme_color_override("font_shadow_color", Color(0.9, 0.55, 0.15, 0.45)); title.add_theme_constant_override("shadow_offset_y", 0); title.add_theme_constant_override("shadow_outline_size", 34)
  var sub = label(ui, "FOUND YOUR GUILD", 26, Color("fff2d0"), false)
- sub.position = Vector2(0, 206); sub.size = Vector2(1600, 40); sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+ sub.position = Vector2(0, 190); sub.size = Vector2(1600, 40); sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
  sub.add_theme_font_override("font", load(MENU_FONT)); sub.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85)); sub.add_theme_constant_override("outline_size", 6)
- # Charter (left).
- var box = panel(Rect2(150, 268, 560, 590))
- label(box, "THE GUILD CHARTER", 15, GOLD)
+ # Charter (left): name, motto, difficulty, slot. One big button carries you on.
+ var box = panel(Rect2(150, 252, 560, 520))
+ box.add_theme_constant_override("separation", 10)
  var roller = RandomNumberGenerator.new(); roller.randomize()
- var head = HBoxContainer.new(); box.add_child(head)
- label(head, "Guild name", 14, MUTED, false).size_flags_horizontal = Control.SIZE_EXPAND_FILL
- var both = button(head, "Roll name & motto", func():
-  var r = GuildNames.roll(roller); new_club_draft = r.name; new_motto = r.motto; new_motto_funny = r.funny; render())
- both.tooltip_text = "Half glorious, half ridiculous"
+ label(box, "NAME", 15, GOLD)
  var name_row = HBoxContainer.new(); box.add_child(name_row)
  new_name = LineEdit.new(); new_name.text = new_club_draft; new_name.max_length = 36; new_name.placeholder_text = "Your guild name"; new_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL; name_row.add_child(new_name)
- button(name_row, "Epic", func(): new_club_draft = GuildNames.roll(roller, 0).name; render()).tooltip_text = "Roll a badass name"
- button(name_row, "Silly", func(): new_club_draft = GuildNames.roll(roller, 1).name; render()).tooltip_text = "Roll a funny name"
- label(box, "Motto", 14, MUTED)
+ new_name.add_theme_font_size_override("font_size", 22); new_name.custom_minimum_size.y = 50
+ var dice = button(name_row, "🎲", func():
+  var r = GuildNames.roll(roller); new_club_draft = r.name; new_motto = r.motto; new_motto_funny = r.funny; render())
+ dice.tooltip_text = "Roll a name and motto"; dice.custom_minimum_size = Vector2(56, 50); dice_icon(dice)
+ var tone = HBoxContainer.new(); tone.add_theme_constant_override("separation", 8); box.add_child(tone)
+ button(tone, "Epic name", func(): new_club_draft = GuildNames.roll(roller, 0).name; render()).add_theme_font_size_override("font_size", 14)
+ button(tone, "Silly name", func(): new_club_draft = GuildNames.roll(roller, 1).name; render()).add_theme_font_size_override("font_size", 14)
+ label(box, "MOTTO", 15, GOLD)
  var motto_row = HBoxContainer.new(); box.add_child(motto_row)
  var motto = LineEdit.new(); motto.text = new_motto; motto.max_length = 48; motto.placeholder_text = "Words to fight by"; motto.size_flags_horizontal = Control.SIZE_EXPAND_FILL; motto_row.add_child(motto)
- button(motto_row, "Epic", func(): new_motto = GuildNames.motto(roller, false); render()).tooltip_text = "Roll a badass motto"
- button(motto_row, "Silly", func(): new_motto = GuildNames.motto(roller, true); render()).tooltip_text = "Roll a funny motto"
+ var mdice = button(motto_row, "🎲", func(): new_motto = GuildNames.motto(roller, randf() < 0.5); render()); mdice.custom_minimum_size.x = 56; mdice.tooltip_text = "Roll a motto"; dice_icon(mdice)
  motto.text_changed.connect(func(v): new_motto = v)
- label(box, "You begin with 1,200 gold. Sign a Legendary headliner, then draft the rest of your squad from the board.", 16, MUTED)
- label(box, "Save slot", 14, MUTED)
- var slots = HBoxContainer.new(); box.add_child(slots)
+ label(box, "DIFFICULTY", 15, GOLD)
+ var diff = HBoxContainer.new(); diff.add_theme_constant_override("separation", 8); box.add_child(diff)
+ for d in [["Keeper", "Relaxed · finish top 5 to survive a cup"], ["Standard", "Fair fights · finish top 4"], ["Champion", "Brutal rivals · finish top 3"]]:
+  var db = button(diff, d[0], func(): new_difficulty = d[0]; render(), new_difficulty == d[0]); db.tooltip_text = d[1]; db.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ label(box, "SAVE SLOT", 15, GOLD)
+ var slots = HBoxContainer.new(); slots.add_theme_constant_override("separation", 8); box.add_child(slots)
  for slot in range(1, 4):
   var saved = Campaign.new(); var occupied = saved.load_slot(slot)
-  var b = button(slots, "Slot %d%s" % [slot, " · used" if occupied else ""], func(): new_slot = slot; render(), new_slot == slot)
-  b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
- var spacer = Control.new(); spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL; box.add_child(spacer)
- var go = button(box, "Found the guild & choose your headliner →", found_club, true); go.custom_minimum_size.y = 58
- button(box, "Back to menu", func(): phase = "menu"; render())
+  var b = button(slots, "%d%s" % [slot, " · used" if occupied else ""], func(): new_slot = slot; render(), new_slot == slot)
+  b.size_flags_horizontal = Control.SIZE_EXPAND_FILL; b.tooltip_text = "Replaces the saved run" if occupied else "Empty slot"
+ # Footer: back on the left, the obvious way forward on the right.
+ var back = button(ui, "◀  Menu", func(): phase = "menu"; render()); back.position = Vector2(150, 804); back.custom_minimum_size = Vector2(160, 58)
+ var fwd = HBoxContainer.new(); ui.add_child(fwd); fwd.position = Vector2(1000, 800); fwd.size = Vector2(450, 64); fwd.alignment = BoxContainer.ALIGNMENT_END
+ FlowUI.cta(self, fwd, "Found guild  ▶", found_club, false, 450).tooltip_text = "Next: sign your Legendary headliner (you start with 1,200 gold)"
  # Crest forge (right).
- var right = panel(Rect2(740, 268, 710, 590))
- label(right, "GUILD CREST", 15, GOLD)
+ var right = panel(Rect2(740, 252, 710, 520))
+ label(right, "CREST", 15, GOLD)
  var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 22); right.add_child(row)
  var crest_col = VBoxContainer.new(); row.add_child(crest_col)
  var crest = Crest.make(crest_col, new_crest, new_club_draft, Vector2(250, 290))
@@ -383,8 +406,13 @@ func build_new() -> void:
    for st in ["normal", "hover", "pressed"]: sw.add_theme_stylebox_override(st, style(Color(Crest.TINCTURES[t]), GOLD if chosen else (Color("ffffff") if st == "hover" else Color(0, 0, 0, 0.6)), 4, 0, 3 if chosen else 1))
    var key = pair[1]
    sw.pressed.connect(func(): new_crest[key] = t; render())
- var dice = HBoxContainer.new(); opts.add_child(dice)
- button(dice, "Randomize crest", func(): new_crest = Crest.default_for(str(randi()) + new_club_draft); render())
+ var crest_dice = HBoxContainer.new(); opts.add_child(crest_dice)
+ button(crest_dice, "Randomize crest", func(): new_crest = Crest.default_for(str(randi()) + new_club_draft); render())
+
+func dice_icon(b: Button) -> void:
+ b.text = ""
+ var c = CenterContainer.new(); c.mouse_filter = Control.MOUSE_FILTER_IGNORE; b.add_child(c); c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+ FlowUI.glyph(c, "roll", 28)
 
 func build_runover() -> void:
  var st = campaign.state; var t = st.get("tour", {})
@@ -419,7 +447,7 @@ func found_club() -> void:
 
 func start_club(name_value: String, slot: int) -> void:
  exhibition = false
- campaign.new_run(name_value, slot)
+ campaign.new_run(name_value, slot, 0, new_difficulty)
  campaign.state.crest = new_crest.duplicate() if not new_crest.is_empty() else Crest.default_for(name_value)
  campaign.state.motto = new_motto.strip_edges().left(48)
  desk_state.compare = []; desk_state.role = "All"
@@ -473,7 +501,7 @@ func build_prep() -> void:
  var footer = panel(Rect2(26, 749, 350, 127))
  var actions = HBoxContainer.new(); footer.add_child(actions)
  button(actions, "◀", func(): phase = "hub"; render()).tooltip_text = "Back"
- var enter = FlowUI.cta(self, actions, "FIGHT  ▶", introduce_match, not campaign.lineup_ready(), 250)
+ var enter = FlowUI.cta(self, actions, "FIGHT  ▶", begin_battle, not campaign.lineup_ready(), 250)
  enter.size_flags_horizontal = Control.SIZE_EXPAND_FILL
  enter.tooltip_text = "%d / 5 ready · %s" % [campaign.lineup().size(), campaign.state.difficulty]
  var opp = campaign.opponent()
@@ -529,7 +557,8 @@ func demo_stage() -> void:
 func introduce_match() -> void:
  if not campaign.lineup_ready() or not campaign.pending_heroes().is_empty():return
  if campaign.state.get("tour",{}).get("shop",false) or campaign.state.get("tour",{}).get("complete",false):return
- begin_battle()
+ # Every fight opens on the matchup: bracket stakes, both fives with power, and a scouting read.
+ phase = "intro"; render()
 
 func begin_battle() -> void:
  if not campaign.lineup_ready() or not campaign.pending_heroes().is_empty(): return
@@ -668,11 +697,23 @@ func build_result() -> void:
   button(end, "See the guild's final record  →", func(): phase = "runover"; render(), true)
   return
  var footer = HBoxContainer.new(); ui.add_child(footer); footer.position = Vector2(560, 800); footer.size = Vector2(480, 62); footer.alignment = BoxContainer.ALIGNMENT_CENTER
- FlowUI.cta(self, footer, ("Level ups (%d)  ▶" % pending) if pending else "Menu  ▶" if exhibition else "Shop  ▶" if campaign.state.has("tour") else "Continue  ▶", func():
+ FlowUI.cta(self, footer, "Menu  ▶" if exhibition else "Bracket  ▶" if campaign.state.has("tour") else ("Level ups (%d)  ▶" % pending) if pending else "Continue  ▶", func():
   if exhibition: quit_to_menu()
+  elif campaign.state.has("tour"): show_bracket_then_shop()
   else:
-   phase = "upgrade" if pending else "shop" if campaign.state.has("tour") else "hub"; tab = "overview"; render()
-   if phase == "shop": FlowUI.banner(self, "SHOP", Color("c8ff9d")), false, 480)
+   phase = "upgrade" if pending else "hub"; tab = "overview"; render(), false, 480)
+
+## After a tour match: replay the bracket, then (if the cup just ended) the progress screen, then shop.
+func show_bracket_then_shop() -> void:
+ var to_shop = func():
+  if campaign.state.get("run_over", false): phase = "runover"; render(); return
+  if not campaign.pending_heroes().is_empty(): phase = "upgrade"; render(); return
+  phase = "shop" if campaign.state.get("tour",{}).get("shop",false) else "hub"; tab = "overview"; render()
+  if phase == "shop": FlowUI.banner(self, "SHOP", Color("c8ff9d"))
+ var cup_over = campaign.state.tour.get("bracket",{}).get("finished",false)
+ var after = (func(): render(); TournamentRewardsUI.open_screen(self, "progress", to_shop, "Shop  ▶")) if cup_over else to_shop
+ render()
+ TournamentRewardsUI.open_screen(self, "bracket", after, "Cup results  ▶" if cup_over else "Shop  ▶", true)
 
 ## Arena Impact Score for every creature in the match, with the MVP called out.
 func impact_board(box: Node, report: Dictionary) -> void:
@@ -728,7 +769,10 @@ func build_upgrade() -> void:
    pulse.bind_node(banner)
    sound.cue("upgrade", true)
   label(content, card.name, 23)
-  var description = label(content, card.description, 15, MUTED); description.max_lines_visible = 4; description.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS; description.tooltip_text = card.description
+  var description = label(content, card.get("summary", card.description), 17, WHITE); description.max_lines_visible = 3; description.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+  description.tooltip_text = card.description; description.mouse_filter = Control.MOUSE_FILTER_STOP
+  if card.get("upgrade", false): label(content, "▲ UPGRADES A SKILL YOU OWN", 12, Color("6fe08a"))
+  var more = label(content, "Hover for full details", 11, MUTED); more.tooltip_text = card.description; more.mouse_filter = Control.MOUSE_FILTER_STOP
   var spacer = Control.new(); spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL; content.add_child(spacer)
   button(content,"Preview in arena",func():
    var demo=AbilityPreview.new();demo.game=self;demo.hero=h.duplicate(true);demo.card=card.duplicate(true);ui.add_child(demo);demo.build())

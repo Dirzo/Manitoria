@@ -83,7 +83,10 @@ static func scaling_type(s: float) -> String:
 ## Level curve: late scalers start below par and finish above it; early scalers the reverse.
 static func curve(hero: Dictionary) -> float:
 	var lv = float(hero.get("level", 1))
-	return clampf(1.0 + (score(hero) - 5.5) * (lv - PIVOT_LEVEL) * SLOPE, 0.72, 1.32)
+	var d = (score(hero) - 5.5) * (lv - PIVOT_LEVEL) * SLOPE
+	# Early scalers fade late, but gently: they still gain raw stats every level.
+	if d < 0.0 and lv > PIVOT_LEVEL: d *= 0.6
+	return clampf(1.0 + d, 0.80, 1.32)
 
 static func mod(hero: Dictionary, key: String) -> float:
 	return float(TRAITS[trait_of(hero)].get(key, 0.0 if key == "armor" else 1.0))

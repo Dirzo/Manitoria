@@ -36,6 +36,7 @@ static func can_drop(game: Node,data: Variant,hero_id: String,_slot: String="",b
  elif kind!="bag":return false
  if bag:return kind=="equipped"
  var hero=c.hero_by_id(hero_id)
+ if kind=="offer":return hero in c.state.roster
  return hero in c.state.roster and (kind!="equipped" or data.owner!=hero_id) and fits(hero,id)
 
 static func apply_drop(game: Node,data: Dictionary,hero_id: String,_slot: String="",bag: bool=false) -> bool:
@@ -51,6 +52,8 @@ static func apply_drop(game: Node,data: Dictionary,hero_id: String,_slot: String
   "equipped":
    if bag:ok=c.unequip(data.owner,str(data.slot))
    else:ok=c.transfer_item(data.owner,hero_id,str(data.slot))
+ if ok and data.kind=="offer" and c.last_error=="bag":
+  c.last_error="";game.sound.cue("upgrade");game.toast("%s is full · sent to your bag"%c.hero_by_id(hero_id).name);game.render();return true
  if ok:
   game.sound.cue("upgrade")
   if not bag:
@@ -108,7 +111,12 @@ static func owned_combos(game: Node,id: String,payload: Dictionary={}) -> Array:
  return out
 
 static func combo_text(id: String,combos: Array) -> String:
- var t="\n\nFORGES WITH WHAT YOU OWN:" if not combos.is_empty() else "\n\nYou own no component that pairs with this yet."
+ var t=""
+ if not combos.is_empty():
+  var o=combos[0];var it=Forge.ITEMS[o.made]
+  t+="\n\n⚒ FORGES INTO %s%s\n(with %s %s)\n%s\n%s"%[it.name.to_upper()," · WILD" if it.get("wild",false) else "",Forge.COMPONENTS[o.partner].name,o.where,it.text,Forge.stat_line(o.made)]
+ t+="\n\nOTHER PAIRINGS YOU OWN:" if combos.size()>1 else ("" if not combos.is_empty() else "\n\nYou own no component that pairs with this yet.")
+ combos=combos.slice(1)
  for o in combos:t+="\n + %s (%s)  →  %s%s"%[Forge.COMPONENTS[o.partner].name,o.where,Forge.ITEMS[o.made].name," · WILD" if Forge.ITEMS[o.made].get("wild",false) else ""]
  t+="\n\nAll recipes:"
  for other in Forge.COMPONENT_ORDER:
@@ -122,7 +130,7 @@ static func result_badge(game: Node,parent: Control,made: String,size_px: float,
  var holder=Control.new();holder.name="ComboHint";holder.mouse_filter=Control.MOUSE_FILTER_IGNORE;holder.position=pos;holder.size=Vector2(size_px,size_px);parent.add_child(holder)
  var ring=Panel.new();ring.mouse_filter=Control.MOUSE_FILTER_IGNORE;ring.size=Vector2(size_px,size_px);holder.add_child(ring)
  ring.add_theme_stylebox_override("panel",game.style(Color("120d1c"),Color("ff9be0") if wild else Color("ffd36e"),int(size_px),3,2))
- var icon=AbilityArt.icon(holder,Forge.ITEMS[made].art,0);icon.mouse_filter=Control.MOUSE_FILTER_IGNORE;icon.position=Vector2(3,3);icon.size=Vector2(size_px-6,size_px-6)
+ var icon=AbilityArt.icon(holder,Forge.info(made).art,0);icon.mouse_filter=Control.MOUSE_FILTER_IGNORE;icon.position=Vector2(3,3);icon.size=Vector2(size_px-6,size_px-6)
  if arrow:
   var a=Label.new();a.text="⚒";a.mouse_filter=Control.MOUSE_FILTER_IGNORE;a.add_theme_font_size_override("font_size",int(size_px*0.42));a.add_theme_color_override("font_color",Color("ffd36e"));a.add_theme_color_override("font_outline_color",Color.BLACK);a.add_theme_constant_override("outline_size",4)
   a.position=Vector2(-size_px*0.34,size_px*0.42);holder.add_child(a)

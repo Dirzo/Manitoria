@@ -1310,7 +1310,11 @@ func buy_and_equip(index: int, id: String) -> bool:
  if h.is_empty() or h not in state.roster or item.is_empty(): return false
  if state.gold<item.price: last_error = "Not enough gold."; return false
  var before=state.duplicate(true)
- if place_item(h, item_id) == "": state = before; return false
+ if place_item(h, item_id) == "":
+  # No room on this champion: the purchase goes to the bag instead of failing.
+  state = before; last_error = ""
+  if buy_item(index): last_error = "bag"; return true
+  return false
  state.gold-=item.price;state.tour.stock[index]=""
  if save():return true
  state=before;return false

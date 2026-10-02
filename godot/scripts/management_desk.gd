@@ -46,7 +46,8 @@ func build() -> void:
  if state.roster.size() < Campaign.MIN_SQUAD: next = "Sign %d more" % (Campaign.MIN_SQUAD - state.roster.size())
  FlowUI.cta(game, row, next, func():
   if not state.has("tour") and state.round >= 17 and campaign.pending_heroes().is_empty(): campaign.new_season(); game.render()
-  else: game.prepare_match(), state.roster.size() < Campaign.MIN_SQUAD or state.get("tour",{}).get("complete",false))
+  elif state.get("tour",{}).get("shop",false) or not campaign.pending_heroes().is_empty() or not campaign.lineup_ready(): game.prepare_match()
+  else: game.introduce_match(), state.roster.size() < Campaign.MIN_SQUAD or state.get("tour",{}).get("complete",false))
 
 func navigate(tab: String) -> void:
  game.tab = tab; game.render()
@@ -199,9 +200,7 @@ func market() -> void:
  var opts = func(h):
   return {"on_scout": func(): game.sound.announce(h.sp); profile(h, false),
    "draft_text": "Draft · %d gold" % h.price if DraftBoard.view(game) == "Grid" else "%d gold" % h.price,
-   "on_draft": func():
-    if campaign.recruit(h.id): game.selected_id = h.id; game.sound.cue("upgrade", true); game.sound.announce(h.sp, true); game.render()
-    else: game.toast(campaign.last_error if not campaign.last_error.is_empty() else "Not enough gold or your roster is full."),
+   "on_draft": func(): draft_with_check(h),
    "draft_disabled": state.gold < h.price or state.roster.size() >= 12 or state.roster.is_empty()}
  if DraftBoard.view(game) == "Table":
   var ordered = []
@@ -213,6 +212,19 @@ func market() -> void:
   if heroes.is_empty(): continue
   text(body, "%s  ·  %d gold" % [t.to_upper(), League.cost(heroes[0].sp)], 22, Color(League.TIER_COLOR[t]))
   DraftBoard.grid(game, body, heroes, opts, 4, 372, 220)
+
+## Warn when a pick would leave too little gold to field a full five.
+func draft_with_check(h: Dictionary) -> void:
+ var go = func():
+  if campaign.recruit(h.id): game.selected_id = h.id; game.sound.cue("upgrade", true); game.sound.announce(h.sp, true); game.render()
+  else: game.toast(campaign.last_error if not campaign.last_error.is_empty() else "Not enough gold or your roster is full.")
+ var starters = campaign.lineup().size() + 1
+ var left = int(state.gold) - int(h.price)
+ var more = left / League.COST_UNIT
+ var can_field = mini(Campaign.MAX_SQUAD, starters + more)
+ if starters < Campaign.MAX_SQUAD and can_field < Campaign.MAX_SQUAD:
+  FlowUI.confirm(game, "Short-handed warning", "After drafting %s you'll have %d gold left, which buys %d more Common.\n\nYou could only field %d of 5 starters. A four-creature squad gets the elite bonus, but you'll be outnumbered." % [h.name, left, more, can_field], "Draft anyway", go, "Keep shopping")
+ else: go.call()
 
 func roster() -> void:
  ChampionWardrobe.build(self)
@@ -269,7 +281,7 @@ func profile(h: Dictionary, yours: bool) -> void:
  var right = column(split)
  text(right, "SIGNATURE  /  RANK %d" % h.signature_rank, 13, GOLD)
  text(right, HeroData.species[h.sp].ability_name, 25)
- text(right, HeroData.species[h.sp].ability_description, 17, MUTED)
+ var sig = text(right, HeroData.signature_summary(h.sp), 18, WHITE); sig.tooltip_text = HeroData.species[h.sp].ability_description; sig.mouse_filter = Control.MOUSE_FILTER_STOP
  text(right, "ABILITY KIT · %d / %d" % [h.learned.size()+1, HeroData.ABILITY_SLOTS], 13, GOLD)
  for key in h.learned:
   var i = int(key)
@@ -281,9 +293,21 @@ func profile(h: Dictionary, yours: bool) -> void:
   var ability_text=VBoxContainer.new(); ability_text.size_flags_horizontal=Control.SIZE_EXPAND_FILL; art_row.add_child(ability_text)
   text(ability_text, ability.name + (" · Rank %d" % rank if rank > 0 else " · Not learned"), 20, TEAL if rank > 0 else WHITE)
   text(ability_text,rarity.to_upper(),12,RarityStyle.color(rarity))
-  text(ability_text, ability.description + "  %.0fs base cooldown." % ability.cooldown, 16, MUTED)
+  var sm = text(ability_text, ability.summary, 17, WHITE); sm.tooltip_text = ability.description; sm.mouse_filter = Control.MOUSE_FILTER_STOP
+  text(ability_text, "%.1fs cooldown · hover for details" % CombatPacing.ability_cd(h, key), 12, MUTED)
  if h.learned.size()+1 < HeroData.ABILITY_SLOTS:
-  text(right, "%d empty slots · Choose fresh ability cards after arena level-ups." % (HeroData.ABILITY_SLOTS-h.learned.size()-1), 17, MUTED)
+  text(right, "%d empty slot%s · level up in the arena to learn more" % [HeroData.ABILITY_SLOTS-h.learned.size()-1, "" if HeroData.ABILITY_SLOTS-h.learned.size()-1 == 1 else "s"], 15, MUTED)
+ # The full skill book: every skill this species can learn, each one its own.
+ text(right, "SKILL BOOK · %d skills" % HeroData.DISCOVERY_CHOICES, 13, GOLD)
+ var book = GridContainer.new(); book.columns = 2; book.add_theme_constant_override("h_separation", 10); book.add_theme_constant_override("v_separation", 8); right.add_child(book)
+ for i in range(HeroData.DISCOVERY_CHOICES):
+  var sk = HeroData.learned_ability(h.sp, i); var owned = h.learned.has(str(i))
+  var cell = HBoxContainer.new(); cell.custom_minimum_size.x = 380; book.add_child(cell); cell.mouse_filter = Control.MOUSE_FILTER_STOP
+  cell.tooltip_text = sk.name + "\n" + sk.description
+  var ic = AbilityArt.icon(cell, "discovery:%s:%d" % [h.sp, i], 44); ic.modulate = Color.WHITE if owned else Color(0.7, 0.7, 0.75)
+  var words = VBoxContainer.new(); words.add_theme_constant_override("separation", -2); cell.add_child(words)
+  game.label(words, sk.name + ("  ✓" if owned else ""), 14, TEAL if owned else WHITE, false)
+  game.label(words, sk.summary, 12, MUTED, false)
  var evolution = h.get("evolution", "")
  text(right, "EVOLUTION · " + (HeroData.evolution_info(h).name if not evolution.is_empty() else "Unlocks at level 10"), 15, GOLD)
  text(right, HeroData.evolution_info(h).description if not evolution.is_empty() else "Choose Ravager, Guardian or Arcanist to change combat strengths and visual effects.", 16, MUTED)

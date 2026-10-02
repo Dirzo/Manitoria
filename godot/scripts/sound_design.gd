@@ -182,7 +182,7 @@ static func event_sound(e: Dictionary, unit: Dictionary) -> Dictionary:
  match e.type:
   "item_proc":
    var item=ItemEffects.definition(str(e.get("credit","")).trim_prefix("item:"))
-   result.key=EFFECT_FAMILY.get(item.get("art","ward"),"shield");result.gain=-22;result.gap=0.45
+   result.key=EFFECT_FAMILY.get(item.get("sfx",item.get("art","ward")),"shield");result.gain=-22;result.gap=0.45
   "telegraph": return result
   "cast":
    result.key = "hero_" + sp if HeroData.species.has(sp) and e.effect == HeroData.species[sp].ab else effect

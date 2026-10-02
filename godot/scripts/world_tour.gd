@@ -75,7 +75,7 @@ static func resolve(c: Campaign, sim: BattleSim) -> bool:
  if bracket.finished:
   var place=placement(c,0)
   var promoted=place==1
-  t.history.append({"level":t.level,"location":r.place,"wins":t.wins,"attempt":t.attempt,"promoted":promoted,"place":place,"bracket":bracket.duplicate(true)})
+  t.history.append({"level":t.level,"location":r.place,"wins":t.wins,"attempt":t.attempt,"promoted":promoted,"place":place,"bracket":bracket.duplicate(true),"start_levels":t.get("start_levels",{}).duplicate()})
   report.tournament_won=promoted;report.place=place
   reward+={1:150+int(t.level)*15,2:90,3:60,4:40}.get(place,20)
   League.weekly_update(c)
@@ -164,6 +164,8 @@ static func ensure_bracket(c: Campaign) -> void:
   var d=m.duplicate(true);d.team_a=-1;d.team_b=-1;d.winner=-1;d.loser=-1;d.skipped=false
   matches.append(d)
  t.bracket={"format":"double","seeds":teams,"matches":matches,"finished":false,"level":t.level,"champion":-1}
+ t.start_levels={}
+ for h in c.state.roster:t.start_levels[h.id]=int(h.level)
  for i in range(8):t.bracket["ovr_%d"%i]=League.team_ovr(team_roster(c,i))
  step(c)
 
@@ -205,10 +207,18 @@ static func current_match(c: Campaign) -> Dictionary:
  return b.matches[13]
 
 static func record_player(c: Campaign, won: bool) -> void:
- var m=current_match(c)
+ var m=current_match(c);var b=c.state.tour.bracket
+ var done=[]
+ for i in range(b.matches.size()):
+  if int(b.matches[i].winner)>=0:done.append(i)
  var mine_a=int(m.team_a)==0
  m.winner=(m.team_a if won==mine_a else m.team_b);m.loser=(m.team_b if won==mine_a else m.team_a)
  step(c)
+ # Remember what just resolved so the bracket screen can play it out (player's match first).
+ var idx=b.matches.find(m);var fresh=[idx]
+ for i in ORDER:
+  if i!=idx and int(b.matches[i].winner)>=0 and i not in done:fresh.append(i)
+ c.state.tour.last_anim={"matches":fresh,"player":idx,"won":won,"level":int(c.state.tour.level)}
 
 static func losses(c: Campaign, team: int) -> int:
  var n=0

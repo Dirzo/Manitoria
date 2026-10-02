@@ -2,6 +2,10 @@ class_name AbilityArt
 extends RefCounted
 const KEYS = ["gore","bulwark","smash","hunger","howl","venom","skystrike","foxfire","acid","shriek","flamewave","chain","gaze","rootbloom","tidal","radiance","triplebite","prideroar","frostroar","shellup","maul","regrowth","threefold","stonedive","vanish","antlerrush","boulder","stormcall","riddle","tailwind","brood","magma","quake","rally","fissure","ward","meteor","renew","drain","fear","ambush","toxic","execute","gust","wisps","barrage","silence","beam","storm","frost","roots","fire","whirl","ravager","guardian","arcanist","vigor","force","focus","basic","blocked","rebirth","victory","summons"]
 static func texture(key: String) -> Texture2D:
+ if key.begins_with("item:"):
+  var ipath="res://assets/items/i_%s.png" % key.trim_prefix("item:")
+  if ResourceLoader.exists(ipath): return load(ipath)
+  key=Forge.ITEMS.get(key.trim_prefix("item:"),{}).get("art","ward")
  if key.begins_with("comp:"):
   var cpath="res://assets/items/%s.png" % key.trim_prefix("comp:")
   if ResourceLoader.exists(cpath): return load(cpath)

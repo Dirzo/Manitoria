@@ -1,0 +1,1666 @@
+{
+"minotaur": [
+[
+"Horn of the Maze",
+"ambush",
+"stun"
+],
+[
+"Bull Rush",
+"fissure",
+"weaken"
+],
+[
+"Bronze Hoofquake",
+"quake",
+"echo"
+],
+[
+"Labyrinth Roar",
+"fear",
+"haste"
+],
+[
+"Axe of Minos",
+"execute",
+"leech"
+],
+[
+"Maze Wall",
+"ward",
+"guard"
+],
+[
+"Goring Spiral",
+"whirl",
+"stun"
+],
+[
+"Thread of Ariadne",
+"rally",
+"mend"
+],
+[
+"Crushing Verdict",
+"meteor",
+"weaken"
+],
+[
+"Bloodsand Charge",
+"drain",
+"haste"
+]
+],
+"golem": [
+[
+"Runic Bulwark",
+"ward",
+"guard"
+],
+[
+"Seismic Fist",
+"quake",
+"root"
+],
+[
+"Crystal Shards",
+"barrage",
+"chill"
+],
+[
+"Monolith Drop",
+"meteor",
+"stun"
+],
+[
+"Gravel Storm",
+"gust",
+"weaken"
+],
+[
+"Rune Pulse",
+"silence",
+"guard"
+],
+[
+"Lodestone Pull",
+"roots",
+"stun"
+],
+[
+"Bedrock Spin",
+"whirl",
+"guard"
+],
+[
+"Glyph Beam",
+"beam",
+"weaken"
+],
+[
+"Mountain's Patience",
+"renew",
+"guard"
+]
+],
+"troll": [
+[
+"Bog Club",
+"quake",
+"weaken"
+],
+[
+"Regrowth Howl",
+"rally",
+"mend"
+],
+[
+"Swamp Belch",
+"toxic",
+"chill"
+],
+[
+"Bone Toss",
+"barrage",
+"stun"
+],
+[
+"Mudslide",
+"gust",
+"root"
+],
+[
+"Troll Fury",
+"whirl",
+"leech"
+],
+[
+"Gnawing Hunger",
+"drain",
+"haste"
+],
+[
+"Moss Blanket",
+"ward",
+"mend"
+],
+[
+"Rock Hurl",
+"meteor",
+"echo"
+],
+[
+"Stubborn Hide",
+"fear",
+"guard"
+]
+],
+"wendigo": [
+[
+"Frostbitten Claws",
+"execute",
+"chill"
+],
+[
+"Antler Gore",
+"ambush",
+"weaken"
+],
+[
+"Whiteout Wail",
+"silence",
+"chill"
+],
+[
+"Starving Howl",
+"fear",
+"leech"
+],
+[
+"Bone Harvest",
+"whirl",
+"leech"
+],
+[
+"Black Ice",
+"frost",
+"root"
+],
+[
+"Soul Frost",
+"beam",
+"chill"
+],
+[
+"Cannibal Feast",
+"drain",
+"guard"
+],
+[
+"Hollow Moon",
+"wisps",
+"weaken"
+],
+[
+"Midnight Blizzard",
+"storm",
+"chill"
+]
+],
+"direwolf": [
+[
+"Moonlit Hunt",
+"execute",
+"haste"
+],
+[
+"Howl of the Hunt",
+"fear",
+"haste"
+],
+[
+"Throat Lunge",
+"drain",
+"stun"
+],
+[
+"Frostfang Rend",
+"whirl",
+"chill"
+],
+[
+"Scent of Blood",
+"rally",
+"haste"
+],
+[
+"Den Guard",
+"ward",
+"guard"
+],
+[
+"Wolfstorm",
+"barrage",
+"weaken"
+],
+[
+"Shadow Stalk",
+"gust",
+"root"
+],
+[
+"Lunar Bite",
+"beam",
+"leech"
+],
+[
+"Tundra Chase",
+"fissure",
+"chill"
+]
+],
+"manticore": [
+[
+"Scorpion Lash",
+"barrage",
+"venom"
+],
+[
+"Man-Eater Pounce",
+"ambush",
+"venom"
+],
+[
+"Tail Spikes",
+"wisps",
+"venom"
+],
+[
+"Paralytic Sting",
+"frost",
+"venom"
+],
+[
+"Desert Roar",
+"fear",
+"weaken"
+],
+[
+"Spiked Mane",
+"whirl",
+"venom"
+],
+[
+"Bloodlust",
+"drain",
+"haste"
+],
+[
+"Sand Ambush",
+"gust",
+"venom"
+],
+[
+"Lethal Dose",
+"execute",
+"venom"
+],
+[
+"Spine Rain",
+"meteor",
+"venom"
+]
+],
+"griffin": [
+[
+"Talon Dive",
+"ambush",
+"stun"
+],
+[
+"Gale Wings",
+"rally",
+"haste"
+],
+[
+"Sky Lance",
+"beam",
+"echo"
+],
+[
+"Feather Cyclone",
+"whirl",
+"haste"
+],
+[
+"Thunder Screech",
+"silence",
+"stun"
+],
+[
+"Golden Gale",
+"ward",
+"haste"
+],
+[
+"Eagle Eye",
+"execute",
+"echo"
+],
+[
+"Cliffbreaker",
+"meteor",
+"chill"
+],
+[
+"Updraft",
+"fissure",
+"root"
+],
+[
+"Lionheart Strike",
+"drain",
+"guard"
+]
+],
+"kitsune": [
+[
+"Foxfire Dance",
+"fire",
+"burn"
+],
+[
+"Nine-Tail Spiral",
+"whirl",
+"burn"
+],
+[
+"Illusory Step",
+"ambush",
+"silence"
+],
+[
+"Kitsune-bi",
+"barrage",
+"burn"
+],
+[
+"Trickster's Riddle",
+"silence",
+"weaken"
+],
+[
+"Shrine Blessing",
+"renew",
+"haste"
+],
+[
+"Fox Moon",
+"beam",
+"burn"
+],
+[
+"Phantom Tails",
+"storm",
+"echo"
+],
+[
+"Soulflame Lure",
+"roots",
+"burn"
+],
+[
+"Charm of Inari",
+"fear",
+"leech"
+]
+],
+"wyvern": [
+[
+"Acid Spit",
+"beam",
+"venom"
+],
+[
+"Diving Talons",
+"ambush",
+"venom"
+],
+[
+"Wyvern's Breath",
+"fire",
+"venom"
+],
+[
+"Wing Gust",
+"storm",
+"chill"
+],
+[
+"Stinger Volley",
+"barrage",
+"venom"
+],
+[
+"Plague Wind",
+"toxic",
+"weaken"
+],
+[
+"Sky Hunter",
+"execute",
+"venom"
+],
+[
+"Tailspin",
+"whirl",
+"venom"
+],
+[
+"Caustic Bomb",
+"meteor",
+"venom"
+],
+[
+"Clutch Guardian",
+"ward",
+"guard"
+]
+],
+"harpy": [
+[
+"Shrieking Gale",
+"gust",
+"weaken"
+],
+[
+"Talon Rake",
+"ambush",
+"leech"
+],
+[
+"Storm Feathers",
+"storm",
+"stun"
+],
+[
+"Discordant Song",
+"fear",
+"silence"
+],
+[
+"Plumage Wall",
+"ward",
+"haste"
+],
+[
+"Hunger Dive",
+"execute",
+"haste"
+],
+[
+"Quill Spiral",
+"whirl",
+"weaken"
+],
+[
+"Thieving Grasp",
+"drain",
+"weaken"
+],
+[
+"Harpy's Chorus",
+"rally",
+"haste"
+],
+[
+"Feather Snare",
+"roots",
+"silence"
+]
+],
+"phoenix": [
+[
+"Sunfire Rain",
+"meteor",
+"burn"
+],
+[
+"Ember Wings",
+"ward",
+"mend"
+],
+[
+"Pyre Spiral",
+"whirl",
+"burn"
+],
+[
+"Rebirth Flame",
+"renew",
+"mend"
+],
+[
+"Flare Burst",
+"silence",
+"burn"
+],
+[
+"Ashen Bolts",
+"wisps",
+"burn"
+],
+[
+"Blazing Talons",
+"ambush",
+"burn"
+],
+[
+"Inferno Gate",
+"fire",
+"burn"
+],
+[
+"Sun Crown",
+"rally",
+"haste"
+],
+[
+"Scorching Gaze",
+"execute",
+"burn"
+]
+],
+"kirin": [
+[
+"Celestial Hooves",
+"quake",
+"stun"
+],
+[
+"Jade Lightning",
+"beam",
+"stun"
+],
+[
+"Thunderclap",
+"silence",
+"stun"
+],
+[
+"Heaven's Mercy",
+"renew",
+"guard"
+],
+[
+"Storm Antlers",
+"whirl",
+"stun"
+],
+[
+"Spark Chain",
+"wisps",
+"stun"
+],
+[
+"Lightning Gallop",
+"fissure",
+"stun"
+],
+[
+"Benevolent Ward",
+"ward",
+"haste"
+],
+[
+"Charged Horn",
+"execute",
+"echo"
+],
+[
+"Rolling Thunder",
+"barrage",
+"stun"
+]
+],
+"basilisk": [
+[
+"Stoneglare Ray",
+"beam",
+"stun"
+],
+[
+"Stone Coil",
+"roots",
+"stun"
+],
+[
+"Venom Fang",
+"execute",
+"venom"
+],
+[
+"Gorgon Glare",
+"silence",
+"stun"
+],
+[
+"Serpent's Sweep",
+"whirl",
+"venom"
+],
+[
+"Fossil Shell",
+"ward",
+"guard"
+],
+[
+"Toxic Pool",
+"fire",
+"venom"
+],
+[
+"Shed Skin",
+"renew",
+"guard"
+],
+[
+"Death Stare",
+"drain",
+"venom"
+],
+[
+"Calcify",
+"frost",
+"weaken"
+]
+],
+"treant": [
+[
+"Rootgrasp",
+"fissure",
+"root"
+],
+[
+"Sapflow",
+"renew",
+"mend"
+],
+[
+"Thorn Volley",
+"barrage",
+"root"
+],
+[
+"Barkskin Grove",
+"rally",
+"guard"
+],
+[
+"Falling Timber",
+"meteor",
+"stun"
+],
+[
+"Seed Burst",
+"wisps",
+"root"
+],
+[
+"Elder Groan",
+"fear",
+"root"
+],
+[
+"Pollen Cloud",
+"toxic",
+"weaken"
+],
+[
+"Branch Sweep",
+"whirl",
+"root"
+],
+[
+"Verdant Lance",
+"beam",
+"leech"
+]
+],
+"naga": [
+[
+"Tidal Lash",
+"beam",
+"chill"
+],
+[
+"Coil of the Deep",
+"roots",
+"chill"
+],
+[
+"Siren Song",
+"silence",
+"weaken"
+],
+[
+"Pearl Shield",
+"ward",
+"mend"
+],
+[
+"Riptide",
+"storm",
+"chill"
+],
+[
+"Abyssal Strike",
+"execute",
+"chill"
+],
+[
+"Water Orbs",
+"wisps",
+"chill"
+],
+[
+"Monsoon",
+"rally",
+"mend"
+],
+[
+"Whirlpool",
+"whirl",
+"chill"
+],
+[
+"Brine Spray",
+"fire",
+"chill"
+]
+],
+"unicorn": [
+[
+"Radiant Charge",
+"ambush",
+"guard"
+],
+[
+"Starlight Bolts",
+"wisps",
+"mend"
+],
+[
+"Purifying Horn",
+"silence",
+"guard"
+],
+[
+"Moon Blessing",
+"rally",
+"mend"
+],
+[
+"Halo Burst",
+"quake",
+"stun"
+],
+[
+"Prism Barrage",
+"barrage",
+"weaken"
+],
+[
+"Healing Light",
+"renew",
+"haste"
+],
+[
+"Lightfall",
+"meteor",
+"stun"
+],
+[
+"Silver Hoof",
+"execute",
+"leech"
+],
+[
+"Rainbow Bridge",
+"fissure",
+"haste"
+]
+],
+"cerberus": [
+[
+"Hellmaw Volley",
+"barrage",
+"burn"
+],
+[
+"Hellfire Howl",
+"fear",
+"burn"
+],
+[
+"Underworld Chains",
+"roots",
+"burn"
+],
+[
+"Guardian of Gates",
+"ward",
+"guard"
+],
+[
+"Brimstone Spin",
+"whirl",
+"burn"
+],
+[
+"Soul Snatch",
+"drain",
+"burn"
+],
+[
+"Three-Headed Roar",
+"silence",
+"stun"
+],
+[
+"Infernal Pounce",
+"ambush",
+"burn"
+],
+[
+"Styx Flood",
+"gust",
+"chill"
+],
+[
+"Ash Pyre",
+"meteor",
+"burn"
+]
+],
+"nemean": [
+[
+"Pride Pounce",
+"ambush",
+"stun"
+],
+[
+"Golden Mane",
+"rally",
+"guard"
+],
+[
+"Invulnerable Hide",
+"fear",
+"guard"
+],
+[
+"Royal Swipe",
+"whirl",
+"weaken"
+],
+[
+"Sunlit Roar",
+"silence",
+"weaken"
+],
+[
+"King's Claim",
+"execute",
+"leech"
+],
+[
+"Lion's Leap",
+"fissure",
+"stun"
+],
+[
+"Herald Roar",
+"quake",
+"weaken"
+],
+[
+"Hunt of Heracles",
+"drain",
+"guard"
+],
+[
+"Crown Guard",
+"renew",
+"guard"
+]
+],
+"yeti": [
+[
+"Snowball Hurl",
+"barrage",
+"chill"
+],
+[
+"Rimeblast Roar",
+"fear",
+"chill"
+],
+[
+"Glacier Slam",
+"quake",
+"chill"
+],
+[
+"Icicle Spear",
+"beam",
+"chill"
+],
+[
+"Blizzard Hug",
+"drain",
+"chill"
+],
+[
+"Ice Armor",
+"ward",
+"guard"
+],
+[
+"Whiteout",
+"silence",
+"chill"
+],
+[
+"Snow Cyclone",
+"whirl",
+"chill"
+],
+[
+"Frozen Tundra",
+"fissure",
+"root"
+],
+[
+"Mountain Call",
+"rally",
+"guard"
+]
+],
+"zaratan": [
+[
+"Shell Slam",
+"meteor",
+"stun"
+],
+[
+"Coral Shield",
+"ward",
+"mend"
+],
+[
+"Wave Breaker",
+"gust",
+"chill"
+],
+[
+"Island Quake",
+"fissure",
+"root"
+],
+[
+"Ancient Patience",
+"fear",
+"guard"
+],
+[
+"Kelp Snare",
+"roots",
+"chill"
+],
+[
+"Deep Current",
+"storm",
+"chill"
+],
+[
+"Turtle Spin",
+"whirl",
+"guard"
+],
+[
+"Barnacle Barrage",
+"barrage",
+"weaken"
+],
+[
+"Tidepool Renewal",
+"rally",
+"mend"
+]
+],
+"owlbear": [
+[
+"Feather Maul",
+"ambush",
+"stun"
+],
+[
+"Bear Hug",
+"drain",
+"stun"
+],
+[
+"Night Hoot",
+"fear",
+"weaken"
+],
+[
+"Mauling Frenzy",
+"barrage",
+"leech"
+],
+[
+"Talon Swipe",
+"quake",
+"weaken"
+],
+[
+"Forest Guard",
+"ward",
+"guard"
+],
+[
+"Moonlit Sight",
+"beam",
+"weaken"
+],
+[
+"Den Rage",
+"rally",
+"haste"
+],
+[
+"Hibernation",
+"renew",
+"guard"
+],
+[
+"Uprooted Tree",
+"meteor",
+"stun"
+]
+],
+"hydra": [
+[
+"Hydra Bite",
+"barrage",
+"venom"
+],
+[
+"Regenerating Heads",
+"ward",
+"mend"
+],
+[
+"Swamp Spin",
+"whirl",
+"venom"
+],
+[
+"Acid Geyser",
+"meteor",
+"venom"
+],
+[
+"Head Lunge",
+"execute",
+"venom"
+],
+[
+"Marsh Snare",
+"roots",
+"venom"
+],
+[
+"Hydra Roar",
+"fear",
+"venom"
+],
+[
+"Bile Lance",
+"beam",
+"venom"
+],
+[
+"Twin Strike",
+"ambush",
+"echo"
+],
+[
+"Bog Fog",
+"silence",
+"venom"
+]
+],
+"chimera": [
+[
+"Goat Charge",
+"ambush",
+"stun"
+],
+[
+"Serpent Fang",
+"execute",
+"venom"
+],
+[
+"Lion's Maw",
+"drain",
+"burn"
+],
+[
+"Triple Breath",
+"beam",
+"burn"
+],
+[
+"Chimeric Roar",
+"fear",
+"burn"
+],
+[
+"Wildfire Coil",
+"whirl",
+"burn"
+],
+[
+"Fireball Volley",
+"barrage",
+"burn"
+],
+[
+"Hybrid Fury",
+"rally",
+"haste"
+],
+[
+"Scorched Earth",
+"meteor",
+"burn"
+],
+[
+"Venom Smoke",
+"toxic",
+"burn"
+]
+],
+"gargoyle": [
+[
+"Cathedral Dive",
+"ambush",
+"stun"
+],
+[
+"Gothic Ward",
+"ward",
+"guard"
+],
+[
+"Spire Shards",
+"barrage",
+"stun"
+],
+[
+"Granite Wings",
+"gust",
+"stun"
+],
+[
+"Bell Toll",
+"silence",
+"stun"
+],
+[
+"Statue Form",
+"renew",
+"guard"
+],
+[
+"Grotesque Glare",
+"fear",
+"weaken"
+],
+[
+"Rooftop Plunge",
+"quake",
+"stun"
+],
+[
+"Spout Spray",
+"fire",
+"chill"
+],
+[
+"Night Watch",
+"rally",
+"guard"
+]
+],
+"nekomata": [
+[
+"Twin Tail Hex",
+"silence",
+"weaken"
+],
+[
+"Ghost Fire",
+"fire",
+"burn"
+],
+[
+"Cursed Claw",
+"execute",
+"leech"
+],
+[
+"Spirit Dance",
+"wisps",
+"weaken"
+],
+[
+"Shadow Pounce",
+"beam",
+"stun"
+],
+[
+"Haunting Wail",
+"fear",
+"leech"
+],
+[
+"Necro Puppet",
+"roots",
+"weaken"
+],
+[
+"Nine Lives",
+"ward",
+"leech"
+],
+[
+"Midnight Spin",
+"whirl",
+"leech"
+],
+[
+"Graveyard Mist",
+"toxic",
+"weaken"
+]
+],
+"jackalope": [
+[
+"Antler Toss",
+"meteor",
+"stun"
+],
+[
+"Rabbit Hop",
+"ambush",
+"haste"
+],
+[
+"Thorny Antlers",
+"whirl",
+"weaken"
+],
+[
+"Burrow Strike",
+"quake",
+"root"
+],
+[
+"Clover Charm",
+"renew",
+"haste"
+],
+[
+"Prairie Wind",
+"gust",
+"haste"
+],
+[
+"Jackrabbit Kick",
+"execute",
+"stun"
+],
+[
+"Wild Warren",
+"ward",
+"haste"
+],
+[
+"Hare Volley",
+"barrage",
+"weaken"
+],
+[
+"Moonrise Bound",
+"beam",
+"haste"
+]
+],
+"cyclops": [
+[
+"Crag Hurl",
+"meteor",
+"stun"
+],
+[
+"Forge Hammer",
+"whirl",
+"burn"
+],
+[
+"Giant's Stomp",
+"fissure",
+"stun"
+],
+[
+"Eye of Fury",
+"execute",
+"echo"
+],
+[
+"Titan Roar",
+"fear",
+"weaken"
+],
+[
+"Thunder Forge",
+"storm",
+"burn"
+],
+[
+"Mountain Guard",
+"ward",
+"guard"
+],
+[
+"Iron Volley",
+"barrage",
+"stun"
+],
+[
+"Earthsplitter",
+"quake",
+"root"
+],
+[
+"Smith's Brand",
+"fire",
+"burn"
+]
+],
+"thunderbird": [
+[
+"Thunder Dive",
+"ambush",
+"stun"
+],
+[
+"Storm Wings",
+"rally",
+"haste"
+],
+[
+"Lightning Lance",
+"beam",
+"stun"
+],
+[
+"Static Field",
+"silence",
+"stun"
+],
+[
+"Thunder Barrage",
+"barrage",
+"stun"
+],
+[
+"Rain Dance",
+"renew",
+"haste"
+],
+[
+"Cloudburst",
+"meteor",
+"chill"
+],
+[
+"Crackling Gale",
+"whirl",
+"stun"
+],
+[
+"Sky Judgment",
+"execute",
+"stun"
+],
+[
+"Ion Wisps",
+"wisps",
+"stun"
+]
+],
+"sphinx": [
+[
+"Riddle Lock",
+"roots",
+"silence"
+],
+[
+"Desert Gaze",
+"beam",
+"weaken"
+],
+[
+"Ancient Curse",
+"toxic",
+"weaken"
+],
+[
+"Sandstorm",
+"gust",
+"weaken"
+],
+[
+"Pharaoh's Ward",
+"ward",
+"guard"
+],
+[
+"Wisdom's Light",
+"renew",
+"haste"
+],
+[
+"Pounce of Ages",
+"ambush",
+"stun"
+],
+[
+"Glyph Storm",
+"storm",
+"silence"
+],
+[
+"Pyramid Fall",
+"quake",
+"stun"
+],
+[
+"Sun Disk",
+"wisps",
+"burn"
+]
+],
+"pegasus": [
+[
+"Wingbeat",
+"wisps",
+"haste"
+],
+[
+"Heavenly Charge",
+"ambush",
+"guard"
+],
+[
+"Cloud Shield",
+"ward",
+"haste"
+],
+[
+"Star Gallop",
+"fissure",
+"haste"
+],
+[
+"Sky Hoof",
+"quake",
+"stun"
+],
+[
+"Zephyr Song",
+"rally",
+"mend"
+],
+[
+"Divine Lance",
+"beam",
+"guard"
+],
+[
+"Aurora",
+"silence",
+"haste"
+],
+[
+"Hurricane Wings",
+"storm",
+"chill"
+],
+[
+"Feather Fall",
+"meteor",
+"stun"
+]
+],
+"arachne": [
+[
+"Silk Bind",
+"frost",
+"root"
+],
+[
+"Spider Swarm",
+"wisps",
+"venom"
+],
+[
+"Web Volley",
+"barrage",
+"root"
+],
+[
+"Fang Strike",
+"execute",
+"venom"
+],
+[
+"Cocoon",
+"ward",
+"guard"
+],
+[
+"Venom Burst",
+"meteor",
+"venom"
+],
+[
+"Weaver's Lure",
+"gust",
+"root"
+],
+[
+"Brood Mother",
+"rally",
+"haste"
+],
+[
+"Eight-Legged Dance",
+"whirl",
+"venom"
+],
+[
+"Poison Nest",
+"fire",
+"venom"
+]
+],
+"salamander": [
+[
+"Flame Tongue",
+"execute",
+"burn"
+],
+[
+"Lava Pool",
+"toxic",
+"burn"
+],
+[
+"Ember Spin",
+"whirl",
+"burn"
+],
+[
+"Fire Dash",
+"ambush",
+"burn"
+],
+[
+"Heat Haze",
+"silence",
+"burn"
+],
+[
+"Magma Shell",
+"ward",
+"guard"
+],
+[
+"Firebolt Swarm",
+"wisps",
+"burn"
+],
+[
+"Volcanic Burst",
+"meteor",
+"burn"
+],
+[
+"Scorch Trail",
+"fissure",
+"burn"
+],
+[
+"Smoldering Roar",
+"fear",
+"burn"
+]
+]
+}

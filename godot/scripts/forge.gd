@@ -132,7 +132,7 @@ static func info(id: String) -> Dictionary:
 		c.description = c.short + "\nCombine with another component to forge a finished item."
 		return c
 	if ITEMS.has(id):
-		var it = ITEMS[id].duplicate(); it.id = id; it.kind = "item"; it.rarity = "Legendary" if it.get("wild", false) else "Rare"; it.price = ITEM_PRICE
+		var it = ITEMS[id].duplicate(); it.id = id; it.kind = "item"; it.sfx = it.art; it.art = "item:" + id; it.rarity = "Legendary" if it.get("wild", false) else "Rare"; it.price = ITEM_PRICE
 		it.description = it.text + "\n" + stat_line(id)
 		return it
 	return {}

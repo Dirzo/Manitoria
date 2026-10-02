@@ -9,6 +9,8 @@ static func build(game: Node) -> void:
  var tabs=HBoxContainer.new();game.ui.add_child(tabs);tabs.position=Vector2(26,140);tabs.size=Vector2(950,60)
  var title=game.label(tabs,"SHOP",40,game.WHITE,false);title.size_flags_horizontal=Control.SIZE_EXPAND_FILL
  title.mouse_filter=Control.MOUSE_FILTER_STOP;title.tooltip_text="Drag gear onto a champion. Two components on one champion forge a finished item."
+ title.size_flags_horizontal=0;title.custom_minimum_size.x=150
+ FlowUI.fight_summary(game,tabs)
  var left=game.scroll_panel(Rect2(26,212,950,475));left.add_theme_constant_override("separation",8)
  var grid=GridContainer.new();grid.columns=3;grid.add_theme_constant_override("h_separation",12);grid.add_theme_constant_override("v_separation",12);left.add_child(grid)
  for index in range(c.state.tour.stock.size()):offer(game,grid,hero,index)
@@ -40,8 +42,9 @@ static func build(game: Node) -> void:
   var dialog=GearUI.modal(game,"Next opponent");game.label(dialog.box,scout(c),24);game.label(dialog.box,WorldTour.next_opponent(c).name,19,game.GOLD))
  scout_b.custom_minimum_size=Vector2(96,58)
  var go=FlowUI.cta(game,actions,"Ready  ▶",func():
-  if WorldTour.leave_shop(c):game.phase="hub";game.tab="overview";game.render();game.prepare_match()
-  else:game.toast(c.last_error),false,300)
+  if not WorldTour.leave_shop(c):game.toast(c.last_error);return
+  game.tab="overview";game.introduce_match()
+  if game.phase=="shop":game.phase="hub";game.render(),false,300)
  go.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 
 static func offer(game: Node,parent: Node,hero: Dictionary,index: int) -> void:
@@ -66,7 +69,8 @@ static func offer(game: Node,parent: Node,hero: Dictionary,index: int) -> void:
    var o=combos[0];var wild=Forge.ITEMS[o.made].get("wild",false)
    var hint=game.label(info,"⚒ %s · %s %s%s"%[Forge.ITEMS[o.made].name,Forge.COMPONENTS[o.partner].name.split(" ")[-1],o.where.replace("in bag","(bag)").replace("on ","@"),"  +%d"%(combos.size()-1) if combos.size()>1 else ""],12,Color("ff9be0") if wild else Color("c8ff9d"),true)
    hint.tooltip_text=GearUI.combo_text(id,combos)
- game.button(box,"Buy & equip · %d gold"%item.price,func():GearUI.apply_drop(game,data,hero.id),true,c.state.gold<item.price or not GearUI.fits(hero,id)).tooltip_text=GearUI.tip(item)
+ var fits=GearUI.fits(hero,id)
+ game.button(box,("Buy & equip · %d gold" if fits else "Buy to bag · %d gold")%item.price,func():GearUI.apply_drop(game,data,hero.id),true,c.state.gold<item.price).tooltip_text=GearUI.tip(item)
  tile.tooltip_text=GearUI.tip(item)
 
 static func scout(c: Campaign) -> String:

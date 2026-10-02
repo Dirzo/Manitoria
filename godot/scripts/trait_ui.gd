@@ -44,7 +44,8 @@ static func rolls(game: Node, parent: Node, hero: Dictionary, compact := false) 
 	game.label(head, "STATS %d/%d" % [total, HeroData.ROLL_MAX * HeroData.ROLL_KEYS.size()], 13, tc, false).tooltip_text = "Sum of all six stat rolls."
 	var fit_text = "GREAT FIT" if fit >= 0.35 else ("GOOD FIT" if fit >= 0.1 else ("POOR FIT" if fit <= -0.25 else "OK FIT"))
 	var fit_col = Color("6fe08a") if fit >= 0.1 else (Color("ff5e5e") if fit <= -0.25 else Color("d6e86a"))
-	game.label(head, fit_text, 13, fit_col, false).tooltip_text = "How good the rolls are in the stats a %s actually uses (gold dots)." % HeroData.species[hero.sp].role
+	var fl = game.label(head, fit_text + "  ·  " + fit_reason(hero, true), 13, fit_col, false); fl.mouse_filter = Control.MOUSE_FILTER_STOP
+	fl.tooltip_text = fit_reason(hero)
 	if compact:
 		var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 4); parent.add_child(row)
 		for k in HeroData.ROLL_KEYS:
@@ -124,3 +125,26 @@ static func fit_info(hero: Dictionary) -> Array:
 	if fit >= 0.1: return ["GOOD", Color("6fe08a")]
 	if fit <= -0.25: return ["POOR", Color("ff5e5e")]
 	return ["OK", Color("d6e86a")]
+
+## Why a champion is a good or poor fit: the role's key stats and how they rolled.
+static func fit_reason(hero: Dictionary, short := false) -> String:
+	var w = HeroData.role_weights(hero.sp); var r = HeroData.rolls(hero); var role = HeroData.species[hero.sp].role
+	var keys = w.keys(); keys.sort_custom(func(a, b): return w[a] > w[b])
+	var highs = []; var lows = []
+	for k in keys:
+		if w[k] < 0.2: continue
+		if int(r[k]) >= 22: highs.append(HeroData.ROLL_NAMES[k])
+		elif int(r[k]) <= 10: lows.append(HeroData.ROLL_NAMES[k])
+	if short:
+		var bits = []
+		if not highs.is_empty(): bits.append("strong " + ", ".join(highs.slice(0, 2)))
+		if not lows.is_empty(): bits.append("weak " + ", ".join(lows.slice(0, 2)))
+		return " · ".join(bits) if not bits.is_empty() else "average key stats"
+	var t = "A %s relies on: " % role
+	var parts = []
+	for k in keys: parts.append("%s %d (%s, %d%%)" % [HeroData.ROLL_NAMES[k], int(r[k]), HeroData.roll_grade(int(r[k])), roundi(w[k] * 100)])
+	t += ", ".join(parts)
+	if not highs.is_empty(): t += "\nStrong where it counts: " + ", ".join(highs)
+	if not lows.is_empty(): t += "\nWeak where it counts: " + ", ".join(lows)
+	t += "\nOther stats barely affect power for this role."
+	return t

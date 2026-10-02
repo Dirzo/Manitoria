@@ -205,38 +205,65 @@ static func power(hero: Dictionary) -> int:
  return League.ovr(hero)
 
 const ABILITY_SLOTS = 4
-const DISCOVERY_CHOICES = 12 # Preserve indices 0–7; expand fresh discovery choices.
+const MAX_RANK = 3
+const DISCOVERY_CHOICES = 12 # 2 originals + 10 unique skills per species (data/skills.json)
 const EVOLUTIONS = {
  "ravager": {"name":"Ravager", "color":"ffb36b", "description":"Become a relentless hunter: +20% attack, +15% movement, 12% lifesteal on basic attacks, but -10% maximum health. Amber talons and spell trails."},
  "guardian": {"name":"Guardian", "color":"7de6bd", "description":"Become a protector: +15% health, +4% armor, but -10% attack. Every ability shields the most wounded nearby ally for 3% of your maximum health. Emerald ward rings."},
  "arcanist": {"name":"Arcanist", "color":"bba2ff", "description":"Become a spell specialist: +20% ability potency and 15% shorter ability cooldowns, but -15% attack and 15% slower basic attacks. Violet orbiting runes."}
 }
 
+## Twelve skills per species, all unique: two originals plus ten from data/skills.json.
+## Each row: [name, effect, rider]. Riders add a signature twist (burn, chill, leech…).
+static var skill_book := {}
 static func ability_pool(sp: String) -> Array:
- # Keep legacy indices 0 and 1 stable so existing saves retain their actions.
- var pool = DISCOVERIES[sp].duplicate(true)
- var extras = ["beam", "storm", "wisps", "silence", "frost", "ward", "barrage", "renew"]
- if line(sp) == "Front": extras = ["whirl", "quake", "ward", "rally", "drain", "fear", "fissure", "renew"]
- elif line(sp) == "Flank": extras = ["ambush", "execute", "toxic", "whirl", "drain", "gust", "ward", "rally"]
- elif sp in ["unicorn", "treant", "naga", "pegasus"]: extras = ["renew", "ward", "rally", "roots", "gust", "beam", "silence", "wisps"]
- var titles = {"beam":"Lance", "storm":"Tempest", "wisps":"Spirit Volley", "silence":"Hush", "frost":"Binding", "ward":"Aegis", "barrage":"Barrage", "renew":"Restoration", "whirl":"Cyclone", "quake":"Earthshaker", "rally":"War Cry", "drain":"Siphon", "fear":"Dread", "fissure":"Rift", "ambush":"Pursuit", "execute":"Finisher", "toxic":"Blight", "gust":"Gale", "roots":"Entanglement"}
- for effect in extras:
-  if pool.any(func(row): return row[1] == effect): continue
-  pool.append([species[sp].n + " " + titles[effect], effect])
-  if pool.size() == 8: break
- # Append without reordering any existing saved ability IDs.
- var reserves=["meteor","fire","roots","silence","renew","ward","rally","beam","storm","wisps","barrage","frost","gust","fear","drain","execute","ambush","toxic","fissure","quake","whirl"]
- titles.merge({"meteor":"Starfall","fire":"Wildfire"})
- for effect in reserves:
-  if pool.size()>=DISCOVERY_CHOICES:break
-  if not pool.any(func(row):return row[1]==effect):pool.append([species[sp].n+" "+titles[effect],effect])
+ if skill_book.is_empty():
+  skill_book = JSON.parse_string(FileAccess.get_file_as_string("res://data/skills.json"))
+ var pool = []
+ for row in DISCOVERIES[sp]: pool.append([row[0], row[1], "none"])
+ for row in skill_book.get(sp, []): pool.append([row[0], row[1], row[2]])
  return pool
+
+const EFFECT_SUMMARY = {"quake":"Stun slam around you", "rally":"Team rally: +attack & speed", "fissure":"Rooting line strike", "ward":"Shield nearby allies",
+ "meteor":"Stunning meteor on a cluster", "renew":"Heal the 3 most wounded", "drain":"Life-draining strike", "fear":"Weaken nearby foes",
+ "ambush":"Leap onto a wounded foe", "toxic":"Poison cloud", "execute":"Finisher vs low-health foes", "gust":"Knockback gust that slows",
+ "wisps":"3 seeking spirit bolts", "barrage":"5-bolt barrage on target", "silence":"Silence a cluster", "beam":"Piercing line lance",
+ "storm":"Lightning on 3 foes", "frost":"Freeze a cluster", "roots":"Root a cluster", "fire":"Burning blast", "whirl":"Spin attack + shield"}
+const RIDERS = {
+ "none": ["", ""], "burn": ["+ Burn", "Sets the main target ablaze for 3s."], "chill": ["+ Chill", "Slows the main target for 2s."],
+ "stun": ["+ Stun", "Stuns the main target for 0.5s."], "root": ["+ Root", "Roots the main target for 0.8s."],
+ "weaken": ["+ Weaken", "Weakens the main target's damage for 3s."], "silence": ["+ Silence", "Silences the main target for 1.5s."],
+ "leech": ["+ Lifesteal", "Heals you for 35% of the damage."], "guard": ["+ Self shield", "Shields you for 10% of your max health."],
+ "haste": ["+ Haste", "Rallies you (+attack & speed) for 3s."], "mend": ["+ Mend", "Also heals the most wounded ally."],
+ "echo": ["+ Echo", "Strikes the main target again for 40%."], "venom": ["+ Venom", "Poisons the main target for 4s."]}
 
 static func learned_ability(sp: String, index: int) -> Dictionary:
  if index==12:return ChampionEvolution.action(sp)
- var row = ability_pool(sp)[index]
+ var pool = ability_pool(sp)
+ var row = pool[clampi(index, 0, pool.size() - 1)]
  var spec = EFFECTS[row[1]]
- return {"key": str(index), "name": row[0], "effect": row[1], "description": spec[0], "cooldown": spec[1], "range": spec[2]}
+ # Each skill gets its own tuning: stronger skills recharge slower.
+ var h = float(abs(hash(sp + "|" + row[0])) % 1000) / 999.0
+ var power = 0.92 + 0.22 * h if row[2] != "none" else 1.0
+ var cd = spec[1] * (0.9 + 0.22 * h) if row[2] != "none" else spec[1]
+ var rider = RIDERS.get(row[2], ["", ""])
+ var summary = EFFECT_SUMMARY[row[1]]
+ if rider[0] != "" and rider[0].trim_prefix("+ ").to_lower() not in summary.to_lower(): summary += " " + rider[0]
+ var detail = spec[0] + ((" " + rider[1]) if rider[1] != "" else "") + "  Power ×%.2f · %.1fs cooldown." % [power, cd]
+ return {"key": str(index), "name": row[0], "effect": row[1], "rider": row[2], "power": power, "summary": summary, "description": detail, "cooldown": cd, "range": spec[2]}
+
+const SIGNATURE_SUMMARY = {"gore":"Charge + stun", "bulwark":"Taunt + stone shield", "smash":"Slam & slow, regenerates", "hunger":"Frenzy: attack + lifesteal",
+ "howl":"Summon 2 wolf pups", "venom":"Leap + poison weakest", "skystrike":"Dive backline + stun", "foxfire":"Decoys + blink",
+ "acid":"Acid pool", "shriek":"Silence + slow nearby", "flamewave":"Fire wave, rises once", "chain":"Lightning chains 4 foes",
+ "gaze":"Petrify one foe", "rootbloom":"Heal ally + root foe", "tidal":"Shield nearby allies", "radiance":"Heal + cleanse allies",
+ "triplebite":"Bite 3 foes + bleed", "prideroar":"Taunt + rally, tough hide", "frostroar":"Chill nearby + ice shield", "shellup":"Taunt + shell (−80% dmg)",
+ "maul":"Pounce + pin", "regrowth":"Regrow health, cleave", "threefold":"3 rapid hits + burn", "stonedive":"Dive backline, turn to stone",
+ "vanish":"Vanish, then ambush", "antlerrush":"Charge through the line", "boulder":"Boulder: crush + stun", "stormcall":"Lightning on 3 foes",
+ "riddle":"Confuse a foe", "tailwind":"Allies +30% attack & speed", "brood":"Summon 3 spiderlings", "magma":"Lava pool: burn + slow"}
+
+static func signature_summary(sp: String) -> String:
+ load_data()
+ return SIGNATURE_SUMMARY.get(species[sp].ab, species[sp].ability_name)
 
 static func evolution_info(hero: Dictionary) -> Dictionary:
  if hero.get("evolution","")=="ascended":return ChampionEvolution.info(hero)
@@ -259,30 +286,36 @@ static func choices(hero: Dictionary, won: bool, rng: RandomNumberGenerator, rew
    var e = EVOLUTIONS[key]
    out.append({"type":"evolution", "key":key, "name":species[hero.sp].n + " · " + e.name, "description":e.description, "rarity":"Evolution", "bonus":1.0})
   return out
+ # Upgrades always follow the skills this champion already chose; new skills only fill empty slots.
+ var upgrades = []
+ for key in hero.learned:
+  var r = int(hero.learned[key])
+  if r >= MAX_RANK: continue
+  var a = learned_ability(hero.sp, int(key))
+  upgrades.append({"type":"ability", "key":key, "name":a.name + " · Rank %d" % (r + 1), "summary":"Upgrade your %s: +20%% power, faster" % a.name, "description":a.description + " Rank %d: +20%% potency and 8%% shorter cooldown." % (r + 1), "rarity":"Uncommon", "bonus":1.0, "upgrade":true})
+ if hero.signature_rank < MAX_RANK:
+  upgrades.append({"type":"signature", "key":"signature", "name":species[hero.sp].ability_name + " · Rank %d" % (hero.signature_rank + 1), "summary":"Upgrade your signature: +20% power, faster", "description":"Your signature gains 20% potency and an 8% shorter cooldown.", "rarity":"Uncommon", "bonus":1.0, "upgrade":true})
+ var discoveries = []
  if hero.learned.size() + 1 < ABILITY_SLOTS:
   for i in range(DISCOVERY_CHOICES):
    if hero.learned.has(str(i)): continue
    var a = learned_ability(hero.sp, i)
-   out.append({"type":"ability", "key":str(i), "name":a.name + " · Rank 1", "description":a.description + " Adds an automatic action to an empty ability slot.", "rarity":"Uncommon", "bonus":1.0})
+   discoveries.append({"type":"ability", "key":str(i), "name":a.name, "summary":"NEW SKILL · " + a.summary, "description":a.description + " Fills an empty ability slot.", "rarity":"Uncommon", "bonus":1.0})
+ for i in range(discoveries.size()-1, 0, -1):
+  var j = rng.randi_range(0, i); var temp = discoveries[i]; discoveries[i] = discoveries[j]; discoveries[j] = temp
+ for i in range(upgrades.size()-1, 0, -1):
+  var j = rng.randi_range(0, i); var temp = upgrades[i]; upgrades[i] = upgrades[j]; upgrades[j] = temp
+ # With open slots: two new skills and one upgrade of something you own. Full: all upgrades.
+ if not discoveries.is_empty():
+  var recent = hero.get("last_offers", []).duplicate(); recent.append_array(hero.get("offered_discoveries",[]))
+  var fresh = discoveries.filter(func(c): return c.key not in recent); var repeat = discoveries.filter(func(c): return c.key in recent)
+  discoveries = fresh + repeat
+  out = discoveries.slice(0, 3 if upgrades.is_empty() else 2) + upgrades.slice(0, 1)
  else:
-  for key in hero.learned:
-   if int(hero.learned[key]) >= 2: continue
-   var a = learned_ability(hero.sp, int(key))
-   out.append({"type":"ability", "key":key, "name":a.name + " · Rank 2", "description":a.description + " Rank 2: +20% potency and 8% shorter cooldown.", "rarity":"Uncommon", "bonus":1.0})
-  if hero.signature_rank < 2:
-   out.append({"type":"signature", "key":"signature", "name":species[hero.sp].ability_name + " · Rank 2", "description":"Your signature gains 20% potency and an 8% shorter cooldown.", "rarity":"Uncommon", "bonus":1.0})
- # Fisher-Yates uses the saved reward seed, never global random state.
- for i in range(out.size()-1, 0, -1):
-  var j = rng.randi_range(0, i); var temp = out[i]; out[i] = out[j]; out[j] = temp
- # Prefer previously unseen cards while there are enough alternatives.
- var recent = hero.get("last_offers", []).duplicate()
- if hero.learned.size()+1<ABILITY_SLOTS:recent.append_array(hero.get("offered_discoveries",[]))
- var fresh = out.filter(func(c): return c.key not in recent)
- var repeat = out.filter(func(c): return c.key in recent)
- out = (fresh + repeat).slice(0, 3)
+  out = upgrades.slice(0, 3)
  if out.is_empty():
   for t in [["vigor", "Iron Vitality", "+10% maximum health."], ["force", "Killing Instinct", "+8% attack."], ["focus", "Arcane Affinity", "+8% ability potency."]]:
-   out.append({"type":t[0], "key":t[0], "name":t[1], "description":"All four abilities are ranked up. " + t[2], "rarity":"Common", "bonus":1.0})
+   out.append({"type":t[0], "key":t[0], "name":t[1], "summary":t[2], "description":"Every skill is at max rank. " + t[2], "rarity":"Common", "bonus":1.0})
  for card in out:
   if card.type in ["ability","signature"]:
    var roll=rng.randf()
@@ -301,10 +334,10 @@ static func apply_choice(hero: Dictionary, card: Dictionary) -> void:
  match card.type:
   "ability":
    if not hero.learned.has(card.key) and hero.learned.size()+1 >= ABILITY_SLOTS: return
-   hero.learned[card.key] = mini(2, int(hero.learned.get(card.key, 0)) + 1)
+   hero.learned[card.key] = mini(MAX_RANK, int(hero.learned.get(card.key, 0)) + 1)
    hero["ability_bonus_" + card.key] = maxf(hero.get("ability_bonus_" + card.key, 1.0), card.bonus)
   "signature":
-   hero.signature_rank = mini(2, hero.signature_rank + 1)
+   hero.signature_rank = mini(MAX_RANK, hero.signature_rank + 1)
    hero.signature_bonus=maxf(hero.get("signature_bonus",1.0),card.bonus)
   "evolution":
    if not hero.get("evolution", "").is_empty(): return

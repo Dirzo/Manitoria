@@ -671,8 +671,9 @@ func cast_learned(u: Dictionary, target: Dictionary, a: Dictionary, rank: int) -
   return true
  u.credit = "ability:" + a.key; track(u,"casts",1)
  var strength = (1.0 + (rank - 1) * 0.2) * CombatPacing.power(u.hero, a.key) * (1.0 + u.hero.get("focus", 0) * 0.08) * HeroData.spell_factor(u.hero)
- var power = u.attack * strength
+ var power = u.attack * strength * float(a.get("power", 1.0))
  cast_visual(u, effect, a.name, target.pos)
+ apply_rider(u, target, str(a.get("rider", "none")), power)
  match effect:
   "renew":
    for v in allies.slice(0, 3): heal(u, v, power * 1.3 + v.max_hp * 0.08)
@@ -718,6 +719,27 @@ func cast_learned(u: Dictionary, target: Dictionary, a: Dictionary, rank: int) -
      "roots": hurt(u, v, power); status(v, "root", 1.8)
    if effect == "whirl": shield(u, u.max_hp * 0.12)
  return true
+
+## The twist that makes each learned skill unique.
+func apply_rider(u: Dictionary, target: Dictionary, rider: String, power: float) -> void:
+ if rider == "none" or rider == "": return
+ var foe_ok = not target.is_empty() and target.get("alive", false) and target.team != u.team
+ if rider in ["burn", "venom", "chill", "stun", "root", "weaken", "silence", "echo"] and not foe_ok: return
+ match rider:
+  "burn": poison(u, target, 3, power * 0.25, "burn")
+  "venom": poison(u, target, 4, power * 0.2)
+  "chill": status(target, "slow", 2)
+  "stun": status(target, "stun", 0.5)
+  "root": status(target, "root", 0.8)
+  "weaken": status(target, "weaken", 3)
+  "silence": status(target, "silence", 1.5)
+  "echo": hurt(u, target, power * 0.4)
+  "leech": heal(u, u, power * 0.35)
+  "guard": shield(u, u.max_hp * 0.10)
+  "haste": status(u, "rally", 3)
+  "mend":
+   var w = wounded_allies(u)
+   if not w.is_empty(): heal(u, w[0], power * 0.6)
 
 func run_to_end() -> int:
  silent = true

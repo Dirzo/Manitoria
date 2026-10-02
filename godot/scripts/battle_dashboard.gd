@@ -5,6 +5,9 @@ var rows: Dictionary = {}
 var selected_uid = -1
 var detail: VBoxContainer
 var cooldowns: Array = []
+var detail_panel: PanelContainer
+var team_totals: Array = []
+## Click a portrait to inspect a champion; the panel stays hidden otherwise.
 func _ready() -> void:
  set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
  mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -12,7 +15,9 @@ func _ready() -> void:
   var panel = PanelContainer.new(); add_child(panel); panel.position = Vector2(26 if team == 0 else 1334, 236); panel.size = Vector2(240, 0)
   panel.add_theme_stylebox_override("panel",game.style(Color(0.025,0.06,0.085,0.92),Color("314c58"),12,12))
   var list = VBoxContainer.new(); list.add_theme_constant_override("separation",10); panel.add_child(list)
-  game.label(list,"YOUR CHAMPIONS" if team == 0 else "THE OPPOSITION",12,game.GOLD)
+  var head = HBoxContainer.new(); list.add_child(head)
+  game.label(head,"YOUR TEAM" if team == 0 else "OPPONENTS",12,game.GOLD,false).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+  team_totals.append(game.label(head,"0 dmg",12,Color("8fd7ff") if team == 0 else Color("ffa98f"),false))
   for u in game.sim.units:
    if u.team != team or u.summon: continue
    var row = HBoxContainer.new(); list.add_child(row)
@@ -24,24 +29,35 @@ func _ready() -> void:
    var bar = ProgressBar.new(); bar.max_value = u.max_hp; bar.value = u.hp; bar.show_percentage = false; bar.custom_minimum_size.y = 7; stack.add_child(bar)
    bar.add_theme_stylebox_override("background",game.style(Color("263641"),Color.TRANSPARENT,3,0,0))
    bar.add_theme_stylebox_override("fill",game.style(Color("70d6bd") if team == 0 else Color("ed9c80"),Color.TRANSPARENT,3,0,0))
-   var status = game.label(stack,"",11,game.MUTED,false)
-   rows[u.uid] = {"bar":bar,"status":status,"portrait":portrait,"name":name_label}
+   # Live damage meter: scaled to the biggest hitter on the field.
+   var dmg_row = HBoxContainer.new(); dmg_row.add_theme_constant_override("separation",4); stack.add_child(dmg_row)
+   var dmg = ProgressBar.new(); dmg.max_value = 1; dmg.value = 0; dmg.show_percentage = false; dmg.custom_minimum_size = Vector2(110,6); dmg.size_flags_vertical = Control.SIZE_SHRINK_CENTER; dmg_row.add_child(dmg)
+   dmg.add_theme_stylebox_override("background",game.style(Color(0,0,0,0.25),Color.TRANSPARENT,2,0,0))
+   dmg.add_theme_stylebox_override("fill",game.style(Color("5fb7d9") if team == 0 else Color("e0735f"),Color.TRANSPARENT,2,0,0))
+   var dmg_label = game.label(dmg_row,"0",11,Color("c9d6dc"),false)
+   var status = game.label(stack,"",11,game.MUTED,false); status.visible = false
+   rows[u.uid] = {"bar":bar,"status":status,"portrait":portrait,"name":name_label,"dmg":dmg,"dmg_label":dmg_label,"team":team}
  var panel = PanelContainer.new(); add_child(panel); panel.position = Vector2(385,652); panel.size = Vector2(830,127)
  panel.add_theme_stylebox_override("panel",game.style(Color(0.025,0.06,0.085,0.95),Color("395561"),12,12))
  detail = VBoxContainer.new(); detail.add_theme_constant_override("separation",7); panel.add_child(detail)
- for u in game.sim.units:
-  if u.team == 0 and not u.summon: inspect(u.uid); break
+ detail_panel = panel; panel.visible = false
+ var hint = game.label(self,"Click a portrait to inspect",12,Color(1,1,1,0.45),false); hint.position = Vector2(30,214)
 func inspect(id: int) -> void:
+ if id == selected_uid and detail_panel.visible:
+  detail_panel.visible = false; selected_uid = -1; return
+ detail_panel.visible = true
  selected_uid = id; cooldowns.clear()
  for child in detail.get_children(): detail.remove_child(child); child.queue_free()
  var u = game.sim.find_unit(id)
  if u.is_empty(): return
  var branch = u.hero.get("evolution", "")
- game.label(detail,u.hero.name + "  /  " + HeroData.species[u.hero.sp].n + ("  ·  " + HeroData.evolution_info(u.hero).name if not branch.is_empty() else "") + "  ·  ABILITIES",13,game.GOLD,false)
+ var top = HBoxContainer.new(); detail.add_child(top)
+ game.label(top,u.hero.name + "  /  " + HeroData.species[u.hero.sp].n + ("  ·  " + HeroData.evolution_info(u.hero).name if not branch.is_empty() else ""),13,game.GOLD,false).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ var close = game.button(top,"×",func(): detail_panel.visible = false; selected_uid = -1); close.custom_minimum_size = Vector2(32,26)
  var row = HBoxContainer.new(); row.add_theme_constant_override("separation",12); detail.add_child(row)
- add_ability(row,HeroData.species[u.hero.sp].ability_name,HeroData.species[u.hero.sp].ability_description,"signature",u.hero.signature_rank)
+ add_ability(row,HeroData.species[u.hero.sp].ability_name,HeroData.signature_summary(u.hero.sp)+"\n\n"+HeroData.species[u.hero.sp].ability_description,"signature",u.hero.signature_rank)
  for key in u.hero.learned:
-  var a = HeroData.learned_ability(u.hero.sp,int(key)); add_ability(row,a.name,a.description,key,int(u.hero.learned[key]))
+  var a = HeroData.learned_ability(u.hero.sp,int(key)); add_ability(row,a.name,a.summary+"\n\n"+a.description,key,int(u.hero.learned[key]))
  for i in range(maxi(0,HeroData.ABILITY_SLOTS-1-u.hero.learned.size())):
   var empty = game.label(row,"UNDISCOVERED\nEarn an arena level",12,game.MUTED); empty.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 func add_ability(row: HBoxContainer, title: String, description: String, key: String, rank: int) -> void:
@@ -60,10 +76,19 @@ func add_ability(row: HBoxContainer, title: String, description: String, key: St
  cooldowns.append({"totals":totals,"key":key,"rank":rank,"status":status,"bar":bar})
 func _process(dt: float) -> void:
  if not is_instance_valid(game) or game.sim == null: return
+ var top_dmg = 1.0; var totals = [0.0, 0.0]
+ for id in rows:
+  var uu = game.sim.find_unit(id)
+  if uu.is_empty(): continue
+  top_dmg = maxf(top_dmg, uu.damage); totals[rows[id].team] += uu.damage
+ for t in range(mini(2, team_totals.size())):
+  team_totals[t].text = ("%.1fk dmg" % (totals[t] / 1000.0)) if totals[t] >= 1000 else ("%d dmg" % totals[t])
  for id in rows:
   var u = game.sim.find_unit(id)
   if u.is_empty(): continue
   var row = rows[id]
+  row.dmg.value = lerpf(row.dmg.value, u.damage / top_dmg, 1 - exp(-dt * 6))
+  row.dmg_label.text = ("%.1fk" % (u.damage / 1000.0)) if u.damage >= 1000 else str(roundi(u.damage))
   row.bar.value = lerpf(row.bar.value,u.hp,1-exp(-dt*14))
   row.status.text = "%d / %d HP%s" % [ceili(u.hp),ceili(u.max_hp),"  +%d" % ceili(u.shield) if u.shield > 0 else ""] if u.alive else "FALLEN"
   row.portrait.modulate = Color.WHITE if u.alive else Color(0.35,0.4,0.45)
