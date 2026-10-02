@@ -305,3 +305,16 @@ static func team_strip(game: Node,parent: Node,slot_px: int=34) -> void:
   var nm=game.label(box,h.name,12,game.GOLD if sel else game.WHITE,false);nm.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER;nm.clip_text=true;nm.custom_minimum_size.x=slot_px*3+6
   var slots=HBoxContainer.new();slots.add_theme_constant_override("separation",3);box.add_child(slots)
   for key in SLOT_KEYS:slot(game,slots,h,key,slot_px)
+
+## "RECOMMENDED" row: the champion's core build, ticked when equipped.
+static func recommended_row(game: Node,parent: Node,hero: Dictionary,px: int=46) -> void:
+ var row=HBoxContainer.new();row.add_theme_constant_override("separation",8);parent.add_child(row)
+ var cap=game.label(row,"RECOMMENDED",12,Color("ffd36e"),false);cap.size_flags_vertical=Control.SIZE_SHRINK_CENTER
+ cap.tooltip_text="A core build for %s. Shop offers that build toward it are marked ★."%HeroData.species[hero.sp].n;cap.mouse_filter=Control.MOUSE_FILTER_STOP
+ var owned=hero.get("equipment",{}).values()
+ for id in Forge.recommended(hero.sp):
+  var item=Forge.info(id);var t=token(game,row,item,px)
+  if id in owned:
+   var ok=game.label(t,"✓",18,Color("6fe08a"),false);ok.position=Vector2(px-16,-4);ok.mouse_filter=Control.MOUSE_FILTER_IGNORE
+  t.tooltip_text=tip(item)+"\n\nRecommended for "+HeroData.species[hero.sp].n
+  t.pressed.connect(func():inspect(game,item))

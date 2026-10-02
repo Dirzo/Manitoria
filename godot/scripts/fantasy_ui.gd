@@ -1,8 +1,7 @@
 class_name FantasyUI
 extends RefCounted
 static func menu(game: Node) -> void:
- var title=game.label(game.ui,"MANITORIA",98,Color("ffe4a0"),false);title.position=Vector2(200,148);title.size=Vector2(1200,125);title.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
- title.add_theme_color_override("font_outline_color",Color("23172a"));title.add_theme_constant_override("outline_size",12);title.add_theme_color_override("font_shadow_color",Color("100b25"));title.add_theme_constant_override("shadow_offset_y",5)
+ var title=Title3D.new();game.ui.add_child(title);title.position=Vector2(100,110);title.size=Vector2(1400,190)
  var sub=game.label(game.ui,"THE LIVING ARENA",22,Color("fff5d2"),false);sub.position=Vector2(400,280);sub.size=Vector2(800,38);sub.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER;sub.add_theme_color_override("font_outline_color",Color("201a32"));sub.add_theme_constant_override("outline_size",5)
  var latest=0;var modified=0
  for slot in range(1,4):
@@ -15,7 +14,7 @@ static func menu(game: Node) -> void:
   var button=game.button(box,entry[0],entry[3],true,i==0 and latest==0);button.custom_minimum_size.y=62;button.add_theme_font_size_override("font_size",23)
   frame.mouse_entered.connect(func():frame.modulate=Color(1.13,1.13,1.13));frame.mouse_exited.connect(func():frame.modulate=Color.WHITE)
  var saves=game.button(game.ui,"Saved campaigns",func():save_picker(game));saves.position=Vector2(620,767);saves.size=Vector2(360,46)
- var version=game.label(game.ui,"Windows edition 0.41 · Balance",14,Color("eee3cf"),false);version.position=Vector2(30,861)
+ var version=game.label(game.ui,"Windows edition 0.42 · Showcase",14,Color("eee3cf"),false);version.position=Vector2(30,861)
 
 static func save_picker(game: Node) -> void:
  var dialog=GearUI.modal(game,"Your campaigns")

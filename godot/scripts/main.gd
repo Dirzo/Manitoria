@@ -335,10 +335,7 @@ func build_showcase() -> void:
 func build_new() -> void:
  if new_crest.is_empty(): new_crest = Crest.default_for(new_club_draft)
  # The great title.
- var title = label(ui, "MANITORIA", 128, Color("ffe4a0"), false)
- title.position = Vector2(0, 20); title.size = Vector2(1600, 170); title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
- title.add_theme_color_override("font_outline_color", Color("2a160c")); title.add_theme_constant_override("outline_size", 18)
- title.add_theme_color_override("font_shadow_color", Color(0.9, 0.55, 0.15, 0.45)); title.add_theme_constant_override("shadow_offset_y", 0); title.add_theme_constant_override("shadow_outline_size", 34)
+ var title = Title3D.new(); ui.add_child(title); title.position = Vector2(150, 8); title.size = Vector2(1300, 180)
  var sub = label(ui, "FOUND YOUR GUILD", 26, Color("fff2d0"), false)
  sub.position = Vector2(0, 190); sub.size = Vector2(1600, 40); sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
  sub.add_theme_font_override("font", load(MENU_FONT)); sub.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85)); sub.add_theme_constant_override("outline_size", 6)
@@ -557,7 +554,13 @@ func demo_stage() -> void:
 func introduce_match() -> void:
  if not campaign.lineup_ready() or not campaign.pending_heroes().is_empty():return
  if campaign.state.get("tour",{}).get("shop",false) or campaign.state.get("tour",{}).get("complete",false):return
- # Every fight opens on the matchup: bracket stakes, both fives with power, and a scouting read.
+ # Every tour fight walks up to the tournament board first, then the matchup, then the arena.
+ var t = campaign.state.get("tour", {})
+ if not t.is_empty() and int(t.get("board_seen", -1)) != int(t.get("serial", 0)):
+  t.board_seen = int(t.get("serial", 0))
+  phase = "hub"; tab = "overview"; render()
+  TournamentRewardsUI.open_screen(self, "bracket", func(): phase = "intro"; render(), "Matchup  ▶")
+  return
  phase = "intro"; render()
 
 func begin_battle() -> void:
@@ -711,6 +714,7 @@ func show_bracket_then_shop() -> void:
   phase = "shop" if campaign.state.get("tour",{}).get("shop",false) else "hub"; tab = "overview"; render()
   if phase == "shop": FlowUI.banner(self, "SHOP", Color("c8ff9d"))
  var cup_over = campaign.state.tour.get("bracket",{}).get("finished",false)
+ campaign.state.tour.board_seen = int(campaign.state.tour.get("serial", 0))
  var after = (func(): render(); TournamentRewardsUI.open_screen(self, "progress", to_shop, "Shop  ▶")) if cup_over else to_shop
  render()
  TournamentRewardsUI.open_screen(self, "bracket", after, "Cup results  ▶" if cup_over else "Shop  ▶", true)

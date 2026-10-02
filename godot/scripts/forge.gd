@@ -487,3 +487,31 @@ static func rival_loadout(hero: Dictionary, level: int, difficulty: String = "St
 	for i in range(n):
 		out[str(i)] = pool[(h / (i + 1) + i * 3) % pool.size()]
 	return out
+
+# ------------------------------------------------------------------ recommended builds
+## A core build per species: three finished items that suit its kit and role.
+const RECOMMENDED := {
+	"minotaur": ["titan", "bloodmaw", "stoneskin"], "golem": ["bastion", "bell", "mirror"], "troll": ["colossus", "worldtree", "titan"],
+	"wendigo": ["bloodmaw", "leechhide", "frenzy"], "direwolf": ["frenzy", "tempest", "executioner"], "manticore": ["viperfang", "assassinkit", "galvanic"],
+	"griffin": ["shadowblade", "crusader", "executioner"], "kitsune": ["illusion", "eclipse", "archmage"], "wyvern": ["hydravenom", "needles", "quiver"],
+	"harpy": ["tempest", "frenzy", "galetalons"], "phoenix": ["archmage", "stormorb", "crown"], "kirin": ["stormorb", "overcharge", "thundercleaver"],
+	"basilisk": ["witherbloom", "crown", "plaguetome"], "treant": ["chalice", "scepter", "lifebloom"], "naga": ["rosary", "aegis", "chalice"],
+	"unicorn": ["halo", "rosary", "martyr"], "cerberus": ["bell", "acidshell", "bastion"], "nemean": ["titan", "ironbark", "aegis"],
+	"yeti": ["ironbark", "stoneskin", "spikes"], "zaratan": ["bell", "colossus", "runeward"], "owlbear": ["crusader", "titan", "thornlash"],
+	"hydra": ["worldtree", "hydravenom", "grievous"], "chimera": ["spellblade", "crusader", "quicksilver"], "gargoyle": ["runeward", "smokeplate", "tusk"],
+	"nekomata": ["assassinkit", "shadowblade", "nightshroud"], "jackalope": ["frenzy", "pilgrim", "executioner"], "cyclops": ["tusk", "crusader", "thundercleaver"],
+	"thunderbird": ["stormorb", "tempestcrown", "stormmantle"], "sphinx": ["crown", "hourglass", "witherbloom"], "pegasus": ["drum", "rosary", "pilgrim"],
+	"arachne": ["puppet", "plaguetome", "crown"], "salamander": ["plaguetome", "archmage", "grievous"],
+}
+
+static func recommended(sp: String) -> Array:
+	return RECOMMENDED.get(sp, ["colossus", "crusader", "archmage"])
+
+## Is this offer part of the champion's recommended build? "core" = the finished item itself,
+## "part" = a component of one, "" = neither. Returns [kind, item_id].
+static func rec_match(sp: String, id: String) -> Array:
+	for r in recommended(sp):
+		if r == id: return ["core", r]
+	for r in recommended(sp):
+		if ITEMS.has(r) and id in ITEMS[r].recipe: return ["part", r]
+	return ["", ""]

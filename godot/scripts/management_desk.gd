@@ -263,6 +263,7 @@ func profile(h: Dictionary, yours: bool) -> void:
  text(left, "LEVEL %d  /  %s  /  %s" % [h.level, HeroData.species[h.sp].role.to_upper(), League.tier(h.sp).to_upper()], 16, TEAL)
  TraitUI.line(game, left, h)
  TraitUI.rolls(game, left, h)
+ GearUI.recommended_row(game, left, h, 44)
  var rr = League.ratings(h)
  text(left, "%s    POW %d · DUR %d · SPD %d · SKL %d · IMP %d" % [League.rating_badge_text(h), rr.POW, rr.DUR, rr.SPD, rr.SKL, rr.IMP], 17, League.tier_color(h.sp))
  if h.has("ais_history"): text(left, "Arena Impact form: %d  ·  last match %d  ·  %d matches" % [roundi(League.form(h)), int(h.get("ais_last", 0)), int(h.get("ais_games", 0))], 15, GOLD)

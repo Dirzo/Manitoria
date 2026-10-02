@@ -18,7 +18,7 @@ func _ready() -> void:
  frame.add_theme_stylebox_override("panel",game.style(Color("12282e"),game.GOLD,14,24,2))
  var layout=VBoxContainer.new();layout.add_theme_constant_override("separation",16);frame.add_child(layout)
  var header=HBoxContainer.new();layout.add_child(header)
- game.label(header,{"bracket":"THE TOURNAMENT","progress":"WORLD TOUR PROGRESS"}.get(mode,"CHAMPION'S VAULT"),30,game.GOLD).size_flags_horizontal=Control.SIZE_EXPAND_FILL
+ game.label(header,{"bracket":"THE TOURNAMENT BOARD","progress":"WORLD TOUR PROGRESS"}.get(mode,"CHAMPION'S VAULT"),30,game.GOLD).size_flags_horizontal=Control.SIZE_EXPAND_FILL
  if on_continue.is_valid():
   var go=FlowUI.cta(game,header,continue_text,func():on_continue.call(),false,300)
  else:game.button(header,"Close",func():game.render())
@@ -47,22 +47,35 @@ func bracket() -> void:
  var c=game.campaign;WorldTour.ensure_bracket(c);var b=c.state.tour.bracket
  game.label(body,"%s · Level %d · Double elimination — lose twice and you're out. The losers' champion must win the grand final twice."%[WorldTour.REGIONS[(int(b.level)-1)%6].name,b.level],17,game.GOLD)
  var canvas=Control.new();canvas.custom_minimum_size=Vector2(1410,600);body.add_child(canvas);canvas_ref=canvas;tiles={};rows={}
+ board_backing(canvas)
  for cap in [["WINNERS BRACKET",Vector2(0,6),Color("8fd7ff")],["LOSERS BRACKET",Vector2(0,386),Color("ffa98f")],["GRAND FINAL",Vector2(1140,234),game.GOLD]]:
   var l=game.label(canvas,cap[0],18,cap[2],false);l.position=cap[1]
+  l.add_theme_font_override("font",load(game.TITLE_FONT));l.add_theme_color_override("font_outline_color",Color(0,0,0,.8));l.add_theme_constant_override("outline_size",5)
  # connectors
  for target in FEEDS:
   for src in FEEDS[target]:
    var from:Vector2=POS[src]+Vector2(TILE.x,TILE.y*0.5);var to:Vector2=POS[target]+Vector2(0,TILE.y*0.5)
    var mid=(from.x+to.x)*0.5
-   var line=Line2D.new();line.width=2;line.default_color=Color("5d7a8f") if not (src==6 and target==12) else Color("8a5d5d")
-   line.points=PackedVector2Array([from,Vector2(mid,from.y),Vector2(mid,to.y),to]);canvas.add_child(line)
+   var pts=PackedVector2Array([from,Vector2(mid,from.y),Vector2(mid,to.y),to])
+   # Brass rails pinned to the board, with a carved shadow beneath.
+   var shadow=Line2D.new();shadow.width=6;shadow.default_color=Color(0,0,0,.45);shadow.points=pts;shadow.position=Vector2(2,3);canvas.add_child(shadow)
+   var line=Line2D.new();line.width=4;line.default_color=Color("b08d57") if not (src==6 and target==12) else Color("8a4a3a");line.points=pts;canvas.add_child(line)
+   var hi=Line2D.new();hi.width=1;hi.default_color=Color(1,.92,.7,.5);hi.points=pts;hi.position=Vector2(0,-1);canvas.add_child(hi)
  var next=WorldTour.current_match(c) if not b.finished else {}
  for i in range(b.matches.size()):
   var m=b.matches[i]
   if i==14 and m.skipped:continue
   var panel=PanelContainer.new();canvas.add_child(panel);panel.position=POS[i];panel.size=TILE;tiles[i]=panel;rows[i]={}
   var is_next=not next.is_empty() and next==m
-  panel.add_theme_stylebox_override("panel",game.style(Color("1d3238") if not is_next else Color("3a3220"),game.GOLD if is_next else Color("57738c"),6,8,2 if is_next else 1))
+  # Each match is a brass-framed wooden plaque, riveted to the board.
+  var plaque=game.style(Color("2a1a10") if not is_next else Color("3d2a12"),Color("ffd36e") if is_next else Color("8c6a3c"),4,8,3)
+  plaque.shadow_color=Color(0,0,0,.6);plaque.shadow_size=6;plaque.shadow_offset=Vector2(3,4)
+  panel.add_theme_stylebox_override("panel",plaque)
+  for corner in [Vector2(3,3),Vector2(TILE.x-9,3),Vector2(3,TILE.y-9),Vector2(TILE.x-9,TILE.y-9)]:
+   var rivet=Panel.new();rivet.mouse_filter=Control.MOUSE_FILTER_IGNORE;rivet.size=Vector2(6,6);rivet.position=POS[i]+corner;rivet.z_index=1;canvas.add_child(rivet)
+   rivet.add_theme_stylebox_override("panel",game.style(Color("d9b36a"),Color("5a3e1a"),3,0,1))
+  if is_next:
+   var lamp=create_tween().set_loops();lamp.tween_property(panel,"modulate",Color(1.25,1.15,0.9),0.8);lamp.tween_property(panel,"modulate",Color.WHITE,0.8)
   var box=VBoxContainer.new();box.add_theme_constant_override("separation",2);panel.add_child(box)
   for side in ["a","b"]:
    var team=int(m["team_"+side]);var row=HBoxContainer.new();row.add_theme_constant_override("separation",6);box.add_child(row);rows[i][side]=row
@@ -199,6 +212,29 @@ func _resolve_one(b: Dictionary,idx: int,mine: bool,hidden: Array,dur: float) ->
   var text="ADVANCES!" if won else ("ELIMINATED" if out else "DROPPED TO LOSERS")
   if b2.finished and int(b2.champion)==0:text="CHAMPIONS!"
   FlowUI.banner(game,text,game.GOLD if won else Color("ff6b5e"),WorldTour.team_name(c,int(m.winner))+" beat "+WorldTour.team_name(c,int(m.loser)))
+
+## A carved wooden tournament board: warm grain, darker edges, a lantern glow in the middle.
+func board_backing(canvas: Control) -> void:
+ var wood=ColorRect.new();wood.mouse_filter=Control.MOUSE_FILTER_IGNORE;canvas.add_child(wood);wood.position=Vector2(-16,-8);wood.size=Vector2(1442,616)
+ var sh=Shader.new();sh.code="""shader_type canvas_item;
+float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float n(vec2 p){vec2 i=floor(p);vec2 f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
+void fragment(){
+ vec2 uv=UV*vec2(1442.,616.);
+ float plank=floor(uv.y/77.);
+ float g=n(vec2(uv.x*0.012+plank*13.,uv.y*0.35))*0.6+n(vec2(uv.x*0.05,uv.y*0.9+plank*7.))*0.4;
+ float rings=0.5+0.5*sin(uv.x*0.02+g*9.+plank*3.);
+ vec3 c=mix(vec3(0.16,0.09,0.05),vec3(0.32,0.19,0.10),g*0.7+rings*0.3);
+ float seam=smoothstep(0.0,2.5,abs(mod(uv.y,77.)-0.5));c*=mix(0.45,1.,seam);
+ vec2 d=UV-vec2(.5,.48);c*=1.15-dot(d,d)*1.6;
+ c+=vec3(0.35,0.22,0.08)*exp(-dot(d,d)*6.)*0.35;
+ COLOR=vec4(c,1.);
+}"""
+ var m=ShaderMaterial.new();m.shader=sh;wood.material=m
+ # Iron frame around the board.
+ var frame=Panel.new();frame.mouse_filter=Control.MOUSE_FILTER_IGNORE;canvas.add_child(frame);frame.position=wood.position;frame.size=wood.size
+ var fs=StyleBoxFlat.new();fs.bg_color=Color(0,0,0,0);fs.border_color=Color("3a2614");fs.set_border_width_all(10);fs.set_corner_radius_all(6)
+ fs.shadow_color=Color(0,0,0,.5);fs.shadow_size=10;frame.add_theme_stylebox_override("panel",fs)
 
 func _source_text(src: Dictionary) -> String:
  if src.has("w"):return "Winner of %s"%_short(int(src.w))

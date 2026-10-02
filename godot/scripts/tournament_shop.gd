@@ -27,6 +27,7 @@ static func build(game: Node) -> void:
   GearUI.slot(game,slots,hero,key,62)
  TraitUI.line(game,gear,hero)
  TraitUI.rolls(game,gear,hero,true)
+ GearUI.recommended_row(game,right,hero,40)
  ChampionKit.build(game,right,hero,150)
  var bag=game.panel(Rect2(26,703,950,178));bag.add_theme_constant_override("separation",8);GearUI.bag(game,bag,hero)
  var actions=HBoxContainer.new();game.ui.add_child(actions);actions.position=Vector2(993,780);actions.size=Vector2(581,62);actions.add_theme_constant_override("separation",10)
@@ -62,6 +63,11 @@ static func offer(game: Node,parent: Node,hero: Dictionary,index: int) -> void:
  var info=VBoxContainer.new();info.size_flags_horizontal=Control.SIZE_EXPAND_FILL;info.add_theme_constant_override("separation",4);row.add_child(info)
  game.label(info,item.name,18)
  game.label(info,("WILD ITEM" if item.get("wild",false) else "FINISHED ITEM") if item.kind=="item" else "COMPONENT",12,tint)
+ var rec=Forge.rec_match(hero.sp,id)
+ if rec[0]!="":
+  var rl=game.label(info,("★ CORE ITEM for %s" if rec[0]=="core" else "★ Builds %s"%Forge.ITEMS[rec[1]].name+" (%s)")%hero.name,12,Color("ffd36e"),false)
+  rl.tooltip_text="Part of the recommended build for "+HeroData.species[hero.sp].n;rl.mouse_filter=Control.MOUSE_FILTER_STOP
+  tile.add_theme_stylebox_override("panel",game.style(Color(.12,.09,.04,.95),Color("ffd36e"),4,10,2))
  game.label(info,Forge.stat_line(id) if item.kind=="item" else item.short,13,game.MUTED)
  if item.kind=="component":
   var combos=GearUI.owned_combos(game,id,data)
