@@ -19,7 +19,7 @@ func build() -> void:
   var frame=FantasyFrame.new();add_child(frame);frame.position=Vector2(36 if side==0 else 852,226);frame.size=Vector2(712,532);frame.accent=Color("72dbff") if side==0 else Color("ff9989")
   frame.add_theme_stylebox_override("panel",game.style(Color(.045,.06,.16,.96),frame.accent,6,18,3))
   var column=VBoxContainer.new();column.add_theme_constant_override("separation",8);frame.add_child(column)
-  game.label(column,c.state.name if side==0 else rival.name,24,frame.accent)
+  FlowUI.fit_label(game.label(column,c.state.name if side==0 else rival.name,24,frame.accent,false),650,24,12)
   var banner=HBoxContainer.new();column.add_child(banner)
   var model=HeroPreview.new();model.species_id=face.sp;model.custom_minimum_size=Vector2(280,236);banner.add_child(model)
   var words=VBoxContainer.new();words.size_flags_horizontal=Control.SIZE_EXPAND_FILL;banner.add_child(words)

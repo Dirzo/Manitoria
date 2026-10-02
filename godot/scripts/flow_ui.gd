@@ -148,3 +148,42 @@ static func fight_summary(game: Node, parent: Node) -> void:
 	if not f.carry.is_empty(): game.label(row, "★ " + str(f.carry.name), 13, game.GOLD, false).tooltip_text = "Your top damage"
 	var tip = game.label(box, "→ " + f.tips[0], 13, Color("c8ff9d"), false); tip.clip_text = true; tip.custom_minimum_size.x = 640
 	panel.tooltip_text = "LAST FIGHT\n" + "\n".join(f.tips.map(func(t): return "• " + t))
+
+## Shrink a label's font until its text fits max_w (keeps long guild names on screen).
+static func fit_label(l: Label, max_w: float, max_size := 26, min_size := 12) -> void:
+	var font: Font = l.get_theme_font("font")
+	var size = max_size
+	while size > min_size and font.get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x > max_w: size -= 1
+	l.add_theme_font_size_override("font_size", size)
+	l.custom_minimum_size.x = minf(max_w, font.get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x + 4)
+	l.clip_text = true; l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	if l.tooltip_text == "": l.tooltip_text = l.text
+	l.mouse_filter = Control.MOUSE_FILTER_PASS
+
+## A pulsing radial glow with slowly turning rays. Used behind legendary loot.
+class Aura extends Control:
+	var color := Color("ffd36e")
+	var rays := 12
+	var t := 0.0
+	var strength := 1.0
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+	func _process(dt: float) -> void:
+		t += dt; queue_redraw()
+	func _draw() -> void:
+		var c = size * 0.5; var r = minf(size.x, size.y) * 0.5
+		var pulse = 0.75 + 0.25 * sin(t * 3.0)
+		for i in range(6):
+			var k = 1.0 - float(i) / 6.0
+			draw_circle(c, r * (0.35 + 0.65 * (1.0 - k)) * pulse, Color(color, 0.10 * k * strength))
+		for i in range(rays):
+			var a = t * 0.6 + TAU * i / rays
+			var w = 0.09
+			var pts = PackedVector2Array([c, c + Vector2(cos(a - w), sin(a - w)) * r, c + Vector2(cos(a + w), sin(a + w)) * r])
+			draw_colored_polygon(pts, Color(color, 0.16 * strength * pulse))
+
+static func aura(parent: Control, color: Color, px: Vector2, strength := 1.0) -> Aura:
+	var a = Aura.new(); a.color = color; a.strength = strength; a.size = px; a.custom_minimum_size = px
+	parent.add_child(a); parent.move_child(a, 0)
+	a.position = (parent.size - px) * 0.5 if parent.size.x > 0 else -px * 0.15
+	return a

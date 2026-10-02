@@ -64,7 +64,7 @@ static func overview(desk: ManagementDesk) -> void:
  for side in range(2):
   var heroes=home if side==0 else away;var leader=strongest(heroes);var face=c.headliner() if side==0 else rival_face(c,rival)
   var panel=desk.card(panels);panel.get_parent().custom_minimum_size.x=755
-  var title=desk.horizontal(panel);Crest.make(title,Crest.of_campaign(c) if side==0 else Crest.default_for(rival.name),c.state.name if side==0 else rival.name,Vector2(34,40));desk.text(title,c.state.name if side==0 else rival.name,24,Color("7ddcf2") if side==0 else Color("ffa093")).size_flags_horizontal=Control.SIZE_EXPAND_FILL
+  var title=desk.horizontal(panel);Crest.make(title,Crest.of_campaign(c) if side==0 else Crest.default_for(rival.name),c.state.name if side==0 else rival.name,Vector2(34,40));var tl=desk.text(title,c.state.name if side==0 else rival.name,24,Color("7ddcf2") if side==0 else Color("ffa093"));FlowUI.fit_label(tl,520,24,12);tl.size_flags_horizontal=Control.SIZE_EXPAND_FILL
   desk.text(title,"%d OVR"%League.team_ovr(heroes),22,desk.GOLD).tooltip_text="Team rating: the average OVR of the five starters. Matchups and tactics still matter."
   if not face.is_empty():
    var banner=desk.horizontal(panel);portrait(banner,face,124)

@@ -151,6 +151,11 @@ func _ready() -> void:
    var h = campaign.state.roster[0]; h.learned = {"0": 1}; h.level = 3; h.pending = []; h.rewards = []
    HeroData.queue_reward(h, 3, true, 4242)
    phase = "upgrade"; preview_team(); render()
+  elif qa == "chest":
+   phase = "hub"; render()
+   ChestOpening.play(self, {"medal":"Gold","location":"Cinderfall Caldera","rewards":[{"kind":"item","item":"fang","title":"Sharpened Fang","detail":"+15% damage"},{"kind":"item","item":"lifebloom","title":"Lifebloom","detail":"Heals"},{"kind":"item","item":"phoenixember","title":"Phoenix Ember","detail":"WILD: rise again"},{"kind":"gold","title":"150 gold","detail":"Prize purse"}]}, func(): pass)
+  elif qa == "tour_intro":
+   phase = "hub"; render(); TourIntro.present(self, func(): pass)
   elif qa in ["bracket_anim", "cup_progress", "shop_after"]:
    for h in campaign.state.roster: h.pending = []; h.rewards = []
    var rounds = 1 if qa == "bracket_anim" else 6
@@ -378,10 +383,10 @@ func build_new() -> void:
  var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 22); right.add_child(row)
  var crest_col = VBoxContainer.new(); row.add_child(crest_col)
  var crest = Crest.make(crest_col, new_crest, new_club_draft, Vector2(250, 290))
- var banner = label(crest_col, new_club_draft, 20, GOLD); banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; banner.custom_minimum_size.x = 250
+ var banner = label(crest_col, new_club_draft, 20, GOLD, false); banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; FlowUI.fit_label(banner, 250, 20, 11); banner.custom_minimum_size.x = 250
  var motto_label = label(crest_col, "“%s”" % new_motto, 14, MUTED); motto_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; motto_label.custom_minimum_size.x = 250
  motto.text_changed.connect(func(v): motto_label.text = "“%s”" % v)
- new_name.text_changed.connect(func(value): new_club_draft = value; crest.guild_name = value; banner.text = value; crest._place_emblem())
+ new_name.text_changed.connect(func(value): new_club_draft = value; crest.guild_name = value; banner.text = value; FlowUI.fit_label(banner, 250, 20, 11); banner.custom_minimum_size.x = 250; crest._place_emblem())
  var opts = VBoxContainer.new(); opts.size_flags_horizontal = Control.SIZE_EXPAND_FILL; opts.add_theme_constant_override("separation", 8); row.add_child(opts)
  var cycle = func(parent: Node, title_text: String, key: String, values: Array) -> void:
   var line = HBoxContainer.new(); parent.add_child(line)
@@ -556,6 +561,12 @@ func introduce_match() -> void:
  if campaign.state.get("tour",{}).get("shop",false) or campaign.state.get("tour",{}).get("complete",false):return
  # Every tour fight walks up to the tournament board first, then the matchup, then the arena.
  var t = campaign.state.get("tour", {})
+ # A new stop on the World Tour gets its own arrival card first.
+ if not t.is_empty() and int(t.get("intro_level", 0)) != int(t.get("level", 1)):
+  t.intro_level = int(t.get("level", 1))
+  phase = "hub"; tab = "overview"; render()
+  TourIntro.present(self, introduce_match)
+  return
  if not t.is_empty() and int(t.get("board_seen", -1)) != int(t.get("serial", 0)):
   t.board_seen = int(t.get("serial", 0))
   phase = "hub"; tab = "overview"; render()
@@ -680,7 +691,12 @@ func build_result() -> void:
    cup.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
   if report.get("chest",false):
    var crow = HBoxContainer.new(); crow.alignment = BoxContainer.ALIGNMENT_CENTER; box.add_child(crow)
-   FlowUI.cta(self, crow, "Open chest  ▶", func():TournamentRewardsUI.open_screen(self,"vault"), false, 320)
+   FlowUI.cta(self, crow, "Open chest  ▶", func():
+    var chests = TrophyVault.unopened(campaign)
+    if chests.is_empty(): TournamentRewardsUI.open_screen(self,"vault"); return
+    var got = TrophyVault.open(campaign, chests[-1].id)
+    if got.is_empty(): toast(TrophyVault.error if not TrophyVault.error.is_empty() else "Could not open the chest."); return
+    ChestOpening.play(self, got, render), false, 320)
  if report.has("ais"): impact_board(box, report)
  var stats_row = HBoxContainer.new(); box.add_child(stats_row)
  var holder = VBoxContainer.new(); box.add_child(holder)
@@ -839,7 +855,7 @@ func _process(dt: float) -> void:
  elif sim and phase in ["menu", "new", "hub", "prep"]: arena.sync(sim, dt)
  if not qa.is_empty() and not qa_taken:
   qa_elapsed += dt
-  if qa_elapsed > (12 if qa in ["arena", "evolved_arena", "exhibition", "tour_arena"] else 7 if qa=="intro" else 1.65 if qa in ["attacks_slam","attacks_weapon"] else 1.43 if qa.begins_with("attacks_") else 2 if qa.begins_with("particles_") else 3):
+  if qa_elapsed > (12 if qa in ["arena", "evolved_arena", "exhibition", "tour_arena"] else 7 if qa in ["intro","chest"] else 1.65 if qa in ["attacks_slam","attacks_weapon"] else 1.43 if qa.begins_with("attacks_") else 2 if qa.begins_with("particles_") else 3):
    qa_taken = true
    await RenderingServer.frame_post_draw
    if not qa_capture.is_empty():

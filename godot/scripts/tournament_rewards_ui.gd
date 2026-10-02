@@ -270,7 +270,7 @@ func vault() -> void:
    game.button(box,"Open chest",func():
     reveal=TrophyVault.open(c,chest.id)
     if reveal.is_empty():game.toast(TrophyVault.error if not TrophyVault.error.is_empty() else "Could not save the chest reward. Please try again.")
-    else:game.sound.cue("upgrade",true)
+    else:ChestOpening.play(game,reveal,refresh)
     refresh(),true)
  else:game.label(body,"No unopened chests · Your next crown awaits",17,game.MUTED)
  var grid=GridContainer.new();grid.columns=4;grid.add_theme_constant_override("h_separation",12);grid.add_theme_constant_override("v_separation",12);body.add_child(grid)

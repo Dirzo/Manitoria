@@ -52,6 +52,9 @@ static func apply_drop(game: Node,data: Dictionary,hero_id: String,_slot: String
   "equipped":
    if bag:ok=c.unequip(data.owner,str(data.slot))
    else:ok=c.transfer_item(data.owner,hero_id,str(data.slot))
+ if ok and not bag:
+  for v in c.hero_by_id(hero_id).get("equipment",{}).values():
+   if Forge.ITEMS.get(str(v),{}).get("wild",false) and str(v) not in before:Callable(FlowUI,"banner").call_deferred(game,"LEGENDARY!",Color("ffd36e"),Forge.ITEMS[str(v)].name+" equipped")
  if ok and data.kind=="offer" and c.last_error=="bag":
   c.last_error="";game.sound.cue("upgrade");game.toast("%s is full · sent to your bag"%c.hero_by_id(hero_id).name);game.render();return true
  if ok:
@@ -74,6 +77,14 @@ static func token(game: Node,parent: Node,item: Dictionary,pixels: int=72) -> Ge
  button.add_theme_stylebox_override("hover",game.style(Color("3b3050"),Color("ffeab1"),4 if not component else 30,5,3))
  var image=AbilityArt.icon(button,item.get("art","ward"),0);image.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT);image.offset_left=6;image.offset_top=6;image.offset_right=-6;image.offset_bottom=-6;image.mouse_filter=Control.MOUSE_FILTER_IGNORE
  if item.has("id"):RarityStyle.decorate(image,item.get("rarity","Common"))
+ if item.get("rarity","")=="Legendary" and pixels>=48:
+  # Legendary loot glows: a pulsing gold rim and a star, so it never hides in a bag.
+  var rim=Panel.new();rim.mouse_filter=Control.MOUSE_FILTER_IGNORE;button.add_child(rim);rim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+  var rs=StyleBoxFlat.new();rs.bg_color=Color(0,0,0,0);rs.border_color=Color("ffd36e");rs.set_border_width_all(3);rs.set_corner_radius_all(6)
+  rim.add_theme_stylebox_override("panel",rs)
+  var pulse=rim.create_tween().set_loops();pulse.tween_property(rim,"modulate:a",0.35,0.7);pulse.tween_property(rim,"modulate:a",1.0,0.7)
+  var star=game.label(button,"★",int(pixels*0.26),Color("ffd36e"),false);star.position=Vector2(3,-2);star.mouse_filter=Control.MOUSE_FILTER_IGNORE
+  star.add_theme_color_override("font_outline_color",Color.BLACK);star.add_theme_constant_override("outline_size",4)
  if item.get("kind","")=="item" and pixels>=56:
   # Recipe pips: the two components this was forged from.
   for i in range(2):
