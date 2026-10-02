@@ -37,14 +37,26 @@ static func ctx(sp: String, palette_color: Color = Color(0, 0, 0, 0), rarity: St
 	var el = element(sp); var st = STYLE[el]
 	var main = Color(st[0])
 	# Blend the card palette in so each ability painting still reads in its effect.
-	if palette_color.a > 0.0: main = main.lerp(palette_color, 0.35)
-	var boost = 1.0 if rarity == "Uncommon" else (1.3 if rarity == "Rare" else 1.6)
-	return {"sp": sp, "el": el, "color": main, "hot": Color(st[1]), "motif": st[2], "smoke": st[3], "boost": boost, "rarity": rarity}
+	if palette_color.a > 0.0: main = main.lerp(palette_color, 0.3)
+	main = vivid(main, 1.3)
+	var hot = vivid(Color(st[1]), 1.5)
+	# A neighbouring hue gives every burst two tones instead of one flat colour.
+	var alt = Color.from_hsv(fposmod(main.h + ALT_SHIFT.get(el, 0.08), 1.0), clampf(main.s * 1.1, 0.0, 1.0), clampf(main.v * 1.05, 0.0, 1.0))
+	var boost = 1.25 if rarity == "Uncommon" else (1.6 if rarity == "Rare" else 2.0)
+	return {"sp": sp, "el": el, "color": main, "hot": hot, "alt": alt, "motif": st[2], "smoke": st[3], "boost": boost, "rarity": rarity}
+
+# Hue nudge for each element's second tone (fire leans magenta-red, storms lean violet, ...).
+const ALT_SHIFT := {"fire": -0.06, "lightning": 0.1, "water": -0.08, "ice": 0.12, "earth": -0.05, "nature": -0.12, "poison": 0.2, "wind": 0.45, "holy": -0.08, "shadow": 0.12, "spirit": 0.1}
+
+## Push saturation up (keeps near-white colours bright but tints them a little).
+static func vivid(col: Color, amount: float) -> Color:
+	return Color.from_hsv(col.h, clampf(maxf(col.s, 0.12) * amount, 0.0, 1.0), clampf(col.v * 1.04, 0.0, 1.0), col.a)
 
 # ---------------------------------------------------------------- windup (gathering energy)
 static func windup(vfx: VFX, c: Dictionary, at: Vector3, duration: float) -> void:
-	vfx.spray(at + Vector3.UP * 1.2, int(14 * c.boost), "glow", c.hot, Vector2(-1.6, -0.8), Vector2(duration * 0.8, duration), 0.08, Vector3.UP, 1.6, 0.0, 1.5, 0.0, 0.0, 1, 0.0)
-	vfx.glow(at + Vector3.UP * 1.3, 1.1, c.color, duration, 1, 0.0, 1.2)
+	vfx.rune(at, 1.8, c.color, 0, duration, 0.0, 1.6)
+	vfx.spray(at + Vector3.UP * 1.2, int(18 * c.boost), "glow", c.hot, Vector2(-1.6, -0.8), Vector2(duration * 0.8, duration), 0.08, Vector3.UP, 1.6, 0.0, 1.5, 0.0, 0.0, 1, 0.0)
+	vfx.glow(at + Vector3.UP * 1.5, 1.6, c.color, duration, 1, 0.0, 1.6)
 
 # ---------------------------------------------------------------- per-family compositions
 static func play(vfx: VFX, family: String, c: Dictionary, from: Vector3, to: Vector3, targets: Array = []) -> void:
@@ -58,8 +70,10 @@ func _dir(from: Vector3, to: Vector3) -> Vector3:
 	return d.normalized() if d.length() > 0.01 else Vector3.FORWARD
 
 func _impact(vfx: VFX, c: Dictionary, at: Vector3, scale: float = 1.0) -> void:
-	vfx.glow(at + Vector3.UP * 0.8, 2.2 * scale, c.hot, 0.35, 0, 0.0, 2.2)
-	vfx.spray(at + Vector3.UP * 0.7, int(18 * c.boost * scale), c.motif, c.color, Vector2(2.0, 4.5), Vector2(0.35, 0.7), 0.1, Vector3.UP, 1.3, 5.0, 1.2, 0.5 if c.motif == "spark" else 0.0, 0.0, 0.0, 0.0, c.hot)
+	vfx.glow(at + Vector3.UP * 1.0, 2.8 * scale, c.hot, 0.35, 0, 0.0, 2.6)
+	vfx.glow(at + Vector3.UP * 1.0, 4.2 * scale, c.alt, 0.45, 0, 0.0, 1.3)
+	vfx.rune(at, 2.6 * scale, c.color, 1, 0.5, 0.0, 2.4)
+	vfx.spray(at + Vector3.UP * 0.8, int(24 * c.boost * scale), c.motif, c.color, Vector2(2.5, 6.0), Vector2(0.35, 0.75), 0.13, Vector3.UP, 1.3, 5.0, 1.2, 0.5 if c.motif == "spark" else 0.0, 0.0, 0.0, 0.0, c.alt)
 
 func _element_burst(vfx: VFX, c: Dictionary, at: Vector3, r: float) -> void:
 	match c.el:
@@ -460,9 +474,26 @@ func fx_generic(vfx: VFX, c: Dictionary, _from: Vector3, to: Vector3, _t: Array)
 
 # ---------------------------------------------------------------- per-recipient flourishes
 static func hit(vfx: VFX, c: Dictionary, at: Vector3, big: bool) -> void:
-	var s = 1.0 if big else 0.55
-	vfx.glow(at + Vector3.UP * 1.0, 1.4 * s, c.hot, 0.25, 0, 0.0, 2.0)
-	vfx.spray(at + Vector3.UP * 1.0, int(10 * s * c.boost), c.motif, c.color, Vector2(1.5, 3.5), Vector2(0.25, 0.5), 0.08, Vector3.UP, 1.4, 5.0, 1.2, 0.3 if c.motif == "spark" else 0.0, 0.0, 0.0, 0.0, c.hot)
+	var s = 1.0 if big else 0.65
+	vfx.glow(at + Vector3.UP * 1.3, 2.1 * s, c.hot, 0.22, 0, 0.0, 2.6)
+	vfx.glow(at + Vector3.UP * 1.3, 3.2 * s, c.color, 0.3, 0, 0.0, 1.4)
+	vfx.spray(at + Vector3.UP * 1.3, int(14 * s * c.boost), c.motif, c.color, Vector2(2.5, 5.5), Vector2(0.25, 0.55), 0.11, Vector3.UP, 1.4, 5.0, 1.2, 0.3 if c.motif == "spark" else 0.0, 0.0, 0.0, 0.0, c.alt)
+	vfx.spray(at + Vector3.UP * 1.3, int(8 * s * c.boost), "spark", c.hot, Vector2(4.0, 8.0), Vector2(0.12, 0.3), 0.07, Vector3.UP, 1.8, 0.0, 2.0, 0.6)
+	if big: vfx.rune(at, 2.2, c.color, 1, 0.4, 0.0, 2.2)
+
+## Cast flash at the caster: a shockwave ring and a burst of the skill's colours.
+static func cast_flash(vfx: VFX, c: Dictionary, at: Vector3) -> void:
+	vfx.rune(at, 2.0 * (0.8 + c.boost * 0.25), c.color, 1, 0.45, 0.0, 2.4)
+	vfx.rune(at, 1.4, c.alt, 0, 0.7, 0.0, 1.6)
+	vfx.glow(at + Vector3.UP * 1.4, 2.6, c.hot, 0.3, 0, 0.0, 2.2)
+	vfx.spray(at + Vector3.UP * 0.3, int(16 * c.boost), "glow", c.color, Vector2(2.0, 4.5), Vector2(0.35, 0.7), 0.1, Vector3.UP, 0.9, -1.0, 1.0, 0.0, 0.0, 1, 0.6, c.alt)
+
+## Knock-out: a coloured burst and a ring as the champion drops.
+static func knockout(vfx: VFX, c: Dictionary, at: Vector3) -> void:
+	vfx.glow(at + Vector3.UP * 1.0, 4.0, c.hot, 0.4, 0, 0.0, 2.4)
+	vfx.rune(at, 3.2, c.color, 1, 0.6, 0.0, 2.4)
+	vfx.spray(at + Vector3.UP * 0.8, 40, c.motif, c.color, Vector2(3.0, 7.0), Vector2(0.5, 1.0), 0.13, Vector3.UP, 1.1, 6.0, 0.9, 0.0, 0.0, 1, 0.4, c.alt)
+	vfx.smoke(at + Vector3.UP * 0.4, 2.4, c.smoke, 1.2, 0.0, Vector3(0, 0.5, 0))
 
 # ---------------------------------------------------------------- projectiles (meteor, wisps, bolts, barrage)
 static func projectile(vfx: VFX, c: Dictionary, effect: String) -> Node3D:

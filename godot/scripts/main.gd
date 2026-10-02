@@ -15,7 +15,10 @@ var tab = "overview"
 var selected_id = ""
 var paused = false
 var speed = 1.0
-const COUNTDOWN = 3.6
+const COUNTDOWN = 2.8
+## Base combat tempo: "1x" plays this much faster than the simulation clock (pure presentation; balance is unchanged).
+const TEMPO = 1.3
+var freeze_left = 0.0 # hit-stop: a few frames of near-freeze on heavy blows and knock-outs
 var countdown = 0.0
 var countdown_shown = -1
 var countdown_label: Label
@@ -54,6 +57,7 @@ func _ready() -> void:
  HeroData.load_data()
  arena = ArenaView.new(); add_child(arena)
  arena.legendary_moment.connect(func(d): legend_left = d; legend_total = d)
+ arena.hitstop.connect(func(d): freeze_left = maxf(freeze_left, d))
  sound = SoundDesign.new(); add_child(sound)
  layer = CanvasLayer.new(); add_child(layer)
  ui = Control.new(); layer.add_child(ui); ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -151,6 +155,30 @@ func _ready() -> void:
    var h = campaign.state.roster[0]; h.learned = {"0": 1}; h.level = 3; h.pending = []; h.rewards = []
    HeroData.queue_reward(h, 3, true, 4242)
    phase = "upgrade"; preview_team(); render()
+  elif qa == "guild_demo":
+   phase = "new"; render()
+   var rr = RandomNumberGenerator.new(); rr.seed = 7
+   for k in range(5):
+    get_tree().create_timer(0.45 + k * 0.55).timeout.connect(func():
+     var r = GuildNames.roll(rr); new_club_draft = r.name; new_motto = r.motto; new_crest = Crest.default_for(str(k * 97) + r.name); render())
+  elif qa == "draft_demo":
+   phase = "hub"; tab = "market"; render()
+   get_tree().create_timer(1.3).timeout.connect(func(): desk_state.view = "Table"; render())
+   get_tree().create_timer(2.4).timeout.connect(func(): desk_state.sort = "Power"; render())
+  elif qa == "builds_demo":
+   campaign.state.tour.level=6;campaign.state.gold=1800
+   campaign.state.inventory=["fang","ember","coin","moon","archmage","phoenixember","seed"]
+   campaign.state.roster[0].equipment={"0":"bastion","1":"fang"}
+   campaign.state.tour.shop=true;campaign.state.tour.stock=WorldTour.stock(campaign);phase="shop";render()
+   get_tree().create_timer(2.0).timeout.connect(func(): GearUI.recipe_book(self))
+  elif qa == "tree_demo":
+   var hero=campaign.state.roster[0]; hero.level=7; hero.learned={"0":2,"3":1,"6":1}
+   phase="hub"; tab="roster"; render()
+   ui.find_children("*","ManagementDesk",true,false)[0].profile(hero,true)
+   var sc = ui.find_children("*","ScrollContainer",true,false)
+   for scroll in sc:
+    if scroll.size.y > 500:
+     var tw = create_tween(); tw.tween_interval(0.8); tw.tween_property(scroll, "scroll_vertical", 900, 2.4).set_trans(Tween.TRANS_SINE)
   elif qa == "chest":
    phase = "hub"; render()
    ChestOpening.play(self, {"medal":"Gold","location":"Cinderfall Caldera","rewards":[{"kind":"item","item":"fang","title":"Sharpened Fang","detail":"+15% damage"},{"kind":"item","item":"lifebloom","title":"Lifebloom","detail":"Heals"},{"kind":"item","item":"phoenixember","title":"Phoenix Ember","detail":"WILD: rise again"},{"kind":"gold","title":"150 gold","detail":"Prize purse"}]}, func(): pass)
@@ -584,7 +612,7 @@ func begin_battle() -> void:
   phase = "battle"; paused = false; speed = 0.75 if tactical else 1.0; accumulator = 0.0; event_history.clear(); resolving = false
   sound.reset_battle()
   arena.set_region(WorldTour.region(campaign) if not exhibition and campaign.state.has("tour") else {})
-  arena.clear_fighters(); arena.camera.h_offset = 0; arena.target_distance = 31 if tactical else 37; arena.target_pitch = 0.95; arena.target_yaw = 0.0
+  arena.clear_fighters(); arena.camera.h_offset = 0; arena.target_distance = 31 if tactical else 34; arena.target_pitch = 0.95; arena.target_yaw = 0.0
   if arena.clarity: arena.clarity.tactical = tactical
   sim = BattleSim.new(); sim.action.connect(on_battle_event)
   sim.setup(campaign.lineup(), exhibition_rivals if exhibition else campaign.opponent().roster, campaign.match_seed(), 1.0 if exhibition else campaign.quality())
@@ -595,7 +623,7 @@ func begin_battle() -> void:
 
 func update_countdown() -> void:
  if not is_instance_valid(countdown_label): return
- var step = 3 - int(floor((COUNTDOWN - countdown) / 0.9))
+ var step = 3 - int(floor((COUNTDOWN - countdown) / 0.7))
  if countdown <= 0.0: countdown_label.visible = false; return
  if step != countdown_shown:
   countdown_shown = step
@@ -625,7 +653,7 @@ func build_battle_hud() -> void:
  button(row, "Resume" if paused else "Pause", func(): paused = not paused; render())
  button(row, "Tactical ¾×", func(): set_tactical(true), tactical)
  for value in [1.0, 2.0, 4.0]: button(row, "%dx" % value, func(): set_tactical(false); speed = value; render(), speed == value and not tactical)
- button(row, "Reset camera", func(): arena.target_yaw = 0.0; arena.target_distance = 31 if tactical else 37; arena.target_pitch = 0.95)
+ button(row, "Reset camera", func(): arena.target_yaw = 0.0; arena.target_distance = 31 if tactical else 34; arena.target_pitch = 0.95)
  var feed = panel(Rect2(1250, 654, 325, 122))
  event_box = VBoxContainer.new(); event_box.add_theme_constant_override("separation", 5); feed.add_child(event_box)
  refresh_feed()
@@ -838,7 +866,7 @@ func _process(dt: float) -> void:
   countdown = maxf(0.0, countdown - dt)
   var k = 1.0 - countdown / COUNTDOWN
   arena.target_yaw = lerpf(0.55, 0.0, smoothstep(0.0, 0.8, k))
-  arena.target_distance = (31.0 if tactical else 37.0) + 6.0 * (1.0 - smoothstep(0.0, 0.8, k))
+  arena.target_distance = (31.0 if tactical else 34.0) + 6.0 * (1.0 - smoothstep(0.0, 0.8, k))
   arena.sync(sim, dt, 0.0)
   update_countdown()
   return
@@ -848,6 +876,9 @@ func _process(dt: float) -> void:
    legend_left = maxf(0.0, legend_left - dt)
    var k = 1.0 - legend_left / legend_total
    dilation = 0.3 + 0.7 * k * k
+  if freeze_left > 0.0 and not paused:
+   freeze_left = maxf(0.0, freeze_left - dt); dilation *= 0.06
+  dilation *= TEMPO
   if not paused:
    accumulator += minf(dt, 0.1) * speed * dilation
    while accumulator >= 1.0 / 30.0 and not sim.finished:
@@ -858,7 +889,7 @@ func _process(dt: float) -> void:
  elif sim and phase in ["menu", "new", "hub", "prep"]: arena.sync(sim, dt)
  if not qa.is_empty() and not qa_taken:
   qa_elapsed += dt
-  if qa_elapsed > (12 if qa in ["arena", "evolved_arena", "exhibition", "tour_arena"] else 7 if qa in ["intro","chest"] else 1.65 if qa in ["attacks_slam","attacks_weapon"] else 1.43 if qa.begins_with("attacks_") else 2 if qa.begins_with("particles_") else 3):
+  if qa_elapsed > (12 if qa in ["arena", "evolved_arena", "exhibition", "tour_arena"] else 7 if qa in ["intro","chest"] else 4 if qa in ["guild_demo","draft_demo","builds_demo","tree_demo","evolution","levelup","tour_intro"] else 1.65 if qa in ["attacks_slam","attacks_weapon"] else 1.43 if qa.begins_with("attacks_") else 2 if qa.begins_with("particles_") else 3):
    qa_taken = true
    await RenderingServer.frame_post_draw
    if not qa_capture.is_empty():

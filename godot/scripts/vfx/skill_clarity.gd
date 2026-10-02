@@ -91,7 +91,7 @@ func _ring(u: Dictionary, pos: Vector3, vis: Dictionary) -> void:
 		rings[u.uid] = _quad(m)
 	var r: MeshInstance3D = rings[u.uid]
 	r.visible = u.alive
-	var size = (0.62 if u.summon else 1.15)
+	var size = (0.8 if u.summon else 1.5)
 	r.position = Vector3(pos.x, 0.04, pos.z); r.scale = Vector3(size, 1, size)
 	r.material_override.set_shader_parameter("strength", 0.95 if tactical else 0.6)
 

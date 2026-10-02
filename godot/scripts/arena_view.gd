@@ -2,6 +2,14 @@ class_name ArenaView
 extends Node3D
 
 signal legendary_moment(duration: float)
+signal hitstop(duration: float)
+
+## Fighters read big and chunky on the floor (was 0.72).
+const MODEL_SCALE = 0.98
+const BAR_LIFT = 1.32
+const HITFLASH = preload("res://shaders/vfx/hitflash.gdshader")
+var shake := 0.0
+var shake_seed := 0.0
 
 const FLOOR_SCALE = 1.45
 
@@ -205,6 +213,20 @@ func update_camera(dt: float) -> void:
  var pitch = camera_pitch
  camera.position = target + Vector3(sin(camera_yaw) * cos(pitch), sin(pitch), cos(camera_yaw) * cos(pitch)) * camera_distance
  camera.look_at(target)
+ if shake > 0.0:
+  # Trauma-style shake: squared falloff so small knocks stay subtle and big ones really jolt.
+  shake = maxf(0.0, shake - dt * 2.4); shake_seed += dt * 38.0
+  var k = shake * shake
+  camera.position += camera.basis.x * sin(shake_seed * 1.7) * 0.55 * k + camera.basis.y * sin(shake_seed * 2.3 + 1.1) * 0.4 * k
+  camera.rotation.z += sin(shake_seed * 1.3) * 0.012 * k
+
+func punch(amount: float) -> void:
+ shake = clampf(maxf(shake, amount), 0.0, 1.0)
+
+func flash(uid: int, col: Color, amount: float = 1.0) -> void:
+ if not models.has(uid): return
+ models[uid].flash.set_shader_parameter("tint", col)
+ models[uid].flash_amt = maxf(models[uid].flash_amt, amount)
 
 func orbit(amount: float) -> void:
  target_yaw += amount
@@ -234,7 +256,7 @@ func spawn(u: Dictionary) -> void:
  if not resources.has(path): resources[path] = load(path)
  var motion = Node3D.new(); motion.name = "CombatMotion"; holder.add_child(motion)
  var model = resources[path].instantiate(); motion.add_child(model)
- model.scale = Vector3.ONE * (0.36 if u.summon else 0.72)
+ model.scale = Vector3.ONE * (0.48 if u.summon else MODEL_SCALE)
  if not u.summon and "giant" in Forge.carried(u.hero): model.scale *= 1.25   # Giant's Draught
  var players = model.find_children("*", "AnimationPlayer", true, false)
  var player: AnimationPlayer = players[0] if not players.is_empty() else null
@@ -262,7 +284,7 @@ func spawn(u: Dictionary) -> void:
     var angle = i * TAU / 3
     var shape = SphereMesh.new(); shape.radius = 0.075; shape.height = 0.6 if evolution == "ravager" else 0.15
     mesh(aura, shape, material(tint, 0, 0.3, true), Vector3(cos(angle)*0.88, 0.5 if evolution == "ravager" else 1.6, sin(angle)*0.88))
- var bars = Node3D.new(); holder.add_child(bars); bars.position.y = (3.05 if u.hero.sp == "kirin" else 2.72) if not u.summon else 1.2
+ var bars = Node3D.new(); holder.add_child(bars); bars.position.y = ((3.05 if u.hero.sp == "kirin" else 2.72) if not u.summon else 1.2) * BAR_LIFT
  var back_shape = QuadMesh.new(); back_shape.size = Vector2(1.75, 0.10)
  var back_mat = material(Color("14242f")); back_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED; back_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
  mesh(bars, back_shape, back_mat)
@@ -277,13 +299,16 @@ func spawn(u: Dictionary) -> void:
  var shield_shape = QuadMesh.new(); shield_shape.size = Vector2(1.75,0.035)
  var shield_mat = health_mat.duplicate(); shield_mat.albedo_color = Color("a8d9ef")
  var shield_bar = mesh(bars,shield_shape,shield_mat,Vector3(0,0.075,0.02)); shield_bar.visible = false
- var bubble_shape = SphereMesh.new(); bubble_shape.radius = 0.95; bubble_shape.height = 2.2
+ var bubble_shape = SphereMesh.new(); bubble_shape.radius = 1.25; bubble_shape.height = 2.9
  var bubble_mat = material(Color(0.35, 0.82, 0.95, 0.16), 0.2, 0.3, true); bubble_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
  var bubble = mesh(holder, bubble_shape, bubble_mat, Vector3(0, 1.1, 0)); bubble.visible = false
 
  var name_label = Label3D.new(); name_label.text = u.hero.name; name_label.position.y = 0.22; name_label.font_size = 29; name_label.pixel_size = 0.010; name_label.modulate = team_color.lightened(0.4); name_label.outline_size = 8; name_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED; bars.add_child(name_label)
  if u.summon: bars.visible = false
- models[u.uid] = {"root": holder, "motion":motion, "stride":0.0, "recoil":Vector3.ZERO, "aura": aura, "model": model, "player": player, "bar": bar, "bars": bars, "ring": circle, "state": "idle", "lock": 0.0, "dead": false, "hp_label": hp_label, "cast_bar": cast_bar, "bubble": bubble, "shield_bar":shield_bar, "stagger": 0.0, "death_elapsed": 0.0, "arc": {}, "last_target": world_point(u.pos), "ground_speed": 0.0, "walk_hold": 0.0, "turn_rate": 0.0, "name_label": name_label, "tempo": randf_range(0.92, 1.08), "born": 0.0 if (u.summon or (sim_ref != null and sim_ref.time > 0.5)) else 1.0}
+ # Every mesh shares one overlay so the whole body flashes when struck or casting.
+ var flash_mat = ShaderMaterial.new(); flash_mat.shader = HITFLASH
+ for mi in model.find_children("*", "MeshInstance3D", true, false): mi.material_overlay = flash_mat
+ models[u.uid] = {"root": holder, "motion":motion, "stride":0.0, "recoil":Vector3.ZERO, "aura": aura, "model": model, "player": player, "bar": bar, "bars": bars, "ring": circle, "state": "idle", "lock": 0.0, "dead": false, "hp_label": hp_label, "cast_bar": cast_bar, "bubble": bubble, "shield_bar":shield_bar, "stagger": 0.0, "death_elapsed": 0.0, "arc": {}, "last_target": world_point(u.pos), "ground_speed": 0.0, "walk_hold": 0.0, "turn_rate": 0.0, "name_label": name_label, "tempo": randf_range(0.92, 1.08), "flash": flash_mat, "flash_amt": 0.0, "born": 0.0 if (u.summon or (sim_ref != null and sim_ref.time > 0.5)) else 1.0}
  holder.position = world_point(u.pos)
  model.rotation.y = u.heading
 
@@ -323,6 +348,8 @@ func sync(sim: BattleSim, dt: float, speed: float = 1.0) -> void:
    var remaining = u.pending_cast.delay / u.pending_cast.total if u.has("pending_cast") else u.windup / maxf(0.01, u.windup_total)
    visual.cast_bar.mesh.size.x = maxf(0.01, 1.75 * (1.0 - remaining))
   visual.stagger = maxf(0, visual.stagger - dt * speed)
+  visual.flash_amt = maxf(0.0, visual.flash_amt - dt * 6.0)
+  visual.flash.set_shader_parameter("flash", visual.flash_amt)
   visual.name_label.visible = not (clarity and clarity.tactical)   # team rings identify sides in Tactical view
   animate_weight(u, visual, dt * speed)
   visual.lock = maxf(0, visual.lock - dt * speed)
@@ -432,7 +459,11 @@ func handle_event(e: Dictionary) -> void:
    floating_text(e.pos, "INTERRUPTED", Color("ef9b83"), 30)
    if models.has(e.uid): models[e.uid].lock = 0
   "death":
-   if models.has(e.uid): models[e.uid].bubble.visible = false; models[e.uid].cast_bar.visible = false
+   if models.has(e.uid):
+    models[e.uid].bubble.visible = false; models[e.uid].cast_bar.visible = false
+    flash(e.uid, Color.WHITE, 1.4)
+    if vfx: AbilityFX.knockout(vfx, fx_context(e, color), world_point(e.pos, 0.0))
+    punch(0.55); hitstop.emit(0.09)
   "telegraph":
    # One callout per skill: it appears as the windup starts and pops when the skill lands.
    if clarity and sim_ref: clarity.callout(sim_ref, e, models, SkillCombat.windup(effect))
@@ -440,6 +471,10 @@ func handle_event(e: Dictionary) -> void:
    # The overhead windup identifies the skill; avoid a duplicate cast banner.
    if not AttackVisuals.style(e.get("species",""),effect).is_empty():physical_casts[e.uid]={"remaining":.3,"targets":{}}
    fx_cast(e, color)
+   if e.get("credit", "basic") != "basic" and vfx:
+    var cc = fx_context(e, color)
+    AbilityFX.cast_flash(vfx, cc, world_point(e.pos, 0.0))
+    flash(e.uid, cc.hot, 0.9)
    if clarity and sim_ref: clarity.release(sim_ref, e, models)
    if e.get("rarity", "") == "Legendary" and e.get("credit", "basic") != "basic" and vfx:
     # Legendary skills get a moment: gilded flourish, and the game slows briefly to let it land.
@@ -449,11 +484,16 @@ func handle_event(e: Dictionary) -> void:
   "hit":
    physical_contact(e)
    fx_hit(e, color)
-   if models.has(e.uid) and e.amount >= 6:
+   var skill = e.get("credit", "basic") != "basic"
+   var amount = float(e.get("amount", 0.0))
+   if amount >= 3: flash(e.uid, fx_context(e, color).hot if skill else Color(1, 0.95, 0.9), clampf(0.35 + amount / 60.0, 0.4, 1.2))
+   if models.has(e.uid) and amount >= 6:
     models[e.uid].stagger = 0.20
     if models.has(e.get("source",-1)):
      var away = models[e.uid].root.position-models[e.source].root.position
-     models[e.uid].recoil = away.normalized()*minf(0.22,e.amount*0.002)
+     models[e.uid].recoil = away.normalized()*minf(0.45,amount*0.004)
+   if skill and amount >= 30: punch(clampf(amount / 140.0, 0.2, 0.6))
+   if skill and amount >= 55: hitstop.emit(0.06)
    number_event(e)
   "heal":
    number_event(e)
@@ -605,6 +645,8 @@ func polish_stage(stage: Node3D) -> void:
    env.ambient_light_color = Color("b2cde5")
    env.ssao_intensity = 1.1
    env.fog_density = 0.0013
+   # Let skill effects bloom (Forward+ only; the compatibility renderer has no glow).
+   env.glow_intensity = 0.95; env.glow_bloom = 0.06; env.glow_hdr_threshold = 0.95
   elif node is DirectionalLight3D:
    if node.shadow_enabled: node.light_energy = 1.65; node.light_color = Color("ffe4c0")
 # Windups are state-driven, so pausing, speed changes and interrupts cannot
@@ -631,15 +673,22 @@ func number_event(e: Dictionary) -> void:
  var window = 0.48 if e.amount >= 6.0 else 0.9
  if combat_numbers.has(key) and combat_numbers[key].age < window:
   combat_numbers[key].amount += e.amount
+  combat_numbers[key].pop = 0.0   # re-pop as the number grows
   update_number(combat_numbers[key])
   return
  if e.type == "blocked" and (e.amount < 10.0 or (clarity and clarity.tactical)): return   # minor absorbs read as noise
  if clarity and clarity.tactical and e.type == "hit" and e.amount < 12.0: return
  var label = Label3D.new(); effects.add_child(label)
- label.font_size = 38 if e.type == "hit" else 29 if e.type == "heal" else 24; label.pixel_size = 0.014; label.no_depth_test = true; label.outline_size = 8; label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
- label.modulate = Color("ffe4c0") if e.type == "hit" else Color("97f0bc") if e.type == "heal" else Color("9edbff")
+ var skill_hit = e.type == "hit" and e.get("credit", "basic") != "basic"
+ label.font_size = (52 if skill_hit else 40) if e.type == "hit" else 32 if e.type == "heal" else 24; label.pixel_size = 0.014; label.no_depth_test = true; label.outline_size = 12; label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+ label.modulate = Color("ffe4c0") if e.type == "hit" else Color("7dffb0") if e.type == "heal" else Color("9edbff")
+ if skill_hit:
+  label.modulate = fx_context(e, color_for(e.get("effect", "basic"))).color.lightened(0.18)
+  if e.amount >= 80.0: label.font_size = 64
+ label.outline_modulate = Color(0.08, 0.02, 0.04) if skill_hit else Color(0, 0, 0)
+ label.font = load("res://assets/fonts/uncialantiqua.ttf") if skill_hit else null
  var lane = (int(e.get("source",0)) % 3 - 1)*0.7
- label.position = Vector3(e.pos.x+lane,3.4+(0.65 if e.type == "heal" else -0.35 if e.type == "blocked" else 0.0),e.pos.y)
+ label.position = Vector3(e.pos.x+lane,4.3+(0.65 if e.type == "heal" else -0.35 if e.type == "blocked" else 0.0),e.pos.y)
  var entry = {"node":label,"amount":e.amount,"type":e.type,"age":0.0,"base_y":label.position.y}
  # A previous burst can finish its flight while the next one accumulates.
  if combat_numbers.has(key): combat_numbers[key+":"+str(label.get_instance_id())] = combat_numbers[key]
@@ -654,7 +703,10 @@ func sync_numbers(dt: float) -> void:
  var occupied: Array[Rect2] = []
  for key in combat_numbers.keys():
   var entry = combat_numbers[key]; entry.age += dt
-  entry.node.position.y = entry.base_y+entry.age*0.85
+  entry.node.position.y = entry.base_y+entry.age*1.1
+  # Pop in big, settle, then drift up and fade.
+  entry.pop = entry.get("pop", 0.0) + dt
+  entry.node.scale = Vector3.ONE * (1.0 + 0.9 * exp(-entry.pop * 16.0))
   entry.node.modulate.a = clampf((0.95-entry.age)/0.4,0,1)
   entry.node.outline_modulate.a = entry.node.modulate.a
   if entry.age >= 0.95:
