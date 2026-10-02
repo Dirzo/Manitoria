@@ -164,14 +164,67 @@ func record_team(heroes: Array, sim: BattleSim, team: int, player: bool, rng: Ra
    h.season_damage = h.get("season_damage", 0.0) + u.damage
    h.season_healing = h.get("season_healing", 0.0) + u.healing
    h.season_blocked = h.get("season_blocked", 0.0) + u.blocked
-  h.xp += roundi((80 if sim.winner == team else 65) * xp_scale)
-  while h.level < 20 and h.xp >= HeroData.xp_needed(h.level):
-   h.xp -= HeroData.xp_needed(h.level); h.level += 1
-   if player: HeroData.queue_reward(h, h.level, sim.winner == team, rng.randi())
-   else:
-    var cards = HeroData.choices(h, sim.winner == team, rng)
-    h.last_offers = cards.map(func(c): return c.key)
-    HeroData.apply_choice(h, cards[rng.randi_range(0, cards.size() - 1)])
+  var base = roundi((80 if sim.winner == team else 65) * xp_scale)
+  gain_xp(h, roundi(base * xp_share(h, heroes, sim, team)) if player else base, sim.winner == team, player, rng)
+ # Focused reserves train on the sidelines and still earn a share.
+ if player:
+  for h in heroes:
+   if h.slot < 0 and h.get("xp_priority", "normal") == "focus":
+    gain_xp(h, roundi((80 if sim.winner == team else 65) * xp_scale * BENCH_TRAINING), sim.winner == team, player, rng)
+
+## XP priority: the fielded squad's XP pool is shared by weight, so focusing a champion speeds them
+## toward Legendary skill rolls (Lv 5+) and evolution (Lv 10) at the others' expense.
+const XP_WEIGHT := {"focus": 1.6, "normal": 1.0, "rest": 0.45}
+const MAX_FOCUS := 2
+const BENCH_TRAINING := 0.35
+
+func xp_share(h: Dictionary, heroes: Array, sim: BattleSim, team: int) -> float:
+ var total = 0.0; var n = 0
+ for u in sim.units:
+  if u.team != team or u.summon: continue
+  for o in heroes:
+   if o.id == u.hero.id: total += XP_WEIGHT.get(o.get("xp_priority", "normal"), 1.0); n += 1
+ if n == 0 or total <= 0.0: return 1.0
+ return XP_WEIGHT.get(h.get("xp_priority", "normal"), 1.0) * n / total
+
+func gain_xp(h: Dictionary, amount: int, won: bool, player: bool, rng: RandomNumberGenerator) -> void:
+ h.xp += amount
+ h.last_xp = amount
+ while h.level < 20 and h.xp >= HeroData.xp_needed(h.level):
+  h.xp -= HeroData.xp_needed(h.level); h.level += 1
+  if player: HeroData.queue_reward(h, h.level, won, rng.randi())
+  else:
+   var cards = HeroData.choices(h, won, rng)
+   h.last_offers = cards.map(func(c): return c.key)
+   HeroData.apply_choice(h, cards[rng.randi_range(0, cards.size() - 1)])
+
+func set_xp_priority(id: String, priority: String) -> bool:
+ var h = hero_by_id(id)
+ if h.is_empty() or not h in state.roster or not XP_WEIGHT.has(priority): return false
+ if priority == "focus" and h.get("xp_priority", "normal") != "focus" and state.roster.filter(func(o): return o.get("xp_priority", "normal") == "focus").size() >= MAX_FOCUS:
+  last_error = "Only %d champions can be focused at once." % MAX_FOCUS; return false
+ h.xp_priority = priority
+ return save()
+
+## Saved formations: up to three named presets of who starts and where.
+const FORMATION_SLOTS := 3
+func save_formation(index: int) -> bool:
+ if index < 0 or index >= FORMATION_SLOTS: return false
+ if not state.has("formations") or not state.formations is Array: state.formations = []
+ while state.formations.size() < FORMATION_SLOTS: state.formations.append({})
+ var slots = {}
+ for h in lineup(): slots[h.id] = int(h.slot)
+ state.formations[index] = {"name": "Formation %d" % (index + 1), "slots": slots}
+ return save()
+
+func load_formation(index: int) -> bool:
+ var list = state.get("formations", [])
+ if index < 0 or index >= list.size() or list[index].is_empty(): last_error = "Nothing saved in that slot yet."; return false
+ var slots: Dictionary = list[index].slots
+ var keep = state.roster.filter(func(h): return slots.has(h.id))
+ if keep.size() < MIN_SQUAD: last_error = "Some champions from that formation have left the guild."; return false
+ for h in state.roster: h.slot = int(slots[h.id]) if slots.has(h.id) else -1
+ return save()
 
 func record_club(club: Dictionary, outcome: int) -> void:
  if outcome == 0: club.wins += 1

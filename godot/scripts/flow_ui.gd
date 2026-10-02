@@ -38,6 +38,13 @@ class Glyph extends Control:
 					draw_line(a, b, Color("dfe6ee"), maxf(2.0, s * 0.11), true)
 					var g = a.lerp(b, 0.24); var n = (b - a).normalized().orthogonal() * s * 0.16
 					draw_line(g - n, g + n, Color("ffd36e"), maxf(2.0, s * 0.09), true)
+			"star":
+				var pts = PackedVector2Array()
+				for i in range(10):
+					var a = -PI * 0.5 + i * PI / 5.0; var r = s * (0.46 if i % 2 == 0 else 0.2)
+					pts.append(c + Vector2(cos(a), sin(a)) * r)
+				draw_colored_polygon(pts, Color("ffd36e"))
+				var ring = pts.duplicate(); ring.append(pts[0]); draw_polyline(ring, Color("8a5a12"), maxf(1.0, s * 0.05), true)
 			"roll":
 				draw_arc(c, s * 0.32, 0.4, TAU - 0.4, 24, Color("c8ff9d"), maxf(2.0, s * 0.11), true)
 				var tip = c + Vector2(cos(0.4), sin(0.4)) * s * 0.32

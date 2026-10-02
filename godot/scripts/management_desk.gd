@@ -219,7 +219,14 @@ func market() -> void:
 ## Warn when a pick would leave too little gold to field a full five.
 func draft_with_check(h: Dictionary) -> void:
  var go = func():
-  if campaign.recruit(h.id): game.selected_id = h.id; game.sound.cue("upgrade", true); game.sound.announce(h.sp, true); game.render()
+  if campaign.recruit(h.id):
+   game.selected_id = h.id; game.sound.cue("upgrade", true); game.sound.announce(h.sp, true)
+   # Squad complete (a full five, or an elite four with no gold left for another): go to the roster.
+   var n = campaign.lineup().size()
+   if n >= Campaign.MAX_SQUAD or (n >= Campaign.MIN_SQUAD and int(state.gold) < League.COST_UNIT):
+    state.roster_intro = true; game.tab = "roster"; game.render()
+    FlowUI.banner(game, "SQUAD READY", Color("ffd36e"), "Set formation, tactics and XP focus")
+   else: game.render()
   else: game.toast(campaign.last_error if not campaign.last_error.is_empty() else "Not enough gold or your roster is full.")
  var starters = campaign.lineup().size() + 1
  var left = int(state.gold) - int(h.price)

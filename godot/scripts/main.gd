@@ -68,6 +68,7 @@ func _ready() -> void:
   if arg.begins_with("--capture="): qa_capture = arg.trim_prefix("--capture=")
   if arg.begins_with("--qa_level="): qa_level = int(arg.trim_prefix("--qa_level="))
   if arg.begins_with("--qa_view="): desk_state.view = arg.trim_prefix("--qa_view=")
+  if arg.begins_with("--qa_scroll="): set_meta("qa_scroll", int(arg.trim_prefix("--qa_scroll=")))
  if not qa.is_empty():
   campaign.new_run("Ravenmoor Menagerie", 97, 731)
   League.run_tiers = {}; campaign.state.tiers = {}; campaign.create_market()   # QA uses the classic tiers
@@ -221,7 +222,12 @@ func _ready() -> void:
    if qa=="roster":
     campaign.state.inventory=["fang","ember","coin","moon","archmage","phoenixember","seed"]
     campaign.state.roster[0].equipment={"0":"bastion","1":"fang"};campaign.state.roster[2].equipment={"claw":"sunclaw"}
+    campaign.state.roster_intro=true;campaign.state.roster[0].xp_priority="focus";campaign.state.roster[0].level=4;campaign.state.roster[0].xp=90;campaign.state.roster[3].xp_priority="rest"
+    campaign.save_formation(0)
    render()
+   if has_meta("qa_scroll"):
+    await get_tree().process_frame
+    for sc in ui.find_children("*","ScrollContainer",true,false): sc.scroll_vertical=int(get_meta("qa_scroll"))
  else: render()
  sound.scene_music(SoundDesign.music_for_phase(phase))
  get_tree().auto_accept_quit = false
@@ -607,6 +613,7 @@ func introduce_match() -> void:
  phase = "intro"; render()
 
 func begin_battle() -> void:
+ campaign.state.erase("roster_intro")
  if not campaign.lineup_ready() or not campaign.pending_heroes().is_empty(): return
  if not exhibition and (campaign.state.get("tour",{}).get("shop",false) or campaign.state.get("tour",{}).get("complete",false)): return
  if exhibition or not qa.is_empty() or campaign.save():
