@@ -176,11 +176,17 @@ func area_ready(u: Dictionary, effect: String, center: Vector2, radius: float) -
 func near_foes(u: Dictionary, center: Vector2, radius: float) -> Array:
  return foes(u).filter(func(e): return e.pos.distance_to(center) <= radius + e.radius)
 
+## Crowd control credit: whoever acted last is credited with the control time they apply to foes.
+var cc_source: Dictionary = {}
+const CC_WEIGHT := {"stun": 1.0, "root": 1.0, "silence": 1.0, "fear": 1.0, "slow": 0.5, "chill": 0.5}
+
 func status(u: Dictionary, key: String, seconds: float) -> void:
  if not u.alive: return
  seconds = Forge.status_mod(u, key, seconds)
  if seconds <= 0.0: return
  if ItemEffects.has(u,"windstep") and key in ["stun","root","slow"]: seconds*=0.7
+ if CC_WEIGHT.has(key) and not cc_source.is_empty() and cc_source.team != u.team:
+  cc_source.cc = cc_source.get("cc", 0.0) + seconds * CC_WEIGHT[key]
  u.status[key] = maxf(u.status.get(key, 0.0), seconds)
  if key == "stun" or (key == "silence" and u.has("pending_cast")):
   if u.windup > 0 or u.has("pending_cast"):
@@ -277,6 +283,7 @@ func hurt(source: Dictionary, target: Dictionary, amount: float, magical: bool =
   Forge.on_ally_death(self, target)
 
 func attack(u: Dictionary, target: Dictionary) -> void:
+ cc_source = u
  u.credit = "basic"; track(u,"casts",1)
  emit({"type": "release", "uid": u.uid, "pos": u.pos, "target": target.pos, "ranged": u.range > 2})
  var amount = u.get("attack_basic", u.attack)
@@ -298,6 +305,7 @@ func step(dt: float) -> void:
   if p.remaining <= 0:
    var source = find_unit(p.source); var target = find_unit(p.target)
    if not source.is_empty() and not target.is_empty():
+    cc_source = source
     if p.get("area", false):
      for e in near_foes(source, target.pos, 2.4):
       hurt(source, e, p.amount,true,p.get("credit","basic")); status(e, "stun", 0.6)
@@ -544,6 +552,7 @@ func poison(u: Dictionary, target: Dictionary, seconds: float, power: float, kin
  target.dots.append({"source": u.uid, "kind": kind, "credit":u.credit, "remaining": seconds, "damage": power})
 
 func cast_signature(u: Dictionary, target: Dictionary) -> bool:
+ cc_source = u
  var key = HeroData.species[u.hero.sp].ab
  if not u.get("casting_resolution", false) and u.tactics.target == "natural":
   var candidates = foes(u).filter(func(e): return u.pos.distance_to(e.pos) <= 8.5)
@@ -656,6 +665,7 @@ func projectile_ability(u: Dictionary, target: Dictionary, power: float) -> void
  launch(u, target, power, 0.75, true, "meteor", true)
 
 func cast_learned(u: Dictionary, target: Dictionary, a: Dictionary, rank: int) -> bool:
+ cc_source = u
  var effect = a.effect
  var support = effect in ["renew", "ward", "rally"]
  if not support and u.pos.distance_to(target.pos) > a.range: return false
@@ -722,6 +732,7 @@ func cast_learned(u: Dictionary, target: Dictionary, a: Dictionary, rank: int) -
 
 ## The twist that makes each learned skill unique.
 func apply_rider(u: Dictionary, target: Dictionary, rider: String, power: float) -> void:
+ cc_source = u
  if rider == "none" or rider == "": return
  var foe_ok = not target.is_empty() and target.get("alive", false) and target.team != u.team
  if rider in ["burn", "venom", "chill", "stun", "root", "weaken", "silence", "echo"] and not foe_ok: return
@@ -763,5 +774,5 @@ func report_rows() -> Array:
  var rows = []
  for u in units:
   if u.summon: continue
-  rows.append({"id":u.hero.id,"name":u.hero.name,"sp":u.hero.sp,"team":u.team,"damage":u.damage,"healing":u.healing,"taken":u.damage_taken,"healing_received":u.healing_received,"blocked":u.blocked,"kills":u.kills,"alive":u.alive,"hp":u.hp,"max_hp":u.max_hp,"ability_stats":u.ability_stats.duplicate(true),"timeline":u.timeline.duplicate(true)})
+  rows.append({"id":u.hero.id,"name":u.hero.name,"sp":u.hero.sp,"team":u.team,"damage":u.damage,"healing":u.healing,"taken":u.damage_taken,"healing_received":u.healing_received,"blocked":u.blocked,"kills":u.kills,"cc":u.get("cc",0.0),"alive":u.alive,"hp":u.hp,"max_hp":u.max_hp,"ability_stats":u.ability_stats.duplicate(true),"timeline":u.timeline.duplicate(true)})
  return rows

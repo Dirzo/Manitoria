@@ -95,7 +95,11 @@ static func formation(desk: ManagementDesk,parent: Node) -> void:
  var frame=PanelContainer.new();parent.add_child(frame);frame.add_theme_stylebox_override("panel",game.style(Color(0.05,0.07,0.1,0.85),Color(0,0,0,0),10,12,0))
  var box=VBoxContainer.new();box.add_theme_constant_override("separation",6);frame.add_child(box)
  var sel=c.hero_by_id(game.selected_id)
- game.label(box,"FORMATION",18,game.GOLD,false)
+ var fh=HBoxContainer.new();box.add_child(fh)
+ game.label(fh,"FORMATION",18,game.GOLD,false).size_flags_horizontal=Control.SIZE_EXPAND_FILL
+ var std=game.button(fh,"Standard",func():
+  if c.standard_formation():game.sound.cue("contest_lock");game.render());std.add_theme_font_size_override("font_size",13)
+ std.tooltip_text="Front-liners to the front, flankers to the middle, ranged to the back."
  game.label(box,("Click a square to move "+str(sel.get("name",""))) if not sel.is_empty() else "Select a champion, then click a square",12,Color("c9d6dc"),false)
  var heads=HBoxContainer.new();box.add_child(heads)
  for t in ["BACK","MIDDLE","FRONT →"]:

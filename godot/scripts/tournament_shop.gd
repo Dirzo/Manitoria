@@ -11,9 +11,14 @@ static func build(game: Node) -> void:
  title.mouse_filter=Control.MOUSE_FILTER_STOP;title.tooltip_text="Drag gear onto a champion. Two components on one champion forge a finished item."
  title.size_flags_horizontal=0;title.custom_minimum_size.x=150
  FlowUI.fight_summary(game,tabs)
- var left=game.scroll_panel(Rect2(26,212,950,475));left.add_theme_constant_override("separation",8)
+ var has_report=not c.state.get("report",{}).get("rows",[]).is_empty()
+ var left=game.scroll_panel(Rect2(26,212,950,378 if has_report else 475));left.add_theme_constant_override("separation",8)
  var grid=GridContainer.new();grid.columns=3;grid.add_theme_constant_override("h_separation",12);grid.add_theme_constant_override("v_separation",12);left.add_child(grid)
  for index in range(c.state.tour.stock.size()):offer(game,grid,hero,index)
+ # Last round's numbers per champion, so purchases answer what actually happened.
+ if has_report:
+  var gp=game.panel(Rect2(26,598,950,98));gp.add_theme_constant_override("separation",2)
+  var g=LastRoundGraph.make(game,gp,88)
  var right=game.panel(Rect2(993,130,581,626));right.add_theme_constant_override("separation",10)
  game.label(right,"YOUR TEAM",14,game.GOLD,false)
  GearUI.team_strip(game,right,31)
@@ -25,10 +30,9 @@ static func build(game: Node) -> void:
  var slots=HBoxContainer.new();slots.add_theme_constant_override("separation",12);gear.add_child(slots)
  for key in GearUI.SLOT_KEYS:
   GearUI.slot(game,slots,hero,key,62)
- TraitUI.line(game,gear,hero)
  TraitUI.rolls(game,gear,hero,true)
  GearUI.recommended_row(game,right,hero,40)
- ChampionKit.build(game,right,hero,150)
+ ChampionKit.build(game,right,hero,96)
  var bag=game.panel(Rect2(26,703,950,178));bag.add_theme_constant_override("separation",8);GearUI.bag(game,bag,hero)
  var actions=HBoxContainer.new();game.ui.add_child(actions);actions.position=Vector2(993,780);actions.size=Vector2(581,62);actions.add_theme_constant_override("separation",10)
  var cost=25+15*int(c.state.tour.get("rerolls",0))
@@ -52,14 +56,14 @@ static func offer(game: Node,parent: Node,hero: Dictionary,index: int) -> void:
  var c: Campaign=game.campaign;var id=str(c.state.tour.stock[index]);var sold=id==""
  var item=Forge.info(id) if not sold else {}
  var tint=Color("6c818b") if sold else (Color("ff9be0") if item.get("wild",false) else (Color("9fd4c6") if item.kind=="component" else Color("ffd36e")))
- var tile=FantasyFrame.new();tile.accent=tint;tile.custom_minimum_size=Vector2(290,190);parent.add_child(tile)
+ var tile=FantasyFrame.new();tile.accent=tint;tile.custom_minimum_size=Vector2(290,150);parent.add_child(tile)
  tile.add_theme_stylebox_override("panel",game.style(Color(.09,.06,.17,.94),tint,10,10,0))
  var box=VBoxContainer.new();box.add_theme_constant_override("separation",5);tile.add_child(box)
  if sold:
   game.label(box,"SOLD",22,game.MUTED);game.label(box,"Refresh for new offers.",14,game.MUTED);return
  var row=HBoxContainer.new();box.add_child(row)
  var data={"kind":"offer","id":id,"index":index}
- var art=GearUI.token(game,row,item,96);art.payload=data;art.pressed.connect(func():GearUI.inspect(game,item,data))
+ var art=GearUI.token(game,row,item,80);art.payload=data;art.pressed.connect(func():GearUI.inspect(game,item,data))
  var info=VBoxContainer.new();info.size_flags_horizontal=Control.SIZE_EXPAND_FILL;info.add_theme_constant_override("separation",4);row.add_child(info)
  game.label(info,item.name,18)
  game.label(info,("★ LEGENDARY · WILD" if item.get("wild",false) else "FINISHED ITEM") if item.kind=="item" else "COMPONENT",12,Color("ffd36e") if item.get("wild",false) else tint)

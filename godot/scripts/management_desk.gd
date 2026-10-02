@@ -221,12 +221,7 @@ func draft_with_check(h: Dictionary) -> void:
  var go = func():
   if campaign.recruit(h.id):
    game.selected_id = h.id; game.sound.cue("upgrade", true); game.sound.announce(h.sp, true)
-   # Squad complete (a full five, or an elite four with no gold left for another): go to the roster.
-   var n = campaign.lineup().size()
-   if n >= Campaign.MAX_SQUAD or (n >= Campaign.MIN_SQUAD and int(state.gold) < League.COST_UNIT):
-    state.roster_intro = true; game.tab = "roster"; game.render()
-    FlowUI.banner(game, "SQUAD READY", Color("ffd36e"), "Set formation, tactics and XP focus")
-   else: game.render()
+   game.render()
   else: game.toast(campaign.last_error if not campaign.last_error.is_empty() else "Not enough gold or your roster is full.")
  var starters = campaign.lineup().size() + 1
  var left = int(state.gold) - int(h.price)
@@ -292,8 +287,12 @@ func profile(h: Dictionary, yours: bool) -> void:
  var right = column(split)
  text(right, "SIGNATURE  /  RANK %d" % h.signature_rank, 13, GOLD)
  text(right, HeroData.species[h.sp].ability_name, 25)
+ var full_text = FlowUI.detailed(game)
  var sig = text(right, HeroData.signature_summary(h.sp), 18, WHITE); sig.tooltip_text = HeroData.species[h.sp].ability_description; sig.mouse_filter = Control.MOUSE_FILTER_STOP
- text(right, "ABILITY KIT · %d / %d" % [h.learned.size()+1, HeroData.ABILITY_SLOTS], 13, GOLD)
+ if full_text: text(right, HeroData.species[h.sp].ability_description, 14, Color("c9d6dc"))
+ var kit_head = HBoxContainer.new(); right.add_child(kit_head)
+ text(kit_head, "ABILITY KIT · %d / %d" % [h.learned.size()+1, HeroData.ABILITY_SLOTS], 13, GOLD).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ FlowUI.detail_toggle(game, kit_head)
  for key in h.learned:
   var i = int(key)
   var ability = HeroData.learned_ability(h.sp, i); var rank = int(h.learned.get(str(i), 0))
@@ -305,7 +304,8 @@ func profile(h: Dictionary, yours: bool) -> void:
   text(ability_text, ability.name + (" · Rank %d" % rank if rank > 0 else " · Not learned"), 20, TEAL if rank > 0 else WHITE)
   text(ability_text,rarity.to_upper(),12,RarityStyle.color(rarity))
   var sm = text(ability_text, ability.summary, 17, WHITE); sm.tooltip_text = ability.description; sm.mouse_filter = Control.MOUSE_FILTER_STOP
-  text(ability_text, "%.1fs cooldown · hover for details" % CombatPacing.ability_cd(h, key), 12, MUTED)
+  if full_text: text(ability_text, ability.description, 14, Color("c9d6dc"))
+  text(ability_text, "%.1fs cooldown" % CombatPacing.ability_cd(h, key) + ("" if full_text else " · hover for details"), 12, MUTED)
  if h.learned.size()+1 < HeroData.ABILITY_SLOTS:
   text(right, "%d empty slot%s · level up in the arena to learn more" % [HeroData.ABILITY_SLOTS-h.learned.size()-1, "" if HeroData.ABILITY_SLOTS-h.learned.size()-1 == 1 else "s"], 15, MUTED)
  # The full skill book: every skill this species can learn, each one its own.
@@ -318,7 +318,10 @@ func profile(h: Dictionary, yours: bool) -> void:
   var ic = AbilityArt.icon(cell, "discovery:%s:%d" % [h.sp, i], 44); ic.modulate = Color.WHITE if owned else Color(0.7, 0.7, 0.75)
   var words = VBoxContainer.new(); words.add_theme_constant_override("separation", -2); cell.add_child(words)
   game.label(words, sk.name + ("  ✓" if owned else ""), 14, TEAL if owned else WHITE, false)
-  game.label(words, sk.summary, 12, MUTED, false)
+  if full_text:
+   words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+   var dl = game.label(words, sk.description, 12, MUTED, true); dl.custom_minimum_size.x = 320
+  else: game.label(words, sk.summary, 12, MUTED, false)
  var evolution = h.get("evolution", "")
  text(right, "EVOLUTION · " + (HeroData.evolution_info(h).name if not evolution.is_empty() else "Unlocks at level 10"), 15, GOLD)
  text(right, HeroData.evolution_info(h).description if not evolution.is_empty() else "Choose Ravager, Guardian or Arcanist to change combat strengths and visual effects.", 16, MUTED)

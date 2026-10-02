@@ -325,6 +325,9 @@ func render() -> void:
  if phase in ["hub", "menu", "new", "shop", "starter", "intro", "runover"]:
   sim = null
   var backdrop=ClubBackdrop.new();backdrop.theme_name=ClubBackdrop.theme_for(self);backdrop.shade=.08 if phase=="menu" else .30;ui.add_child(backdrop)
+ if phase == "hub" and campaign.state.get("goto_roster", false):
+  campaign.state.erase("goto_roster"); tab = "roster"
+  get_tree().process_frame.connect(func(): FlowUI.banner(self, "SQUAD READY", Color("ffd36e"), "Set formation, tactics and XP focus"), CONNECT_ONE_SHOT)
  build_header()
  if phase == "menu": build_menu()
  elif phase == "new": build_new()
@@ -808,6 +811,7 @@ func build_upgrade() -> void:
  label(details, "%s · Level %d" % [h.name, reward_level], 28)
  label(details, "%s  /  %s" % [HeroData.species[h.sp].n, HeroData.species[h.sp].role], 20, GOLD)
  label(details, "Choose an evolution to define this hero’s build." if h.pending[0][0].type == "evolution" else "%d / %d abilities · Discover your kit, then rank up your chosen abilities." % [h.learned.size()+1, HeroData.ABILITY_SLOTS], 18, MUTED)
+ FlowUI.detail_toggle(self, identity).size_flags_vertical = Control.SIZE_SHRINK_BEGIN
  var row = HBoxContainer.new(); box.add_child(row)
  for index in range(h.pending[0].size()):
   var card = h.pending[0][index]
@@ -828,10 +832,13 @@ func build_upgrade() -> void:
    pulse.bind_node(banner)
    sound.cue("upgrade", true)
   label(content, card.name, 23)
-  var description = label(content, card.get("summary", card.description), 17, WHITE); description.max_lines_visible = 3; description.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+  var full_text = FlowUI.detailed(self)
+  var description = label(content, card.description if full_text else card.get("summary", card.description), 15 if full_text else 17, WHITE)
+  if not full_text: description.max_lines_visible = 3; description.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
   description.tooltip_text = card.description; description.mouse_filter = Control.MOUSE_FILTER_STOP
   if card.get("upgrade", false): label(content, "▲ UPGRADES A SKILL YOU OWN", 12, Color("6fe08a"))
-  var more = label(content, "Hover for full details", 11, MUTED); more.tooltip_text = card.description; more.mouse_filter = Control.MOUSE_FILTER_STOP
+  if not full_text:
+   var more = label(content, "Hover for full details", 11, MUTED); more.tooltip_text = card.description; more.mouse_filter = Control.MOUSE_FILTER_STOP
   var spacer = Control.new(); spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL; content.add_child(spacer)
   button(content,"Preview in arena",func():
    var demo=AbilityPreview.new();demo.game=self;demo.hero=h.duplicate(true);demo.card=card.duplicate(true);ui.add_child(demo);demo.build())

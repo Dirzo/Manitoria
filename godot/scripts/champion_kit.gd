@@ -10,7 +10,10 @@ static func entries(hero: Dictionary) -> Array:
  return list
 
 static func build(game: Node,parent: Node,hero: Dictionary,height: int=235) -> void:
- var title=game.label(parent,"CURRENT ABILITIES · %d / 4"%(hero.learned.size()+1),13,game.GOLD,false)
+ var head=HBoxContainer.new();parent.add_child(head)
+ var title=game.label(head,"CURRENT ABILITIES · %d / 4"%(hero.learned.size()+1),13,game.GOLD,false);title.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+ FlowUI.detail_toggle(game,head)
+ var detailed=FlowUI.detailed(game)
  title.tooltip_text="Only learned abilities are shown. Read the effects before selecting equipment."
  var scroll=ScrollContainer.new();scroll.custom_minimum_size.y=height;scroll.horizontal_scroll_mode=ScrollContainer.SCROLL_MODE_DISABLED;parent.add_child(scroll);scroll.name="ChampionAbilities"
  var column=VBoxContainer.new();column.size_flags_horizontal=Control.SIZE_EXPAND_FILL;column.add_theme_constant_override("separation",12);scroll.add_child(column)
@@ -27,7 +30,8 @@ static func build(game: Node,parent: Node,hero: Dictionary,height: int=235) -> v
   var tip=entry.description+"\n"+info
   sm.tooltip_text=tip;det.tooltip_text=tip;icon.tooltip_text=tip
   # Click "details" to unfold the full text in place.
-  var full=game.label(text,entry.description,14,Color("c9d6dc"));full.visible=false
+  var full=game.label(text,entry.description,14,Color("c9d6dc"));full.visible=detailed
+  if detailed:det.text=info+"  ·  details ▴"
   det.gui_input.connect(func(ev):
    if ev is InputEventMouseButton and ev.pressed and ev.button_index==MOUSE_BUTTON_LEFT:full.visible=not full.visible;det.text=info+("  ·  details ▴" if full.visible else "  ·  details ▾"))
  if not hero.get("evolution","").is_empty():

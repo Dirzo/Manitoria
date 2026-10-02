@@ -47,14 +47,18 @@ func recruit(id: String) -> bool:
   if h.id == id and state.gold >= h.price:
    state.gold -= h.price
    if lineup().size() < 5:
-    for slot in FORMATION:
-     if not lineup().any(func(b): return b.slot == slot): h.slot = slot; break
+    h.slot = standard_slot(h, lineup().map(func(b): return b.slot))
    var at = state.market.find(h)
    state.roster.append(h); state.market.erase(h)
    state.market.insert(at, draft_prospect(h.sp))   # the board always keeps one of each creature
    if state.get("headliner", "").is_empty(): state.headliner=h.id
    add_news("New signing · " + h.name, "%s joins your %s line." % [HeroData.species[h.sp].n, HeroData.line(h.sp).to_lower()])
-   state.selected = h.id; return save()
+   state.selected = h.id
+   # Squad complete (a full five, or an elite four with too little gold for another): show the roster next.
+   var n = lineup().size()
+   if not state.get("draft_done", false) and (n >= MAX_SQUAD or (n >= MIN_SQUAD and int(state.gold) < League.COST_UNIT)):
+    state.draft_done = true; state.roster_intro = true; state.goto_roster = true
+   return save()
  return false
 
 func refresh_market() -> bool:
@@ -76,6 +80,27 @@ func hero_by_id(id: String) -> Dictionary:
   for h in club.roster:
    if h.id == id: return h
  return {}
+
+## Standard formation: front-liners in the front column, flankers in the middle, ranged at the back.
+## The grid is 5 rows x 3 columns (slot = row * 3 + column; column 0 back, 1 middle, 2 front).
+const LINE_COLUMN := {"Front": 2, "Flank": 1, "Back": 0}
+const ROW_ORDER := [2, 1, 3, 0, 4]
+func standard_slot(h: Dictionary, taken: Array) -> int:
+ var col = LINE_COLUMN.get(HeroData.line(h.sp), 1)
+ for c in [col, 1, 2 if col == 0 else 0, 0 if col == 2 else 2]:
+  for r in ROW_ORDER:
+   if not (r * 3 + c) in taken: return r * 3 + c
+ return -1
+
+func standard_formation() -> bool:
+ var starters = lineup()
+ if starters.is_empty(): return false
+ # Fill the front first, then flank, then back, so each column stays centred.
+ starters.sort_custom(func(a, b): return LINE_COLUMN.get(HeroData.line(a.sp), 1) > LINE_COLUMN.get(HeroData.line(b.sp), 1))
+ var taken = []
+ for h in starters:
+  h.slot = standard_slot(h, taken); taken.append(h.slot)
+ return save()
 
 func place_hero(id: String, slot: int) -> bool:
  if slot < 0 or slot >= 15: return false
@@ -414,8 +439,8 @@ func suggest_lineup() -> bool:
   if not options.is_empty(): picks.append(options[0]); pool.erase(options[0])
  while picks.size() < mini(5, state.roster.size()): picks.append(pool.pop_front())
  for h in state.roster: h.slot = -1
- for i in range(picks.size()): picks[i].slot = FORMATION[i]
- return save()
+ for p in picks: p.slot = 0
+ return standard_formation()
 
 func season_leaders(metric: String = "impact", per_bout: bool = true) -> Array:
  var rows = []
@@ -1420,7 +1445,7 @@ func choose_starter(sp: String) -> bool:
  elif not hero.is_empty():state.market.erase(hero)
  if hero.is_empty():
   hero=HeroData.make_hero(sp,"h%d"%state.next_id,HeroData.themed_name(sp,"h%d"%state.next_id));state.next_id+=1
- hero.slot={"Front":FORMATION[0],"Flank":FORMATION[2],"Back":FORMATION[3]}[HeroData.line(sp)];hero.price=League.cost(sp);state.roster.append(hero)
+ hero.slot=standard_slot(hero,[]);hero.price=League.cost(sp);state.roster.append(hero)
  state.headliner=hero.id;state.selected=hero.id;state.gold-=hero.price
  draft_rivals()
  add_news("Your headliner",hero.name+" leads "+state.name+" into the arena.")

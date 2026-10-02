@@ -107,6 +107,19 @@ static func banner(game: Node, text: String, color := Color("ffe9b8"), sub := ""
 	t.tween_interval(0.9); t.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	t.tween_property(holder, "modulate:a", 0.0, 0.35); t.tween_callback(holder.queue_free)
 
+## "Detailed descriptions" setting: full ability text shown in place instead of only on hover.
+static func detailed(game: Node) -> bool:
+	return bool(game.campaign.state.get("detailed", false)) if game.campaign and not game.campaign.state.is_empty() else false
+
+static func detail_toggle(game: Node, parent: Node) -> CheckBox:
+	var cb = CheckBox.new(); cb.text = "Detailed descriptions"; cb.button_pressed = detailed(game); cb.focus_mode = Control.FOCUS_NONE
+	cb.add_theme_font_size_override("font_size", 13); cb.add_theme_color_override("font_color", Color("c9d6dc")); cb.add_theme_color_override("font_pressed_color", Color("ffd36e"))
+	cb.tooltip_text = "Show every ability's full description instead of a one-line summary."
+	cb.toggled.connect(func(on):
+		if game.campaign.state.is_empty(): return
+		game.campaign.state.detailed = on; game.campaign.save(); game.render())
+	parent.add_child(cb); return cb
+
 ## A styled yes/no popup. on_yes runs only if the player confirms.
 static func confirm(game: Node, title: String, body: String, yes_text: String, on_yes: Callable, no_text := "Cancel") -> void:
 	var dialog = GearUI.modal(game, title, Vector2(720, 330))
