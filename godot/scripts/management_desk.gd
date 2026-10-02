@@ -202,12 +202,15 @@ func market() -> void:
    "draft_text": "Draft · %d gold" % h.price if DraftBoard.view(game) == "Grid" else "%d gold" % h.price,
    "on_draft": func(): draft_with_check(h),
    "draft_disabled": state.gold < h.price or state.roster.size() >= 12 or state.roster.is_empty()}
+ # Once the headliner and an Epic are signed (or Epics are out of reach), Commons lead the board.
+ var has_epic = state.roster.any(func(h): return League.tier(h.sp) == "Epic")
+ var tier_order = ["Common", "Epic"] if not state.roster.is_empty() and (has_epic or state.gold < League.COST_UNIT * 2) else ["Epic", "Common"]
  if DraftBoard.view(game) == "Table":
   var ordered = []
-  for t in ["Epic", "Common"]: ordered.append_array(pool.filter(func(h): return League.tier(h.sp) == t))
+  for t in tier_order: ordered.append_array(pool.filter(func(h): return League.tier(h.sp) == t))
   DraftBoard.table(game, body, TraitUI.sorted(ordered, sort), opts)
   return
- for t in ["Epic", "Common"]:
+ for t in tier_order:
   var heroes = TraitUI.sorted(pool.filter(func(h): return League.tier(h.sp) == t), sort)
   if heroes.is_empty(): continue
   text(body, "%s  ·  %d gold" % [t.to_upper(), League.cost(heroes[0].sp)], 22, Color(League.TIER_COLOR[t]))

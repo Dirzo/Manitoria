@@ -70,6 +70,7 @@ func _ready() -> void:
   if arg.begins_with("--qa_view="): desk_state.view = arg.trim_prefix("--qa_view=")
  if not qa.is_empty():
   campaign.new_run("Ravenmoor Menagerie", 97, 731)
+  League.run_tiers = {}; campaign.state.tiers = {}; campaign.create_market()   # QA uses the classic tiers
   # QA club: Jackalope headliner plus a full five from the draft board (exactly the 8-unit budget).
   var qa_picks = ["jackalope", "golem", "troll", "harpy", "naga"]
   for i in range(qa_picks.size()):
@@ -984,7 +985,7 @@ func show_opponent_scout() -> void:
  dialog.dialog_text = "\n\n".join(lines); dialog.popup_centered(Vector2i(650, 600))
 
 func start_exhibition() -> void:
- exhibition = true; campaign = Campaign.new(); campaign.new_run("The Dawn Champions",99,7913)
+ exhibition = true; campaign = Campaign.new(); campaign.new_run("The Dawn Champions",99,7913); League.run_tiers = {}; campaign.state.tiers = {}; campaign.create_market()
  campaign.state.roster = []; exhibition_rivals = []
  for team in range(2):
   for i in range(5):

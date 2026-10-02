@@ -16,15 +16,15 @@ static func portrait(parent: Node,hero: Dictionary,pixels: int) -> Control:
  return SplashArt.make(parent,hero.sp,Vector2(int(pixels*0.8),pixels))
 
 static func starter(game: Node) -> void:
- var chosen=str(game.get_meta("starter_species","jackalope"))
- if League.tier(chosen)!="Legendary":chosen="jackalope"
+ var chosen=str(game.get_meta("starter_species",""))
+ if League.tier(chosen)!="Legendary":chosen=str(League.tiers().Legendary[0])
  var pool=game.campaign.legend_pool()
  var hero=pool.get(chosen,HeroData.make_hero(chosen,"preview","Your headliner"))
  var heading=game.label(game.ui,"SIGN YOUR HEADLINER",36,game.GOLD,false);heading.position=Vector2(34,128)
  var bar=HBoxContainer.new();game.ui.add_child(bar);bar.position=Vector2(34,180);bar.size=Vector2(960,44)
  DraftBoard.view_bar(game,bar)
  var left=game.scroll_panel(Rect2(26,232,970,645))
- var legends=TraitUI.sorted(League.TIERS.Legendary.map(func(sp):return pool.get(sp,{})).filter(func(h):return not h.is_empty()),str(game.desk_state.get("sort","Board")))
+ var legends=TraitUI.sorted(League.tiers().Legendary.map(func(sp):return pool.get(sp,{})).filter(func(h):return not h.is_empty()),str(game.desk_state.get("sort","Board")))
  var opts=func(h):
   return {"selected":h.sp==chosen,"on_select":func():game.set_meta("starter_species",h.sp);game.sound.cue("contest_reveal");game.sound.announce(h.sp);game.render()}
  if DraftBoard.view(game)=="Table":

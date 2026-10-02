@@ -44,10 +44,13 @@ static func rolls(game: Node, parent: Node, hero: Dictionary, compact := false) 
 	game.label(head, "STATS %d/%d" % [total, HeroData.ROLL_MAX * HeroData.ROLL_KEYS.size()], 13, tc, false).tooltip_text = "Sum of all six stat rolls."
 	var fit_text = "GREAT FIT" if fit >= 0.35 else ("GOOD FIT" if fit >= 0.1 else ("POOR FIT" if fit <= -0.25 else "OK FIT"))
 	var fit_col = Color("6fe08a") if fit >= 0.1 else (Color("ff5e5e") if fit <= -0.25 else Color("d6e86a"))
-	var fl = game.label(head, fit_text + "  ·  " + fit_reason(hero, true), 13, fit_col, false); fl.mouse_filter = Control.MOUSE_FILTER_STOP
+	# Compact cards put the fit verdict on its own clipped line so it can never widen the card.
+	var fl = game.label(parent if compact else head, fit_text + "  ·  " + fit_reason(hero, true), 13, fit_col, false); fl.mouse_filter = Control.MOUSE_FILTER_STOP
 	fl.tooltip_text = fit_reason(hero)
 	if compact:
-		var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 4); parent.add_child(row)
+		head.alignment = BoxContainer.ALIGNMENT_CENTER
+		fl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; fl.clip_text = true; fl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS; fl.custom_minimum_size.x = 40
+		var row = HFlowContainer.new(); row.add_theme_constant_override("h_separation", 4); row.add_theme_constant_override("v_separation", 3); row.alignment = FlowContainer.ALIGNMENT_CENTER; parent.add_child(row)
 		for k in HeroData.ROLL_KEYS:
 			var v = int(r[k]); var chip = PanelContainer.new(); row.add_child(chip)
 			chip.add_theme_stylebox_override("panel", game.style(HeroData.roll_color(v).darkened(0.55 if w.has(k) else 0.8), HeroData.roll_color(v), 5, 3, 0))

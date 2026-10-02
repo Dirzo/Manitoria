@@ -14,6 +14,8 @@ func new_run(club_name: String, slot: int, seed_value: int = 0, difficulty: Stri
  var seed_used = seed_value if seed_value else int(Time.get_unix_time_from_system())
  HeroData.run_salt = str(seed_used) + ("" if seed_value else "|" + str(randi()))
  state = {"version": SAVE_VERSION, "name": club_name.strip_edges().left(36) if not club_name.strip_edges().is_empty() else "Ravenmoor Menagerie", "slot": slot, "seed": seed_used, "season": 1, "round": 0, "gold": League.START_GOLD, "earned_gold": 0, "roster": [], "market": [], "clubs": [], "schedule": [], "report": {}, "wins": 0, "losses": 0, "draws": 0, "difficulty": difficulty, "selected": "", "trophies": 0, "history": [], "next_id": 100, "music": true, "effects": true, "guide_seen": false}
+ # Fresh tiers every run: a random headliner and Epic from each of the eight niches.
+ state.tiers = League.roll_tiers(HeroData.run_salt); League.run_tiers = state.tiers
  var rng = RandomNumberGenerator.new(); rng.seed = seed_used
  create_market(rng)
  # Rival clubs are drafted once the player has signed a headliner (each club gets a different one).
@@ -31,7 +33,7 @@ func new_run(club_name: String, slot: int, seed_value: int = 0, difficulty: Stri
 func create_market(_rng: RandomNumberGenerator = null) -> void:
  state.market = []
  for t in ["Epic", "Common"]:
-  for sp in League.TIERS[t]: state.market.append(draft_prospect(sp))
+  for sp in League.tiers()[t]: state.market.append(draft_prospect(sp))
 
 func draft_prospect(sp: String) -> Dictionary:
  var h = HeroData.make_hero(sp, "h%d" % state.next_id, HeroData.NAMES[(int(state.next_id) - 100) % HeroData.NAMES.size()])
@@ -107,7 +109,7 @@ func choose(id: String, index: int) -> bool:
 
 func quality() -> float:
  if state.has("tour"):
-  var base=0.95 if state.difficulty=="Keeper" else (1.06+minf(0.08,0.014*(int(state.tour.level)-1))) if state.difficulty=="Champion" else 1.0
+  var base=0.95 if state.difficulty=="Keeper" else (1.0+minf(0.08,0.011*(int(state.tour.level)-1))) if state.difficulty=="Champion" else 1.0
   if state.difficulty=="Keeper" and state.tour.level==4:base-=0.10
   return base+mini(3,int(state.tour.bout))*0.025
  if state.difficulty == "Keeper": return minf(0.96, 0.90 + state.round * 0.004)
@@ -292,6 +294,7 @@ func load_slot(slot: int) -> bool:
   if not valid(data): last_error = "This save cannot be read. Its files have been kept."; return false
  state = data; state.slot = slot
  HeroData.run_salt = str(state.get("salt", state.get("seed", "")))
+ League.run_tiers = state.get("tiers", {}) if state.get("tiers") is Dictionary else {}
  ensure_management()
  return true
 
@@ -1341,7 +1344,7 @@ func headliner() -> Dictionary:
 func legend_pool() -> Dictionary:
  if not state.has("legends") or not state.legends is Dictionary or state.legends.is_empty():
   state.legends={}
-  for sp in League.TIERS.Legendary:
+  for sp in League.tiers().Legendary:
    var h=HeroData.make_hero(sp,"h%d"%state.next_id,HeroData.NAMES[(int(state.next_id)-100)%HeroData.NAMES.size()]);state.next_id+=1
    h.price=League.cost(sp);state.legends[sp]=h
  return state.legends
@@ -1367,7 +1370,7 @@ func choose_starter(sp: String) -> bool:
 ## Draft the seven rival clubs around the headliners the player did not take.
 func draft_rivals() -> void:
  var mine = state.roster.map(func(h): return h.sp)
- var free = League.TIERS.Legendary.filter(func(sp): return sp not in mine)
+ var free = League.tiers().Legendary.filter(func(sp): return sp not in mine)
  var rng = RandomNumberGenerator.new(); rng.seed = int(state.seed) + 4242
  for i in range(free.size() - 1, 0, -1):
   var j = rng.randi_range(0, i); var tmp = free[i]; free[i] = free[j]; free[j] = tmp

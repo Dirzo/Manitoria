@@ -8,10 +8,10 @@ static func build(desk: ManagementDesk) -> void:
  game.button(top,"Formation",game.prepare_match,true,c.state.roster.size()<Campaign.MIN_SQUAD)
  game.button(top,"Recruit",func():desk.navigate("market"))
  if hero.is_empty():game.label(desk.body,"Recruit your first champion to begin.",25);return
- var row=HBoxContainer.new();row.add_theme_constant_override("separation",14);desk.body.add_child(row)
+ var row=HBoxContainer.new();row.add_theme_constant_override("separation",12);desk.body.add_child(row)
  for h in c.lineup():champion(desk,row,h)
  for i in range(5-c.lineup().size()):
-  var empty=FantasyFrame.new();empty.custom_minimum_size=Vector2(286,338);row.add_child(empty)
+  var empty=FantasyFrame.new();empty.custom_minimum_size=Vector2(280,338);row.add_child(empty)
   var box=VBoxContainer.new();empty.add_child(box);game.label(box,"+",62,game.GOLD).horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
   game.button(box,"Recruit",func():desk.navigate("market"))
  var bench=TraitUI.sorted(c.state.roster.filter(func(h):return h.slot<0),game.desk_state.get("sort","Board"))
@@ -31,11 +31,11 @@ static func build(desk: ManagementDesk) -> void:
 
 static func champion(desk: ManagementDesk,parent: Node,h: Dictionary) -> void:
  var game=desk.game;var selected=h.id==game.selected_id
- var frame=FantasyFrame.new();frame.accent=game.GOLD if selected else SkillCombat.tint(h.sp);frame.custom_minimum_size=Vector2(286,360);parent.add_child(frame)
+ var frame=FantasyFrame.new();frame.accent=game.GOLD if selected else SkillCombat.tint(h.sp);frame.custom_minimum_size=Vector2(280,360);parent.add_child(frame)
  frame.add_theme_stylebox_override("panel",game.style(Color(.09,.055,.16,.93),frame.accent,4,12,2))
  var box=VBoxContainer.new();box.add_theme_constant_override("separation",6);frame.add_child(box)
  var name_label=game.label(box,h.name+" · "+str(h.level),24,game.GOLD if selected else game.WHITE);name_label.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
- var preview_holder=GearToken.new();preview_holder.game=game;preview_holder.target_hero=h.id;preview_holder.custom_minimum_size=Vector2(258,172);box.add_child(preview_holder);preview_holder.name="Champion_"+h.id
+ var preview_holder=GearToken.new();preview_holder.game=game;preview_holder.target_hero=h.id;preview_holder.custom_minimum_size=Vector2(252,168);box.add_child(preview_holder);preview_holder.name="Champion_"+h.id
  preview_holder.add_theme_stylebox_override("normal",StyleBoxEmpty.new());preview_holder.pressed.connect(func():game.selected_id=h.id;game.render())
  var preview=SplashArt.new();preview.sp=h.sp;preview_holder.add_child(preview);preview.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT);preview.mouse_filter=Control.MOUSE_FILTER_IGNORE
  var role=game.label(box,HeroData.species[h.sp].n+"  ·  "+("★ " if Traits.is_ideal(h) else "")+Traits.trait_of(h),15,TraitUI.IDEAL if Traits.is_ideal(h) else game.MUTED);role.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER;role.tooltip_text=Traits.describe(h)+"\n"+Traits.scaling_text(h.sp)+" · "+Traits.info(h.sp).calling

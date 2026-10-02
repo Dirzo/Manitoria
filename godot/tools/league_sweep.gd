@@ -6,6 +6,8 @@ func _init() -> void:
 	var wins = 0; var games = 0; var places = {}; var champs = 0; var dead = 0; var reached = 0
 	for r in range(runs):
 		var c = Campaign.new(); c.new_run("Sweep", 95, 5000 + r * 77, OS.get_environment("DIFF"))
+		# Classic tiers keep sweeps comparable across versions.
+		League.run_tiers = {}; c.state.tiers = {}; c.create_market()
 		var legs = League.TIERS.Legendary; c.choose_starter(legs[r % legs.size()])
 		var plan = [["golem", "kirin", "naga"], ["troll", "griffin", "harpy", "pegasus"], ["nemean", "yeti", "wyvern", "naga"], ["minotaur", "treant", "cyclops"]][r % 4]
 		for sp in plan:

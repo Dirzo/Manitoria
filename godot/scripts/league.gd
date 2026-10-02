@@ -12,6 +12,40 @@ const TIERS := {
 	"Common": ["troll", "wendigo", "owlbear", "yeti", "direwolf", "nekomata", "gargoyle", "chimera", "manticore",
 		"wyvern", "harpy", "salamander", "basilisk", "cyclops", "naga", "pegasus"],
 }
+## The eight team niches. Each run, one random creature from every niche becomes a Legendary
+## headliner and another becomes an Epic, so every draft is fresh but every niche is covered.
+const NICHE_GROUPS := {
+	"Anchor": ["golem", "yeti", "zaratan"],
+	"Warden": ["cerberus", "nemean"],
+	"Bruiser": ["minotaur", "troll", "wendigo", "owlbear", "hydra"],
+	"Healer": ["treant", "naga", "unicorn", "pegasus"],
+	"Controller": ["basilisk", "sphinx", "kitsune"],
+	"Caster": ["phoenix", "kirin", "salamander", "arachne"],
+	"Artillery": ["cyclops", "thunderbird", "wyvern", "harpy"],
+	"Skirmisher": ["direwolf", "jackalope", "manticore", "nekomata", "griffin", "gargoyle", "chimera"],
+}
+static var run_tiers: Dictionary = {}
+
+## This run's tiers (falls back to the classic line-up for old saves and tools).
+static func tiers() -> Dictionary:
+	return run_tiers if not run_tiers.is_empty() else TIERS
+
+static func roll_tiers(seed_text: String) -> Dictionary:
+	var rng = RandomNumberGenerator.new(); rng.seed = hash("tiers|" + seed_text)
+	var out = {"Legendary": [], "Epic": [], "Common": []}
+	for niche in NICHE_GROUPS:
+		var pool: Array = NICHE_GROUPS[niche].duplicate()
+		for i in range(pool.size() - 1, 0, -1):
+			var j = rng.randi_range(0, i); var t = pool[i]; pool[i] = pool[j]; pool[j] = t
+		out.Legendary.append(pool[0]); out.Epic.append(pool[1])
+		for k in range(2, pool.size()): out.Common.append(pool[k])
+	return out
+
+static func niche_of(sp: String) -> String:
+	for n in NICHE_GROUPS:
+		if sp in NICHE_GROUPS[n]: return n
+	return ""
+
 const TIER_COST := {"Legendary": 3, "Epic": 2, "Common": 1}
 # Raw strength step between tiers (health and attack).
 const TIER_POWER := {"Legendary": 1.12, "Epic": 1.05, "Common": 1.0}
@@ -57,8 +91,9 @@ const BALANCE := {
 }
 
 static func tier(sp: String) -> String:
-	for t in TIERS:
-		if sp in TIERS[t]: return t
+	var all = tiers()
+	for t in all:
+		if sp in all[t]: return t
 	return "Common"
 
 static func cost(sp: String) -> int:
@@ -231,7 +266,7 @@ static func draft_club(name: String, headliner: String, rng: RandomNumberGenerat
 			for sp in HeroData.species:
 				if sp not in picks and tier(sp) != "Legendary" and HeroData.species[sp].role in lanes[i] and (tier(sp) == "Epic") == want_epic: pool.append(sp)
 		if pool.is_empty():
-			for sp in TIERS["Epic" if want_epic else "Common"]:
+			for sp in tiers()["Epic" if want_epic else "Common"]:
 				if sp not in picks: pool.append(sp)
 		picks.append(pool[rng.randi_range(0, pool.size() - 1)])
 	var order = _lane_order(picks)

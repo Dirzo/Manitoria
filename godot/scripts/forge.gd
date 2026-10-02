@@ -472,9 +472,9 @@ static func forced_target(sim: BattleSim, u: Dictionary, all: Array) -> Dictiona
 	return best
 
 ## Rival clubs: deterministic loadouts that grow with the tour level.
-## Difficulty shifts how early rivals get their kit: Keeper is two cups behind; Champion also unlocks WILD items for rivals from cup 8.
+## Difficulty shifts how early rivals get their kit: Keeper is a cup behind; Champion is a cup ahead from cup 6 and unlocks WILD items for rivals from cup 8.
 static func rival_loadout(hero: Dictionary, level: int, difficulty: String = "Standard") -> Dictionary:
-	var eff = level + {"Keeper": -1, "Standard": 0, "Champion": 1}.get(difficulty, 0)
+	var eff = level + {"Keeper": -1, "Standard": 0, "Champion": (1 if level >= 6 else 0)}.get(difficulty, 0)
 	var n = 0 if eff < 2 else (1 if eff < 6 else (2 if eff < 12 else 3))
 	var role = HeroData.line(hero.sp)
 	var pool = {"Front": ["bastion", "ironbark", "colossus", "bell", "stoneskin", "titan", "mirror", "aegis", "grail", "acidshell", "smokeplate", "lightningrod"],
