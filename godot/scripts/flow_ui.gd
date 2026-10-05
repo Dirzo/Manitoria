@@ -108,8 +108,9 @@ static func banner(game: Node, text: String, color := Color("ffe9b8"), sub := ""
 	t.tween_property(holder, "modulate:a", 0.0, 0.35); t.tween_callback(holder.queue_free)
 
 ## "Detailed descriptions" setting: full ability text shown in place instead of only on hover.
-static func detailed(game: Node) -> bool:
-	return bool(game.campaign.state.get("detailed", false)) if game.campaign and not game.campaign.state.is_empty() else false
+## Full skill descriptions are always shown (the old summary-only option is gone).
+static func detailed(_game: Node) -> bool:
+	return true
 
 static func detail_toggle(game: Node, parent: Node) -> CheckBox:
 	var cb = CheckBox.new(); cb.text = "Detailed descriptions"; cb.button_pressed = detailed(game); cb.focus_mode = Control.FOCUS_NONE

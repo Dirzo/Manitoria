@@ -229,6 +229,7 @@ func _ready() -> void:
     campaign.save_formation(0)
    render()
    if qa == "settings": FlowUI.settings(self)
+   if qa == "scout": ScoutUI.open(self, campaign.opponent())
    if has_meta("qa_scroll"):
     await get_tree().process_frame
     for sc in ui.find_children("*","ScrollContainer",true,false): sc.scroll_vertical=int(get_meta("qa_scroll"))
@@ -785,6 +786,8 @@ func build_result() -> void:
   else:
    var analytics = MatchAnalytics.new(); analytics.game = self; analytics.report = report; holder.add_child(analytics)
    toggle.text = uncial_text("Hide stats  ▴"))
+ # The graphs open straight away; the button hides them.
+ toggle.pressed.emit()
  var pending = campaign.pending_heroes().size()
  if campaign.state.get("run_over", false) and not exhibition:
   var over = label(box, "KNOCKED OUT · THE RUN IS OVER", 30, Color("ff8a7a"))
@@ -847,7 +850,6 @@ func build_upgrade() -> void:
  label(details, "%s · Level %d" % [h.name, reward_level], 28)
  label(details, "%s  /  %s" % [HeroData.species[h.sp].n, HeroData.species[h.sp].role], 20, GOLD)
  label(details, "Choose an evolution to define this hero’s build." if h.pending[0][0].type == "evolution" else "%d / %d abilities · Discover your kit, then rank up your chosen abilities." % [h.learned.size()+1, HeroData.ABILITY_SLOTS], 18, MUTED)
- FlowUI.detail_toggle(self, identity).size_flags_vertical = Control.SIZE_SHRINK_BEGIN
  var row = HBoxContainer.new(); box.add_child(row)
  for index in range(h.pending[0].size()):
   var card = h.pending[0][index]
@@ -1028,15 +1030,7 @@ func show_tactics(id: String) -> void:
  var editor = TacticsMenu.new(); editor.game = self; editor.hero_id = id; ui.add_child(editor)
 
 func show_opponent_scout() -> void:
- var opponent = campaign.opponent()
- var dialog = AcceptDialog.new(); ui.add_child(dialog); dialog.title = opponent.name + " · Scouting"
- var lines = []
- for hero in opponent.roster:
-  var stats = HeroData.stats(hero, campaign.quality())
-  var details = "%s · %s · Level %d\n%d HP · %d ATK\n%s · Rank %d" % [hero.name, HeroData.species[hero.sp].n, hero.level, stats.hp, stats.attack, HeroData.species[hero.sp].ability_name, hero.signature_rank]
-  for key in hero.learned: details += "\n" + HeroData.learned_ability(hero.sp, int(key)).name + " · Rank " + str(hero.learned[key])
-  lines.append(details)
- dialog.dialog_text = "\n\n".join(lines); dialog.popup_centered(Vector2i(650, 600))
+ ScoutUI.open(self, campaign.opponent())
 
 func start_exhibition() -> void:
  exhibition = true; campaign = Campaign.new(); campaign.new_run("The Dawn Champions",99,7913); League.run_tiers = {}; campaign.state.tiers = {}; campaign.create_market()

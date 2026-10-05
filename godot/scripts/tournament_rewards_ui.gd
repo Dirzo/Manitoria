@@ -16,7 +16,7 @@ func _ready() -> void:
  var immersive=mode=="bracket" and game.campaign.state.has("tour")
  if immersive:
   # The current stop's own scenery, dimmed, behind the board.
-  var r=WorldTour.region(game.campaign)
+  var r=WorldTour.display_region(game.campaign)
   var bg=TextureRect.new();bg.texture=load("res://assets/ui/regions/%s.jpg"%str(r.theme).to_lower());bg.expand_mode=TextureRect.EXPAND_IGNORE_SIZE;bg.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_COVERED
   bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT);bg.mouse_filter=Control.MOUSE_FILTER_IGNORE;add_child(bg)
   var dim=ColorRect.new();dim.color=Color(Color(r.color).darkened(0.85),0.62);dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT);dim.mouse_filter=Control.MOUSE_FILTER_IGNORE;add_child(dim)
@@ -28,7 +28,7 @@ func _ready() -> void:
  var header=HBoxContainer.new();layout.add_child(header)
  var head=game.label(header,"" if immersive else {"bracket":"THE TOURNAMENT BOARD","progress":"WORLD TOUR PROGRESS"}.get(mode,"CHAMPION'S VAULT"),30,game.GOLD);head.size_flags_horizontal=Control.SIZE_EXPAND_FILL
  if immersive:
-  head.text=str(WorldTour.region(game.campaign).name).to_upper();head.add_theme_font_override("font",load(game.TITLE_FONT));head.add_theme_color_override("font_color",Color(WorldTour.region(game.campaign).color).lightened(0.3))
+  head.text=str(WorldTour.display_region(game.campaign).name).to_upper();head.add_theme_font_override("font",load(game.TITLE_FONT));head.add_theme_color_override("font_color",Color(WorldTour.display_region(game.campaign).color).lightened(0.3))
  if on_continue.is_valid():
   var go=FlowUI.cta(game,header,continue_text,func():on_continue.call(),false,300)
  else:game.button(header,"Close",func():game.render())
@@ -66,7 +66,7 @@ func bracket() -> void:
    var mid=(from.x+to.x)*0.5
    var pts=PackedVector2Array([from,Vector2(mid,from.y),Vector2(mid,to.y),to])
    # Brass rails pinned to the board, with a carved shadow beneath.
-   var accent=Color(WorldTour.region(c).color) if c.state.has("tour") else Color("dfe8ec")
+   var accent=Color(WorldTour.display_region(c).color) if c.state.has("tour") else Color("dfe8ec")
    var line=Line2D.new();line.width=3;line.default_color=Color(accent.lightened(0.3),0.55) if not (src==6 and target==12) else Color("ff8a7a",0.45);line.points=pts;canvas.add_child(line)
  var next=WorldTour.current_match(c) if not b.finished else {}
  for i in range(b.matches.size()):

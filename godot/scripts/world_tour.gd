@@ -15,6 +15,16 @@ static func start(c: Campaign) -> void:
  c.state.tour = {"level":1,"bout":0,"wins":0,"attempt":1,"serial":0,"shop":false,"stock":[],"history":[],"complete":false}
  c.add_news("The World Tour opens", "Eight clubs, double elimination. Podium finishes earn medal chests; every club moves on to the next cup. Visit the outfitter after every match.")
 
+## The cup the screens should be about: the one just finished stays on screen through its results and the
+## break that follows, until the next cup actually starts.
+static func shown_level(c: Campaign) -> int:
+ var t=c.state.tour
+ if (t.get("intermission",false) or c.state.get("run_over",false)) and not t.get("history",[]).is_empty():return int(t.history[-1].level)
+ return int(t.level)
+
+static func display_region(c: Campaign) -> Dictionary:
+ return REGIONS[(shown_level(c)-1)%REGIONS.size()]
+
 static func region(c: Campaign) -> Dictionary:
  return REGIONS[(int(c.state.tour.level)-1)%REGIONS.size()]
 

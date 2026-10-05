@@ -21,7 +21,7 @@ static func theme_for(game: Node) -> String:
   if not saved.load_slot(latest) or not saved.state.has("tour"):return "Forest"
   c=saved
  if c==null or not c.state.has("tour") or game.exhibition:return "Forest"
- return str(WorldTour.region(c).theme)
+ return str(WorldTour.display_region(c).theme)
 
 func _ready() -> void:
  mouse_filter=Control.MOUSE_FILTER_IGNORE;set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

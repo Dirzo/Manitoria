@@ -17,7 +17,6 @@ static func entries(hero: Dictionary) -> Array:
 static func build(game: Node,parent: Node,hero: Dictionary,height: int=235) -> void:
  var head=HBoxContainer.new();parent.add_child(head)
  var title=game.label(head,"CURRENT ABILITIES · %d / 4"%(hero.learned.size()+1),13,game.GOLD,false);title.size_flags_horizontal=Control.SIZE_EXPAND_FILL
- FlowUI.detail_toggle(game,head)
  var detailed=FlowUI.detailed(game)
  title.tooltip_text="Only learned abilities are shown. Read the effects before selecting equipment."
  var scroll=ScrollContainer.new();scroll.custom_minimum_size.y=height;scroll.vertical_scroll_mode=ScrollContainer.SCROLL_MODE_AUTO;scroll.horizontal_scroll_mode=ScrollContainer.SCROLL_MODE_DISABLED;parent.add_child(scroll);scroll.name="ChampionAbilities"

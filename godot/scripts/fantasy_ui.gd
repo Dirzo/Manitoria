@@ -37,7 +37,7 @@ static func header(game: Node) -> void:
 ## the World Tour road on the right.
 static func location_banner(game: Node) -> void:
  var c=game.campaign;var touring=game.phase!="new" and not game.exhibition and c.state.has("tour")
- var r=WorldTour.region(c) if touring else {}
+ var r=WorldTour.display_region(c) if touring else {}
  var accent=Color(r.get("color","e8c27a"))
  var band=ColorRect.new();game.ui.add_child(band);band.position=Vector2.ZERO;band.size=Vector2(1600,124);band.mouse_filter=Control.MOUSE_FILTER_IGNORE
  var sh=Shader.new();sh.code="""shader_type canvas_item;
@@ -64,24 +64,26 @@ void fragment(){
  var mid=VBoxContainer.new();game.ui.add_child(mid);mid.position=Vector2(470,10);mid.size=Vector2(660,100);mid.add_theme_constant_override("separation",-2)
  var kicker;var place;var stage
  if game.phase=="new":kicker="THE FOUNDING CHARTER";place="Manitoria";stage="Name your club and claim a headliner"
+ elif game.phase=="starter":kicker="";place="Draft your headliner champion";stage="Your headliner leads the guild. Next you draft the rest of your squad."
  elif game.exhibition:kicker="EXHIBITION";place="The Living Arena";stage="Champion showcase"
  elif touring:
   var t=c.state.tour
-  kicker="%s  ·  CUP %d OF %d"%[str(r.name).to_upper(),int(t.level),WorldTour.MAX_LEVEL]
+  kicker="%s  ·  CUP %d OF %d"%[str(r.name).to_upper(),WorldTour.shown_level(c),WorldTour.MAX_LEVEL]
   place=str(r.place)
   stage=_stage_text(c)
  else:kicker="";place="Manitoria";stage=game.stage_label()
  var k=game.label(mid,kicker,14,accent.lightened(.25),false);k.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
  k.add_theme_color_override("font_outline_color",Color(0,0,0,.8));k.add_theme_constant_override("outline_size",4)
  var title=game.label(mid,place.to_upper(),34,Color("ffe9b8"),false);title.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+ if game.phase=="starter":FlowUI.fit_label(title,660,34,20)
  title.add_theme_font_override("font",load(game.TITLE_FONT))
  title.add_theme_color_override("font_outline_color",Color("1a0f14"));title.add_theme_constant_override("outline_size",8)
  title.add_theme_color_override("font_shadow_color",Color(accent,.55));title.add_theme_constant_override("shadow_offset_y",3)
  var st=game.label(mid,stage,16,game.WHITE,false);st.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
  st.add_theme_color_override("font_outline_color",Color(0,0,0,.85));st.add_theme_constant_override("outline_size",4)
  # Right: the road and controls
- if touring:
-  var road=TourPath.new();road.level=int(c.state.tour.level);game.ui.add_child(road);road.position=Vector2(1112,40);road.size=Vector2(312,62)
+ if touring and game.phase!="starter":
+  var road=TourPath.new();road.level=WorldTour.shown_level(c);game.ui.add_child(road);road.position=Vector2(1112,40);road.size=Vector2(312,62)
   var cap=game.label(game.ui,"WORLD TOUR",11,Color(1,1,1,.6),false);cap.position=Vector2(1112,12);cap.size=Vector2(290,18);cap.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
  var tools=VBoxContainer.new();game.ui.add_child(tools);tools.position=Vector2(1446,14);tools.add_theme_constant_override("separation",6)
  var row=HBoxContainer.new();row.add_theme_constant_override("separation",6);tools.add_child(row)

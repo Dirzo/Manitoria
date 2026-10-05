@@ -44,7 +44,7 @@ static func build(game: Node) -> void:
  FlowUI.glyph(rr,"roll",26);game.label(rr,"Roll",22,game.WHITE,false).mouse_filter=Control.MOUSE_FILTER_IGNORE
  FlowUI.glyph(rr,"coin",18);game.label(rr,str(cost),18,Color("ffdf7e"),false).mouse_filter=Control.MOUSE_FILTER_IGNORE
  var scout_b=game.button(actions,"Scout",func():
-  var dialog=GearUI.modal(game,"Next opponent");game.label(dialog.box,scout(c),24);game.label(dialog.box,WorldTour.next_opponent(c).name,19,game.GOLD))
+  ScoutUI.open(game,WorldTour.next_opponent(c),scout(c)))
  scout_b.custom_minimum_size=Vector2(96,58)
  var go=FlowUI.cta(game,actions,"Ready  ▶",func():
   if not WorldTour.leave_shop(c):game.toast(c.last_error);return

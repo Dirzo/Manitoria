@@ -65,9 +65,8 @@ func recruit(id: String) -> bool:
    state.gold -= h.price
    if lineup().size() < 5:
     h.slot = standard_slot(h, lineup().map(func(b): return b.slot))
-   var at = state.market.find(h)
+   # The drafted champion leaves the board; nothing replaces it until the next cup's fresh board.
    state.roster.append(h); state.market.erase(h)
-   state.market.insert(at, draft_prospect(h.sp))   # the board always keeps one of each creature
    if state.get("headliner", "").is_empty(): state.headliner=h.id
    add_news("New signing · " + h.name, "%s joins your %s line." % [HeroData.species[h.sp].n, HeroData.line(h.sp).to_lower()])
    state.selected = h.id
@@ -440,6 +439,22 @@ func add_news(title: String, detail: String) -> void:
  if not state.has("news"): state.news = []
  state.news.push_front({"title": title, "detail": detail, "season": state.season, "round": state.round})
  if state.news.size() > 40: state.news.resize(40)
+
+## Sell a champion back for half of what it cost. Its items go to the bag. The headliner can't be sold.
+func sell_price(h: Dictionary) -> int:
+ return roundi(float(h.get("price", League.cost(h.sp))) * 0.5)
+
+func sell(id: String) -> bool:
+ var h = hero_by_id(id)
+ if h.is_empty() or h not in state.roster: last_error = "That champion isn't in your guild."; return false
+ if id == str(state.get("headliner", "")): last_error = "Your headliner can't be sold. Make another champion headliner first."; return false
+ var refund = sell_price(h)
+ for v in h.get("equipment", {}).values(): state.inventory.append(str(v))
+ state.roster.erase(h); state.gold += refund
+ for f in state.get("formations", []):
+  if f is Dictionary and f.has("slots"): f.slots.erase(id)
+ add_news("Released · " + h.name, "%s left the guild for %d gold." % [h.name, refund])
+ return save()
 
 func bench(id: String) -> bool:
  var h = hero_by_id(id)

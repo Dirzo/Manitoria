@@ -188,7 +188,7 @@ func market() -> void:
  var counts = {"Front": 0, "Flank": 0, "Back": 0}
  for h in campaign.lineup(): counts[HeroData.line(h.sp)] += 1
  var info = horizontal(card(body))
- var slots_label = text(info, "%d open slot%s  ·  %d front · %d flank · %d back  ·  %d/12 signed" % [open_slots, "" if open_slots == 1 else "s", counts.Front, counts.Flank, counts.Back, state.roster.size()], 18, GOLD)
+ var slots_label = text(info, "%d open slot%s  ·  %d front · %d flank · %d back  ·  %d/12 signed  ·  drafted champions leave the board; a fresh board arrives after each cup" % [open_slots, "" if open_slots == 1 else "s", counts.Front, counts.Flank, counts.Back, state.roster.size()], 17, GOLD)
  slots_label.mouse_filter = Control.MOUSE_FILTER_STOP
  slots_label.tooltip_text = "Common %dg · Epic %dg · Legendary %dg\nAfter your headliner, %dg buys an elite four (2 Epics + 1 Common, elite-squad bonus) or a full five (1 Epic + 3 Commons)." % [League.COST_UNIT, League.COST_UNIT * 2, League.COST_UNIT * 3, League.START_GOLD - League.COST_UNIT * 3]
  var bars = horizontal(body)
@@ -223,8 +223,9 @@ func market() -> void:
 func draft_with_check(h: Dictionary) -> void:
  var go = func():
   if campaign.recruit(h.id):
-   game.selected_id = h.id; game.sound.cue("upgrade", true); game.sound.announce(h.sp, true)
+   game.selected_id = h.id; game.sound.cue("upgrade", true)
    game.render()
+   game.toast("%s joined your roster and left the draft board · %d gold left" % [h.name, int(state.gold)])
   else: game.toast(campaign.last_error if not campaign.last_error.is_empty() else "Not enough gold or your roster is full.")
  var starters = campaign.lineup().size() + 1
  var left = int(state.gold) - int(h.price)
@@ -286,6 +287,12 @@ func profile(h: Dictionary, yours: bool) -> void:
   action(left, "Bench hero" if h.slot >= 0 else "Field / replace", func():
    if h.slot >= 0: campaign.bench(h.id); game.render()
    else: dialog.root.queue_free(); field_hero(h))
+  var refund = campaign.sell_price(h)
+  var sell_b = action(left, "Sell for %d gold (50%%)" % refund, func():
+   FlowUI.confirm(game, "Sell " + h.name + "?", "%s leaves the guild for %d gold (half of the %d paid). Equipped items go to your bag." % [h.name, refund, int(h.get("price", League.cost(h.sp)))], "Sell for %d gold" % refund, func():
+    if campaign.sell(h.id): dialog.root.queue_free(); game.sound.cue("contest_lock"); game.render(); game.toast("%s sold · +%d gold" % [h.name, refund])
+    else: game.toast(campaign.last_error)), false, h.id == str(state.get("headliner", "")))
+  if h.id == str(state.get("headliner", "")): sell_b.tooltip_text = "Your headliner can't be sold."
  # Middle: the stat hexagon, what each stat does, and how this champion grows.
  var mid = column(split, false); mid.custom_minimum_size.x = 440
  var hex_head = horizontal(mid)
@@ -299,7 +306,6 @@ func profile(h: Dictionary, yours: bool) -> void:
  var full_text = FlowUI.detailed(game)
  var kit_head = HBoxContainer.new(); right.add_child(kit_head)
  text(kit_head, "ABILITIES · %d / %d" % [h.learned.size()+1, HeroData.ABILITY_SLOTS], 13, GOLD).size_flags_horizontal = Control.SIZE_EXPAND_FILL
- FlowUI.detail_toggle(game, kit_head)
  for entry in ChampionKit.entries(h): ChampionKit.row(game, right, entry, full_text)
  if h.learned.size()+1 < HeroData.ABILITY_SLOTS:
   text(right, "%d empty slot%s · level up in the arena to learn more" % [HeroData.ABILITY_SLOTS-h.learned.size()-1, "" if HeroData.ABILITY_SLOTS-h.learned.size()-1 == 1 else "s"], 13, MUTED)

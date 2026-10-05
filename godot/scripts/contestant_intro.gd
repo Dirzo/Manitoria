@@ -21,13 +21,14 @@ func build() -> void:
   var column=VBoxContainer.new();column.add_theme_constant_override("separation",8);frame.add_child(column)
   FlowUI.fit_label(game.label(column,c.state.name if side==0 else rival.name,24,frame.accent,false),650,24,12)
   var banner=HBoxContainer.new();column.add_child(banner)
-  var model=HeroPreview.new();model.species_id=face.sp;model.custom_minimum_size=Vector2(280,236);banner.add_child(model)
+  var model=HeroPreview.new();model.species_id=face.sp;model.custom_minimum_size=Vector2(200,236);banner.add_child(model)
   var words=VBoxContainer.new();words.size_flags_horizontal=Control.SIZE_EXPAND_FILL;banner.add_child(words)
   game.label(words,"HEADLINER" if side==0 else "RIVAL POWER LEADER",13,frame.accent)
   game.label(words,face.name.to_upper(),40,game.GOLD);game.label(words,HeroData.species[face.sp].n,23)
   game.label(words,"%d TEAM POWER"%HeadlinerUI.power(heroes),20,game.GOLD)
   game.label(words,"Strongest active: %s · %d"%[leader.name,HeroData.power(leader)],16,game.MUTED)
   if side==0 and face.slot<0:game.label(words,"Headliner on the bench",13,game.MUTED)
+  formation_map(banner,heroes,side,frame.accent)
   var strip=HBoxContainer.new();strip.add_theme_constant_override("separation",8);column.add_child(strip)
   for i in range(heroes.size()):
    var h=heroes[i];var tile=VBoxContainer.new();tile.custom_minimum_size.x=124;strip.add_child(tile)
@@ -45,9 +46,12 @@ func build() -> void:
  timeline.tween_callback(func():game.sound.cue("contest_versus")).set_delay(2.15)
  var delta=HeadlinerUI.power(home)-HeadlinerUI.power(away)
  var odds=game.label(self,"EVENLY MATCHED" if delta==0 else ("YOUR TEAM" if delta>0 else "RIVALS")+" LEAD BY %d POWER"%abs(delta),18,game.GOLD,false);odds.position=Vector2(350,770);odds.size.x=900;odds.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
- var back=game.button(self,"Formation",func():game.phase="prep";game.render());back.position=Vector2(36,816);back.size=Vector2(200,60)
+ var back=game.button(self,"Change formation",func():game.phase="prep";game.render());back.position=Vector2(36,816);back.size=Vector2(240,60)
+ back.tooltip_text="Rearrange your champions against this enemy formation (their positions are shown on the arena floor)."
  if c.state.has("tour"):
-  var br=game.button(self,"Bracket",func():TournamentRewardsUI.open_screen(game,"bracket"));br.position=Vector2(250,816);br.size=Vector2(180,60)
+  var br=game.button(self,"Bracket",func():TournamentRewardsUI.open_screen(game,"bracket"));br.position=Vector2(290,816);br.size=Vector2(180,60)
+ var sc=game.button(self,"Scout rival",func():ScoutUI.open(game,rival));sc.position=Vector2(484,816);sc.size=Vector2(210,60)
+ sc.tooltip_text="Every rival champion's stats, items and skills."
  var holder=HBoxContainer.new();add_child(holder);holder.position=Vector2(1164,812);holder.size=Vector2(400,64)
  var fight=FlowUI.cta(game,holder,"FIGHT  ▶",launch,false,400)
  fight.tooltip_text="Start when ready, or skip the introduction immediately."
@@ -69,6 +73,26 @@ func stakes(c: Campaign) -> String:
  if idx==14:win="Champion"
  var out_next=WorldTour.losses(c,0)>=1 or lose==""
  return "%s   ·   WIN → %s   ·   LOSE → %s"%[str(m.label).to_upper(),win if win!="" else "Champion",("ELIMINATED" if out_next else lose)]
+
+## Where each champion stands. Both maps face the VS line: yours runs back to front left to right,
+## theirs is mirrored, so champions that will meet first sit closest to the centre.
+func formation_map(parent: Node,heroes: Array,side: int,accent: Color) -> void:
+ var box=VBoxContainer.new();box.add_theme_constant_override("separation",2);parent.add_child(box)
+ var head=HBoxContainer.new();box.add_child(head)
+ for t in (["BACK","MID","FRONT"] if side==0 else ["FRONT","MID","BACK"]):
+  var l=game.label(head,t,10,game.MUTED,false);l.custom_minimum_size.x=46;l.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+ var grid=GridContainer.new();grid.columns=3;grid.add_theme_constant_override("h_separation",4);grid.add_theme_constant_override("v_separation",4);box.add_child(grid)
+ for row in range(5):
+  for col in range(3):
+   var real_col=col if side==0 else 2-col
+   var slot=row*3+real_col
+   var cell=Panel.new();cell.custom_minimum_size=Vector2(42,32);grid.add_child(cell)
+   var here=heroes.filter(func(h):return int(h.get("slot",-1))==slot)
+   cell.add_theme_stylebox_override("panel",game.style(Color(accent,0.22) if not here.is_empty() else Color(1,1,1,0.05),accent if not here.is_empty() else Color(0,0,0,0),5,0,1 if not here.is_empty() else 0))
+   if not here.is_empty():
+    var h=here[0]
+    var art=SplashArt.make(cell,h.sp,Vector2(40,30),false,false);art.position=Vector2(1,1);art.size=Vector2(40,30)
+    cell.tooltip_text="%s · %s · %s line\n%d power"%[h.name,HeroData.species[h.sp].n,HeroData.line(h.sp),HeroData.power(h)];cell.mouse_filter=Control.MOUSE_FILTER_STOP
 
 ## Basic scouting, always visible: shape of the team, healers, ranged, gear and the biggest threat.
 func scout_row(column: Node,heroes: Array,side: int) -> void:

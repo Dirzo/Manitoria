@@ -20,7 +20,7 @@ static func starter(game: Node) -> void:
  if League.tier(chosen)!="Legendary":chosen=str(League.tiers().Legendary[0])
  var pool=game.campaign.legend_pool()
  var hero=pool.get(chosen,HeroData.make_hero(chosen,"preview","Your headliner"))
- var heading=game.label(game.ui,"SIGN YOUR HEADLINER",36,game.GOLD,false);heading.position=Vector2(34,128)
+ var heading=game.label(game.ui,"Pick one champion to lead your guild. Click a card to see its stats and skills, then sign it on the right.",17,Color("e8e2d2"),false);heading.position=Vector2(34,140)
  var bar=HBoxContainer.new();game.ui.add_child(bar);bar.position=Vector2(34,180);bar.size=Vector2(960,44)
  DraftBoard.view_bar(game,bar)
  var left=game.scroll_panel(Rect2(26,232,970,645))
@@ -56,7 +56,7 @@ static func rival_face(c: Campaign, rival: Dictionary) -> Dictionary:
  return strongest(rival.roster)
 
 static func overview(desk: ManagementDesk) -> void:
- var game=desk.game;var c=desk.campaign;var t=c.state.tour;var region=WorldTour.region(c)
+ var game=desk.game;var c=desk.campaign;var t=c.state.tour;var region=WorldTour.display_region(c)
  var top=desk.horizontal(desk.body);desk.text(top,region.name,34).size_flags_horizontal=Control.SIZE_EXPAND_FILL;desk.text(top,"LEVEL %d · %s"%[t.level,WorldTour.stage_label(c).to_upper()],19,desk.GOLD)
  var navigation=desk.horizontal(desk.body)
  desk.action(navigation,"View tournament bracket",func():TournamentRewardsUI.open_screen(game,"bracket"),true)
