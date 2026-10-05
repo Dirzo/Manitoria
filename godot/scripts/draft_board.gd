@@ -105,9 +105,13 @@ static func table(game: Node, parent: Node, heroes: Array, opts: Callable, colum
 			game.label(c, col[0], 13, game.GOLD, false); continue
 		var active = sort == col[1]
 		var b = Button.new(); b.text = col[0] + (" ▼" if active else ""); b.flat = true; c.add_child(b)
-		b.add_theme_font_size_override("font_size", 15); b.add_theme_color_override("font_color", game.GOLD if active else Color("dfe8ec"))
+		# Headers use the plain body face: the decorative title font turns short codes like DMG into glyphs.
+		b.add_theme_font_override("font", b.get_theme_default_font())
+		b.add_theme_font_size_override("font_size", 16); b.add_theme_color_override("font_color", game.GOLD if active else Color("dfe8ec"))
 		b.add_theme_color_override("font_hover_color", game.GOLD)
+		b.clip_text = false
 		b.tooltip_text = "Sort by " + col[0]; var key = col[1]
+		if StatHex.GUIDE.has(key): b.tooltip_text = "%s: %s\n%s\nClick to sort." % [StatHex.GUIDE[key].name, StatHex.GUIDE[key].does, StatHex.GUIDE[key].scale]
 		b.pressed.connect(func(): game.desk_state.sort = key; game.render())
 	# Best roll per stat among these heroes gets a gold ring.
 	var best = {}

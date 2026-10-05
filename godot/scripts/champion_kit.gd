@@ -15,24 +15,25 @@ static func build(game: Node,parent: Node,hero: Dictionary,height: int=235) -> v
  FlowUI.detail_toggle(game,head)
  var detailed=FlowUI.detailed(game)
  title.tooltip_text="Only learned abilities are shown. Read the effects before selecting equipment."
- var scroll=ScrollContainer.new();scroll.custom_minimum_size.y=height;scroll.horizontal_scroll_mode=ScrollContainer.SCROLL_MODE_DISABLED;parent.add_child(scroll);scroll.name="ChampionAbilities"
- var column=VBoxContainer.new();column.size_flags_horizontal=Control.SIZE_EXPAND_FILL;column.add_theme_constant_override("separation",12);scroll.add_child(column)
+ var scroll=ScrollContainer.new();scroll.custom_minimum_size.y=height;scroll.vertical_scroll_mode=ScrollContainer.SCROLL_MODE_AUTO;scroll.horizontal_scroll_mode=ScrollContainer.SCROLL_MODE_DISABLED;parent.add_child(scroll);scroll.name="ChampionAbilities"
+ var column=VBoxContainer.new();column.size_flags_horizontal=Control.SIZE_EXPAND_FILL;column.add_theme_constant_override("separation",6);scroll.add_child(column)
  for entry in entries(hero):
-  var row=HBoxContainer.new();row.add_theme_constant_override("separation",10);column.add_child(row)
-  var icon=AbilityArt.icon(row,entry.art,48);icon.size_flags_vertical=Control.SIZE_SHRINK_BEGIN;RarityStyle.decorate(icon,entry.rarity)
-  var text=VBoxContainer.new();text.size_flags_horizontal=Control.SIZE_EXPAND_FILL;row.add_child(text)
-  game.label(text,entry.name+" · R%d"%entry.rank,17,RarityStyle.color(entry.rarity))
-  var sm=game.label(text,entry.summary,15,game.WHITE);sm.mouse_filter=Control.MOUSE_FILTER_STOP
-  var info=("Signature" if entry.signature else "Learned")+" · "+entry.rarity
-  if entry.cooldown>0:info+=" · %.1fs"%entry.cooldown
-  if entry.rank>1:info+=" · +%d%% from rank"%((entry.rank-1)*20)
-  var det=game.label(text,info+"  ·  details ▾",12,game.MUTED);det.mouse_filter=Control.MOUSE_FILTER_STOP
-  var tip=entry.description+"\n"+info
-  sm.tooltip_text=tip;det.tooltip_text=tip;icon.tooltip_text=tip
-  # Click "details" to unfold the full text in place.
-  var full=game.label(text,entry.description,14,Color("c9d6dc"));full.visible=detailed
-  if detailed:det.text=info+"  ·  details ▴"
-  det.gui_input.connect(func(ev):
-   if ev is InputEventMouseButton and ev.pressed and ev.button_index==MOUSE_BUTTON_LEFT:full.visible=not full.visible;det.text=info+("  ·  details ▴" if full.visible else "  ·  details ▾"))
+  row(game,column,entry,detailed)
  if not hero.get("evolution","").is_empty():
   var evolution=HeroData.evolution_info(hero);game.label(column,evolution.name,17,game.GOLD);game.label(column,evolution.description,15)
+
+## One compact line per skill: icon, name and rank, one-line summary, then rarity and cooldown.
+## With "Detailed descriptions" on, the full text sits under the summary.
+static func row(game: Node,parent: Node,entry: Dictionary,detailed: bool) -> void:
+ var line=HBoxContainer.new();line.add_theme_constant_override("separation",10);parent.add_child(line)
+ var icon=AbilityArt.icon(line,entry.art,40);icon.size_flags_vertical=Control.SIZE_SHRINK_BEGIN;RarityStyle.decorate(icon,entry.rarity)
+ var text=VBoxContainer.new();text.size_flags_horizontal=Control.SIZE_EXPAND_FILL;text.add_theme_constant_override("separation",0);line.add_child(text)
+ var head=HBoxContainer.new();text.add_child(head)
+ var nm=game.label(head,entry.name+" · R%d"%entry.rank,15,RarityStyle.color(entry.rarity),false);nm.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+ var info=("Signature" if entry.signature else entry.rarity)
+ if entry.cooldown>0:info+=" · %.1fs"%entry.cooldown
+ game.label(head,info,11,game.MUTED,false)
+ var sm=game.label(text,entry.summary,13,game.WHITE,false);sm.clip_text=true;sm.text_overrun_behavior=TextServer.OVERRUN_TRIM_ELLIPSIS;sm.custom_minimum_size.x=60
+ var tip=entry.name+"\n"+entry.description+"\n"+info+(" · +%d%% from rank"%((entry.rank-1)*20) if entry.rank>1 else "")
+ for c in [icon,nm,sm]:c.tooltip_text=tip;c.mouse_filter=Control.MOUSE_FILTER_STOP
+ if detailed:game.label(text,entry.description,12,Color("c9d6dc"))

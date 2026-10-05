@@ -33,10 +33,16 @@ static func starter(game: Node) -> void:
   DraftBoard.grid(game,left,legends,opts,4,200,166)
  var detail=game.panel(Rect2(1016,128,558,652));game.label(detail,hero.name+"  ·  "+HeroData.species[chosen].n,28,game.GOLD)
  game.label(detail,"%s  ·  %s"%[HeroData.species[chosen].role.to_upper(),League.NICHE.get(chosen,"")],15,Color(League.TIER_COLOR.Legendary))
- SplashArt.make(detail,chosen,Vector2(0,200),true)
+ SplashArt.make(detail,chosen,Vector2(0,150),true)
  TraitUI.line(game,detail,hero,true)
- TraitUI.rolls(game,detail,hero)
- ChampionKit.build(game,detail,hero,160)
+ # Stat hexagon beside a short guide: where this champion excels, and what each stat does (hover).
+ var stat_row=HBoxContainer.new();stat_row.add_theme_constant_override("separation",8);detail.add_child(stat_row)
+ StatHex.make(stat_row,hero,Vector2(330,210))
+ var side=VBoxContainer.new();side.add_theme_constant_override("separation",4);stat_row.add_child(side)
+ var p=HeroData.power(hero);game.label(side,"POWER %d"%p,16,TraitUI.power_color(hero),false)
+ StatHex.guide(game,side,hero,true)
+ game.label(side,Traits.scaling_text(hero.sp),12,Color("ffd36e"),false).tooltip_text="Health and damage grow every level; this curve decides when this champion peaks."
+ ChampionKit.build(game,detail,hero,110)
  var pick=FlowUI.cta(game,game.ui,"Sign  ·  %d gold  ▶"%League.cost(chosen),func():
   if game.campaign.choose_starter(chosen):
    game.selected_id=game.campaign.state.selected;game.sound.cue("contest_lock");game.phase="hub";game.tab="market";game.render();FlowUI.banner(game,"DRAFT YOUR SQUAD",Color("ffd36e"))

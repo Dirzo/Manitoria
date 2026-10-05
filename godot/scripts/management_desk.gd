@@ -261,8 +261,9 @@ func overlay(title: String) -> Dictionary:
 func profile(h: Dictionary, yours: bool) -> void:
  var dialog = overlay(h.name + "  /  " + HeroData.species[h.sp].n)
  var split = horizontal(dialog.body)
- var left = column(split); left.custom_minimum_size.x = 400; left.size_flags_horizontal = Control.SIZE_FILL
- var stage = Control.new(); stage.custom_minimum_size = Vector2(400, 320); left.add_child(stage)
+ # Three columns: who it is (left), how its stats compare (middle), what it does (right).
+ var left = column(split, false); left.custom_minimum_size.x = 340
+ var stage = Control.new(); stage.custom_minimum_size = Vector2(340, 220); left.add_child(stage)
  var backdrop = SplashArt.new(); backdrop.sp = h.sp; backdrop.backdrop_only = true; stage.add_child(backdrop); backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
  var preview = HeroPreview.new(); preview.species_id = h.sp; stage.add_child(preview); preview.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
  var poses = horizontal(left)
@@ -270,12 +271,10 @@ func profile(h: Dictionary, yours: bool) -> void:
  var stats = HeroData.stats(h)
  text(left, "LEVEL %d  /  %s  /  %s" % [h.level, HeroData.species[h.sp].role.to_upper(), League.tier(h.sp).to_upper()], 16, TEAL)
  TraitUI.line(game, left, h)
- TraitUI.rolls(game, left, h)
- GearUI.recommended_row(game, left, h, 44)
- var rr = League.ratings(h)
- text(left, "%s    POW %d · DUR %d · SPD %d · SKL %d · IMP %d" % [League.rating_badge_text(h), rr.POW, rr.DUR, rr.SPD, rr.SKL, rr.IMP], 17, League.tier_color(h.sp))
+ TraitUI.rolls(game, left, h, true)
+ GearUI.recommended_row(game, left, h, 40)
  if h.has("ais_history"): text(left, "Arena Impact form: %d  ·  last match %d  ·  %d matches" % [roundi(League.form(h)), int(h.get("ais_last", 0)), int(h.get("ais_games", 0))], 15, GOLD)
- text(left, "%d HP    %d ATK    %d%% ARMOR\n%.1fs attack interval  ·  %.1f range" % [stats.hp, stats.attack, stats.armor * 100, stats.interval, stats.range], 19)
+ text(left, "%d HP  ·  %d DMG  ·  %d%% armor  ·  %.1fs per attack  ·  %.1f range" % [stats.hp, stats.attack, stats.armor * 100, stats.interval, stats.range], 14)
  text(left, "%d bouts  ·  %d kills  ·  %.1f career impact/bout" % [h.bouts, h.kills, h.impact / maxf(1, h.bouts)], 15, MUTED)
  if yours:
   action(left,"Team headliner" if h.id==state.get("headliner","") else "Make team headliner",func():
@@ -287,44 +286,33 @@ func profile(h: Dictionary, yours: bool) -> void:
   action(left, "Bench hero" if h.slot >= 0 else "Field / replace", func():
    if h.slot >= 0: campaign.bench(h.id); game.render()
    else: dialog.root.queue_free(); field_hero(h))
+ # Middle: the stat hexagon, what each stat does, and how this champion grows.
+ var mid = column(split, false); mid.custom_minimum_size.x = 440
+ var hex_head = horizontal(mid)
+ text(hex_head, "STATS  ·  vs every champion at level %d" % int(h.level), 13, GOLD).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ text(hex_head, "outline = average rolls", 11, MUTED)
+ StatHex.make(mid, h, Vector2(440, 270))
+ StatHex.guide(game, mid, h)
+ StatHex.scaling(game, mid, h)
+ # Right: every skill on one screen, then the skill book.
  var right = column(split)
- text(right, "SIGNATURE  /  RANK %d" % h.signature_rank, 13, GOLD)
- text(right, HeroData.species[h.sp].ability_name, 25)
  var full_text = FlowUI.detailed(game)
- var sig = text(right, HeroData.signature_summary(h.sp), 18, WHITE); sig.tooltip_text = HeroData.species[h.sp].ability_description; sig.mouse_filter = Control.MOUSE_FILTER_STOP
- if full_text: text(right, HeroData.species[h.sp].ability_description, 14, Color("c9d6dc"))
  var kit_head = HBoxContainer.new(); right.add_child(kit_head)
- text(kit_head, "ABILITY KIT · %d / %d" % [h.learned.size()+1, HeroData.ABILITY_SLOTS], 13, GOLD).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ text(kit_head, "ABILITIES · %d / %d" % [h.learned.size()+1, HeroData.ABILITY_SLOTS], 13, GOLD).size_flags_horizontal = Control.SIZE_EXPAND_FILL
  FlowUI.detail_toggle(game, kit_head)
- for key in h.learned:
-  var i = int(key)
-  var ability = HeroData.learned_ability(h.sp, i); var rank = int(h.learned.get(str(i), 0))
-  var box = card(right)
-  var art_row=HBoxContainer.new(); box.add_child(art_row); art_row.add_theme_constant_override("separation",12)
-  var skill_art=AbilityArt.icon(art_row,"discovery:%s:%d" % [h.sp,i],72)
-  var rarity=RarityStyle.for_skill(h,"ability:"+key);RarityStyle.decorate(skill_art,rarity)
-  var ability_text=VBoxContainer.new(); ability_text.size_flags_horizontal=Control.SIZE_EXPAND_FILL; art_row.add_child(ability_text)
-  text(ability_text, ability.name + (" · Rank %d" % rank if rank > 0 else " · Not learned"), 20, TEAL if rank > 0 else WHITE)
-  text(ability_text,rarity.to_upper(),12,RarityStyle.color(rarity))
-  var sm = text(ability_text, ability.summary, 17, WHITE); sm.tooltip_text = ability.description; sm.mouse_filter = Control.MOUSE_FILTER_STOP
-  if full_text: text(ability_text, ability.description, 14, Color("c9d6dc"))
-  text(ability_text, "%.1fs cooldown" % CombatPacing.ability_cd(h, key) + ("" if full_text else " · hover for details"), 12, MUTED)
+ for entry in ChampionKit.entries(h): ChampionKit.row(game, right, entry, full_text)
  if h.learned.size()+1 < HeroData.ABILITY_SLOTS:
-  text(right, "%d empty slot%s · level up in the arena to learn more" % [HeroData.ABILITY_SLOTS-h.learned.size()-1, "" if HeroData.ABILITY_SLOTS-h.learned.size()-1 == 1 else "s"], 15, MUTED)
- # The full skill book: every skill this species can learn, each one its own.
- text(right, "SKILL BOOK · %d skills" % HeroData.DISCOVERY_CHOICES, 13, GOLD)
- var book = GridContainer.new(); book.columns = 2; book.add_theme_constant_override("h_separation", 10); book.add_theme_constant_override("v_separation", 8); right.add_child(book)
+  text(right, "%d empty slot%s · level up in the arena to learn more" % [HeroData.ABILITY_SLOTS-h.learned.size()-1, "" if HeroData.ABILITY_SLOTS-h.learned.size()-1 == 1 else "s"], 13, MUTED)
+ # The full skill book: every skill this species can learn (hover for details).
+ text(right, "SKILL BOOK · %d skills · hover for details" % HeroData.DISCOVERY_CHOICES, 13, GOLD)
+ var book = GridContainer.new(); book.columns = 2; book.add_theme_constant_override("h_separation", 8); book.add_theme_constant_override("v_separation", 4); right.add_child(book)
  for i in range(HeroData.DISCOVERY_CHOICES):
   var sk = HeroData.learned_ability(h.sp, i); var owned = h.learned.has(str(i))
-  var cell = HBoxContainer.new(); cell.custom_minimum_size.x = 380; book.add_child(cell); cell.mouse_filter = Control.MOUSE_FILTER_STOP
-  cell.tooltip_text = sk.name + "\n" + sk.description
-  var ic = AbilityArt.icon(cell, "discovery:%s:%d" % [h.sp, i], 44); ic.modulate = Color.WHITE if owned else Color(0.7, 0.7, 0.75)
-  var words = VBoxContainer.new(); words.add_theme_constant_override("separation", -2); cell.add_child(words)
-  game.label(words, sk.name + ("  ✓" if owned else ""), 14, TEAL if owned else WHITE, false)
-  if full_text:
-   words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-   var dl = game.label(words, sk.description, 12, MUTED, true); dl.custom_minimum_size.x = 320
-  else: game.label(words, sk.summary, 12, MUTED, false)
+  var cell = HBoxContainer.new(); cell.custom_minimum_size.x = 186; cell.add_theme_constant_override("separation", 6); book.add_child(cell); cell.mouse_filter = Control.MOUSE_FILTER_STOP
+  cell.tooltip_text = sk.name + " · " + sk.summary + "\n" + sk.description
+  var ic = AbilityArt.icon(cell, "discovery:%s:%d" % [h.sp, i], 30); ic.modulate = Color.WHITE if owned else Color(0.7, 0.7, 0.75); ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+  var nm = game.label(cell, sk.name + ("  ✓" if owned else ""), 13, TEAL if owned else WHITE, false); nm.mouse_filter = Control.MOUSE_FILTER_IGNORE
+  nm.clip_text = true; nm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS; nm.custom_minimum_size.x = 140
  var evolution = h.get("evolution", "")
  text(right, "EVOLUTION · " + (HeroData.evolution_info(h).name if not evolution.is_empty() else "Unlocks at level 10"), 15, GOLD)
  text(right, HeroData.evolution_info(h).description if not evolution.is_empty() else "Choose Ravager, Guardian or Arcanist to change combat strengths and visual effects.", 16, MUTED)

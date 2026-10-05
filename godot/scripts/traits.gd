@@ -19,6 +19,8 @@ const TRAITS := {
 	"Patient":    {"scale": 2.0, "up": "Scales much harder late", "down": "Weaker in the early cups"},
 	"Eager":      {"scale": -2.0, "up": "Strong from the first cup", "down": "Falls off late"},
 	"Steadfast":  {"hp": 1.07, "armor": 0.03, "haste": 0.94, "up": "+7% health, +3 armor", "down": "-6% attack speed"},
+	# Reference only (never rolled): no modifiers, used for species baselines in stat charts.
+	"Neutral":    {"up": "", "down": ""},
 }
 const ORDER := ["Courageous", "Shy", "Ferocious", "Stoic", "Swift", "Cunning", "Reckless", "Gentle", "Proud", "Patient", "Eager", "Steadfast"]
 
