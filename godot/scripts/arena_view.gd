@@ -269,16 +269,24 @@ func spawn(u: Dictionary) -> void:
  var team_color = Color("70d6dd") if u.team == 0 else Color("eb987b")
  var circle = Node3D.new(); holder.add_child(circle) # Legacy selection anchor; team identity is in the health bar.
  var aura = Node3D.new(); holder.add_child(aura); aura.name = "EvolutionAura"
- var evolution = u.hero.get("evolution", "")
- if not evolution.is_empty() and not u.summon:
+ var evolution = Evolutions.look(str(u.hero.get("evolution", "")))   # species evolutions map onto three aura styles
+ if not str(u.hero.get("evolution", "")).is_empty() and not u.summon:
   var tint = HeroData.evolution_color(u.hero)
+  if Evolutions.has(str(u.hero.evolution)): model.scale *= 1.06   # an evolved champion stands a little taller
+  if HeroData.is_awakened(u.hero) and evolution != "ascended":
+   # Awakened on top of an evolution: the crest of shards still crowns it.
+   for i in range(5):
+    var crest=PrismMesh.new();crest.size=Vector3(0.08,0.28+0.07*(2-abs(i-2)),0.1)
+    mesh(aura,crest,material(Color("ffd36e"),0.4,0.2,true),Vector3((i-2)*0.14,2.25+0.08*(2-abs(i-2)),0))
   if evolution == "ascended":
    model.scale*=1.13
    for i in range(5):
     var shard=PrismMesh.new();shard.size=Vector3(0.08,0.28+0.07*(2-abs(i-2)),0.1)
     mesh(aura,shard,material(tint,0.4,0.2,true),Vector3((i-2)*0.14,2.25+0.08*(2-abs(i-2)),0))
   elif evolution == "guardian":
-   box(aura,Vector3(0.09,0.3,0.09),Vector3(-0.45,1.7,0),material(tint,0.2,0.4,true))
+   for i in range(4):
+    var a = i * TAU / 4
+    box(aura,Vector3(0.09,0.3,0.09),Vector3(cos(a)*0.9,1.7,sin(a)*0.9),material(tint,0.2,0.4,true))
   else:
    for i in range(3):
     var angle = i * TAU / 3

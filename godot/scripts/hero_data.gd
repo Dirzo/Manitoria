@@ -185,6 +185,13 @@ static func role_weights(sp: String) -> Dictionary:
  return ROLE_WEIGHTS.get(species[sp].role, {"hp": 0.25, "attack": 0.25, "haste": 0.2, "speed": 0.15, "potency": 0.15})
 
 ## Role fit of the rolls: -1 .. +1, only counting the stats this creature's role relies on.
+## Overall fit for the role: stat rolls (70%) and temperament (30%) together.
+static func fit_score(hero: Dictionary) -> float:
+ var rf = roll_fit(hero)
+ var f = rf * 0.7 + Traits.temper_fit(hero) * 0.3
+ # GREAT needs good rolls too: temperament alone can lift a champion to GOOD, not past it.
+ return minf(f, 0.34) if rf < 0.15 else f
+
 static func roll_fit(hero: Dictionary) -> float:
  var w = role_weights(hero.sp); var t = 0.0
  for k in w: t += roll_norm(hero, k) * w[k]
@@ -231,13 +238,18 @@ static func stats(hero: Dictionary, quality: float = 1.0) -> Dictionary:
  var f = Forge.totals(hero)
  result.hp *= 1.0 + f.hp; result.attack *= 1.0 + f.attack; result.armor = clampf(result.armor + f.armor, 0.0, 0.45)
  result.interval /= 1.0 + f.haste; result.speed *= 1.0 + f.speed
+ # Species evolutions (level 10): stat changes that define the niche.
+ if Evolutions.has(str(hero.get("evolution", ""))):
+  result.hp *= Evolutions.mod(hero, "hp"); result.attack *= Evolutions.mod(hero, "attack")
+  result.speed *= Evolutions.mod(hero, "speed"); result.interval /= Evolutions.mod(hero, "haste")
+  result.armor = clampf(result.armor + Evolutions.mod(hero, "armor", 0.0), 0.0, 0.5)
  match hero.get("evolution", ""):
   "ravager": result.attack *= 1.20; result.hp *= 0.90; result.speed *= 1.15
   "guardian": result.hp *= 1.15; result.armor += 0.04; result.attack *= 0.90
   "arcanist": result.attack *= 0.85; result.interval *= 1.15
  result.hp*=1.0+hero.get("legacy_hp",0.0)
  result.attack*=1.0+hero.get("legacy_attack",0.0)
- if hero.get("evolution","")=="ascended":result.attack*=0.9
+ if is_awakened(hero):result.attack*=0.9
  return result
 
 ## Power on a 1-100 scale that grows through the run: level-1 champions sit in the teens to high 30s,
@@ -286,6 +298,7 @@ const RIDERS = {
 
 static func learned_ability(sp: String, index: int) -> Dictionary:
  if index==12:return ChampionEvolution.action(sp)
+ if index>=13:return Evolutions.grant_ability(sp,index-13)
  var pool = ability_pool(sp)
  var row = pool[clampi(index, 0, pool.size() - 1)]
  var spec = EFFECTS[row[1]]
@@ -312,23 +325,33 @@ static func signature_summary(sp: String) -> String:
  load_data()
  return SIGNATURE_SUMMARY.get(species[sp].ab, species[sp].ability_name)
 
+## Awakening (from Gold-chest unlocks) is separate from the level-10 evolution, so a champion keeps both.
+static func is_awakened(hero: Dictionary) -> bool:
+ return bool(hero.get("awakened", false)) or str(hero.get("evolution", "")) == "ascended"
+
 static func evolution_info(hero: Dictionary) -> Dictionary:
  if hero.get("evolution","")=="ascended":return ChampionEvolution.info(hero)
+ if Evolutions.has(str(hero.get("evolution",""))):return Evolutions.info(hero.evolution)
  return EVOLUTIONS.get(hero.get("evolution",""),{})
 
 static func evolution_color(hero: Dictionary) -> Color:
  return Color(evolution_info(hero).get("color","ffffff"))
 
 static func cooldown_factor(hero: Dictionary) -> float:
- return (0.85 if hero.get("evolution", "") == "arcanist" else 1.0) * Traits.mod(hero, "cd") * Forge.totals(hero).cd
+ return (0.85 if hero.get("evolution", "") == "arcanist" else 1.0) * Evolutions.mod(hero, "cd") * Traits.mod(hero, "cd") * Forge.totals(hero).cd
 
 static func spell_factor(hero: Dictionary) -> float:
- return (1.20 if hero.get("evolution", "") == "arcanist" else 1.0) * roll_mult(hero, "potency") * Traits.mod(hero, "potency") * (1.0 + Forge.totals(hero).potency)
+ return (1.20 if hero.get("evolution", "") == "arcanist" else 1.0) * Evolutions.mod(hero, "potency") * roll_mult(hero, "potency") * Traits.mod(hero, "potency") * (1.0 + Forge.totals(hero).potency)
 
 static func choices(hero: Dictionary, won: bool, rng: RandomNumberGenerator, reward_level: int = -1) -> Array:
  var out = []
  var level = int(hero.level) if reward_level < 0 else reward_level
  if level >= 10 and hero.get("evolution", "").is_empty():
+  # Three evolutions unique to this species, each defining a different playstyle.
+  for key in Evolutions.options(hero.sp):
+   var e = Evolutions.entry(key)
+   out.append({"type":"evolution", "key":key, "name":e.name, "summary":e.niche.to_upper() + " · " + e.text, "description":e.niche + ". " + e.text, "rarity":"Evolution", "bonus":1.0})
+  if not out.is_empty(): return out
   for key in EVOLUTIONS:
    var e = EVOLUTIONS[key]
    out.append({"type":"evolution", "key":key, "name":species[hero.sp].n + " · " + e.name, "description":e.description, "rarity":"Evolution", "bonus":1.0})

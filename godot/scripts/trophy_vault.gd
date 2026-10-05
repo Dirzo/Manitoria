@@ -96,8 +96,8 @@ static func open(c: Campaign,id: String) -> Dictionary:
 static func awaken(c: Campaign,id: String) -> bool:
  sync(c)
  var h=c.hero_by_id(id)
- if h.is_empty() or h not in c.state.roster or h.level<10 or not h.get("ascension_unlocked",false) or h.get("evolution","")=="ascended" or not h.pending.is_empty():return false
+ if h.is_empty() or h not in c.state.roster or h.level<10 or not h.get("ascension_unlocked",false) or HeroData.is_awakened(h) or not h.pending.is_empty():return false
  var before=h.duplicate(true)
- h.evolution="ascended";h.history.append(ChampionEvolution.NAMES[h.sp])
+ h.awakened=true;h.history.append(ChampionEvolution.NAMES[h.sp])
  if c.save():return true
  h.clear();h.merge(before,true);return false

@@ -93,6 +93,17 @@ static func curve(hero: Dictionary) -> float:
 static func mod(hero: Dictionary, key: String) -> float:
 	return float(TRAITS[trait_of(hero)].get(key, 0.0 if key == "armor" else 1.0))
 
+## How well the temperament suits the role, -1..1: an ideal temperament is a full match; otherwise
+## its bonuses and penalties are weighed by how much the role relies on each stat.
+static func temper_fit(hero: Dictionary) -> float:
+	if is_ideal(hero): return 1.0
+	var t = TRAITS[trait_of(hero)]; var w = HeroData.role_weights(hero.sp); var s = 0.0
+	for k in ["hp", "attack", "haste", "speed", "potency"]:
+		if t.has(k): s += (float(t[k]) - 1.0) * float(w.get(k, 0.05))
+	if t.has("armor"): s += float(t.armor) * 2.0 * float(w.get("armor", 0.05))
+	if t.has("cd"): s += (1.0 - float(t.cd)) * float(w.get("potency", 0.05))
+	return clampf(s * 12.0, -1.0, 1.0)
+
 static func is_ideal(hero: Dictionary) -> bool:
 	return trait_of(hero) in info(hero.sp).ideal
 

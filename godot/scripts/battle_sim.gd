@@ -48,10 +48,13 @@ func setup(left: Array, right: Array, seed_value: int, rival_quality: float = 1.
 
 func add_unit(hero: Dictionary, team: int, pos: Vector2, quality: float = 1.0, owner: int = -1) -> Dictionary:
  hero=hero.duplicate(true)
- if owner<0 and hero.get("evolution","")=="ascended":hero.learned["12"]=1
+ if owner<0 and HeroData.is_awakened(hero):hero.learned["12"]=1
+ # A species evolution may bring its own ability (learned slot 13-15 inside the fight only).
+ if owner<0 and Evolutions.grant_index(str(hero.get("evolution","")))>=0:hero.learned[str(Evolutions.grant_index(hero.evolution))]=1
  var s = HeroData.stats(hero, quality)
  var u = {"uid": uid, "hero": hero.duplicate(true), "team": team, "pos": pos, "heading": PI / 2 if team == 0 else -PI / 2, "hp": s.hp, "max_hp": s.hp, "attack": s.attack, "armor": s.armor, "speed": s.speed, "range": s.range, "interval": s.interval, "cd": rng.randf_range(1.3, 2.8), "attack_timer": rng.randf_range(0.0, 0.4), "windup": 0.0, "target": -1, "pending_target": -1, "status": {}, "shield": 0.0, "shield_time": 0.0, "cast_time": 0.0, "alive": true, "moving": false, "reborn": false, "summon": owner >= 0, "owner": owner, "ttl": 16.0, "damage": 0.0, "healing": 0.0, "blocked": 0.0, "kills": 0, "kill_chain": 0, "last_kill": -20.0, "ability_cds": {}, "radius": BODY.get(hero.sp, 0.72)}
  u.items = {}; u.tactics = BattleTactics.for_hero(hero)
+ if owner < 0 and float(Evolutions.perk(hero, "regen", 0.0)) > 0.0: u.evo_regen = float(Evolutions.perk(hero, "regen", 0.0))
  u.velocity = Vector2.ZERO
  u.start_pos = pos; u.area_wait = {}; u.recovery = 0.0; u.windup_total = 0.0
  u.dots = []; u.credit = "basic"; u.ability_stats = {}; u.timeline = {}; u.damage_taken = 0.0; u.healing_received = 0.0
@@ -220,6 +223,8 @@ func heal(source: Dictionary, target: Dictionary, amount: float, credit: String 
 
  ItemEffects.on_heal(self,source,target,actual,credit)
 
+var reflecting := false
+
 func hurt(source: Dictionary, target: Dictionary, amount: float, magical: bool = true, credit: String = "") -> void:
  if not target.alive: return
  var hit_credit=credit if not credit.is_empty() else str(source.credit)
@@ -232,6 +237,7 @@ func hurt(source: Dictionary, target: Dictionary, amount: float, magical: bool =
   var broken=minf(target.shield,source.attack*0.35)
   target.shield-=broken;target.blocked+=broken;track(target,"blocked",broken,"incoming");track(source,"shield_break",broken,"item:claw");ItemEffects.proc(self,source,"claw",target)
  amount = Forge.damage_mod(self, source, target, amount, magical, hit_credit)
+ if not source.summon and target.hp < target.max_hp * 0.35: amount *= 1.0 + float(Evolutions.perk(source.hero, "execute", 0.0))
  amount *= 1.22 if active(source, "rally") else 1.0
  amount *= 0.75 if active(source, "weaken") else 1.0
  amount *= 0.35 if active(target, "shell") else 1.0
@@ -253,6 +259,15 @@ func hurt(source: Dictionary, target: Dictionary, amount: float, magical: bool =
   if not owner_unit.is_empty(): owner_unit.damage += actual
  if active(source, "hunger"): heal(source, source, actual * 0.45,"signature")
  if not magical and not source.summon and source.hero.get("evolution", "") == "ravager": heal(source, source, actual * 0.12,"lifesteal")
+ # Evolution perks: lifesteal on basics, on-hit riders, thorns.
+ if not source.summon and hit_credit == "basic" and actual > 0:
+  var ls = float(Evolutions.perk(source.hero, "lifesteal", 0.0))
+  if ls > 0.0: heal(source, source, actual * ls, "lifesteal")
+  var oh = Evolutions.perk(source.hero, "on_hit", [])
+  if oh is Array and oh.size() == 2 and target.alive and rng.randf() < float(oh[1]): apply_rider(source, target, str(oh[0]), 1.0)
+ var th = float(Evolutions.perk(target.hero, "thorns", 0.0)) if not target.summon else 0.0
+ if th > 0.0 and actual > 0 and source.alive and not reflecting and source.uid != target.uid:
+  reflecting = true; hurt(target, source, actual * th, true, "thorns"); reflecting = false
  if actual > 0: emit({"type": "hit", "uid": target.uid, "source": source.uid, "amount": actual, "pos": target.pos, "credit": credit if not credit.is_empty() else source.credit})
  ItemEffects.on_hit(self,source,target,actual,hit_credit)
  Forge.after_hit(self, source, target, actual, magical, hit_credit)
@@ -350,6 +365,7 @@ func step(dt: float) -> void:
    if u.ttl <= 0:
     u.alive = false; emit({"type": "death", "uid": u.uid, "pos": u.pos}); continue
   if u.hero.sp == "troll": heal(u, u, u.max_hp * 0.007 * dt,"regeneration")
+  if not u.summon and u.has("evo_regen"): heal(u, u, u.max_hp * u.evo_regen * dt, "regeneration")
   u.cd = maxf(0, u.cd - dt)
   u.cast_time = maxf(0, u.cast_time - dt)
   u.recovery = maxf(0, u.recovery - dt)
@@ -535,6 +551,11 @@ func separate() -> void:
 func cast_visual(u: Dictionary, effect: String, label_text: String, target: Vector2) -> void:
  ItemEffects.on_cast(self,u)
  Forge.on_cast(self, u, find_unit(int(u.target)))
+ var ward_share = float(Evolutions.perk(u.hero, "ward", 0.0)) if not u.summon else 0.0
+ if ward_share > 0.0:
+  var mates = living(u.team, false).filter(func(v): return v.pos.distance_to(u.pos) <= 5.0)
+  mates.sort_custom(func(a, b): return a.hp/a.max_hp < b.hp/b.max_hp)
+  if not mates.is_empty(): shield(mates[0], u.max_hp * ward_share)
  if u.hero.get("evolution", "") == "guardian" and not u.summon:
   var allies = living(u.team, false).filter(func(v): return v.pos.distance_to(u.pos) <= 5.0)
   allies.sort_custom(func(a, b): return a.hp/a.max_hp < b.hp/b.max_hp)

@@ -39,7 +39,7 @@ static func power_color(x) -> Color:
 static func rolls(game: Node, parent: Node, hero: Dictionary, compact := false) -> void:
 	var r = HeroData.rolls(hero); var w = HeroData.role_weights(hero.sp)
 	var total = HeroData.roll_total(hero); var p = HeroData.power(hero)
-	var fit = HeroData.roll_fit(hero)
+	var fit = HeroData.fit_score(hero)
 	var head = HBoxContainer.new(); head.add_theme_constant_override("separation", 10); parent.add_child(head)
 	var pw = game.label(head, "POWER %d" % p, 15, power_color(hero), false)
 	pw.tooltip_text = "Power level: tier, level, abilities, how well the rolls suit a %s, temperament fit and scaling." % HeroData.species[hero.sp].role
@@ -82,7 +82,7 @@ static func sorted(list: Array, mode: String) -> Array:
 		out.sort_custom(func(a, b):
 			var ia = Traits.is_ideal(a); var ib = Traits.is_ideal(b)
 			if ia != ib: return ia
-			var fa = HeroData.roll_fit(a); var fb = HeroData.roll_fit(b)
+			var fa = HeroData.fit_score(a); var fb = HeroData.fit_score(b)
 			if absf(fa - fb) > 0.001: return fa > fb
 			return HeroData.power(a) > HeroData.power(b))
 	elif mode in HeroData.ROLL_KEYS:
@@ -90,7 +90,7 @@ static func sorted(list: Array, mode: String) -> Array:
 	elif mode == "Stats":
 		out.sort_custom(func(a, b): return HeroData.roll_total(a) > HeroData.roll_total(b))
 	elif mode == "Fit":
-		out.sort_custom(func(a, b): return HeroData.roll_fit(a) > HeroData.roll_fit(b))
+		out.sort_custom(func(a, b): return HeroData.fit_score(a) > HeroData.fit_score(b))
 	elif mode == "Scale":
 		out.sort_custom(func(a, b): return Traits.score(a) > Traits.score(b))
 	elif mode == "Price":
@@ -126,7 +126,7 @@ static func scale_color(s: float) -> Color:
 	return Color("ffa451") if s <= 3.5 else (Color("c99bff") if s >= 6.5 else Color("7fe0d0"))
 
 static func fit_info(hero: Dictionary) -> Array:
-	var fit = HeroData.roll_fit(hero)
+	var fit = HeroData.fit_score(hero)
 	if fit >= 0.35: return ["GREAT", Color("ffd36e")]
 	if fit >= 0.1: return ["GOOD", Color("6fe08a")]
 	if fit <= -0.25: return ["POOR", Color("ff5e5e")]
@@ -141,11 +141,15 @@ static func fit_reason(hero: Dictionary, short := false) -> String:
 		if w[k] < 0.2: continue
 		if int(r[k]) >= 22: highs.append(HeroData.ROLL_NAMES[k])
 		elif int(r[k]) <= 10: lows.append(HeroData.ROLL_NAMES[k])
+	var tf = Traits.temper_fit(hero); var tname = Traits.trait_of(hero)
+	var temper = ("%s is ideal" % tname) if Traits.is_ideal(hero) else (("%s suits a %s" % [tname, role]) if tf >= 0.15 else (("%s works against a %s" % [tname, role]) if tf <= -0.15 else ""))
 	if short:
 		var bits = []
 		if not highs.is_empty(): bits.append("strong " + ", ".join(highs.slice(0, 2)))
 		if not lows.is_empty(): bits.append("weak " + ", ".join(lows.slice(0, 2)))
-		return " · ".join(bits) if not bits.is_empty() else "average key stats"
+		if bits.is_empty(): bits.append("average key stats")
+		if temper != "": bits.append(temper)
+		return " · ".join(bits)
 	var t = "A %s relies on: " % role
 	var parts = []
 	for k in keys: parts.append("%s %d (%s, %d%%)" % [HeroData.ROLL_NAMES[k], int(r[k]), HeroData.roll_grade(int(r[k])), roundi(w[k] * 100)])
@@ -153,4 +157,6 @@ static func fit_reason(hero: Dictionary, short := false) -> String:
 	if not highs.is_empty(): t += "\nStrong where it counts: " + ", ".join(highs)
 	if not lows.is_empty(): t += "\nWeak where it counts: " + ", ".join(lows)
 	t += "\nOther stats barely affect power for this role."
+	t += "\nTemperament: %s%s" % [Traits.describe(hero), (" · " + temper) if temper != "" else " · neutral for this role"]
+	t += "\nFit combines stat rolls (70%) and temperament (30%)."
 	return t

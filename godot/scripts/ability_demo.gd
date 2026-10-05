@@ -14,6 +14,8 @@ var control_seen: Dictionary={}
 var starting_health: Dictionary={}
 var affected_ids: Dictionary={}
 
+var grant_key := -1
+
 func setup(source: Dictionary,offer: Dictionary,layout: String="Clustered") -> void:
  hero=source.duplicate(true);card=offer.duplicate(true)
  HeroData.apply_choice(hero,card)
@@ -33,6 +35,9 @@ func setup(source: Dictionary,offer: Dictionary,layout: String="Clustered") -> v
   var unit=sim.add_unit(enemy,1,positions[i]);unit.hp*=.7 if i else .32
  target=sim.units[4]
  effect=HeroData.learned_ability(hero.sp,int(card.key)).effect if card.type=="ability" else HeroData.species[hero.sp].ab
+ # An evolution that brings its own ability previews that ability.
+ grant_key=Evolutions.grant_index(str(card.key)) if card.type=="evolution" else -1
+ if grant_key>=0:effect=Evolutions.entry(card.key).grant.effect
  caster.tactics.area="immediate"
  for u in sim.units:starting_health[u.uid]=u.hp
  freeze_actions()
@@ -48,7 +53,8 @@ func advance(dt: float) -> void:
  elapsed+=dt
  freeze_actions()
  if not cast_started and sim.time>=.65:
-  if card.type=="ability":cast_started=sim.cast_learned(caster,target,HeroData.learned_ability(hero.sp,int(card.key)),int(hero.learned[card.key]))
+  if grant_key>=0:cast_started=sim.cast_learned(caster,target,HeroData.learned_ability(hero.sp,grant_key),1)
+  elif card.type=="ability":cast_started=sim.cast_learned(caster,target,HeroData.learned_ability(hero.sp,int(card.key)),int(hero.learned[card.key]))
   else:cast_started=sim.cast_signature(caster,target)
  sim.step(dt)
  for u in sim.units:

@@ -286,14 +286,14 @@ func vault() -> void:
   box.tooltip_text=ChampionEvolution.info({"sp":sp}).description
   game.button(box,"Preview evolution action",func():
    var demo=AbilityPreview.new();demo.game=game;demo.hero=HeroData.make_hero(sp,"evolution_preview",HeroData.species[sp].n,10)
-   demo.hero.evolution="ascended"
+   demo.hero.awakened=true
    var ability=ChampionEvolution.action(sp)
    demo.card={"type":"ability","key":"12","name":ability.name,"description":ability.description,"rarity":"Legendary","bonus":1.0}
    game.ui.add_child(demo);demo.build())
   for h in c.state.roster:
    if h.sp!=sp:continue
-   var ready=unlocked and h.level>=10 and h.pending.is_empty() and h.evolution!="ascended"
-   game.button(box,"Awaken "+h.name if ready else "Awakened" if h.evolution=="ascended" else h.name+" · Reach Lv 10" if h.level<10 else "Finish level-up choices" if not h.pending.is_empty() else "Evolution locked",func():
+   var ready=unlocked and h.level>=10 and h.pending.is_empty() and not HeroData.is_awakened(h)
+   game.button(box,"Awaken "+h.name if ready else "Awakened" if HeroData.is_awakened(h) else h.name+" · Reach Lv 10" if h.level<10 else "Finish level-up choices" if not h.pending.is_empty() else "Evolution locked",func():
     if TrophyVault.awaken(c,h.id):game.sound.cue("upgrade",true);refresh()
     else:game.toast(c.last_error),ready,not ready)
 func _unhandled_key_input(event: InputEvent) -> void:

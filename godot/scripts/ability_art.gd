@@ -25,6 +25,7 @@ static func texture(key: String) -> Texture2D:
 static func card_key(hero: Dictionary, card: Dictionary) -> String:
  if card.type == "ability": return "discovery:%s:%s" % [hero.sp,card.key]
  if card.type == "signature": return HeroData.species[hero.sp].ab
+ if card.type == "evolution" and Evolutions.has(str(card.key)): return Evolutions.art(card.key)
  return card.key
 static func metric_info(sp: String, key: String) -> Dictionary:
  if key.begins_with("item:"):

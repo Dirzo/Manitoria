@@ -7,6 +7,11 @@ static func entries(hero: Dictionary) -> Array:
  for key in hero.learned:
   var ability=HeroData.learned_ability(hero.sp,int(key))
   list.append({"name":ability.name,"summary":ability.summary,"description":ability.description,"rank":int(hero.learned[key]),"art":"discovery:%s:%s"%[hero.sp,key],"rarity":RarityStyle.for_skill(hero,"ability:"+key),"cooldown":CombatPacing.ability_cd(hero,key),"signature":false})
+ # An evolution's own ability joins the kit.
+ var gi=Evolutions.grant_index(str(hero.get("evolution","")))
+ if gi>=0:
+  var g=HeroData.learned_ability(hero.sp,gi)
+  list.append({"name":g.name,"summary":"EVOLUTION · "+g.summary,"description":g.description,"rank":1,"art":g.effect,"rarity":"Rare","cooldown":g.cooldown,"signature":false})
  return list
 
 static func build(game: Node,parent: Node,hero: Dictionary,height: int=235) -> void:

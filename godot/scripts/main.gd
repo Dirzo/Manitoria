@@ -93,7 +93,7 @@ func _ready() -> void:
    var key=0 if qa=="skill_preview" else 2
    var demo=AbilityPreview.new();demo.game=self;demo.hero=h.duplicate(true);demo.card={"type":"ability","key":str(key),"name":HeroData.learned_ability(h.sp,key).name,"description":HeroData.learned_ability(h.sp,key).description,"rarity":"Rare","bonus":1.1};ui.add_child(demo);demo.build()
   elif qa=="ascension_preview":
-   var h=campaign.state.roster[0];h.sp="kirin";h.level=10;h.evolution="ascended";h.learned={}
+   var h=campaign.state.roster[0];h.sp="kirin";h.level=10;h.awakened=true;h.learned={}
    phase="hub";tab="overview";render()
    var demo=AbilityPreview.new();demo.game=self;demo.hero=h;var ability=ChampionEvolution.action(h.sp)
    demo.card={"type":"ability","key":"12","name":ability.name,"description":ability.description,"rarity":"Legendary","bonus":1.0};ui.add_child(demo);demo.build()
@@ -153,7 +153,7 @@ func _ready() -> void:
    phase = "upgrade"; preview_team(); render()
   elif qa == "evolved_arena":
    for i in range(campaign.state.roster.size()):
-    var h = campaign.state.roster[i]; h.level = 10; h.learned = {"0":2, "2":2, "4":2}; h.evolution = HeroData.EVOLUTIONS.keys()[i%3]
+    var h = campaign.state.roster[i]; h.level = 10; h.learned = {"0":2, "2":2, "4":2}; h.evolution = "%s:%d" % [h.sp, i % 3]
    phase = "prep"; begin_battle()
   elif qa == "levelup":
    var h = campaign.state.roster[0]; h.learned = {"0": 1}; h.level = 3; h.pending = []; h.rewards = []

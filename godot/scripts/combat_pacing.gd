@@ -43,14 +43,15 @@ static func rarity_of(hero: Dictionary, key: String) -> String:
 	return RarityStyle.for_skill(hero, "signature" if key == "signature" else "ability:" + key)
 
 static func signature_cd(hero: Dictionary) -> float:
-	return HeroData.species[hero.sp].cd * pow(0.92, hero.signature_rank - 1) * HeroData.cooldown_factor(hero) * role(hero).cd * RARITY[rarity_of(hero, "signature")].cd
+	return Evolutions.sig(hero, "cd") * HeroData.species[hero.sp].cd * pow(0.92, hero.signature_rank - 1) * HeroData.cooldown_factor(hero) * role(hero).cd * RARITY[rarity_of(hero, "signature")].cd
 
 static func ability_cd(hero: Dictionary, key: String) -> float:
 	var a = HeroData.learned_ability(hero.sp, int(key))
-	return a.cooldown * pow(0.92, int(hero.learned.get(key, 1)) - 1) * HeroData.cooldown_factor(hero) * role(hero).cd * RARITY[rarity_of(hero, key)].cd
+	return (1.0 if int(key) >= 12 else Evolutions.skills(hero, "cd")) * a.cooldown * pow(0.92, int(hero.learned.get(key, 1)) - 1) * HeroData.cooldown_factor(hero) * role(hero).cd * RARITY[rarity_of(hero, key)].cd
 
 static func power(hero: Dictionary, key: String) -> float:
-	return SKILL_POWER * RARITY[rarity_of(hero, key)].power
+	var evo = Evolutions.sig(hero, "power") if key == "signature" else (Evolutions.skills(hero, "power") if key.is_valid_int() and int(key) < 12 else 1.0)
+	return SKILL_POWER * RARITY[rarity_of(hero, key)].power * evo
 
 ## First-use timers: the signature comes first for front-liners; learned skills follow in a staggered order.
 static func opening(hero: Dictionary, rng: RandomNumberGenerator) -> Dictionary:

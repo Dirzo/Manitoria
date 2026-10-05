@@ -39,7 +39,7 @@ func build() -> void:
  status_label=game.label(left,"",19,game.GOLD,false)
  var right=VBoxContainer.new();right.custom_minimum_size.x=450;right.size_flags_horizontal=Control.SIZE_EXPAND_FILL;right.add_theme_constant_override("separation",12);body.add_child(right)
  var art=AbilityArt.icon(right,AbilityArt.card_key(hero,card),136);RarityStyle.decorate(art,card.rarity)
- game.label(right,"AFTER CHOOSING THIS CARD" if card.type in ["ability","signature"] else "SIGNATURE WITH THIS UPGRADE",13,game.GOLD)
+ game.label(right,"AFTER CHOOSING THIS CARD" if card.type in ["ability","signature"] else ("WITH THIS EVOLUTION" if card.type=="evolution" else "SIGNATURE WITH THIS UPGRADE"),13,game.GOLD)
  game.label(right,card.description,18)
  game.label(right,"Blue allies start wounded. Red enemies stay still so you can compare coverage.",16,game.MUTED)
  outcome_label=game.label(right,"",21,game.GOLD)
