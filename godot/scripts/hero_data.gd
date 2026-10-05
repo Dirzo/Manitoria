@@ -127,7 +127,7 @@ static func make_hero(sp: String, id: String, nickname: String, level: int = 1) 
  # Every champion is rolled fresh each run: a random temperament and random stat genes.
  var rng = RandomNumberGenerator.new(); rng.seed = hash(id + "|identity|" + run_salt)
  h.trait = Traits.roll(rng)
- h.rolls = roll_stats(rng)
+ h.rolls = roll_stats(rng, roll_floor(sp))
  return h
 
 # ---------------------------------------------------------------- stat genes
@@ -155,17 +155,47 @@ const ROLE_WEIGHTS = {
  "Trickster": {"potency": 0.3, "speed": 0.3, "attack": 0.25, "haste": 0.15},
 }
 
-static func roll_stats(rng: RandomNumberGenerator) -> Dictionary:
+## Rarity sets the lowest a stat can roll: headliners are never hopeless at anything.
+const ROLL_FLOOR := {"Legendary": 12, "Epic": 8, "Common": 4}
+## Rolls also grow as a champion levels: its role's key stats faster, the rest slower.
+const GROWTH_KEY := 0.6
+const GROWTH_OTHER := 0.35
+
+## Bell-shaped rolls between the floor and 31 (two dice averaged, so extremes are rare).
+static func roll_stats(rng: RandomNumberGenerator, floor_value: int = 0) -> Dictionary:
  var r = {}
- for k in ROLL_KEYS: r[k] = rng.randi_range(0, ROLL_MAX)
+ for k in ROLL_KEYS:
+  var u = (rng.randf() + rng.randf()) * 0.5
+  r[k] = clampi(floor_value + roundi(u * float(ROLL_MAX - floor_value)), floor_value, ROLL_MAX)
  return r
 
+static func roll_floor(sp: String) -> int:
+ return int(ROLL_FLOOR.get(League.tier(sp), 0))
+
+## Base rolls (what the champion was born with), never below its rarity's floor.
 static func rolls(hero: Dictionary) -> Dictionary:
  var r = hero.get("rolls", {})
- if r is Dictionary and r.size() == ROLL_KEYS.size(): return r
- # Older saves and generated stand-ins: stable rolls from the champion's id.
- var rng = RandomNumberGenerator.new(); rng.seed = hash(str(hero.get("id", "")) + "|rolls|" + run_salt)
- return roll_stats(rng)
+ if not (r is Dictionary and r.size() == ROLL_KEYS.size()):
+  # Older saves and generated stand-ins: stable rolls from the champion's id.
+  var rng = RandomNumberGenerator.new(); rng.seed = hash(str(hero.get("id", "")) + "|rolls|" + run_salt)
+  r = roll_stats(rng, roll_floor(str(hero.get("sp", ""))))
+ var f = roll_floor(str(hero.get("sp", "")))
+ if f > 0 and r.values().any(func(v): return int(v) < f):
+  r = r.duplicate()
+  for k in r: r[k] = maxi(int(r[k]), f)
+ return r
+
+## How much a stat has grown from levelling.
+static func roll_growth(hero: Dictionary, key: String) -> int:
+ var lvl = int(hero.get("level", 1)) - 1
+ return int(floor(lvl * (GROWTH_KEY if role_weights(str(hero.get("sp", ""))).has(key) else GROWTH_OTHER)))
+
+## The roll as it stands now (base + growth). This is what the stats actually use.
+static func roll_now(hero: Dictionary, key: String) -> int:
+ return int(rolls(hero).get(key, 15)) + roll_growth(hero, key)
+
+static func roll_norm_now(hero: Dictionary, key: String) -> float:
+ return (float(roll_now(hero, key)) - 15.5) / 15.5
 
 ## -1 (worst roll) .. +1 (perfect roll)
 static func roll_norm(hero: Dictionary, key: String) -> float:
@@ -173,7 +203,7 @@ static func roll_norm(hero: Dictionary, key: String) -> float:
 
 static func roll_mult(hero: Dictionary, key: String) -> float:
  var spread = {"hp": 0.18, "attack": 0.18, "haste": 0.12, "speed": 0.10, "potency": 0.18}.get(key, 0.15)
- return 1.0 + roll_norm(hero, key) * spread
+ return 1.0 + roll_norm_now(hero, key) * spread
 
 static func roll_total(hero: Dictionary) -> int:
  var t = 0
@@ -227,7 +257,7 @@ static func stats(hero: Dictionary, quality: float = 1.0) -> Dictionary:
   result.armor += item.get("armor", 0.0)
  # Temperament, scaling curve and forged items.
  result.hp *= roll_mult(hero, "hp"); result.attack *= roll_mult(hero, "attack")
- result.armor += roll_norm(hero, "armor") * 0.03
+ result.armor += roll_norm_now(hero, "armor") * 0.03
  result.interval /= roll_mult(hero, "haste"); result.speed *= roll_mult(hero, "speed")
  var curve = Traits.curve(hero)
  result.hp *= Traits.mod(hero, "hp") * curve
@@ -238,7 +268,7 @@ static func stats(hero: Dictionary, quality: float = 1.0) -> Dictionary:
  var f = Forge.totals(hero)
  result.hp *= 1.0 + f.hp; result.attack *= 1.0 + f.attack; result.armor = clampf(result.armor + f.armor, 0.0, 0.45)
  result.interval /= 1.0 + f.haste; result.speed *= 1.0 + f.speed
- # Species evolutions (level 10): stat changes that define the niche.
+ # Species evolutions (level 8): stat changes that define the niche.
  if Evolutions.has(str(hero.get("evolution", ""))):
   result.hp *= Evolutions.mod(hero, "hp"); result.attack *= Evolutions.mod(hero, "attack")
   result.speed *= Evolutions.mod(hero, "speed"); result.interval /= Evolutions.mod(hero, "haste")
@@ -264,6 +294,7 @@ static func power_quality(hero: Dictionary) -> float:
  return League.ovr_raw(hero) - (int(hero.get("level", 1)) - 1) * 0.84
 
 const ABILITY_SLOTS = 4
+const EVOLVE_LEVEL = 8   # first (and only) evolution choice
 const MAX_RANK = 3
 const DISCOVERY_CHOICES = 12 # 2 originals + 10 unique skills per species (data/skills.json)
 const EVOLUTIONS = {
@@ -346,7 +377,7 @@ static func spell_factor(hero: Dictionary) -> float:
 static func choices(hero: Dictionary, won: bool, rng: RandomNumberGenerator, reward_level: int = -1) -> Array:
  var out = []
  var level = int(hero.level) if reward_level < 0 else reward_level
- if level >= 10 and hero.get("evolution", "").is_empty():
+ if level >= EVOLVE_LEVEL and hero.get("evolution", "").is_empty():
   # Three evolutions unique to this species, each defining a different playstyle.
   for key in Evolutions.options(hero.sp):
    var e = Evolutions.entry(key)
@@ -434,7 +465,7 @@ static func migrate_progression(hero: Dictionary) -> void:
  hero.evolution = hero.get("evolution", "")
  hero.progression_version = 2
  # Existing high-level heroes receive their missed evolution once, without a reset.
- if hero.level >= 10 and hero.evolution.is_empty(): queue_reward(hero, 10, false, hash(hero.id + "evolution"))
+ if hero.level >= EVOLVE_LEVEL and hero.evolution.is_empty(): queue_reward(hero, EVOLVE_LEVEL, false, hash(hero.id + "evolution"))
  for i in range(count): queue_reward(hero, maxi(2, int(hero.level)-count+i+1), false, hash(hero.id + str(i)))
 
 static func xp_needed(level: int) -> int:

@@ -48,6 +48,20 @@ var theme_materials: Array = []
 var vfx: VFX
 var sim_ref: BattleSim
 var trail_clock: Dictionary = {}
+## Follow the action: the camera pans to where the living fighters are and zooms to fit them.
+static var follow_on := true
+var focus := Vector3(0, 0.9, 0)
+var follow_bias := 0.0
+var live := false   # true only while a real fight is on screen
+const CAMERA_CFG := "user://settings.cfg"
+
+static func load_follow() -> void:
+ var cfg = ConfigFile.new()
+ if cfg.load(CAMERA_CFG) == OK: follow_on = bool(cfg.get_value("camera", "follow", true))
+
+static func set_follow(on: bool) -> void:
+ follow_on = on
+ var cfg = ConfigFile.new(); cfg.load(CAMERA_CFG); cfg.set_value("camera", "follow", on); cfg.save(CAMERA_CFG)
 
 func material(color: Color, metal: float = 0.0, roughness: float = 0.8, glow: bool = false) -> StandardMaterial3D:
  var m = StandardMaterial3D.new()
@@ -207,8 +221,23 @@ func build_architecture() -> void:
 
 func update_camera(dt: float) -> void:
  camera_yaw = lerp_angle(camera_yaw, target_yaw, 1.0 - exp(-dt * 8.0))
- camera_distance = lerpf(camera_distance, target_distance, 1.0 - exp(-dt * 8.0))
- var target = Vector3(0, 0.9, 0)
+ var goal = Vector3(0, 0.9, 0); var want = target_distance
+ if follow_on and live and sim_ref:
+  # Centre on the living fighters (a little toward wherever they are bunched) and back off to fit them.
+  var pts: Array = []
+  for u in sim_ref.units:
+   if u.alive: pts.append(world_point(u.pos, 0.9))
+  if not pts.is_empty():
+   var c = Vector3.ZERO
+   for p in pts: c += p
+   c /= float(pts.size())
+   var spread = 0.0
+   for p in pts: spread = maxf(spread, Vector2(p.x - c.x, p.z - c.z).length())
+   goal = Vector3(c.x * 0.85, 0.9, c.z * 0.85)
+   want = clampf(spread * 1.75 + 13.0 + follow_bias, 12.0, 44.0)
+ focus = focus.lerp(goal, 1.0 - exp(-dt * 2.6))
+ camera_distance = lerpf(camera_distance, want, 1.0 - exp(-dt * (2.2 if follow_on and live else 8.0)))
+ var target = focus
  camera_pitch = lerpf(camera_pitch, target_pitch, 1.0 - exp(-dt * 8.0))
  var pitch = camera_pitch
  camera.position = target + Vector3(sin(camera_yaw) * cos(pitch), sin(pitch), cos(camera_yaw) * cos(pitch)) * camera_distance
@@ -232,9 +261,11 @@ func orbit(amount: float) -> void:
  target_yaw += amount
 
 func zoom(amount: float) -> void:
+ if follow_on: follow_bias = clampf(follow_bias + amount, -10.0, 20.0)
  target_distance = clampf(target_distance + amount, 9.0, 62.0)
 
 func clear_fighters() -> void:
+ live = false; follow_bias = 0.0
  physical_casts.clear()
  for child in fighters.get_children(): child.queue_free()
  for child in effects.get_children():

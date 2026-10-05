@@ -1,6 +1,6 @@
 class_name TourPath
 extends Control
-# The World Tour as a road of six arenas: conquered stops in gold, the current arena
+# The World Tour as a road of five arenas: conquered stops in gold, the current arena
 # glowing in its region colour, the road ahead dimmed.
 var level=1
 var cleared=0  # cups won so far
@@ -8,9 +8,9 @@ var t=0.0
 
 func _ready() -> void:
  custom_minimum_size=Vector2(312,62);mouse_filter=Control.MOUSE_FILTER_PASS
- var start=int((level-1)/6)*6+1
+ var start=1
  var tips=[]
- for i in range(6):
+ for i in range(WorldTour.MAX_LEVEL):
   var r=WorldTour.REGIONS[(start+i-1)%WorldTour.REGIONS.size()]
   tips.append("Cup %d · %s — %s"%[start+i,r.name,r.place])
  tooltip_text="\n".join(tips)
@@ -19,14 +19,14 @@ func _process(delta: float) -> void:
  t+=delta;queue_redraw()
 
 func _draw() -> void:
- var start=int((level-1)/6)*6+1
- var gap=52.0;var y=22.0;var x0=26.0
+ var start=1
+ var gap=64.0;var y=22.0;var x0=28.0
  var font=load("res://assets/fonts/uncialantiqua.ttf")
- for i in range(5):
+ for i in range(WorldTour.MAX_LEVEL-1):
   var lv=start+i
   var done=lv<level
   draw_line(Vector2(x0+i*gap+11,y),Vector2(x0+(i+1)*gap-11,y),Color("e8c27a") if done else Color(1,1,1,.22),3.0 if done else 2.0)
- for i in range(6):
+ for i in range(WorldTour.MAX_LEVEL):
   var lv=start+i;var r=WorldTour.REGIONS[(lv-1)%WorldTour.REGIONS.size()]
   var c=Color(r.color);var p=Vector2(x0+i*gap,y)
   if lv<level:

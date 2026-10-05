@@ -123,7 +123,7 @@ static func detail_toggle(game: Node, parent: Node) -> CheckBox:
 
 ## Settings: volume sliders for music, sound effects and the announcer (saved for every campaign).
 static func settings(game: Node) -> void:
-	var dialog = GearUI.modal(game, "Settings", Vector2(660, 400))
+	var dialog = GearUI.modal(game, "Settings", Vector2(660, 450))
 	dialog.box.add_theme_constant_override("separation", 14)
 	for row_def in [["music", "Music"], ["effects", "Sound effects"], ["voice", "Announcer"]]:
 		var key: String = row_def[0]
@@ -139,6 +139,9 @@ static func settings(game: Node) -> void:
 			game.sound.save_settings()
 			if key == "voice": game.sound.announce("fight", true)
 			elif key == "effects": game.sound.cue("contest_reveal", true))
+	var cam = CheckBox.new(); cam.text = "Camera follows the action in fights"; cam.button_pressed = ArenaView.follow_on
+	cam.add_theme_font_size_override("font_size", 18); dialog.box.add_child(cam)
+	cam.toggled.connect(func(on): ArenaView.set_follow(on))
 	game.label(dialog.box, "Saved for every campaign. The ♪ and FX buttons still mute music and effects.", 14, Color("9fb0b8"), true)
 	var done_row = HBoxContainer.new(); done_row.alignment = BoxContainer.ALIGNMENT_END; dialog.box.add_child(done_row)
 	game.button(done_row, "Done", func(): game.sound.save_settings(); dialog.root.queue_free(), true).custom_minimum_size = Vector2(160, 50)

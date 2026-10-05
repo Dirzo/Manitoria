@@ -4,6 +4,7 @@ func _init() -> void:
 	HeroData.load_data()
 	var runs = int(OS.get_environment("RUNS")); var cups = int(OS.get_environment("CUPS"))
 	var wins = 0; var games = 0; var places = {}; var champs = 0; var dead = 0; var reached = 0
+	var lvl_by_cup = {}; var top_by_cup = {}; var cnt_by_cup = {}
 	for r in range(runs):
 		var c = Campaign.new(); c.new_run("Sweep", 95, 5000 + r * 77, OS.get_environment("DIFF"))
 		# Classic tiers keep sweeps comparable across versions.
@@ -35,7 +36,13 @@ func _init() -> void:
 							if GearUI.fits(h, id) and c.buy_and_equip(i, h.id): break
 				WorldTour.leave_shop(c)
 				if fin: break
+			if c.state.tour.get("intermission", false): WorldTour.end_intermission(c)
+			var lv = c.lineup().map(func(h): return int(h.level))
+			lvl_by_cup[cup] = lvl_by_cup.get(cup, 0.0) + lv.reduce(func(a, b): return a + b, 0) / float(maxi(1, lv.size()))
+			cnt_by_cup[cup] = cnt_by_cup.get(cup, 0) + 1
+			top_by_cup[cup] = maxi(top_by_cup.get(cup, 0), lv.max() if not lv.is_empty() else 0)
 		dead += int(c.state.get("run_over", false)); reached += int(c.state.tour.level)
 	print("RUNS ended=%d/%d avg cup reached=%.1f" % [dead, runs, float(reached) / runs])
 	print("SWEEP diff=%s runs=%d cups=%d match winrate=%.2f (%d games) places=%s champs=%d" % [OS.get_environment("DIFF"), runs, cups, float(wins) / games, games, places, champs])
+	for k in lvl_by_cup: print("after cup %d: avg lineup level %.1f (%d runs) top %d" % [k + 1, lvl_by_cup[k] / cnt_by_cup[k], cnt_by_cup[k], top_by_cup[k]])
 	quit()

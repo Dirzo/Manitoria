@@ -230,6 +230,8 @@ func _ready() -> void:
    render()
    if qa == "settings": FlowUI.settings(self)
    if qa == "scout": ScoutUI.open(self, campaign.opponent())
+   if qa == "stats_help":
+    var sh = campaign.state.roster[0].duplicate(true); sh.level = 9; StatHex.explain(self, sh)
    if has_meta("qa_scroll"):
     await get_tree().process_frame
     for sc in ui.find_children("*","ScrollContainer",true,false): sc.scroll_vertical=int(get_meta("qa_scroll"))
@@ -640,7 +642,7 @@ func begin_battle() -> void:
   phase = "battle"; paused = false; speed = 0.75 if tactical else 1.0; accumulator = 0.0; event_history.clear(); resolving = false
   sound.reset_battle()
   arena.set_region(WorldTour.region(campaign) if not exhibition and campaign.state.has("tour") else {})
-  arena.clear_fighters(); arena.camera.h_offset = 0; arena.target_distance = 31 if tactical else 34; arena.target_pitch = 0.95; arena.target_yaw = 0.0
+  arena.clear_fighters(); arena.live = true; arena.camera.h_offset = 0; arena.target_distance = 31 if tactical else 34; arena.target_pitch = 0.95; arena.target_yaw = 0.0
   if arena.clarity: arena.clarity.tactical = tactical
   sim = BattleSim.new(); sim.action.connect(on_battle_event)
   sim.setup(campaign.lineup(), exhibition_rivals if exhibition else campaign.opponent().roster, campaign.match_seed(), 1.0 if exhibition else campaign.quality())
@@ -682,7 +684,9 @@ func build_battle_hud() -> void:
  button(row, "Resume" if paused else "Pause", func(): paused = not paused; render())
  button(row, "Tactical ¾×", func(): set_tactical(true), tactical)
  for value in [1.0, 2.0, 4.0]: button(row, "%dx" % value, func(): set_tactical(false); speed = value; render(), speed == value and not tactical)
- button(row, "Reset camera", func(): arena.target_yaw = 0.0; arena.target_distance = 31 if tactical else 34; arena.target_pitch = 0.95)
+ button(row, "Reset camera", func(): arena.target_yaw = 0.0; arena.target_distance = 31 if tactical else 34; arena.target_pitch = 0.95; arena.follow_bias = 0.0)
+ var fb = button(row, "◎ Follow action", func(): ArenaView.set_follow(not ArenaView.follow_on); render(), ArenaView.follow_on)
+ fb.tooltip_text = "Keep the camera on the fight: pans to where the champions are and zooms to fit them. Scroll still zooms in or out."
  var feed = panel(Rect2(1250, 654, 325, 122))
  event_box = VBoxContainer.new(); event_box.add_theme_constant_override("separation", 5); feed.add_child(event_box)
  refresh_feed()
@@ -856,7 +860,7 @@ func build_upgrade() -> void:
   var shell = PanelContainer.new(); shell.size_flags_horizontal = Control.SIZE_EXPAND_FILL; shell.custom_minimum_size = Vector2(405, 510); row.add_child(shell)
   shell.add_theme_stylebox_override("panel", style(Color("1c3440"), HeroData.evolution_color({"evolution":card.key}) if card.type == "evolution" else RarityStyle.color(card.rarity), 12, 17, 2))
   var content = VBoxContainer.new(); content.add_theme_constant_override("separation",8); shell.add_child(content)
-  label(content, "LEVEL 10 · EVOLUTION" if card.type == "evolution" else card.rarity.to_upper() + ("  ·  NEW ABILITY" if card.type == "ability" and not h.learned.has(card.key) else "  ·  EVOLUTION" if card.type == "evolution" else "  ·  RANK UP" if card.type in ["ability", "signature"] else "  ·  MASTERY"), 12, GOLD)
+  label(content, "LEVEL %d · EVOLUTION" % HeroData.EVOLVE_LEVEL if card.type == "evolution" else card.rarity.to_upper() + ("  ·  NEW ABILITY" if card.type == "ability" and not h.learned.has(card.key) else "  ·  EVOLUTION" if card.type == "evolution" else "  ·  RANK UP" if card.type in ["ability", "signature"] else "  ·  MASTERY"), 12, GOLD)
   var art = TextureRect.new(); art.name = "AbilityCardArt"; art.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS; art.texture = AbilityArt.texture(AbilityArt.card_key(h,card)); art.custom_minimum_size = Vector2(0,244); art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; content.add_child(art)
   RarityStyle.decorate(art,card.rarity)
   if card.get("rarity","") == "Legendary":

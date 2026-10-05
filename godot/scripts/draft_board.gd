@@ -21,6 +21,7 @@ static func view_bar(game: Node, parent: Node) -> HBoxContainer:
 		b.custom_minimum_size.x = 104
 	var gap = Control.new(); gap.custom_minimum_size.x = 18; row.add_child(gap)
 	TraitUI.sort_bar(game, row)
+	StatHex.help_button(game, row, {}, "?  Stats")
 	return row
 
 static func _badge(game: Node, parent: Control, text: String, color: Color, font: int, pos: Vector2, fill := Color(0.03, 0.03, 0.06, 0.82)) -> PanelContainer:
@@ -117,7 +118,7 @@ static func table(game: Node, parent: Node, heroes: Array, opts: Callable, colum
 	var best = {}
 	for k in HeroData.ROLL_KEYS:
 		best[k] = 0
-		for h in heroes: best[k] = maxi(best[k], int(HeroData.rolls(h)[k]))
+		for h in heroes: best[k] = maxi(best[k], HeroData.roll_now(h, k))
 	for h in heroes: _row(game, list, h, opts.call(h), columns, best)
 	return list
 
@@ -171,9 +172,9 @@ static func _row(game: Node, list: Node, h: Dictionary, o: Dictionary, columns: 
 					sb.custom_minimum_size.x = col[2] - 6
 			_:
 				if col[1] in HeroData.ROLL_KEYS:
-					var v = int(r[col[1]]); var color = HeroData.roll_color(v)
+					var v = HeroData.roll_now(h, col[1]); var color = HeroData.roll_color(v)
 					var chip = PanelContainer.new(); c.add_child(chip); chip.custom_minimum_size = Vector2(44, 30)
 					var top = v == best[col[1]] and v >= 16
 					chip.add_theme_stylebox_override("panel", game.style(color.darkened(0.74), TraitUI.IDEAL if top else (color if w.has(col[1]) else color.darkened(0.6)), 5, 2, 2 if top else 1))
 					var l = game.label(chip, str(v), 16, color, false); l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-					chip.tooltip_text = "%s %d/%d (%s)%s%s" % [HeroData.ROLL_NAMES[col[1]], v, HeroData.ROLL_MAX, HeroData.roll_grade(v), "\nKey stat for a " + HeroData.species[h.sp].role if w.has(col[1]) else "", "\nBest on the board" if top else ""]
+					chip.tooltip_text = TraitUI.roll_tip(h, col[1]) + ("\nBest on the board" if top else "")

@@ -1,7 +1,13 @@
 class_name WorldTour
 extends RefCounted
 
-const MAX_LEVEL = 20
+const MAX_LEVEL = 5
+## The World Tour is five cups. Rival strength, gear and skill rarity follow a 1-20 "stage" so
+## the whole arc of the old long tour (first component to full WILD kits) fits into five cups.
+const PLAYER_XP := 1.9   # your champions level faster so they keep pace with the shorter tour
+
+static func stage(c: Campaign) -> int:
+ return 1 + roundi(float(int(c.state.tour.level) - 1) * 19.0 / float(MAX_LEVEL - 1))
 const REGIONS = [
  {"name":"Verdant Crown", "place":"Briarwild Conservatory", "theme":"Forest", "color":"82d99c", "floor":"345044", "sky":"a7d5b3", "roster":["golem","treant","direwolf","harpy","unicorn"]},
  {"name":"Ember Crucible", "place":"Cinderfall Caldera", "theme":"Volcanic", "color":"ffad76", "floor":"44322f", "sky":"f1ad88", "roster":["minotaur","cerberus","chimera","phoenix","salamander"]},
@@ -31,7 +37,8 @@ static func region(c: Campaign) -> Dictionary:
 static func seeded_team(c: Campaign, entrant: int) -> Dictionary:
  var t=c.state.tour;var heroes=[]
  var level=1
- var experience=3*(int(t.level)-1)*75
+ var experience=(int(t.level)-1)*500
+ var st=stage(c)
  while level<20 and experience>=HeroData.xp_needed(level):
   experience-=HeroData.xp_needed(level);level+=1
  for i in range(5):
@@ -40,10 +47,10 @@ static func seeded_team(c: Campaign, entrant: int) -> Dictionary:
   h.slot=Campaign.FORMATION[i]
   for k in range(mini(3,maxi(0,level-1))): h.learned[str(k)]=2 if level>=8 else 1
   if level>=5: h.signature_rank=2
-  if t.level>=8:h.skill_rarity={"0":"Rare"};h.ability_bonus_0=1.1
-  if t.level>=16:h.skill_rarity={"0":"Legendary"};h.ability_bonus_0=1.25
-  h.equipment=Forge.rival_loadout(h,int(t.level),str(c.state.get("difficulty","Standard")))
-  if level>=10: h.evolution=["guardian","ravager","arcanist"][i%3]
+  if st>=8:h.skill_rarity={"0":"Rare"};h.ability_bonus_0=1.1
+  if st>=16:h.skill_rarity={"0":"Legendary"};h.ability_bonus_0=1.25
+  h.equipment=Forge.rival_loadout(h,st,str(c.state.get("difficulty","Standard")))
+  if level>=HeroData.EVOLVE_LEVEL: h.evolution="%s:%d" % [sp, i % 3]
   heroes.append(h)
  return {"name":Campaign.CLUBS[entrant-1],"roster":heroes,"practice":false}
 
@@ -60,7 +67,7 @@ static func stock(c: Campaign) -> Array:
  for i in range(4): result.append(Forge.COMPONENT_ORDER[rng.randi_range(0,Forge.COMPONENT_ORDER.size()-1)])
  var tame=Forge.ITEMS.keys().filter(func(k): return not Forge.ITEMS[k].get("wild",false))
  result.append(tame[rng.randi_range(0,tame.size()-1)])
- if level>=3:
+ if stage(c)>=6:
   var all=Forge.ITEMS.keys()
   result.append(all[rng.randi_range(0,all.size()-1)] if rng.randf()<0.5 else "coin")
  return result
@@ -71,7 +78,7 @@ static func resolve(c: Campaign, sim: BattleSim) -> bool:
  var rng=RandomNumberGenerator.new();rng.seed=c.match_seed()+801
  var reward=110 if sim.winner==0 else 75
  var rival=opponent(c);var m=current_match(c)
- c.record_team(c.state.roster,sim,0,true,rng);c.record_club(c.state,sim.winner)
+ c.record_team(c.state.roster,sim,0,true,rng,PLAYER_XP);c.record_club(c.state,sim.winner)
  var rival_club=club(c,int(m.team_b) if int(m.team_a)==0 else int(m.team_a))
  if not rival_club.is_empty():c.record_team(rival_club.roster,sim,1,false,rng);c.record_club(rival_club,1 if sim.winner==0 else 0 if sim.winner==1 else -1)
  var report={"winner":sim.winner,"gold":reward,"duration":sim.time,"rows":sim.report_rows(),"opponent":rival.name,"round":t.serial,"season":c.state.season,"tour_level":t.level,"location":r.place,"bout":t.bout+1,"stage":m.label}
@@ -87,7 +94,7 @@ static func resolve(c: Campaign, sim: BattleSim) -> bool:
   var promoted=place==1
   t.history.append({"level":t.level,"location":r.place,"wins":t.wins,"attempt":t.attempt,"promoted":promoted,"place":place,"bracket":bracket.duplicate(true),"start_levels":t.get("start_levels",{}).duplicate()})
   report.tournament_won=promoted;report.place=place
-  reward+={1:150+int(t.level)*15,2:90,3:60,4:40}.get(place,20)
+  reward+={1:150+stage(c)*15,2:90,3:60,4:40}.get(place,20)
   League.weekly_update(c)
   # Podium finishes earn a medal chest; everyone moves on to the next cup regardless.
   var medal={1:"Gold",2:"Silver",3:"Bronze"}.get(place,"")
@@ -100,7 +107,7 @@ static func resolve(c: Campaign, sim: BattleSim) -> bool:
   if place>cutoff:
    c.state.run_over=true;report.run_over=true;report.cutoff=cutoff
    c.add_news("The run is over","%s finished %s at %s. %s runs must finish %s or better."%[c.state.name,TournamentRewardsUI._place_text(place),r.place,c.state.difficulty,TournamentRewardsUI._place_text(cutoff)])
-  elif t.level==MAX_LEVEL:t.complete=true
+  elif t.level>=MAX_LEVEL:t.complete=true
   else:t.level+=1
   t.attempt=1
   t.bout=0;t.wins=0
@@ -166,13 +173,13 @@ static func team_name(c: Campaign, team: int) -> String:
 
 ## Rival clubs grow with the tour: gear and rarer skills arrive as the team level rises.
 static func outfit_clubs(c: Campaign) -> void:
- var lvl=int(c.state.tour.level)
+ var lvl=stage(c)
  for cl in c.state.clubs:
   for h in cl.roster:
    h.equipment=Forge.rival_loadout(h,lvl,str(c.state.get("difficulty","Standard")))
    if lvl>=8 and h.learned.has("0") and RarityStyle.for_skill(h,"ability:0")=="Uncommon":h.skill_rarity=h.get("skill_rarity",{});h.skill_rarity["0"]="Rare"
    if lvl>=16 and h.learned.has("0"):h.skill_rarity=h.get("skill_rarity",{});h.skill_rarity["0"]="Legendary"
-   if int(h.level)>=10 and h.get("evolution","").is_empty():h.evolution=["guardian","ravager","arcanist"][hash(h.id)%3]
+   if int(h.level)>=HeroData.EVOLVE_LEVEL and h.get("evolution","").is_empty():h.evolution="%s:%d" % [h.sp, abs(hash(h.id))%3]
 
 static func ensure_bracket(c: Campaign) -> void:
  var t=c.state.tour
@@ -218,7 +225,7 @@ static func step(c: Campaign) -> void:
   m.winner=m.team_a if won_a else m.team_b;m.loser=m.team_b if won_a else m.team_a
   for side in [0,1]:
    var team=m.team_a if side==0 else m.team_b
-   c.record_team(team_roster(c,team),sim,side,false,rng,0.6);c.record_club(club(c,team),0 if (sim.winner==side) else 1 if sim.winner==1-side else -1)
+   c.record_team(team_roster(c,team),sim,side,false,rng,0.9);c.record_club(club(c,team),0 if (sim.winner==side) else 1 if sim.winner==1-side else -1)
  b.finished=true
  var last=b.matches[14] if not b.matches[14].skipped else b.matches[13]
  b.champion=int(last.winner)

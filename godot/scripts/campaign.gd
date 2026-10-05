@@ -150,8 +150,7 @@ func choose(id: String, index: int) -> bool:
 
 func quality() -> float:
  if state.has("tour"):
-  var base=0.95 if state.difficulty=="Keeper" else (1.0+minf(0.08,0.011*(int(state.tour.level)-1))) if state.difficulty=="Champion" else 1.0
-  if state.difficulty=="Keeper" and state.tour.level==4:base-=0.10
+  var base=0.95 if state.difficulty=="Keeper" else (1.0+minf(0.08,0.011*(WorldTour.stage(self)-1))) if state.difficulty=="Champion" else 1.0
   return base+mini(3,int(state.tour.bout))*0.025
  if state.difficulty == "Keeper": return minf(0.96, 0.90 + state.round * 0.004)
  if state.difficulty == "Champion": return 1.08
@@ -214,7 +213,7 @@ func record_team(heroes: Array, sim: BattleSim, team: int, player: bool, rng: Ra
     gain_xp(h, roundi((80 if sim.winner == team else 65) * xp_scale * BENCH_TRAINING), sim.winner == team, player, rng)
 
 ## XP priority: the fielded squad's XP pool is shared by weight, so focusing a champion speeds them
-## toward Legendary skill rolls (Lv 5+) and evolution (Lv 10) at the others' expense.
+## toward Legendary skill rolls (Lv 5+) and evolution (Lv 8) at the others' expense.
 const XP_WEIGHT := {"focus": 1.6, "normal": 1.0, "rest": 0.45}
 const MAX_FOCUS := 2
 const BENCH_TRAINING := 0.35

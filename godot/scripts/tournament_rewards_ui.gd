@@ -292,8 +292,8 @@ func vault() -> void:
    game.ui.add_child(demo);demo.build())
   for h in c.state.roster:
    if h.sp!=sp:continue
-   var ready=unlocked and h.level>=10 and h.pending.is_empty() and not HeroData.is_awakened(h)
-   game.button(box,"Awaken "+h.name if ready else "Awakened" if HeroData.is_awakened(h) else h.name+" · Reach Lv 10" if h.level<10 else "Finish level-up choices" if not h.pending.is_empty() else "Evolution locked",func():
+   var ready=unlocked and h.level>=HeroData.EVOLVE_LEVEL and h.pending.is_empty() and not HeroData.is_awakened(h)
+   game.button(box,"Awaken "+h.name if ready else "Awakened" if HeroData.is_awakened(h) else h.name+" · Reach Lv %d" % HeroData.EVOLVE_LEVEL if h.level<HeroData.EVOLVE_LEVEL else "Finish level-up choices" if not h.pending.is_empty() else "Evolution locked",func():
     if TrophyVault.awaken(c,h.id):game.sound.cue("upgrade",true);refresh()
     else:game.toast(c.last_error),ready,not ready)
 func _unhandled_key_input(event: InputEvent) -> void:

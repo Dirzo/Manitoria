@@ -52,7 +52,7 @@ static func next_steps(desk: ManagementDesk) -> void:
   var v=VBoxContainer.new();v.add_theme_constant_override("separation",0);cell.add_child(v)
   game.label(v,step[1],16,Color.WHITE,false);game.label(v,step[2],12,Color("c9d6dc"),false)
 
-const EVOLVE_LEVEL := 10
+const EVOLVE_LEVEL := HeroData.EVOLVE_LEVEL
 const LEGEND_LEVEL := 5
 
 ## XP bar + the next milestone this champion is working toward.

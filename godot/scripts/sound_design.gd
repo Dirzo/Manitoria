@@ -292,9 +292,10 @@ func load_settings() -> void:
  if cfg.load(SETTINGS_PATH) == OK:
   for k in levels: levels[k] = clampf(float(cfg.get_value("audio", k, levels[k])), 0.0, 1.0)
  apply_levels()
+ ArenaView.load_follow()
 
 func save_settings() -> void:
- var cfg = ConfigFile.new()
+ var cfg = ConfigFile.new(); cfg.load(SETTINGS_PATH)
  for k in levels: cfg.set_value("audio", k, levels[k])
  cfg.save(SETTINGS_PATH)
 

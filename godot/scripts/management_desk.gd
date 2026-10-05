@@ -243,7 +243,7 @@ func roster_card(parent: Node, h: Dictionary) -> void:
  portrait(box, h.sp, 210)
  if not h.get("evolution", "").is_empty(): text(box,HeroData.evolution_info(h).name.to_upper(),12,HeroData.evolution_color(h))
  text(box, h.name, 23); text(box, HeroData.species[h.sp].n + " · " + HeroData.line(h.sp), 14, MUTED)
- text(box,"%d / 4 abilities · %s" % [h.learned.size()+1,"Evolved" if not h.get("evolution", "").is_empty() else "Evolution at Lv 10"],12,GOLD)
+ text(box,"%d / 4 abilities · %s" % [h.learned.size()+1,"Evolved" if not h.get("evolution", "").is_empty() else "Evolution at Lv %d" % HeroData.EVOLVE_LEVEL],12,GOLD)
  progress(box, "Level %d" % h.level, h.xp, HeroData.xp_needed(h.level))
  action(box, "Inspect hero", func(): profile(h, true))
  if h.slot >= 0: action(box, "Bench", func(): campaign.bench(h.id); game.render())
@@ -298,6 +298,7 @@ func profile(h: Dictionary, yours: bool) -> void:
  var hex_head = horizontal(mid)
  text(hex_head, "STATS  ·  vs every champion at level %d" % int(h.level), 13, GOLD).size_flags_horizontal = Control.SIZE_EXPAND_FILL
  text(hex_head, "outline = average rolls", 11, MUTED)
+ StatHex.help_button(game, hex_head, h, "?  How stats work")
  StatHex.make(mid, h, Vector2(440, 270))
  StatHex.guide(game, mid, h)
  StatHex.scaling(game, mid, h)
@@ -320,7 +321,7 @@ func profile(h: Dictionary, yours: bool) -> void:
   var nm = game.label(cell, sk.name + ("  ✓" if owned else ""), 13, TEAL if owned else WHITE, false); nm.mouse_filter = Control.MOUSE_FILTER_IGNORE
   nm.clip_text = true; nm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS; nm.custom_minimum_size.x = 140
  var evolution = h.get("evolution", "")
- text(right, "EVOLUTION · " + (HeroData.evolution_info(h).name if not evolution.is_empty() else "Unlocks at level 10"), 15, GOLD)
+ text(right, "EVOLUTION · " + (HeroData.evolution_info(h).name if not evolution.is_empty() else "Unlocks at level %d" % HeroData.EVOLVE_LEVEL), 15, GOLD)
  text(right, HeroData.evolution_info(h).description if not evolution.is_empty() else "Choose Ravager, Guardian or Arcanist to change combat strengths and visual effects.", 16, MUTED)
  text(right, "Fill four ability slots, then raise chosen abilities to Rank 2. Wins slightly improve rare-card odds.", 15, GOLD)
  if yours:

@@ -81,7 +81,7 @@ static func open(c: Campaign,id: String) -> Dictionary:
     if key not in data.unlocks:target=key;break
  if not target.is_empty():
   data.unlocks.append(target)
-  rewards.append({"kind":"evolution","species":target,"title":ChampionEvolution.NAMES[target],"detail":"Evolution unlocked · Awaken this champion at level 10."})
+  rewards.append({"kind":"evolution","species":target,"title":ChampionEvolution.NAMES[target],"detail":"Evolution unlocked · Awaken this champion at level 8."})
  var stat="vitality" if int(data.vitality)<=int(data.might) else "might"
  if int(data[stat])<5:
   data[stat]=int(data[stat])+1
@@ -96,7 +96,7 @@ static func open(c: Campaign,id: String) -> Dictionary:
 static func awaken(c: Campaign,id: String) -> bool:
  sync(c)
  var h=c.hero_by_id(id)
- if h.is_empty() or h not in c.state.roster or h.level<10 or not h.get("ascension_unlocked",false) or HeroData.is_awakened(h) or not h.pending.is_empty():return false
+ if h.is_empty() or h not in c.state.roster or h.level<HeroData.EVOLVE_LEVEL or not h.get("ascension_unlocked",false) or HeroData.is_awakened(h) or not h.pending.is_empty():return false
  var before=h.duplicate(true)
  h.awakened=true;h.history.append(ChampionEvolution.NAMES[h.sp])
  if c.save():return true

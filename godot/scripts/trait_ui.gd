@@ -55,22 +55,34 @@ static func rolls(game: Node, parent: Node, hero: Dictionary, compact := false) 
 		fl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; fl.clip_text = true; fl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS; fl.custom_minimum_size.x = 40
 		var row = HFlowContainer.new(); row.add_theme_constant_override("h_separation", 4); row.add_theme_constant_override("v_separation", 3); row.alignment = FlowContainer.ALIGNMENT_CENTER; parent.add_child(row)
 		for k in HeroData.ROLL_KEYS:
-			var v = int(r[k]); var chip = PanelContainer.new(); row.add_child(chip)
+			var v = HeroData.roll_now(hero, k); var chip = PanelContainer.new(); row.add_child(chip)
 			chip.add_theme_stylebox_override("panel", game.style(HeroData.roll_color(v).darkened(0.55 if w.has(k) else 0.8), HeroData.roll_color(v), 5, 3, 0))
 			var l = game.label(chip, "%s%s %d" % ["•" if w.has(k) else "", ROLL_SHORT[k], v], 11, HeroData.roll_color(v), false)
-			chip.tooltip_text = "%s roll %d/%d (%s)%s" % [HeroData.ROLL_NAMES[k], v, HeroData.ROLL_MAX, HeroData.roll_grade(v), "\nKey stat for this role" if w.has(k) else ""]
+			chip.tooltip_text = roll_tip(hero, k)
 		return
 	var grid = GridContainer.new(); grid.columns = 4; grid.add_theme_constant_override("h_separation", 8); grid.add_theme_constant_override("v_separation", 2); parent.add_child(grid)
 	for k in HeroData.ROLL_KEYS:
-		var v = int(r[k]); var c = HeroData.roll_color(v)
+		var v = HeroData.roll_now(hero, k); var c = HeroData.roll_color(v)
 		var name = game.label(grid, ("● " if w.has(k) else "   ") + HeroData.ROLL_NAMES[k], 13, IDEAL if w.has(k) else Color("9fb0b8"), false)
 		name.custom_minimum_size.x = 128
 		var bar = ProgressBar.new(); bar.max_value = HeroData.ROLL_MAX; bar.value = v; bar.show_percentage = false; bar.custom_minimum_size = Vector2(150, 10); bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER; grid.add_child(bar)
 		bar.add_theme_stylebox_override("background", game.style(Color("1d2a31"), Color.TRANSPARENT, 4, 0, 0))
 		bar.add_theme_stylebox_override("fill", game.style(c, Color.TRANSPARENT, 4, 0, 0))
 		game.label(grid, "%d" % v, 13, c, false).custom_minimum_size.x = 24
-		var pct = roundi((HeroData.roll_mult(hero, k) - 1.0) * 100.0) if k != "armor" else roundi(HeroData.roll_norm(hero, k) * 3.0)
+		var pct = roundi((HeroData.roll_mult(hero, k) - 1.0) * 100.0) if k != "armor" else roundi(HeroData.roll_norm_now(hero, k) * 3.0)
+		name.tooltip_text = roll_tip(hero, k); name.mouse_filter = Control.MOUSE_FILTER_STOP; bar.tooltip_text = name.tooltip_text
 		game.label(grid, ("%s  %+d%%" % [HeroData.roll_grade(v), pct]) if k != "armor" else ("%s  %+d armor" % [HeroData.roll_grade(v), pct]), 12, c, false)
+
+## One stat roll explained: what it does, base roll (with the rarity floor), growth from levels, effect.
+static func roll_tip(hero: Dictionary, k: String) -> String:
+	var base = int(HeroData.rolls(hero)[k]); var grow = HeroData.roll_growth(hero, k); var now = base + grow
+	var key = HeroData.role_weights(hero.sp).has(k)
+	var g = StatHex.GUIDE.get(k, {"name": HeroData.ROLL_NAMES[k], "does": "", "scale": ""})
+	var t = "%s · roll %d (%s)\n%s" % [g.name, now, HeroData.roll_grade(now), g.does]
+	t += "\nBorn with %d%s" % [base, (" (a %s never rolls below %d)" % [League.tier(hero.sp), HeroData.roll_floor(hero.sp)]) if HeroData.roll_floor(hero.sp) > 0 else ""]
+	t += " · +%d from levels" % grow if grow > 0 else ""
+	t += "\nGrows about +%.1f per level%s" % [HeroData.GROWTH_KEY if key else HeroData.GROWTH_OTHER, " (key stat for a %s)" % HeroData.species[hero.sp].role if key else ""]
+	return t
 
 ## Sort champions: "Power" (highest power level first) or "Ideal" (ideal temperament first, then
 ## best role fit of the stat rolls, then power). Anything else keeps the given order.

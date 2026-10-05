@@ -39,7 +39,9 @@ static func starter(game: Node) -> void:
  var stat_row=HBoxContainer.new();stat_row.add_theme_constant_override("separation",8);detail.add_child(stat_row)
  StatHex.make(stat_row,hero,Vector2(330,210))
  var side=VBoxContainer.new();side.add_theme_constant_override("separation",4);stat_row.add_child(side)
- var p=HeroData.power(hero);game.label(side,"POWER %d"%p,16,TraitUI.power_color(hero),false)
+ var ph=HBoxContainer.new();ph.add_theme_constant_override("separation",8);side.add_child(ph)
+ var p=HeroData.power(hero);game.label(ph,"POWER %d"%p,16,TraitUI.power_color(hero),false)
+ var hb=StatHex.help_button(game,ph,hero,"?");hb.custom_minimum_size=Vector2(34,28);hb.add_theme_font_size_override("font_size",14)
  StatHex.guide(game,side,hero,true)
  game.label(side,Traits.scaling_text(hero.sp),12,Color("ffd36e"),false).tooltip_text="Health and damage grow every level; this curve decides when this champion peaks."
  ChampionKit.build(game,detail,hero,110)
@@ -64,7 +66,7 @@ static func overview(desk: ManagementDesk) -> void:
  if t.complete:
   var done=desk.card(desk.body);desk.text(done,"WORLD CHAMPIONS",40,desk.GOLD)
   if not c.headliner().is_empty():portrait(done,c.headliner(),200)
-  desk.text(done,"All twenty tournaments conquered.",24);return
+  desk.text(done,"All five cups conquered.",24);return
  var rival=c.opponent();var home=c.lineup();var away=rival.roster
  var panels=desk.horizontal(desk.body)
  for side in range(2):
