@@ -1,4 +1,4 @@
-# Manitoria 0.57 · Clean (Windows build)
+# Manitoria 0.58 · Clean (Windows build)
 
 GitHub limits single files to 100 MB, so the game is split into parts.
 
