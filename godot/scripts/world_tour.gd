@@ -60,16 +60,12 @@ static func survival_place(c: Campaign) -> int:
  return {"Keeper":5,"Standard":4,"Champion":3}.get(str(c.state.get("difficulty","Standard")),4)
 
 static func stock(c: Campaign) -> Array:
- # Four components, one finished item, and (from cup 3) a wild card that may be a WILD item.
- var level=int(c.state.tour.level)
+ # Components only: finished items are forged from two components, never sold whole.
+ # From cup 2 a sixth offer appears, often a Trickster's Coin (the wild-item component).
  var rng=RandomNumberGenerator.new();rng.seed=c.state.seed+c.state.tour.serial*97+int(c.state.tour.get("rerolls",0))*7919
  var result=[]
- for i in range(4): result.append(Forge.COMPONENT_ORDER[rng.randi_range(0,Forge.COMPONENT_ORDER.size()-1)])
- var tame=Forge.ITEMS.keys().filter(func(k): return not Forge.ITEMS[k].get("wild",false))
- result.append(tame[rng.randi_range(0,tame.size()-1)])
- if stage(c)>=6:
-  var all=Forge.ITEMS.keys()
-  result.append(all[rng.randi_range(0,all.size()-1)] if rng.randf()<0.5 else "coin")
+ for i in range(5): result.append(Forge.COMPONENT_ORDER[rng.randi_range(0,Forge.COMPONENT_ORDER.size()-2)])
+ if stage(c)>=6: result.append("coin" if rng.randf()<0.5 else Forge.COMPONENT_ORDER[rng.randi_range(0,Forge.COMPONENT_ORDER.size()-1)])
  return result
 
 static func resolve(c: Campaign, sim: BattleSim) -> bool:
@@ -95,6 +91,10 @@ static func resolve(c: Campaign, sim: BattleSim) -> bool:
   t.history.append({"level":t.level,"location":r.place,"wins":t.wins,"attempt":t.attempt,"promoted":promoted,"place":place,"bracket":bracket.duplicate(true),"start_levels":t.get("start_levels",{}).duplicate()})
   report.tournament_won=promoted;report.place=place
   reward+={1:150+stage(c)*15,2:90,3:60,4:40}.get(place,20)
+  var cup_pts=int(Campaign.CUP_POINTS.get(place,0))
+  for h in c.state.roster:
+   if t.get("cup_played",{}).has(h.id):h.tour_points=int(h.get("tour_points",0))+cup_pts
+  t.erase("cup_played")
   League.weekly_update(c)
   # Podium finishes earn a medal chest; everyone moves on to the next cup regardless.
   var medal={1:"Gold",2:"Silver",3:"Bronze"}.get(place,"")
@@ -172,10 +172,20 @@ static func team_name(c: Campaign, team: int) -> String:
  return c.state.name if team==0 else club(c,team).get("name","?")
 
 ## Rival clubs grow with the tour: gear and rarer skills arrive as the team level rises.
+## Rival champions are at least this level when a cup starts (they still earn XP inside the cup).
+## Paced to where a player's squad usually is, so the first evolutions meet each other around cup 3.
+const RIVAL_LEVELS := [1, 5, 9, 12, 15]
+static func rival_level(c: Campaign) -> int:
+ var i=clampi(int(c.state.tour.level)-1,0,RIVAL_LEVELS.size()-1)
+ return clampi(RIVAL_LEVELS[i]+{"Keeper":-1,"Champion":1}.get(str(c.state.get("difficulty","Standard")),0),1,20)
+
 static func outfit_clubs(c: Campaign) -> void:
  var lvl=stage(c)
+ var floor_level=rival_level(c)
+ var rng=RandomNumberGenerator.new();rng.seed=hash(str(c.state.get("seed",0))+"|lift|"+str(c.state.tour.level))
  for cl in c.state.clubs:
   for h in cl.roster:
+   while int(h.level)<floor_level:c.gain_xp(h,maxi(1,HeroData.xp_needed(int(h.level))-int(h.xp)),true,false,rng)
    h.equipment=Forge.rival_loadout(h,lvl,str(c.state.get("difficulty","Standard")))
    if lvl>=8 and h.learned.has("0") and RarityStyle.for_skill(h,"ability:0")=="Uncommon":h.skill_rarity=h.get("skill_rarity",{});h.skill_rarity["0"]="Rare"
    if lvl>=16 and h.learned.has("0"):h.skill_rarity=h.get("skill_rarity",{});h.skill_rarity["0"]="Legendary"

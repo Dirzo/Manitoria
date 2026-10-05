@@ -188,13 +188,35 @@ func match_seed() -> int:
  if state.has("tour"): return int(state.seed+700000+state.tour.serial*31)
  return int(state.seed + state.season * 1000 + state.round * 17)
 
+## World tour points per champion: a win is worth 3, an MVP performance 2, and every champion who
+## played in a cup shares its finish (champions 10, runner-up 6, third 4, fourth 2).
+const TOUR_POINTS := {"win": 3, "mvp": 2}
+const CUP_POINTS := {1: 10, 2: 6, 3: 4, 4: 2}
+
+## The match MVP: highest Arena Impact Score among real champions (not summons) on either side.
+static func mvp_uid(sim: BattleSim) -> int:
+ var best = -1; var top = -INF
+ for u in sim.units:
+  if u.summon: continue
+  var a = float(League.ais(sim, u))
+  if a > top: top = a; best = int(u.uid)
+ return best
+
 func record_team(heroes: Array, sim: BattleSim, team: int, player: bool, rng: RandomNumberGenerator, xp_scale: float = 1.0) -> void:
+ var mvp = mvp_uid(sim)
  for u in sim.units:
   if u.team != team or u.summon: continue
   var matches = heroes.filter(func(h): return h.id == u.hero.id)
   if matches.is_empty(): continue
   var h = matches[0]
   h.bouts += 1; h.wins += 1 if sim.winner == team else 0
+  h.losses = int(h.get("losses", 0)) + (1 if sim.winner == 1 - team else 0)
+  if int(u.uid) == mvp: h.mvps = int(h.get("mvps", 0)) + 1
+  if state.has("tour"):
+   h.tour_points = int(h.get("tour_points", 0)) + (TOUR_POINTS.win if sim.winner == team else 0) + (TOUR_POINTS.mvp if int(u.uid) == mvp else 0)
+   if player:
+    if not state.tour.has("cup_played"): state.tour.cup_played = {}
+    state.tour.cup_played[h.id] = true
   h.kills += u.kills; h.impact += u.damage / 60.0 + u.healing / 45.0 + u.blocked / 120.0 + u.kills * 4.0
   League.record_ais(h, League.ais(sim, u))
   if state.has("tour") or state.round >= 3:
@@ -1352,7 +1374,7 @@ func buy_item(index: int) -> bool:
  state=before;return false
 
 func free_slot(h: Dictionary) -> String:
- for i in range(Forge.SLOTS):
+ for i in range(HeroData.item_slots(h)):
   if not h.get("equipment", {}).has(str(i)): return str(i)
  return ""
 

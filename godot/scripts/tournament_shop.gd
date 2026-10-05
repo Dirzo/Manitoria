@@ -28,7 +28,7 @@ static func build(game: Node) -> void:
  var gear=VBoxContainer.new();gear.size_flags_horizontal=Control.SIZE_EXPAND_FILL;loadout.add_child(gear)
  var stats=HeroData.stats(hero);game.label(gear,"Lv %d · %d HP · %d ATK"%[hero.level,stats.hp,stats.attack],15,game.GOLD,false)
  var slots=HBoxContainer.new();slots.add_theme_constant_override("separation",12);gear.add_child(slots)
- for key in GearUI.SLOT_KEYS:
+ for key in GearUI.slot_keys(hero):
   GearUI.slot(game,slots,hero,key,62)
  TraitUI.rolls(game,gear,hero,true)
  GearUI.recommended_row(game,right,hero,40)

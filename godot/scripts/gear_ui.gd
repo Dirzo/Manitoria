@@ -1,7 +1,9 @@
 class_name GearUI
 extends RefCounted
 ## Forge items UI: three slots per champion, a bag, drag-and-drop, forging and the recipe book.
-const SLOT_KEYS=["0","1","2"]
+const SLOT_KEYS=["0","1","2","3","4"]
+static func slot_keys(h: Dictionary) -> Array:
+ return SLOT_KEYS.slice(0,HeroData.item_slots(h))
 
 static func selected(game: Node) -> Dictionary:
  var hero=game.campaign.hero_by_id(game.selected_id)
@@ -16,7 +18,7 @@ static func stock_ok(c: Campaign,index: int) -> bool:
 ## Would this item fit on the champion (free slot, or forging with a loose component)?
 static func fits(hero: Dictionary,item_id: String) -> bool:
  var eq=hero.get("equipment",{})
- if eq.size()<Forge.SLOTS:return true
+ if eq.size()<HeroData.item_slots(hero):return true
  if Forge.is_component(item_id):
   for k in eq:
    if Forge.is_component(str(eq[k])) and Forge.combine(str(eq[k]),item_id)!="":return true
@@ -315,7 +317,7 @@ static func team_strip(game: Node,parent: Node,slot_px: int=34) -> void:
   face.pressed.connect(func():game.selected_id=h.id;game.render())
   var nm=game.label(box,h.name,12,game.GOLD if sel else game.WHITE,false);nm.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER;nm.clip_text=true;nm.custom_minimum_size.x=slot_px*3+6
   var slots=HBoxContainer.new();slots.add_theme_constant_override("separation",3);box.add_child(slots)
-  for key in SLOT_KEYS:slot(game,slots,h,key,slot_px)
+  for key in slot_keys(h):slot(game,slots,h,key,slot_px)
 
 ## "RECOMMENDED" row: the champion's core build, ticked when equipped.
 static func recommended_row(game: Node,parent: Node,hero: Dictionary,px: int=46) -> void:

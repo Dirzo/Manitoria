@@ -477,6 +477,7 @@ static func forced_target(sim: BattleSim, u: Dictionary, all: Array) -> Dictiona
 static func rival_loadout(hero: Dictionary, level: int, difficulty: String = "Standard") -> Dictionary:
 	var eff = level + {"Keeper": -1, "Standard": 0, "Champion": (1 if level >= 6 else 0)}.get(difficulty, 0)
 	var n = 0 if eff < 2 else (1 if eff < 6 else (2 if eff < 12 else 3))
+	if eff >= 16: n = mini(4, HeroData.item_slots(hero))   # evolved late-tour rivals fill their 4th slot
 	var role = HeroData.line(hero.sp)
 	var pool = {"Front": ["bastion", "ironbark", "colossus", "bell", "stoneskin", "titan", "mirror", "aegis", "grail", "acidshell", "smokeplate", "lightningrod"],
 		"Flank": ["bloodmaw", "executioner", "frenzy", "tusk", "spellblade", "tempest", "quicksilver", "thundercleaver", "shadowblade", "viperfang", "assassinkit", "crusader"],

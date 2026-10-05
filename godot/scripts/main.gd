@@ -853,14 +853,14 @@ func build_upgrade() -> void:
  var reward_level = h.rewards[0].level if not h.get("rewards", []).is_empty() else h.level
  label(details, "%s · Level %d" % [h.name, reward_level], 28)
  label(details, "%s  /  %s" % [HeroData.species[h.sp].n, HeroData.species[h.sp].role], 20, GOLD)
- label(details, "Choose an evolution to define this hero’s build." if h.pending[0][0].type == "evolution" else "%d / %d abilities · Discover your kit, then rank up your chosen abilities." % [h.learned.size()+1, HeroData.ABILITY_SLOTS], 18, MUTED)
+ label(details, "Choose an evolution to define this hero’s build. Evolving also unlocks a 4th item slot." if h.pending[0][0].type == "evolution" else "APEX · the second evolution. Pick one permanent upgrade." if h.pending[0][0].type == "apex" else "%d / %d abilities · Discover your kit, then rank up your chosen abilities." % [h.learned.size()+1, HeroData.ABILITY_SLOTS], 18, MUTED)
  var row = HBoxContainer.new(); box.add_child(row)
  for index in range(h.pending[0].size()):
   var card = h.pending[0][index]
   var shell = PanelContainer.new(); shell.size_flags_horizontal = Control.SIZE_EXPAND_FILL; shell.custom_minimum_size = Vector2(405, 510); row.add_child(shell)
   shell.add_theme_stylebox_override("panel", style(Color("1c3440"), HeroData.evolution_color({"evolution":card.key}) if card.type == "evolution" else RarityStyle.color(card.rarity), 12, 17, 2))
   var content = VBoxContainer.new(); content.add_theme_constant_override("separation",8); shell.add_child(content)
-  label(content, "LEVEL %d · EVOLUTION" % HeroData.EVOLVE_LEVEL if card.type == "evolution" else card.rarity.to_upper() + ("  ·  NEW ABILITY" if card.type == "ability" and not h.learned.has(card.key) else "  ·  EVOLUTION" if card.type == "evolution" else "  ·  RANK UP" if card.type in ["ability", "signature"] else "  ·  MASTERY"), 12, GOLD)
+  label(content, "LEVEL %d · EVOLUTION" % HeroData.EVOLVE_LEVEL if card.type == "evolution" else "LEVEL %d · APEX EVOLUTION" % HeroData.APEX_LEVEL if card.type == "apex" else card.rarity.to_upper() + ("  ·  NEW ABILITY" if card.type == "ability" and not h.learned.has(card.key) else "  ·  EVOLUTION" if card.type == "evolution" else "  ·  RANK UP" if card.type in ["ability", "signature"] else "  ·  MASTERY"), 12, GOLD)
   var art = TextureRect.new(); art.name = "AbilityCardArt"; art.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS; art.texture = AbilityArt.texture(AbilityArt.card_key(h,card)); art.custom_minimum_size = Vector2(0,244); art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; content.add_child(art)
   RarityStyle.decorate(art,card.rarity)
   if card.get("rarity","") == "Legendary":
@@ -882,16 +882,17 @@ func build_upgrade() -> void:
   if not full_text:
    var more = label(content, "Hover for full details", 11, MUTED); more.tooltip_text = card.description; more.mouse_filter = Control.MOUSE_FILTER_STOP
   var spacer = Control.new(); spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL; content.add_child(spacer)
-  button(content,"Preview in arena",func():
-   var demo=AbilityPreview.new();demo.game=self;demo.hero=h.duplicate(true);demo.card=card.duplicate(true);ui.add_child(demo);demo.build())
-  button(content, "Choose evolution" if card.type == "evolution" else "Learn ability" if card.type == "ability" and not h.learned.has(card.key) else "Choose upgrade", func():
+  if card.type != "apex":
+   button(content,"Preview in arena",func():
+    var demo=AbilityPreview.new();demo.game=self;demo.hero=h.duplicate(true);demo.card=card.duplicate(true);ui.add_child(demo);demo.build())
+  button(content, "Choose evolution" if card.type == "evolution" else "Choose apex" if card.type == "apex" else "Learn ability" if card.type == "ability" and not h.learned.has(card.key) else "Choose upgrade", func():
    if campaign.choose(h.id, index): sound.cue("upgrade", true); render()
    else: toast(campaign.last_error), true)
  label(box, "%d heroes awaiting their own choice. Wins slightly improve rarity." % pending.size(), 15, MUTED)
 
 func show_guide() -> void:
  var dialog = AcceptDialog.new(); ui.add_child(dialog); dialog.title = "Your first match · three steps"
- dialog.dialog_text = "1. DRAFT YOUR SQUAD\nSign a Legendary headliner (×3 cost), then build from the draft board: Epics cost ×2, Commons ×1. An elite four (2 Epics + 1 Common) gets the elite-squad bonus; a full five (1 Epic + 3 Commons) brings numbers.\n\n2. ARRANGE & SET TACTICS\nRoster → Arrange formation → drag your five into position.\nHero tactics → choose an approach and target priority.\n\n3. COMPETE, THEN DEVELOP\nEnter the arena. Fielded heroes earn XP; level-ups offer individual abilities.\n\nEach cup is a double-elimination bracket: lose twice and you're out. Every cup moves you on to the next; finish 1st, 2nd or 3rd for a Gold, Silver or Bronze chest.\n\n4. FORGE ITEMS\nBuy components at the outfitter after every match. Each champion carries 3 items; drop a second component on a champion holding one to forge a finished item (see the Recipe book). Trickster's Coin forges WILD items that change how a champion fights.\n\n5. TEMPERAMENT & SCALING\nEvery champion has a temperament (a strength and a weakness) and a scaling curve: early scalers dominate the first cups, late scalers start weak and take over. Gold text marks a champion's perfect role and ideal temperaments. Club → Settings changes difficulty."
+ dialog.dialog_text = "1. DRAFT YOUR SQUAD\nSign a Legendary headliner (×3 cost), then build from the draft board: Epics cost ×2, Commons ×1. An elite four (2 Epics + 1 Common) gets the elite-squad bonus; a full five (1 Epic + 3 Commons) brings numbers.\n\n2. ARRANGE & SET TACTICS\nRoster → Arrange formation → drag your five into position.\nHero tactics → choose an approach and target priority.\n\n3. COMPETE, THEN DEVELOP\nEnter the arena. Fielded heroes earn XP; level-ups offer individual abilities.\n\nEach cup is a double-elimination bracket: lose twice and you're out. Every cup moves you on to the next; finish 1st, 2nd or 3rd for a Gold, Silver or Bronze chest.\n\n4. FORGE ITEMS\nBuy components at the outfitter after every match. Each champion carries 3 items (4 after its first evolution at level 8, 5 with the Apex Arsenal at level 16); drop a second component on a champion holding one to forge a finished item (see the Recipe book). Trickster's Coin forges WILD items that change how a champion fights.\n\n5. TEMPERAMENT & SCALING\nEvery champion has a temperament (a strength and a weakness) and a scaling curve: early scalers dominate the first cups, late scalers start weak and take over. Gold text marks a champion's perfect role and ideal temperaments. Club → Settings changes difficulty."
  dialog.popup_centered(Vector2i(650, 420))
 
 func toggle_music() -> void:

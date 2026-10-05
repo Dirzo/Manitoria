@@ -276,7 +276,7 @@ func profile(h: Dictionary, yours: bool) -> void:
  GearUI.recommended_row(game, left, h, 40)
  if h.has("ais_history"): text(left, "Arena Impact form: %d  ·  last match %d  ·  %d matches" % [roundi(League.form(h)), int(h.get("ais_last", 0)), int(h.get("ais_games", 0))], 15, GOLD)
  text(left, "%d HP  ·  %d DMG  ·  %d%% armor  ·  %.1fs per attack  ·  %.1f range" % [stats.hp, stats.attack, stats.armor * 100, stats.interval, stats.range], 14)
- text(left, "%d bouts  ·  %d kills  ·  %.1f career impact/bout" % [h.bouts, h.kills, h.impact / maxf(1, h.bouts)], 15, MUTED)
+ text(left, "%d tour pts  ·  %d-%d  ·  %d MVP  ·  %d kills" % [int(h.get("tour_points", 0)), int(h.wins), int(h.get("losses", 0)), int(h.get("mvps", 0)), h.kills], 15, MUTED).tooltip_text = "World tour points: win +3, MVP +2, plus the cup finish for every champion who played (10 / 6 / 4 / 2).\n%d bouts · %.1f career impact per bout" % [h.bouts, h.impact / maxf(1, h.bouts)]
  if yours:
   action(left,"Team headliner" if h.id==state.get("headliner","") else "Make team headliner",func():
    if campaign.set_headliner(h.id):game.sound.cue("contest_lock");game.render()
@@ -325,11 +325,11 @@ func profile(h: Dictionary, yours: bool) -> void:
  text(right, HeroData.evolution_info(h).description if not evolution.is_empty() else "Choose Ravager, Guardian or Arcanist to change combat strengths and visual effects.", 16, MUTED)
  text(right, "Fill four ability slots, then raise chosen abilities to Rank 2. Wins slightly improve rare-card odds.", 15, GOLD)
  if yours:
-  text(right, "ITEMS · up to 3", 13, GOLD)
+  text(right, "ITEMS · %d slots%s" % [HeroData.item_slots(h), "  ·  4th slot at first evolution (Lv %d)" % HeroData.EVOLVE_LEVEL if HeroData.item_slots(h) < 4 else ("  ·  5th slot: Apex Arsenal at Lv %d" % HeroData.APEX_LEVEL if HeroData.item_slots(h) < 5 and str(h.get("apex", "")).is_empty() else "")], 13, GOLD)
   if not state.has("tour") and state.earned_gold < 300: text(right, "Unlock the armory by earning 300 gold in the arena.", 16, MUTED)
   else:
    var slots=horizontal(right)
-   for key in GearUI.SLOT_KEYS:GearUI.slot(game,slots,h,key,78)
+   for key in GearUI.slot_keys(h):GearUI.slot(game,slots,h,key,78)
    GearUI.bag(game,right,h)
 
  if h in state.market:
@@ -523,11 +523,38 @@ func club_page() -> void:
   text(box, "Team level %d / %d · %d tournament wins · %d arena gold" % [state.tour.level,WorldTour.MAX_LEVEL,state.trophies,state.earned_gold] if state.has("tour") else "Season %d    /    %d league titles    /    %d total arena gold earned" % [state.season, state.trophies, state.earned_gold], 22, TEAL)
   text(box, "Gold funds recruitment and equipment. Field five heroes to earn arena XP; reserves retain their progress until their next appearance.", 19, MUTED)
   action(box, "Open season calendar", func(): navigate("matches"))
+  records(body)
+  # Records first: they are what changes from match to match.
+  var shell = box
+  while shell.get_parent() != body: shell = shell.get_parent()
+  body.move_child(body.get_child(body.get_child_count() - 1), shell.get_index())
+
+## Guild records: every champion's world tour points, wins, losses and MVP performances.
+func records(parent: Node) -> void:
+ var box = card(parent)
+ var total = 0
+ for h in state.roster: total += int(h.get("tour_points", 0))
+ text(box, "CHAMPION RECORDS  ·  %d guild tour points" % total, 16, GOLD)
+ text(box, "Tour points: win +3, MVP +2, and every champion who played a cup shares its finish (champions +10, runner-up +6, third +4, fourth +2).", 14, MUTED)
+ var grid = GridContainer.new(); grid.columns = 8; grid.add_theme_constant_override("h_separation", 22); grid.add_theme_constant_override("v_separation", 6); box.add_child(grid)
+ for head in ["", "Champion", "Tour pts", "Wins", "Losses", "Win %", "MVP", "Kills"]: text(grid, head, 14, MUTED)
+ var list = state.roster.duplicate()
+ list.sort_custom(func(a, b): return int(a.get("tour_points", 0)) > int(b.get("tour_points", 0)) or (int(a.get("tour_points", 0)) == int(b.get("tour_points", 0)) and int(a.get("mvps", 0)) > int(b.get("mvps", 0))))
+ for h in list:
+  thumb(grid, h.sp, 36)
+  var n = text(grid, "%s  ·  %s" % [h.name, HeroData.species[h.sp].n], 16, GOLD if h.id == state.get("headliner", "") else WHITE); n.custom_minimum_size.x = 260
+  text(grid, str(int(h.get("tour_points", 0))), 17, GOLD)
+  text(grid, str(int(h.wins)), 16, Color("8cff9a"))
+  text(grid, str(int(h.get("losses", 0))), 16, Color("ff8a7a"))
+  var played = int(h.wins) + int(h.get("losses", 0))
+  text(grid, "%d%%" % roundi(100.0 * h.wins / played) if played > 0 else "–", 16, WHITE)
+  text(grid, ("★ %d" % int(h.get("mvps", 0))) if int(h.get("mvps", 0)) > 0 else "0", 16, GOLD if int(h.get("mvps", 0)) > 0 else MUTED)
+  text(grid, str(int(h.kills)), 16, WHITE)
 
 func armory() -> void:
  if state.has("tour"):
   var intro=card(body); text(intro,"Tournament outfitter",28)
-  text(intro,"The shop opens after every match. Equip three slots per hero: claws, armor and charm. Your inventory carries between locations.",18,MUTED)
+  text(intro,"The shop opens after every match. Champions carry three items, four after their first evolution and five with the Apex Arsenal at level 16. Your inventory carries between locations.",18,MUTED)
   if state.tour.shop: action(intro,"Visit outfitter",func(): game.phase="shop";game.render(),true)
   else: action(intro,"Manage equipped items",func(): navigate("roster"))
   return

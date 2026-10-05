@@ -176,7 +176,7 @@ static func champion(desk: ManagementDesk,parent: Node,h: Dictionary) -> void:
  var role=game.label(box,HeroData.species[h.sp].n+"  ·  "+("★ " if Traits.is_ideal(h) else "")+Traits.trait_of(h),15,TraitUI.IDEAL if Traits.is_ideal(h) else game.MUTED);role.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER;role.tooltip_text=Traits.describe(h)+"\n"+Traits.scaling_text(h.sp)+" · "+Traits.info(h.sp).calling
  TraitUI.rolls(game,box,h,true)
  var slots=HBoxContainer.new();slots.alignment=BoxContainer.ALIGNMENT_CENTER;slots.add_theme_constant_override("separation",12);box.add_child(slots)
- for key in GearUI.SLOT_KEYS:GearUI.slot(game,slots,h,key,62)
+ for key in GearUI.slot_keys(h):GearUI.slot(game,slots,h,key,62)
  xp_block(game,box,h)
  priority_toggle(desk,box,h)
  var actions=HBoxContainer.new();actions.alignment=BoxContainer.ALIGNMENT_CENTER;box.add_child(actions)

@@ -280,7 +280,25 @@ static func stats(hero: Dictionary, quality: float = 1.0) -> Dictionary:
  result.hp*=1.0+hero.get("legacy_hp",0.0)
  result.attack*=1.0+hero.get("legacy_attack",0.0)
  if is_awakened(hero):result.attack*=0.9
+ if hero.get("apex", "") == "apex_stats": result.hp *= 1.0 + APEX_STAT; result.attack *= 1.0 + APEX_STAT
  return result
+
+## Second evolution (Apex) at level 16: one permanent choice.
+const APEX_LEVEL := 16
+const APEX_STAT := 0.15
+const APEX_SKILL := 0.25
+const APEX := {
+ "apex_stats": {"name": "Apex Body", "summary": "+15% health, damage and ability power", "description": "A permanent +15% to health, damage and ability power."},
+ "apex_skill": {"name": "Apex Mastery", "summary": "Every skill +1 rank and +25% power", "description": "Every skill this champion owns (signature included) gains a rank where it can and +25% power."},
+ "apex_slot": {"name": "Apex Arsenal", "summary": "Unlock a 5th item slot", "description": "Carry a fifth item. Pairs with any build."},
+}
+
+## Item slots: 3, a 4th after the first evolution (or an awakening), a 5th from Apex Arsenal.
+static func item_slots(hero: Dictionary) -> int:
+ var n = 3
+ if not str(hero.get("evolution", "")).is_empty() or bool(hero.get("awakened", false)): n += 1
+ if hero.get("apex", "") == "apex_slot": n += 1
+ return n
 
 ## Power on a 1-100 scale that grows through the run: level-1 champions sit in the teens to high 30s,
 ## and only the best champions near level 20 approach 100. The colour of a Power number shows
@@ -372,7 +390,8 @@ static func cooldown_factor(hero: Dictionary) -> float:
  return (0.85 if hero.get("evolution", "") == "arcanist" else 1.0) * Evolutions.mod(hero, "cd") * Traits.mod(hero, "cd") * Forge.totals(hero).cd
 
 static func spell_factor(hero: Dictionary) -> float:
- return (1.20 if hero.get("evolution", "") == "arcanist" else 1.0) * Evolutions.mod(hero, "potency") * roll_mult(hero, "potency") * Traits.mod(hero, "potency") * (1.0 + Forge.totals(hero).potency)
+ var apex = {"apex_stats": 1.0 + APEX_STAT, "apex_skill": 1.0 + APEX_SKILL}.get(str(hero.get("apex", "")), 1.0)
+ return apex * (1.20 if hero.get("evolution", "") == "arcanist" else 1.0) * Evolutions.mod(hero, "potency") * roll_mult(hero, "potency") * Traits.mod(hero, "potency") * (1.0 + Forge.totals(hero).potency)
 
 static func choices(hero: Dictionary, won: bool, rng: RandomNumberGenerator, reward_level: int = -1) -> Array:
  var out = []
@@ -386,6 +405,10 @@ static func choices(hero: Dictionary, won: bool, rng: RandomNumberGenerator, rew
   for key in EVOLUTIONS:
    var e = EVOLUTIONS[key]
    out.append({"type":"evolution", "key":key, "name":species[hero.sp].n + " · " + e.name, "description":e.description, "rarity":"Evolution", "bonus":1.0})
+  return out
+ if level >= APEX_LEVEL and str(hero.get("apex", "")).is_empty() and not str(hero.get("evolution", "")).is_empty():
+  for key in APEX:
+   out.append({"type":"apex", "key":key, "name":APEX[key].name, "summary":"APEX · " + APEX[key].summary, "description":"Second evolution. " + APEX[key].description, "rarity":"Evolution", "bonus":1.0})
   return out
  # Upgrades always follow the skills this champion already chose; new skills only fill empty slots.
  var upgrades = []
@@ -443,6 +466,12 @@ static func apply_choice(hero: Dictionary, card: Dictionary) -> void:
   "evolution":
    if not hero.get("evolution", "").is_empty(): return
    hero.evolution = card.key
+  "apex":
+   if not str(hero.get("apex", "")).is_empty(): return
+   hero.apex = card.key
+   if card.key == "apex_skill":
+    hero.signature_rank = mini(MAX_RANK, hero.signature_rank + 1)
+    for k in hero.learned: hero.learned[k] = mini(MAX_RANK, int(hero.learned[k]) + 1)
   "vigor", "force", "focus": hero[card.type] = int(hero.get(card.type, 0)) + 1
  hero.history.append(card.name)
 
