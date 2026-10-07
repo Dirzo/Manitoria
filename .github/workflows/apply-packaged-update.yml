@@ -1,0 +1,25 @@
+name: Apply packaged Manitoria update
+on:
+  push:
+    branches: [main]
+    paths: ['.codex-transfer/manifest.json']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: manitoria-packaged-update
+  cancel-in-progress: false
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify and unpack the prepared update
+        run: python3 .github/scripts/apply_package.py
+      - name: Commit the game and analytics files
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Apply Manitoria balance pass and complete analytics audit'
+          git push origin HEAD:main
