@@ -331,7 +331,12 @@ func render() -> void:
   last_rendered_phase = phase
  sound.set_combat_paused(phase == "battle" and paused)
  sound.scene_music(music_now())
- for child in ui.get_children(): child.queue_free(); ui.remove_child(child)
+ if has_meta("retained_shop_carousel"):
+  get_meta("retained_shop_carousel").queue_free();remove_meta("retained_shop_carousel")
+ for child in ui.get_children():
+  if phase=="shop" and child is ChampionCarousel and child.heroes.map(func(h):return h.id)==(campaign.lineup()+campaign.state.roster.filter(func(h):return h.slot<0)).map(func(h):return h.id):
+   ui.remove_child(child);set_meta("retained_shop_carousel",child)
+  else:child.queue_free();ui.remove_child(child)
  match_label = null; event_box = null
  arena.visible = phase not in ["hub", "menu", "new", "shop", "starter", "intro", "runover"]
  if phase in ["hub", "menu", "new", "shop", "starter", "intro", "runover"]:
@@ -531,7 +536,6 @@ func controls_hint() -> void:
  l.position = Vector2(400, 820); l.size = Vector2(790, 25); l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 func prepare_match() -> void:
- if campaign.state.has("tour"): WorldTour.end_intermission(campaign)
  if not campaign.pending_heroes().is_empty(): phase = "upgrade"; render(); return
  if campaign.state.get("tour",{}).get("shop",false): phase="shop"; render(); return
  if campaign.state.get("tour",{}).get("complete",false) or (not campaign.state.has("tour") and campaign.state.round >= 17): tab = "overview"; phase = "hub"; render(); return
@@ -549,13 +553,15 @@ func build_prep() -> void:
  select.item_selected.connect(func(i): selected_id = campaign.state.roster[i].id; render())
  box.add_child(select)
  label(box, "BACK         MIDDLE         FRONT →", 12, GOLD)
- var grid = GridContainer.new(); grid.columns = 3; grid.add_theme_constant_override("h_separation", 6); grid.add_theme_constant_override("v_separation", 6); box.add_child(grid)
+ var grid = Control.new(); grid.custom_minimum_size = Vector2(250, 418); box.add_child(grid)
  for slot in range(15):
-  var cell = FormationCell.new(); cell.destination = slot; cell.custom_minimum_size = Vector2(90, 48)
+  var cell = FormationCell.new(); cell.destination = slot; cell.size = Vector2(94, 76)
+  cell.position = Vector2((slot % 3) * 78, int(slot / 3) * 76 + (38 if slot % 3 == 1 else 0))
   var heroes = campaign.lineup().filter(func(h): return h.slot == slot)
   cell.hero_id = heroes[0].id if not heroes.is_empty() else ""
-  cell.text = heroes[0].name if not heroes.is_empty() else "+"
-  if cell.hero_id == selected_id: cell.add_theme_stylebox_override("normal", style(Color("45636b"), GOLD, 8, 4, 2))
+  cell.caption = heroes[0].name if not heroes.is_empty() else "+"
+  cell.selected = cell.hero_id == selected_id
+  cell.tooltip_text = cell.caption + " · deployment hex"
   cell.placed.connect(place_hero)
   cell.pressed.connect(func(): place_hero(selected_id, slot))
   grid.add_child(cell)
@@ -593,7 +599,7 @@ func place_hero(id: String, destination: int) -> void:
 
 func preview_formation() -> void:
  arena.set_region(WorldTour.region(campaign) if campaign.state.has("tour") else {})
- arena.clear_fighters(); arena.target_distance = 49.0; arena.camera.h_offset = 0; arena.target_pitch = 0.95; arena.target_yaw = 0.0
+ arena.clear_fighters(); arena.target_distance = 49.0 * ArenaGrid.LINEAR_SCALE; arena.camera.h_offset = 0; arena.target_pitch = 0.95; arena.target_yaw = 0.0
  sim = BattleSim.new(); sim.silent = true
  sim.setup(campaign.lineup(), campaign.opponent().roster, campaign.match_seed(), campaign.quality())
  arena.sync(sim, 1.0, 1.0)
@@ -638,6 +644,7 @@ func begin_battle() -> void:
  campaign.state.erase("roster_intro")
  if not campaign.lineup_ready() or not campaign.pending_heroes().is_empty(): return
  if not exhibition and (campaign.state.get("tour",{}).get("shop",false) or campaign.state.get("tour",{}).get("complete",false)): return
+ if not exhibition and campaign.state.has("tour"):campaign.state.tour.cup_started=true
  if exhibition or not qa.is_empty() or campaign.save():
   phase = "battle"; paused = false; speed = 0.75 if tactical else 1.0; accumulator = 0.0; event_history.clear(); resolving = false
   sound.reset_battle()
@@ -815,7 +822,7 @@ func show_bracket_then_shop() -> void:
   if phase == "shop": FlowUI.banner(self, "SHOP", Color("c8ff9d"))
  var cup_over = campaign.state.tour.get("bracket",{}).get("finished",false)
  campaign.state.tour.board_seen = int(campaign.state.tour.get("serial", 0))
- var next_text = "New recruits  ▶" if campaign.state.tour.get("intermission", false) else "Shop  ▶"
+ var next_text = "Keep team  ▶" if campaign.state.tour.get("intermission", false) else "Shop  ▶"
  var after = (func(): render(); TournamentRewardsUI.open_screen(self, "progress", to_shop, next_text)) if cup_over else to_shop
  render()
  TournamentRewardsUI.open_screen(self, "bracket", after, "Cup results  ▶" if cup_over else "Shop  ▶", true)
@@ -852,7 +859,7 @@ func build_upgrade() -> void:
  label(details, "ARENA LEVEL UP  ·  ONE HERO, ONE CHOICE", 14, GOLD)
  var reward_level = h.rewards[0].level if not h.get("rewards", []).is_empty() else h.level
  label(details, "%s · Level %d" % [h.name, reward_level], 28)
- label(details, "%s  /  %s" % [HeroData.species[h.sp].n, HeroData.species[h.sp].role], 20, GOLD)
+ label(details, "%s  /  %s  /  %s build" % [HeroData.species[h.sp].n, HeroData.species[h.sp].role,SkillScaling.audited(h.sp,"signature").get("build_path","ap").to_upper()], 20, GOLD)
  label(details, "Choose an evolution to define this hero’s build. Evolving also unlocks a 4th item slot." if h.pending[0][0].type == "evolution" else "APEX · the second evolution. Pick one permanent upgrade." if h.pending[0][0].type == "apex" else "%d / %d abilities · Discover your kit, then rank up your chosen abilities." % [h.learned.size()+1, HeroData.ABILITY_SLOTS], 18, MUTED)
  var row = HBoxContainer.new(); box.add_child(row)
  for index in range(h.pending[0].size()):
@@ -886,7 +893,12 @@ func build_upgrade() -> void:
    button(content,"Preview in arena",func():
     var demo=AbilityPreview.new();demo.game=self;demo.hero=h.duplicate(true);demo.card=card.duplicate(true);ui.add_child(demo);demo.build())
   button(content, "Choose evolution" if card.type == "evolution" else "Choose apex" if card.type == "apex" else "Learn ability" if card.type == "ability" and not h.learned.has(card.key) else "Choose upgrade", func():
-   if campaign.choose(h.id, index): sound.cue("upgrade", true); render()
+   var newly_learned=card.type=="ability" and not h.learned.has(card.key)
+   var before_choice=h.duplicate(true)
+   if campaign.choose(h.id, index):
+    sound.cue("upgrade", true);render()
+    if newly_learned:
+     var demo=AbilityPreview.new();demo.game=self;demo.hero=before_choice;demo.card=card.duplicate(true);demo.unlocked=true;ui.add_child(demo);demo.build()
    else: toast(campaign.last_error), true)
  label(box, "%d heroes awaiting their own choice. Wins slightly improve rarity." % pending.size(), 15, MUTED)
 
@@ -943,6 +955,9 @@ func _process(dt: float) -> void:
     sim.step(1.0 / 30.0); accumulator -= 1.0 / 30.0
   arena.sync(sim, dt, 0.0 if paused else speed * dilation)
   if is_instance_valid(match_label): match_label.text = "%d   —   %d      %02d:%02d%s" % [sim.living(0, false).size(), sim.living(1, false).size(), int(sim.time) / 60, int(sim.time) % 60, "  PAUSED" if paused else ""]
+  if is_instance_valid(match_label) and sim.time>=CombatPacing.OVERTIME_START:
+   match_label.text+=" · OVERTIME"
+   match_label.tooltip_text="Healing and new shields reduced by %d%%"%roundi((1.0-CombatPacing.sustain_factor(sim.time))*100)
   if sim.finished: call_deferred("finish_battle")
  elif phase == "battle" and sim and resolving:
   # Fight over: the survivors keep breathing while the results are tallied.
@@ -974,15 +989,12 @@ func _input(event: InputEvent) -> void:
   var point = arena.ground_position(event.position)
   point.x += drag_offset.x; point.z += drag_offset.y
   for u in sim.units:
-   if u.hero.id == dragged_id: u.pos = Vector2(clampf(point.x, -10, -5), clampf(point.z, -6.2, 6.2))
+   if u.hero.id == dragged_id: u.pos = Vector2(clampf(point.x, ArenaGrid.FORMATION_COLUMNS[0], ArenaGrid.FORMATION_COLUMNS[2]), clampf(point.z, -ArenaGrid.BOUNDS.y, ArenaGrid.BOUNDS.y))
  if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed and not dragged_id.is_empty():
   var point = arena.ground_position(event.position)
   point.x += drag_offset.x; point.z += drag_offset.y
-  var columns = BattleSim.FORMATION_COLUMNS; var col = 0
-  for i in range(3):
-   if absf(point.x - columns[i]) < absf(point.x - columns[col]): col = i
-  var row = clampi(roundi(point.z / BattleSim.FORMATION_ROW_GAP + 2), 0, 4)
-  var id = dragged_id; dragged_id = ""; place_hero(id, row * 3 + col)
+  var slot = ArenaGrid.nearest_formation_slot(Vector2(point.x, point.z))
+  var id = dragged_id; dragged_id = ""; place_hero(id, slot)
 
 func _unhandled_input(event: InputEvent) -> void:
  if event is InputEventMouseButton and phase != "hub":

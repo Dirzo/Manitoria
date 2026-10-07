@@ -6,7 +6,12 @@ extends RefCounted
 # Fighters are tougher so a fight lasts long enough to read and plan around.
 const HP_SCALE := 1.75
 const BASIC_SCALE := 0.92
+static func support_heal_factor(support_count: int) -> float:
+	return maxf(.40,1.0-.30*maxi(0,support_count-1))
 const TIME_LIMIT := 150.0
+const OVERTIME_START := 60.0
+static func sustain_factor(seconds: float) -> float:
+	return clampf(1.0-maxf(0.0,seconds-OVERTIME_START)*0.020,0.05,1.0)
 # Skills are rarer but each one matters more.
 const SKILL_POWER := 1.12
 # A team never starts two skills within this many seconds (except emergency heals and Legendaries).

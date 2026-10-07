@@ -1,5 +1,11 @@
 # Manitoria
 
+The native Godot edition is now **0.70**, with hex combat, champion copies and stars, build-specific skills, updated artwork, item feedback/audio and a measured balance pass. Its editable project is in [`godot/`](godot/README.md).
+
+Explore [`Manitoria Atlas`](analytics/index.html) for all 32 champion pages, the 136-item screen and patch comparisons from 8,192 simulated matches. See the [0.70 balance notes](BALANCE-ATLAS-0.70.md) for changes, validation and sample limitations. Pages hosting setup is documented in [`analytics/README.md`](analytics/README.md).
+
+## Original browser edition
+
 A pixel-art arena manager where you run a club of mythical beasts. Build a roster, set how each beast fights, and climb from the Mud Pits to the Mythic Arena while every beast writes its own history.
 
 The whole game is a single file, `index.html`. Open it in a browser to play. There is no build step and nothing to install.

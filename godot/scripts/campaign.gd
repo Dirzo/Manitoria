@@ -58,7 +58,16 @@ func value_price(h: Dictionary) -> int:
  var lvl = 1.0 + 0.06 * (int(h.level) - 1)
  return maxi(60, roundi(League.cost(h.sp) * q * lvl / 5.0) * 5)
 
+func recruitment_open() -> bool:
+ if not state.has("tour"):return true
+ var t=state.tour
+ if state.get("run_over",false) or t.get("complete",false):return false
+ if t.get("intermission",false):return true
+ if t.get("shop",false):return false
+ return not t.get("cup_started",false) and int(t.get("serial",0))==0
+
 func recruit(id: String) -> bool:
+ if not recruitment_open():last_error="Your roster is locked for this cup. Recruit between cups after keeping your team.";return false
  if state.roster.size() >= 12: return false
  for h in state.market:
   if h.id == id and state.gold >= h.price:
@@ -77,7 +86,38 @@ func recruit(id: String) -> bool:
    return save()
  return false
 
+## The copy counter includes the original hero; purchased copies never occupy roster slots.
+func copy_purchases_open() -> bool:
+ if state.get("run_over",false) or state.get("tour",{}).get("complete",false):return false
+ return recruitment_open() or bool(state.get("tour",{}).get("shop",false))
+
+func copy_offer(h: Dictionary) -> Dictionary:
+ var t=state.get("tour",{})
+ return ChampionStars.offer(h,str(state.get("seed",0))+"|"+str(t.get("serial",0))+"|"+str(t.get("rerolls",0)))
+
+func buy_champion_copy(id: String) -> bool:
+ if not copy_purchases_open():last_error="Buy owned champion copies in the shop or between cups.";return false
+ if state.has("tour") and not state.tour.get("shop",false) and not state.tour.get("intermission",false) and not lineup_ready():last_error="Field at least four champions before buying copies.";return false
+ var h=hero_by_id(id)
+ if h.is_empty() or h not in state.roster:last_error="Choose a champion in your roster.";return false
+ if ChampionStars.copies(h)>=6:last_error="This champion is already three stars.";return false
+ var cost=League.cost(h.sp)
+ if int(state.gold)<cost:last_error="You need %d gold for this copy."%cost;return false
+ var before=state.duplicate(true)
+ var old_star=ChampionStars.tier(h)
+ var prior_stats=StatHex.effective(h)
+ var improved=ChampionStars.merge(h,copy_offer(h))
+ state.gold-=cost;h.copies=ChampionStars.copies(h)+1
+ h.copy_feedback={"before":prior_stats,"after":StatHex.effective(h),"improved":improved,"serial":int(state.get("tour",{}).get("serial",0))}
+ h.copy_gold=int(h.get("copy_gold",0))+cost
+ state.selected=h.id
+ add_news("Star upgrade · "+h.name if ChampionStars.tier(h)>old_star else "Champion copy · "+h.name,ChampionStars.label(h)+" · bought for %d gold"%cost)
+ if save():return true
+ state=before
+ return false
+
 func refresh_market() -> bool:
+ if not recruitment_open():last_error="Recruitment reopens between cups.";return false
  if state.roster.size() < 5 or state.gold < 25: return false
  state.gold -= 25
  var rng = RandomNumberGenerator.new(); rng.seed = state.seed + state.next_id
@@ -150,8 +190,7 @@ func choose(id: String, index: int) -> bool:
 
 func quality() -> float:
  if state.has("tour"):
-  var base=0.95 if state.difficulty=="Keeper" else (1.0+minf(0.08,0.011*(WorldTour.stage(self)-1))) if state.difficulty=="Champion" else 1.0
-  return base+mini(3,int(state.tour.bout))*0.025
+  return TourBalance.quality(int(state.tour.level),int(state.tour.bout),str(state.difficulty))
  if state.difficulty == "Keeper": return minf(0.96, 0.90 + state.round * 0.004)
  if state.difficulty == "Champion": return 1.08
  return 1.0
@@ -463,14 +502,16 @@ func add_news(title: String, detail: String) -> void:
 
 ## Sell a champion back for half of what it cost. Its items go to the bag. The headliner can't be sold.
 func sell_price(h: Dictionary) -> int:
- return roundi(float(h.get("price", League.cost(h.sp))) * 0.5)
+ return roundi(float(int(h.get("price", League.cost(h.sp)))+int(h.get("copy_gold",0))) * 0.5)
 
 func sell(id: String) -> bool:
+ if not recruitment_open():last_error="Keep your current roster until the cup finishes.";return false
  var h = hero_by_id(id)
  if h.is_empty() or h not in state.roster: last_error = "That champion isn't in your guild."; return false
  if id == str(state.get("headliner", "")): last_error = "Your headliner can't be sold. Make another champion headliner first."; return false
  var refund = sell_price(h)
  for v in h.get("equipment", {}).values(): state.inventory.append(str(v))
+ if not h.get("equipment",{}).is_empty():state.bag_unread=true
  state.roster.erase(h); state.gold += refund
  for f in state.get("formations", []):
   if f is Dictionary and f.has("slots"): f.slots.erase(id)
@@ -1370,6 +1411,7 @@ func buy_item(index: int) -> bool:
  if state.gold < item.price: last_error = "Not enough gold."; return false
  var before=state.duplicate(true)
  state.gold -= item.price; state.inventory.append(id); state.tour.stock[index] = ""
+ state.bag_unread=true
  if save(): return true
  state=before;return false
 
@@ -1405,6 +1447,7 @@ func unequip(id: String, slot: String) -> bool:
  if h.is_empty() or h not in state.roster or not h.get("equipment", {}).has(slot): return false
  var before=state.duplicate(true)
  state.inventory.append(h.equipment[slot]); h.equipment.erase(slot)
+ state.bag_unread=true
  if save():return true
  state=before;return false
 
@@ -1414,6 +1457,7 @@ func forge_bag(a: String, b: String) -> String:
  if made == "" or not state.inventory.has(a) or not state.inventory.has(b) or (a == b and state.inventory.count(a) < 2): return ""
  var before = state.duplicate(true)
  state.inventory.erase(a); state.inventory.erase(b); state.inventory.append(made)
+ state.bag_unread=true
  if save(): return made
  state = before; return ""
 
@@ -1460,13 +1504,20 @@ func buy_and_equip(index: int, id: String) -> bool:
  if save():return true
  state=before;return false
 
-func transfer_item(from_id: String,to_id: String,slot: String) -> bool:
+func transfer_item(from_id: String,to_id: String,slot: String,target_slot: String="") -> bool:
  if from_id==to_id:return false
  var source=hero_by_id(from_id);var target=hero_by_id(to_id)
  if source not in state.roster or target not in state.roster:return false
  var item_id=str(source.get("equipment",{}).get(slot,""))
  if item_id.is_empty():return false
  var before=state.duplicate(true)
+ if target_slot in GearUI.slot_keys(target):
+  var displaced=str(target.get("equipment",{}).get(target_slot,""))
+  if displaced!="":source.equipment[slot]=displaced
+  else:source.equipment.erase(slot)
+  target.equipment[target_slot]=item_id
+  if save():return true
+  state=before;return false
  source.equipment.erase(slot)
  if place_item(target, item_id) == "": state = before; return false
  if save():return true

@@ -82,6 +82,8 @@ const DISCOVERIES = {
  "salamander": [["Cinder Spit", "fire"], ["Molten Lance", "beam"]]
 }
 const EFFECTS = {
+ "brood": ["Hatch two spiderlings, up to three active, lasting 16s. AP strengthens their bites and health.", 16.0, 5.0],
+ "magma": ["Erupt a molten pool for 60% skill power on impact and 35% per second for 4s, slowing foes.", 14.0, 7.0],
  "quake": ["Slam nearby enemies for 150% attack and stun for 0.8s.", 10.0, 3.0],
  "rally": ["Rally allies: +22% attack and speed for 4s, with a small shield.", 14.0, 5.5],
  "fissure": ["Crack a line through foes for 150% attack and root for 1s.", 11.0, 7.0],
@@ -134,7 +136,7 @@ static func make_hero(sp: String, id: String, nickname: String, level: int = 1) 
 ## Set once per run (from the campaign seed) so every new game deals different traits and rolls.
 static var run_salt := ""
 const ROLL_KEYS = ["hp", "attack", "armor", "haste", "speed", "potency"]
-const ROLL_NAMES = {"hp": "Health", "attack": "Damage", "armor": "Armor", "haste": "Attack speed", "speed": "Move speed", "potency": "Ability power"}
+const ROLL_NAMES = {"hp": "Health", "attack": "Attack damage", "armor": "Armor", "haste": "Attack speed", "speed": "Move speed", "potency": "Ability power"}
 const ROLL_MAX = 31
 ## How much each stat matters to a role. Power level only rewards the rolls a role actually uses,
 ## so a tank with great damage rolls but poor health and armor is still a poor tank.
@@ -212,7 +214,12 @@ static func roll_total(hero: Dictionary) -> int:
 
 static func role_weights(sp: String) -> Dictionary:
  load_data()
- return ROLE_WEIGHTS.get(species[sp].role, {"hp": 0.25, "attack": 0.25, "haste": 0.2, "speed": 0.15, "potency": 0.15})
+ var build=SkillScaling.build_weights({"sp":sp,"learned":{}})
+ var weights={"hp":build.hp+0.10,"attack":build.ad,"armor":build.armor,"haste":build["as"],"speed":0.10,"potency":build.ap}
+ var total=0.0
+ for value in weights.values():total+=value
+ for key in weights:weights[key]/=total
+ return weights
 
 ## Role fit of the rolls: -1 .. +1, only counting the stats this creature's role relies on.
 ## Overall fit for the role: stat rolls (70%) and temperament (30%) together.
@@ -248,6 +255,11 @@ static func stats(hero: Dictionary, quality: float = 1.0) -> Dictionary:
  var level = hero.level
  var tierf = League.stat_factor(hero.sp)   # draft tier (Legendary / Epic / Common) and per-species balance
  var result = {"hp": (450.0 + (level - 1) * 24.0) * d.hp * tierf * quality * (1.0 + hero.get("vigor", 0) * 0.10), "attack": (43.0 + (level - 1) * 2.6) * d.atk * tierf * quality * (1.0 + hero.get("force", 0) * 0.08), "armor": clampf(0.08 + d.def * 0.09, 0.10, 0.28), "speed": d.mv * 0.036, "range": maxf(0.7, d.range / 44.0), "interval": 1.0 / (d.as * 0.85), "cooldown": d.cd}
+ if result.range > 2.0:
+  result.range *= 1.55 if d.role == "Artillery" else 1.35
+ if d.role == "Artillery":
+  # Fewer, weightier basic shots. Longer commitment keeps melee counterplay.
+  result.interval *= 1.25
  for item in Campaign.EQUIPMENT:
   if item.id not in hero.get("equipment", {}).values(): continue
   result.hp *= 1.0 + item.get("hp", 0.0)
@@ -259,7 +271,13 @@ static func stats(hero: Dictionary, quality: float = 1.0) -> Dictionary:
  result.hp *= roll_mult(hero, "hp"); result.attack *= roll_mult(hero, "attack")
  result.armor += roll_norm_now(hero, "armor") * 0.03
  result.interval /= roll_mult(hero, "haste"); result.speed *= roll_mult(hero, "speed")
+ result.interval /= 1.0 + hero.get("agility", 0) * 0.08
  var curve = Traits.curve(hero)
+ result.base_hp=(450.0+(level-1)*24.0)*d.hp*tierf*quality*curve
+ result.base_armor=clampf(0.08+d.def*0.09,0.10,0.28)
+ result.base_interval=1.0/(d.as*0.85)*(1.25 if d.role=="Artillery" else 1.0)
+ result.skill_base=(43.0+(level-1)*2.6)*d.atk*tierf*quality*curve
+ result.ability_power=result.skill_base*spell_factor(hero)*(1.0+hero.get("focus",0)*0.08)
  result.hp *= Traits.mod(hero, "hp") * curve
  result.attack *= Traits.mod(hero, "attack") * curve
  result.armor += Traits.mod(hero, "armor")
@@ -281,6 +299,13 @@ static func stats(hero: Dictionary, quality: float = 1.0) -> Dictionary:
  result.attack*=1.0+hero.get("legacy_attack",0.0)
  if is_awakened(hero):result.attack*=0.9
  if hero.get("apex", "") == "apex_stats": result.hp *= 1.0 + APEX_STAT; result.attack *= 1.0 + APEX_STAT
+ # Physical kits face full armor mitigation; keep their primary damage competitive with spells.
+ if SkillScaling.audited(hero.sp,"signature").get("build_path","ap")=="ad":result.attack*=1.12
+ # Stars multiply each independent damage channel once. Base health follows star health
+ # so health-scaling skills do not also receive the health bonus a second time.
+ result.hp*=ChampionStars.health(hero);result.base_hp*=ChampionStars.health(hero)
+ result.attack*=ChampionStars.damage(hero)
+ result.ability_power*=ChampionStars.damage(hero);result.skill_base*=ChampionStars.damage(hero)
  return result
 
 ## Second evolution (Apex) at level 16: one permanent choice.
@@ -305,7 +330,7 @@ static func item_slots(hero: Dictionary) -> int:
 ## quality (rarity, rolls, temperament) instead, via power_quality(), so a strong roll reads green early.
 static func power(hero: Dictionary) -> int:
  var lvl = int(hero.get("level", 1))
- return clampi(roundi((power_quality(hero) - 40.0) * 0.8 + (lvl - 1) * 3.15), 1, 100)
+ return clampi(roundi((power_quality(hero) - 40.0) * 0.8 + (lvl - 1) * 3.15 + [0,6,13][ChampionStars.tier(hero)-1]), 1, 100)
 
 ## Level-neutral quality on the old 40-99 rating scale (what the Power colour is based on).
 static func power_quality(hero: Dictionary) -> float:
@@ -341,13 +366,14 @@ const RIDERS = {
  "none": ["", ""], "burn": ["+ Burn", "Sets the main target ablaze for 3s."], "chill": ["+ Chill", "Slows the main target for 2s."],
  "stun": ["+ Stun", "Stuns the main target for 0.5s."], "root": ["+ Root", "Roots the main target for 0.8s."],
  "weaken": ["+ Weaken", "Weakens the main target's damage for 3s."], "silence": ["+ Silence", "Silences the main target for 1.5s."],
- "leech": ["+ Lifesteal", "Heals you for 35% of the damage."], "guard": ["+ Self shield", "Shields you for 10% of your max health."],
+ "leech": ["+ Siphon heal", "Heals you for 35% of this skill's power."], "guard": ["+ Self shield", "Shields you for 10% of your max health."],
  "haste": ["+ Haste", "Rallies you (+attack & speed) for 3s."], "mend": ["+ Mend", "Also heals the most wounded ally."],
- "echo": ["+ Echo", "Strikes the main target again for 40%."], "venom": ["+ Venom", "Poisons the main target for 4s."]}
+ "echo": ["+ Echo", "Strikes the main target again for 40% skill power."], "venom": ["+ Venom", "Poisons the main target for 4s at 20% skill power per second."]}
 
 static func learned_ability(sp: String, index: int) -> Dictionary:
- if index==12:return ChampionEvolution.action(sp)
- if index>=13:return Evolutions.grant_ability(sp,index-13)
+ load_data()
+ if index==12:return audit_ability(sp,index,ChampionEvolution.action(sp))
+ if index>=13:return audit_ability(sp,index,Evolutions.grant_ability(sp,index-13))
  var pool = ability_pool(sp)
  var row = pool[clampi(index, 0, pool.size() - 1)]
  var spec = EFFECTS[row[1]]
@@ -358,8 +384,34 @@ static func learned_ability(sp: String, index: int) -> Dictionary:
  var rider = RIDERS.get(row[2], ["", ""])
  var summary = EFFECT_SUMMARY[row[1]]
  if rider[0] != "" and rider[0].trim_prefix("+ ").to_lower() not in summary.to_lower(): summary += " " + rider[0]
- var detail = spec[0] + ((" " + rider[1]) if rider[1] != "" else "") + "  Power ×%.2f · %.1fs cooldown." % [power, cd]
- return {"key": str(index), "name": row[0], "effect": row[1], "rider": row[2], "power": power, "summary": summary, "description": detail, "cooldown": cd, "range": spec[2]}
+ var detail = spec[0].replace("% attack","% skill power") + ((" " + rider[1]) if rider[1] != "" else "") + "  Skill multiplier ×%.2f · %.1fs base cooldown. " % [power, cd] + SkillScaling.description(sp,row[1])
+ var reach = float(spec[2])
+ if species[sp].range / 44.0 > 2.0 and reach >= 6.0:
+  reach *= 1.40 if species[sp].role == "Artillery" else 1.25
+ return audit_ability(sp,index,{"key": str(index), "name": row[0], "effect": row[1], "rider": row[2], "power": power, "summary": summary, "description": detail, "cooldown": cd, "range": reach})
+
+static func audit_ability(sp: String,index: int,a: Dictionary) -> Dictionary:
+ if a.is_empty():return a
+ var data=SkillScaling.audited(sp,str(index))
+ if data.is_empty():return a
+ a=a.duplicate(true)
+ for key in ["name","effect","rider","power","cooldown"]:a[key]=data[key]
+ var spec=EFFECTS[a.effect]
+ a.range=float(spec[2])
+ if species[sp].range/44.0>2.0 and a.range>=6.0:a.range*=1.40 if species[sp].role=="Artillery" else 1.25
+ a.summary=EFFECT_SUMMARY.get(a.effect,"Summon slowing spiderlings")
+ if a.effect=="magma":a.summary="Molten pool: burn + slow"
+ if data.has("range"):a.range=float(data.range)
+ var rider=RIDERS.get(a.rider,["",""])
+ a.summary+=" "+rider[0] if not rider[0].is_empty() else ""
+ var reach_note=""
+ if a.effect in ["quake","whirl","fear"]:reach_note="Area: 1 hex around you. "
+ elif a.effect not in ["ward","rally","renew","brood"]:
+  var hexes=ArenaGrid.attack_hexes(a.range)
+  reach_note="Primary reach: %d hexes. "%hexes
+  a.summary+=" · %d hexes"%hexes
+ a.description=data.description+" "+rider[1]+" "+reach_note+"%.1fs base cooldown. "%a.cooldown+SkillScaling.description(sp,a.effect,str(index))
+ return a
 
 const SIGNATURE_SUMMARY = {"gore":"Charge + stun", "bulwark":"Taunt + stone shield", "smash":"Slam & slow, regenerates", "hunger":"Frenzy: attack + lifesteal",
  "howl":"Summon 2 wolf pups", "venom":"Leap + poison weakest", "skystrike":"Dive backline + stun", "foxfire":"Decoys + blink",
@@ -387,7 +439,7 @@ static func evolution_color(hero: Dictionary) -> Color:
  return Color(evolution_info(hero).get("color","ffffff"))
 
 static func cooldown_factor(hero: Dictionary) -> float:
- return (0.85 if hero.get("evolution", "") == "arcanist" else 1.0) * Evolutions.mod(hero, "cd") * Traits.mod(hero, "cd") * Forge.totals(hero).cd
+ return clampf((0.85 if hero.get("evolution", "") == "arcanist" else 1.0) * Evolutions.mod(hero, "cd") * Traits.mod(hero, "cd") * Forge.totals(hero).cd,0.60,1.50)
 
 static func spell_factor(hero: Dictionary) -> float:
  var apex = {"apex_stats": 1.0 + APEX_STAT, "apex_skill": 1.0 + APEX_SKILL}.get(str(hero.get("apex", "")), 1.0)
@@ -416,9 +468,9 @@ static func choices(hero: Dictionary, won: bool, rng: RandomNumberGenerator, rew
   var r = int(hero.learned[key])
   if r >= MAX_RANK: continue
   var a = learned_ability(hero.sp, int(key))
-  upgrades.append({"type":"ability", "key":key, "name":a.name + " · Rank %d" % (r + 1), "summary":"Upgrade your %s: +20%% power, faster" % a.name, "description":a.description + " Rank %d: +20%% potency and 8%% shorter cooldown." % (r + 1), "rarity":"Uncommon", "bonus":1.0, "upgrade":true})
+  upgrades.append({"type":"ability", "key":key, "name":a.name + " · Rank %d" % (r + 1), "summary":"Upgrade your %s: +20%% power, faster" % a.name, "description":a.description + " Rank %d: +20%% skill power and 8%% shorter cooldown." % (r + 1), "rarity":"Uncommon", "bonus":1.0, "upgrade":true})
  if hero.signature_rank < MAX_RANK:
-  upgrades.append({"type":"signature", "key":"signature", "name":species[hero.sp].ability_name + " · Rank %d" % (hero.signature_rank + 1), "summary":"Upgrade your signature: +20% power, faster", "description":"Your signature gains 20% potency and an 8% shorter cooldown.", "rarity":"Uncommon", "bonus":1.0, "upgrade":true})
+  upgrades.append({"type":"signature", "key":"signature", "name":species[hero.sp].ability_name + " · Rank %d" % (hero.signature_rank + 1), "summary":"Upgrade your signature: +20% power, faster", "description":"Your signature gains 20% skill power and an 8% shorter cooldown. "+SkillScaling.description(hero.sp,species[hero.sp].ab), "rarity":"Uncommon", "bonus":1.0, "upgrade":true})
  var discoveries = []
  if hero.learned.size() + 1 < ABILITY_SLOTS:
   for i in range(DISCOVERY_CHOICES):
@@ -438,15 +490,18 @@ static func choices(hero: Dictionary, won: bool, rng: RandomNumberGenerator, rew
  else:
   out = upgrades.slice(0, 3)
  if out.is_empty():
-  for t in [["vigor", "Iron Vitality", "+10% maximum health."], ["force", "Killing Instinct", "+8% attack."], ["focus", "Arcane Affinity", "+8% ability potency."]]:
+  var spell_growth = ["focus", "Arcane Affinity", "+8% ability potency."]
+  if SkillScaling.audited(hero.sp,"signature").get("build_path","ap") == "ad":
+   spell_growth = ["agility", "Relentless Tempo", "+8% attack speed."]
+  for t in [["vigor", "Iron Vitality", "+10% maximum health."], ["force", "Killing Instinct", "+8% attack."], spell_growth]:
    out.append({"type":t[0], "key":t[0], "name":t[1], "summary":t[2], "description":"Every skill is at max rank. " + t[2], "rarity":"Common", "bonus":1.0})
  for card in out:
   if card.type in ["ability","signature"]:
    var roll=rng.randf()
    if level>=5 and roll<(0.09 if won else 0.05):
-    card.rarity="Legendary";card.bonus=1.25;card.description+=" Legendary: +75% potency, a gilded spell effect and a moment in the spotlight. Recharges 12% slower."
+    card.rarity="Legendary";card.bonus=1.25;card.description+=" Legendary: +75% skill power, a gilded spell effect and a moment in the spotlight. Recharges 12% slower."
    elif roll<(0.31 if won else 0.21):
-    card.rarity="Rare";card.bonus=1.1;card.description+=" Rare: +30% potency and a luminous spell effect."
+    card.rarity="Rare";card.bonus=1.1;card.description+=" Rare: +30% skill power and a luminous spell effect."
  return out
 
 static func apply_choice(hero: Dictionary, card: Dictionary) -> void:
@@ -472,7 +527,7 @@ static func apply_choice(hero: Dictionary, card: Dictionary) -> void:
    if card.key == "apex_skill":
     hero.signature_rank = mini(MAX_RANK, hero.signature_rank + 1)
     for k in hero.learned: hero.learned[k] = mini(MAX_RANK, int(hero.learned[k]) + 1)
-  "vigor", "force", "focus": hero[card.type] = int(hero.get(card.type, 0)) + 1
+  "vigor", "force", "focus", "agility": hero[card.type] = int(hero.get(card.type, 0)) + 1
  hero.history.append(card.name)
 
 static func queue_reward(hero: Dictionary, level: int, won: bool, seed_value: int) -> void:

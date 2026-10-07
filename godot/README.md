@@ -1,3 +1,7 @@
+# Manitoria 0.60 — Hex Arena
+
+30% more playable arena area, hex paving and deployment, longer-range artillery, and a rotating champion shop with items beneath the featured champion. See [HEX-ARENA.md](HEX-ARENA.md) for controls, combat changes and validation.
+
 # Manitoria 0.24 — Champion Atelier
 
 Individual sculpt and material details across all 32 creatures. Kirin is the quality reference, not a shared design. See [CHAMPION-ATELIER.md](CHAMPION-ATELIER.md).

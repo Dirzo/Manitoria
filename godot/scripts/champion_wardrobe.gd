@@ -6,7 +6,7 @@ static func build(desk: ManagementDesk) -> void:
  var title=game.label(top,"YOUR CHAMPIONS",30);title.size_flags_horizontal=Control.SIZE_EXPAND_FILL
  var jump=game.button(top,"Formation & XP  ▼",func():pass)
  game.button(top,"Auto lineup",func():c.suggest_lineup();game.render(),false,c.state.roster.is_empty())
- game.button(top,"Recruit",func():desk.navigate("market"))
+ if c.recruitment_open():game.button(top,"Recruit",func():desk.navigate("market"))
  if hero.is_empty():game.label(desk.body,"Recruit your first champion to begin.",25);return
  next_steps(desk)
  var row=HBoxContainer.new();row.add_theme_constant_override("separation",12);desk.body.add_child(row)
@@ -14,7 +14,8 @@ static func build(desk: ManagementDesk) -> void:
  for i in range(5-c.lineup().size()):
   var empty=FantasyFrame.new();empty.custom_minimum_size=Vector2(280,338);row.add_child(empty)
   var box=VBoxContainer.new();empty.add_child(box);game.label(box,"+",62,game.GOLD).horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
-  game.button(box,"Recruit",func():desk.navigate("market"))
+  if c.recruitment_open():game.button(box,"Recruit",func():desk.navigate("market"))
+  else:game.label(box,"Roster locked until cup ends",14,game.MUTED)
  var lower=HBoxContainer.new();lower.add_theme_constant_override("separation",14);desk.body.add_child(lower)
  jump.pressed.connect(func():
   var sc=desk.body.get_parent()
@@ -64,7 +65,7 @@ static func xp_block(game: Node,parent: Node,h: Dictionary) -> void:
  if lv<LEGEND_LEVEL:goal="Legendary rolls in %d Lv"%(LEGEND_LEVEL-lv)
  elif str(h.get("evolution","")).is_empty() and lv<EVOLVE_LEVEL:goal="Evolves in %d Lv"%(EVOLVE_LEVEL-lv)
  elif str(h.get("evolution","")).is_empty():goal="Evolution ready!"
- else:goal=str(h.evolution).capitalize()
+ else:goal=HeroData.evolution_info(h).get("name","Evolved")
  game.label(head,goal,12,Color("ffb3ec") if goal.begins_with("Evol") else Color("ffd36e"),false)
  var bar=ProgressBar.new();bar.max_value=need;bar.value=int(h.xp);bar.show_percentage=false;bar.custom_minimum_size=Vector2(0,7);parent.add_child(bar)
  bar.add_theme_stylebox_override("background",game.style(Color("1d2a31"),Color.TRANSPARENT,4,0,0))
@@ -161,7 +162,7 @@ static func xp_guide(desk: ManagementDesk,parent: Node) -> void:
   game.label(grid,h.name+(" (bench)" if h.slot<0 else ""),13,Color.WHITE,false)
   game.label(grid,"Lv %d"%int(h.level),13,Color("c9d6dc"),false)
   game.label(grid,("★ " if pr=="focus" else "")+pr.capitalize(),13,col,false)
-  var lv=int(h.level);var goal=("Legendary rolls in %d Lv"%(LEGEND_LEVEL-lv)) if lv<LEGEND_LEVEL else (("Evolves in %d Lv"%(EVOLVE_LEVEL-lv)) if lv<EVOLVE_LEVEL and str(h.get("evolution","")).is_empty() else ("Evolution ready!" if str(h.get("evolution","")).is_empty() else str(h.evolution).capitalize()))
+  var lv=int(h.level);var goal=("Legendary rolls in %d Lv"%(LEGEND_LEVEL-lv)) if lv<LEGEND_LEVEL else (("Evolves in %d Lv"%(EVOLVE_LEVEL-lv)) if lv<EVOLVE_LEVEL and str(h.get("evolution","")).is_empty() else ("Evolution ready!" if str(h.get("evolution","")).is_empty() else HeroData.evolution_info(h).get("name","Evolved")))
   game.label(grid,goal,13,Color("ffb3ec") if goal.begins_with("Evol") else Color("ffd36e"),false)
 
 static func champion(desk: ManagementDesk,parent: Node,h: Dictionary) -> void:
@@ -170,6 +171,8 @@ static func champion(desk: ManagementDesk,parent: Node,h: Dictionary) -> void:
  frame.add_theme_stylebox_override("panel",game.style(Color(.09,.055,.16,.93),frame.accent,4,12,2))
  var box=VBoxContainer.new();box.add_theme_constant_override("separation",6);frame.add_child(box)
  var name_label=game.label(box,h.name+" · "+str(h.level),24,game.GOLD if selected else game.WHITE);name_label.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+ game.label(box,ChampionStars.label(h),13,game.GOLD,false).tooltip_text=ChampionStars.description(h)
+ var evo=game.label(box,ChampionStars.evolution_label(h),12,HeroData.evolution_color(h) if not str(h.get("evolution","")).is_empty() else game.MUTED);evo.tooltip_text=HeroData.evolution_info(h).get("description","Choose a species evolution at level eight; it unlocks a fourth item slot.")
  var preview_holder=GearToken.new();preview_holder.game=game;preview_holder.target_hero=h.id;preview_holder.custom_minimum_size=Vector2(252,120);box.add_child(preview_holder);preview_holder.name="Champion_"+h.id
  preview_holder.add_theme_stylebox_override("normal",StyleBoxEmpty.new());preview_holder.pressed.connect(func():game.selected_id=h.id;game.render())
  var preview=SplashArt.new();preview.sp=h.sp;preview_holder.add_child(preview);preview.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT);preview.mouse_filter=Control.MOUSE_FILTER_IGNORE

@@ -24,9 +24,9 @@ var effects = Node3D.new()
 var models: Dictionary = {}
 var resources: Dictionary = {}
 var camera_yaw = 0.30
-var camera_distance = 33.0
+var camera_distance = 33.0 * ArenaGrid.LINEAR_SCALE
 var target_yaw = 0.30
-var target_distance = 33.0
+var target_distance = 33.0 * ArenaGrid.LINEAR_SCALE
 var elapsed = 0.0
 var inspecting = false
 var flames: Array = []
@@ -93,6 +93,7 @@ func _ready() -> void:
  if not build_from_code and ResourceLoader.exists("res://scenes/arena_environment.tscn"):
   var stage = load("res://scenes/arena_environment.tscn").instantiate(); add_child(stage); world_stage=stage
   for node in stage.find_children("*", "Node3D", true, false):
+   if node is MultiMeshInstance3D and node.multimesh.mesh is BoxMesh: node.visible = false
    if node is MeshInstance3D and node.mesh is TorusMesh: node.visible = false
    if node is MeshInstance3D and node.mesh is BoxMesh and node.position.y < 0.1 and absf(Vector2(node.position.x,node.position.z).length()-4.3)<0.1: node.visible = false
    if node is Camera3D: camera = node
@@ -102,8 +103,9 @@ func _ready() -> void:
    for node in stage.get_children():
     if node is WorldEnvironment: node.environment.ssao_enabled = false; node.environment.glow_enabled = false
   camera.reparent(self); camera.scale = Vector3.ONE
-  stage.scale = Vector3(FLOOR_SCALE, 1, FLOOR_SCALE)
+  stage.scale = Vector3(FLOOR_SCALE, 1, FLOOR_SCALE) * Vector3(ArenaGrid.LINEAR_SCALE, 1, ArenaGrid.LINEAR_SCALE)
   polish_stage(stage)
+  build_hex_floor()
   camera.make_current(); update_camera(1.0)
   return
  var env = WorldEnvironment.new()
@@ -124,6 +126,12 @@ func _ready() -> void:
  var rim = DirectionalLight3D.new(); rim.rotation_degrees = Vector3(-22, 145, 0)
  rim.light_color = Color("83b6df"); rim.light_energy = 0.5; add_child(rim)
  build_architecture()
+ # The procedural fallback uses the same enlarged stage and unscaled hex cells.
+ for node in get_children():
+  if node is MeshInstance3D or node is MultiMeshInstance3D:
+   node.position *= Vector3(FLOOR_SCALE * ArenaGrid.LINEAR_SCALE, 1, FLOOR_SCALE * ArenaGrid.LINEAR_SCALE)
+   node.scale *= Vector3(FLOOR_SCALE * ArenaGrid.LINEAR_SCALE, 1, FLOOR_SCALE * ArenaGrid.LINEAR_SCALE)
+ build_hex_floor()
  camera = Camera3D.new(); camera.fov = 43; camera.far = 180; add_child(camera); camera.make_current()
  update_camera(1.0)
 
@@ -157,7 +165,7 @@ func build_architecture() -> void:
  for i in range(positions.size()):
   multimesh.set_instance_transform(i, Transform3D(Basis(), positions[i]))
   var shade = rng.randf_range(0.62, 0.88); multimesh.set_instance_color(i, Color(shade, shade * 1.01, shade * 0.97))
- var tiles = MultiMeshInstance3D.new(); tiles.multimesh = multimesh; tiles.material_override = tile_mat; add_child(tiles)
+ var tiles = MultiMeshInstance3D.new(); tiles.multimesh = multimesh; tiles.material_override = tile_mat; tiles.visible = false; add_child(tiles)
 
 
  for i in range(12):
@@ -219,6 +227,25 @@ func build_architecture() -> void:
   crowd.set_instance_color(i, Color.from_hsv(rng.randf(), 0.25, rng.randf_range(0.30, 0.70)))
  var spectators = MultiMeshInstance3D.new(); spectators.multimesh = crowd; spectators.material_override = crowd_mat; add_child(spectators)
 
+func build_hex_floor() -> void:
+ # A six-sided cylinder is a flat-top regular hexagon. A narrow gap exposes the
+ # darker stone beneath, making the grid readable without bright combat overlays.
+ var shape = CylinderMesh.new()
+ shape.top_radius = ArenaGrid.HEX_RADIUS * FLOOR_SCALE * 0.975
+ shape.bottom_radius = shape.top_radius
+ shape.height = 0.06; shape.radial_segments = 6
+ var pavers = MultiMesh.new(); pavers.transform_format = MultiMesh.TRANSFORM_3D
+ pavers.use_colors = true; pavers.mesh = shape
+ var points = ArenaGrid.floor_centers(); pavers.instance_count = points.size()
+ var rng = RandomNumberGenerator.new(); rng.seed = 1017
+ for i in range(points.size()):
+  pavers.set_instance_transform(i, Transform3D(Basis(Vector3.UP, PI / 6.0), world_point(points[i], 0.035)))
+  var shade = rng.randf_range(0.65, 0.93)
+  pavers.set_instance_color(i, Color(shade * 0.86, shade * 0.97, shade))
+ var mat = material(Color("435b60"), 0.12, 0.87); mat.vertex_color_use_as_albedo = true
+ var tiles = MultiMeshInstance3D.new(); tiles.name = "HexFloor"; tiles.multimesh = pavers; tiles.material_override = mat
+ tiles.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF; add_child(tiles)
+
 func update_camera(dt: float) -> void:
  camera_yaw = lerp_angle(camera_yaw, target_yaw, 1.0 - exp(-dt * 8.0))
  var goal = Vector3(0, 0.9, 0); var want = target_distance
@@ -234,7 +261,7 @@ func update_camera(dt: float) -> void:
    var spread = 0.0
    for p in pts: spread = maxf(spread, Vector2(p.x - c.x, p.z - c.z).length())
    goal = Vector3(c.x * 0.85, 0.9, c.z * 0.85)
-   want = clampf(spread * 1.75 + 13.0 + follow_bias, 12.0, 44.0)
+   want = clampf(spread * 1.75 + 13.0 + follow_bias, 12.0, 44.0 * ArenaGrid.LINEAR_SCALE)
  focus = focus.lerp(goal, 1.0 - exp(-dt * 2.6))
  camera_distance = lerpf(camera_distance, want, 1.0 - exp(-dt * (2.2 if follow_on and live else 8.0)))
  var target = focus
@@ -342,7 +369,7 @@ func spawn(u: Dictionary) -> void:
  var bubble_mat = material(Color(0.35, 0.82, 0.95, 0.16), 0.2, 0.3, true); bubble_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
  var bubble = mesh(holder, bubble_shape, bubble_mat, Vector3(0, 1.1, 0)); bubble.visible = false
 
- var name_label = Label3D.new(); name_label.text = u.hero.name; name_label.position.y = 0.22; name_label.font_size = 29; name_label.pixel_size = 0.010; name_label.modulate = team_color.lightened(0.4); name_label.outline_size = 8; name_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED; bars.add_child(name_label)
+ var name_label = Label3D.new(); name_label.text = u.hero.name + (" " + "★".repeat(ChampionStars.tier(u.hero)) if ChampionStars.tier(u.hero)>1 else ""); name_label.position.y = 0.22; name_label.font_size = 29; name_label.pixel_size = 0.010; name_label.modulate = team_color.lightened(0.4); name_label.outline_size = 8; name_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED; bars.add_child(name_label)
  if u.summon: bars.visible = false
  # Every mesh shares one overlay so the whole body flashes when struck or casting.
  var flash_mat = ShaderMaterial.new(); flash_mat.shader = HITFLASH
@@ -486,11 +513,11 @@ func handle_event(e: Dictionary) -> void:
  if e.has("species"): color = CardParticles.profile(e.species,e.get("credit","basic"),effect).color
  if card_particles:card_particles.event(e)
  match e.type:
-  "item_proc":
-   var item=ItemEffects.definition(str(e.credit).trim_prefix("item:"))
-   var tint=RarityStyle.color(item.get("rarity","Common"))
-   sparks(e.target,tint,5)
-   if e.pos.distance_to(e.target)>0.1:beam(Vector3(e.pos.x,1.2,e.pos.y),Vector3(e.target.x,1.2,e.target.y),tint,0.045,0.25)
+  "item_feedback":
+   if vfx:ItemFeedback.play(vfx,e,world_point(e.pos,0),world_point(e.target,0))
+   if e.stage=="proc":
+    flash(int(e.target_uid),ItemFeedback.profile(e.item_id).color,.35)
+    floating_text(e.target*FLOOR_SCALE,e.name,ItemFeedback.profile(e.item_id).color,23)
   "attack": pass
   "release":
    if not e.ranged: AttackVisuals.strike(self,e.pos,e.target,e.get("species",""))
@@ -540,7 +567,13 @@ func handle_event(e: Dictionary) -> void:
   "blocked":
    physical_contact(e);number_event(e)
   "impact":
-   pass # Card particles already provide directional impact debris.
+   if e.get("heavy", false) and vfx:
+    var c = fx_context(e, color)
+    var at = world_point(e.pos, 0.10)
+    vfx.rune(at, 2.0 if e.get("small", false) else 3.5, c.color, 1, 0.48, 0.0, 1.2)
+    vfx.smoke(at + Vector3.UP * 0.3, 2.2, c.smoke, 0.8)
+    vfx.spray(at, 14, c.motif, c.hot, Vector2(2.0, 4.5), Vector2(0.3, 0.6), 0.12, Vector3.UP, 1.4, 5.0, 0.8)
+    punch(0.38 if e.get("small", false) else 0.60)
   "bolt":
    fx_bolt(e, color)
   "projectile": pass # Visuals track live simulation projectiles, including pause and target movement.
@@ -629,18 +662,20 @@ func sync_projectiles(sim: BattleSim) -> void:
    var color = color_for(p.effect)
    if not source.is_empty(): color = CardParticles.profile(source.hero.sp,p.get("credit","basic"),p.effect).color
    var rarity=RarityStyle.for_skill(source.hero,p.get("credit","basic")) if not source.is_empty() else "Uncommon"
-   var c = AbilityFX.ctx(source.hero.sp if not source.is_empty() else "", color, rarity)
+   var c = AbilityFX.ctx(source.hero.sp if not source.is_empty() else "", color, rarity,p.get("credit","basic"),p.effect)
    var root = AbilityFX.projectile(vfx, c, p.effect); vfx.add_child(root)
    if rarity in ["Rare","Legendary"]: root.scale=Vector3.ONE*(1.4 if rarity=="Legendary" else 1.18)
+   if p.get("heavy", false): root.scale *= 1.5
    missiles[p.id] = {"node": root, "ctx": c, "last": Vector3.ZERO}
   var target = sim.find_unit(p.target)
   if not target.is_empty(): p.last_pos = target.pos
-  var arc = 4.0 if p.effect in ["meteor", "boulder"] else 0.35
+  var arc = 5.2 if p.effect in ["meteor", "boulder"] else (2.4 if p.get("heavy", false) else 0.65)
   var start = world_point(p.origin, 1.25); var end = world_point(p.last_pos, 1.15)
   var t = clampf(1.0 - p.remaining / p.duration, 0, 1)
   var entry = missiles[p.id]; var node: Node3D = entry.node
   node.position = start.lerp(end, t) + Vector3.UP * sin(t * PI) * arc
   var tangent = (end - start + Vector3.UP * cos(t * PI) * PI * arc).normalized()
+  if node.has_meta("skill_id") and tangent.length_squared()>.01:node.look_at(node.position+tangent,Vector3.UP)
   if node.has_meta("spin"): node.get_meta("spin").rotation = Vector3(t * 9.0, t * 5.0, 0)
   # Emit trail puffs on the simulation clock (pause-safe).
   var key = str(p.id)
@@ -661,7 +696,7 @@ func sync_zones(sim: BattleSim) -> void:
   if not zone_visuals.has(key):
    var color = color_for(zone.effect)
    if not source.is_empty(): color = CardParticles.profile(source.hero.sp, zone.get("credit","signature"), zone.effect).color
-   zone_visuals[key] = {"next": 0.0, "ctx": AbilityFX.ctx(source.hero.sp if not source.is_empty() else "", color, "Uncommon")}
+   zone_visuals[key] = {"next": 0.0, "ctx": AbilityFX.ctx(source.hero.sp if not source.is_empty() else "", color, "Uncommon",zone.get("credit","signature"),zone.effect)}
   var z = zone_visuals[key]
   if sim.time >= z.next:
    # Persistent ground effects renew themselves on the battle clock.
@@ -700,7 +735,7 @@ func sync_telegraphs(sim: BattleSim) -> void:
   var color = CardParticles.profile(u.hero.sp,pending.get("credit","signature"),pending.effect).color
   telegraphs[u.uid] = true
   if vfx and AttackVisuals.style(u.hero.sp,pending.effect).is_empty():
-   AbilityFX.windup(vfx, AbilityFX.ctx(u.hero.sp, color, RarityStyle.for_skill(u.hero, pending.get("credit","signature"))), world_point(u.pos, 0.0), pending.total)
+   AbilityFX.windup(vfx, AbilityFX.ctx(u.hero.sp, color, RarityStyle.for_skill(u.hero, pending.get("credit","signature")),pending.get("credit","signature"),pending.effect), world_point(u.pos, 0.0), pending.total)
  for id in telegraphs.keys():
   if not live.has(id): telegraphs.erase(id)
 
@@ -824,6 +859,7 @@ func set_region(region: Dictionary) -> void:
  region_name=title
  if is_instance_valid(world_props):world_props.queue_free()
  world_props=Node3D.new();add_child(world_props)
+ world_props.scale=Vector3(FLOOR_SCALE * ArenaGrid.LINEAR_SCALE,1,FLOOR_SCALE * ArenaGrid.LINEAR_SCALE)
  if is_instance_valid(world_stage):
   if theme_materials.is_empty():
    for node in world_stage.find_children("*","GeometryInstance3D",true,false):
@@ -865,12 +901,13 @@ const BOLT_FAMILIES = ["storm", "stormcall", "chain", "beam", "fissure"]
 const SUPPORT_FAMILIES = ["ward", "renew", "rally", "tidal", "radiance", "regrowth", "bulwark", "shellup", "tailwind", "prideroar", "rootbloom", "howl", "hunger"]
 
 func fx_context(e: Dictionary, color: Color) -> Dictionary:
- return AbilityFX.ctx(e.get("species", ""), color, e.get("rarity", "Uncommon"))
+ return AbilityFX.ctx(e.get("species", ""), color, e.get("rarity", "Uncommon"),e.get("credit","signature"),e.get("effect",""))
 
 func fx_cast(e: Dictionary, color: Color) -> void:
  var effect = e.get("effect", "basic")
  if not vfx or effect in BOLT_FAMILIES: return
  var c = fx_context(e, color)
+ c.area_radius=ArenaGrid.ROW_GAP*FLOOR_SCALE
  var from = world_point(e.pos, 0.0); var to = world_point(e.get("target", e.pos), 0.0)
  var targets = []
  if sim_ref:
@@ -880,8 +917,7 @@ func fx_cast(e: Dictionary, color: Color) -> void:
     for u in sim_ref.units:
      if u.alive and u.team == caster.team and u.pos.distance_to(caster.pos) <= 5.5: targets.append(world_point(u.pos, 0.0))
    else:
-    for u in sim_ref.units:
-     if u.alive and u.team != caster.team and u.pos.distance_to(e.get("target", e.pos)) <= 2.6: targets.append(world_point(u.pos, 0.0))
+    for u in sim_ref.near_foes(caster,e.get("target",e.pos),2.5):targets.append(world_point(u.pos,0.0))
  AbilityFX.play(vfx, effect, c, from, to, targets)
 
 func fx_bolt(e: Dictionary, color: Color) -> void:

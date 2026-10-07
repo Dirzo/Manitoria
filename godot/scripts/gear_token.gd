@@ -55,6 +55,7 @@ func _forge_preview(data: Variant) -> String:
  var eq=hero.get("equipment",{})
  if target_slot!="":
   var here=str(eq.get(target_slot,""))
+  if data.get("kind","")=="equipped" and here!="":return ""
   return Forge.combine(str(data.id),here) if Forge.is_component(here) else ""
  for k in eq:
   if data.get("kind","")=="equipped" and str(data.get("owner",""))==target_hero and str(data.get("slot",""))==str(k):continue
@@ -68,7 +69,8 @@ func _notification(what: int) -> void:
   original_style=get_theme_stylebox("normal")
   var data=get_viewport().gui_get_drag_data()
   if _can_drop_data(Vector2.ZERO,data):
-   add_theme_stylebox_override("normal",game.style(Color("225344"),Color("c8ff9d"),4,6,3))
+   var silhouette=name.begins_with("CarouselHero_")
+   add_theme_stylebox_override("normal",game.style(Color(0.1,0.35,0.24,0.08) if silhouette else Color("225344"),Color("c8ff9d"),4,6,3))
    var made=_forge_preview(data)
    if made!="":
     var s=minf(size.x,size.y)*0.56

@@ -2,6 +2,12 @@ class_name AbilityArt
 extends RefCounted
 const KEYS = ["gore","bulwark","smash","hunger","howl","venom","skystrike","foxfire","acid","shriek","flamewave","chain","gaze","rootbloom","tidal","radiance","triplebite","prideroar","frostroar","shellup","maul","regrowth","threefold","stonedive","vanish","antlerrush","boulder","stormcall","riddle","tailwind","brood","magma","quake","rally","fissure","ward","meteor","renew","drain","fear","ambush","toxic","execute","gust","wisps","barrage","silence","beam","storm","frost","roots","fire","whirl","ravager","guardian","arcanist","vigor","force","focus","basic","blocked","rebirth","victory","summons"]
 static func texture(key: String) -> Texture2D:
+ HeroData.load_data()
+ for sp in HeroData.species:
+  if HeroData.species[sp].ab==key:
+   var signature_path="res://assets/abilities/signature-%s.png"%sp
+   if ResourceLoader.exists(signature_path):return load(signature_path)
+   break
  if key.begins_with("item:"):
   var ipath="res://assets/items/i_%s.png" % key.trim_prefix("item:")
   if ResourceLoader.exists(ipath): return load(ipath)
@@ -25,12 +31,17 @@ static func texture(key: String) -> Texture2D:
 static func card_key(hero: Dictionary, card: Dictionary) -> String:
  if card.type == "ability": return "discovery:%s:%s" % [hero.sp,card.key]
  if card.type == "signature": return HeroData.species[hero.sp].ab
- if card.type == "evolution" and Evolutions.has(str(card.key)): return Evolutions.art(card.key)
+ if card.type == "evolution" and Evolutions.has(str(card.key)):
+  var gi=Evolutions.grant_index(str(card.key))
+  return "discovery:%s:%d"%[hero.sp,gi] if gi>=0 else Evolutions.art(card.key)
  if card.type == "apex":
-  if card.key == "apex_skill" and Evolutions.has(str(hero.get("evolution", ""))): return Evolutions.art(hero.evolution)
+  if card.key == "apex_skill" and Evolutions.has(str(hero.get("evolution", ""))):
+   var apex_grant=Evolutions.grant_index(str(hero.evolution))
+   return "discovery:%s:%d"%[hero.sp,apex_grant] if apex_grant>=0 else Evolutions.art(hero.evolution)
   return {"apex_stats": "renew", "apex_slot": "ward"}.get(str(card.key), "ward")
  return card.key
 static func metric_info(sp: String, key: String) -> Dictionary:
+ if key in ["evolution","on_hit"]:return {"name":"Evolution on-hit" if key=="evolution" else "On-hit damage","art":HeroData.species[sp].ab}
  if key.begins_with("item:"):
   var item=ItemEffects.definition(key.trim_prefix("item:"))
   return {"name":item.get("name","Equipment"),"art":item.get("art","ward")}

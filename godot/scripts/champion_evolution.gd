@@ -18,7 +18,8 @@ const EFFECTS={
  "pegasus":"gust","arachne":"roots","salamander":"fire"}
 static func info(hero: Dictionary) -> Dictionary:
  var sp=hero.get("sp","minotaur");var effect=EFFECTS[sp]
- return {"name":NAMES[sp],"color":color(sp).to_html(false),"description":"Ascended action: "+HeroData.EFFECTS[effect][0]+" Every 20s. Keeps your four abilities; -10% attack. A larger silhouette and elemental crest mark your evolution."}
+ var action=HeroData.learned_ability(sp,12)
+ return {"name":NAMES[sp],"color":color(sp).to_html(false),"description":"Ascended action: "+action.description+" Keeps your four abilities; -10% attack damage. A larger silhouette and elemental crest mark your evolution."}
 static func color(sp: String) -> Color:
  var colors={"fire":"ffa35b","storm":"8bdfff","renew":"97eda6","ward":"ffe3a1","roots":"78ce92","toxic":"b7ed69","frost":"a9e5ff","drain":"d591d8","silence":"cbb1ff"}
  return Color(colors.get(EFFECTS[sp],"ffca83"))

@@ -8,12 +8,12 @@ extends Control
 # Clockwise from the top-left corner, like a classic RPG stat chart.
 const AXES := ["attack", "haste", "speed", "hp", "armor", "potency"]
 const GUIDE := {
-	"attack": {"name": "Damage", "does": "Basic-attack hit, and the base most skills multiply.", "scale": "Grows a lot every level (species damage x2.6 per level), plus its roll creeps up as it levels."},
-	"haste": {"name": "Attack speed", "does": "How often it attacks. More swings means more damage and more on-hit effects.", "scale": "Grows slowly through its roll as it levels. Items and temperament add more."},
+	"attack": {"name": "Attack damage", "does": "Basic attacks and the attack-damage portion of physical or hybrid skills. Does not boost pure spells.", "scale": "Grows with level, rolls, temperament and attack-damage items."},
+	"haste": {"name": "Attack speed", "does": "More basic attacks and on-hit effects. Also boosts designated rapid skills; it does not speed every spell.", "scale": "Grows through rolls, items and temperament. Rapid-skill amplification is capped."},
 	"speed": {"name": "Move speed", "does": "How fast it reaches the back line, chases, or escapes.", "scale": "Grows slowly through its roll as it levels. Items add more."},
 	"hp": {"name": "Health", "does": "How much damage it can take before it falls.", "scale": "Grows a lot every level (species health x24 per level), plus its roll creeps up as it levels."},
-	"armor": {"name": "Armor", "does": "Cuts the damage of every hit it takes.", "scale": "Grows slowly through its roll as it levels. Items and the Guardian-style evolutions add more."},
-	"potency": {"name": "Ability power", "does": "Strength of its skills: damage, healing, shields and control.", "scale": "Grows through its roll as it levels. Each skill rank adds +20% power and an 8% shorter cooldown."},
+	"armor": {"name": "Armor", "does": "Reduces incoming damage and strengthens armor-scaling slams and defensive skills.", "scale": "Rolls, armor items and defensive evolutions raise it."},
+	"potency": {"name": "Ability power", "does": "Spells, healing and the ability-power portion of hybrid skills. Does not boost basic attacks. Ability haste separately reduces cooldowns.", "scale": "Grows with level, AP rolls, AP items and caster evolutions."},
 }
 const FILL := Color(0.22, 0.75, 0.39, 0.78)
 const EDGE := Color(0.12, 0.45, 0.24)
@@ -28,17 +28,21 @@ var values := {}      # axis -> 0..1 for this champion
 var baseline := {}    # axis -> 0..1 for the species with average rolls
 var excels: Array = []
 var hover := -1
+var prior_values := {}
+var improvement := {}
+var reveal := 1.0
 var font: Font
 static var _ranges := {}
 
 ## Effective value of each stat (bigger is better for every axis).
 static func effective(h: Dictionary) -> Dictionary:
 	var s = HeroData.stats(h)
-	return {"attack": s.attack, "haste": 1.0 / maxf(0.05, s.interval), "speed": s.speed, "hp": s.hp, "armor": s.armor, "potency": HeroData.spell_factor(h)}
+	return {"attack": s.attack, "haste": 1.0 / maxf(0.05, s.interval), "speed": s.speed, "hp": s.hp, "armor": s.armor, "potency": s.ability_power}
 
 ## Min/max of every stat across all species at a level, with average rolls (cached per level).
 static func ranges(level: int) -> Dictionary:
-	if _ranges.has(level): return _ranges[level]
+	var cache_key=str(level)+"|"+JSON.stringify(League.run_tiers)
+	if _ranges.has(cache_key): return _ranges[cache_key]
 	HeroData.load_data()
 	var lo = {}; var hi = {}
 	for sp in HeroData.species:
@@ -52,8 +56,8 @@ static func ranges(level: int) -> Dictionary:
 	# Leave room past the species extremes for great (or poor) rolls, items and temperament.
 	for k in AXES:
 		var span = maxf(0.0001, hi[k] - lo[k]); lo[k] -= span * 0.15; hi[k] += span * 0.15
-	_ranges[level] = {"lo": lo, "hi": hi}
-	return _ranges[level]
+	_ranges[cache_key] = {"lo": lo, "hi": hi}
+	return _ranges[cache_key]
 
 static func normalized(h: Dictionary) -> Dictionary:
 	var r = ranges(int(h.get("level", 1))); var e = effective(h); var out = {}
@@ -90,12 +94,26 @@ static func make(parent: Node, h: Dictionary, px: Vector2) -> StatHex:
 func _ready() -> void:
 	font = get_theme_default_font()
 	values = normalized(hero); baseline = species_baseline(hero)
+	var feedback=hero.get("copy_feedback",{})
+	if not feedback.is_empty():
+		var bounds=ranges(int(hero.level))
+		for k in AXES:
+			prior_values[k]=clampf((feedback.before[k]-bounds.lo[k])/maxf(.0001,bounds.hi[k]-bounds.lo[k]),0,1)
+			improvement[k]=feedback.after[k]-feedback.before[k]
+		reveal=0.0
+		var tween=create_tween();tween.tween_property(self,"reveal",1.0,.75).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tween.finished.connect(func():queue_redraw())
+		set_process(true)
 	var order = AXES.duplicate(); order.sort_custom(func(a, b): return values[a] > values[b])
 	# Stars mark real strengths (Strong or better, up to two); a champion with none still shows its best stat.
 	excels = order.slice(0, 2).filter(func(k): return values[k] >= 0.6)
 	if excels.is_empty(): excels = [order[0]]
 	mouse_exited.connect(func(): hover = -1; queue_redraw())
 	resized.connect(queue_redraw)
+
+func _process(_delta: float) -> void:
+	if reveal<1.0:queue_redraw()
+	else:set_process(false)
 
 func center() -> Vector2: return size * 0.5 + Vector2(0, 4)
 func radius() -> float: return minf(size.x * 0.5 - 84.0, size.y * 0.5 - 26.0)
@@ -119,22 +137,32 @@ func _draw() -> void:
 	var ghost = PackedVector2Array()
 	for i in range(7): ghost.append(corner(i % 6, R * (0.08 + 0.92 * baseline[AXES[i % 6]])))
 	draw_polyline(ghost, GHOST, 1.5, true)
+	# Gold outline holds the pre-purchase stats while the current polygon expands.
+	if not prior_values.is_empty():
+		var prior=PackedVector2Array()
+		for i in range(7):prior.append(corner(i%6,R*(.08+.92*prior_values[AXES[i%6]])))
+		draw_polyline(prior,STAR,2.0,true)
 	# This champion.
 	var poly = PackedVector2Array()
-	for i in range(6): poly.append(corner(i, R * (0.08 + 0.92 * values[AXES[i]])))
+	for i in range(6): poly.append(corner(i, R * (0.08 + 0.92 * lerpf(prior_values.get(AXES[i],values[AXES[i]]),values[AXES[i]],reveal))))
 	draw_colored_polygon(poly, FILL)
 	var edge = poly.duplicate(); edge.append(poly[0]); draw_polyline(edge, EDGE, 2.0, true)
 	var w = HeroData.role_weights(hero.sp)
 	for i in range(6):
 		var k = AXES[i]; var p = corner(i, R + 14.0)
-		var name = ("★ " if k in excels else "") + GUIDE[k].name + (" •" if w.has(k) else "")
-		var col = STAR if k in excels else LABEL
+		var name = ("★ " if k in excels else "") + ({"attack":"AD","haste":"AS","speed":"MOV","hp":"HP","armor":"ARM","potency":"AP"}[k] if size.x<500 else GUIDE[k].name) + (" •" if w.has(k) else "")
+		if improvement.get(k,0.0)>.00001:
+			var delta=float(improvement[k])
+			name+=" +%.1fpp"%(delta*100) if k=="armor" else " +%.1f%%"%(delta/maxf(.0001,hero.copy_feedback.before[k])*100) if k=="speed" else " +%.1f"%delta
+		var col = Color("8effac") if improvement.get(k,0.0)>.00001 else STAR if k in excels else LABEL
 		if hover == i: col = Color.WHITE
 		var fs = 14 if size.x >= 400 else 12
 		var tw = font.get_string_size(name, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 		var x = p.x - tw * 0.5
 		if i == 2: x = p.x + 2.0                      # right corner: text runs outward
 		elif i == 5: x = p.x - tw - 2.0               # left corner
+		if size.x<500 and i in [0,4]:x=p.x-tw
+		elif size.x<500 and i in [1,3]:x=p.x
 		var y = p.y + 5.0
 		if i in [0, 1]: y = p.y - 2.0                 # top corners sit above the rim
 		elif i in [3, 4]: y = p.y + 14.0              # bottom corners sit below

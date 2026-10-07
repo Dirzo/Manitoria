@@ -72,8 +72,8 @@ const DATA := {
  "kitsune": [
   {"name": "Ninefold Oracle", "niche": "Illusion caster", "look": "arcanist", "color": "cbb1ff", "mods": {"potency": 1.2, "cd": 0.9},
    "text": "+20% ability power and 10% faster skills."},
-  {"name": "Foxfire Duelist", "niche": "Flame skirmisher", "look": "ravager", "color": "ff9a5c", "mods": {"attack": 1.12}, "perks": {"on_hit": ["burn", 0.3]},
-   "text": "+12% damage; basic attacks often set foes alight."},
+  {"name": "Foxfire Duelist", "niche": "Flame skirmisher", "look": "ravager", "color": "ff9a5c", "mods": {"potency": 1.12, "haste": 1.10, "hp": 0.92}, "perks": {"on_hit": ["burn", 0.3]},
+   "text": "+12% ability power, +10% attack speed, -8% health; basic attacks often burn with AP."},
   {"name": "Shrine Keeper", "niche": "Spirit support", "look": "guardian", "color": "ffe9c0", "grant": {"effect": "wisps", "name": "Shrine Wisps", "cd": 12.0}, "perks": {"ward": 0.03},
    "text": "New ability Shrine Wisps. Every cast shields the most wounded ally for 3% of its health."},
  ],
@@ -96,8 +96,8 @@ const DATA := {
  "phoenix": [
   {"name": "Dawn Eternal", "niche": "Burn caster", "look": "arcanist", "color": "ffa35b", "sig": {"power": 1.3}, "mods": {"potency": 1.12},
    "text": "Flame Wave burns 30% harder. +12% ability power."},
-  {"name": "Cinder Hawk", "niche": "Fire skirmisher", "look": "ravager", "color": "ff6a1c", "mods": {"attack": 1.12, "speed": 1.1}, "perks": {"on_hit": ["burn", 0.35]},
-   "text": "+12% damage, +10% move speed; attacks often burn."},
+  {"name": "Cinder Hawk", "niche": "Fire skirmisher", "look": "ravager", "color": "ff6a1c", "mods": {"potency": 1.12, "haste": 1.08, "speed": 1.1, "hp": 0.92}, "perks": {"on_hit": ["burn", 0.35]},
+   "text": "+12% ability power, +8% attack speed, +10% move speed, -8% health; attacks often burn with AP."},
   {"name": "Ashen Saint", "niche": "Rebirth healer", "look": "guardian", "color": "ffd9a0", "grant": {"effect": "renew", "name": "Ember Renewal", "cd": 13.0}, "mods": {"hp": 1.1},
    "text": "New ability Ember Renewal heals nearby allies. +10% health."},
  ],
@@ -106,14 +106,14 @@ const DATA := {
    "text": "Chain Lightning hits 30% harder and returns 15% sooner."},
   {"name": "Jade Celestial", "niche": "Spell weaver", "look": "arcanist", "color": "7fe0b0", "skills": {"power": 1.2, "cd": 0.9}, "mods": {"potency": 1.08},
    "text": "Learned skills hit 20% harder and recharge 10% faster. +8% ability power."},
-  {"name": "Storm Charger", "niche": "Lightning lancer", "look": "ravager", "color": "eef6ff", "mods": {"attack": 1.12, "speed": 1.1}, "perks": {"on_hit": ["stun", 0.07]},
-   "text": "+12% damage, +10% move speed; hooves can stun."},
+  {"name": "Storm Charger", "niche": "Lightning lancer", "look": "ravager", "color": "eef6ff", "mods": {"potency": 1.12, "haste": 1.08, "speed": 1.1, "hp": 0.92}, "perks": {"on_hit": ["stun", 0.07]},
+   "text": "+12% ability power, +8% attack speed, +10% move speed, -8% health; hooves can stun."},
  ],
  "basilisk": [
   {"name": "Obsidian Monarch", "niche": "Lockdown controller", "look": "arcanist", "color": "a9e5ff", "sig": {"cd": 0.75, "power": 1.1},
    "text": "Petrifying Gaze returns 25% sooner."},
-  {"name": "Venomfang Basilisk", "niche": "Poison bruiser", "look": "ravager", "color": "b7ed69", "mods": {"attack": 1.12}, "perks": {"on_hit": ["venom", 0.35]},
-   "text": "+12% damage; bites often poison."},
+  {"name": "Venomfang Basilisk", "niche": "Poison bruiser", "look": "ravager", "color": "b7ed69", "mods": {"potency": 1.12, "haste": 1.10, "hp": 0.92}, "perks": {"on_hit": ["venom", 0.35]},
+   "text": "+12% ability power, +10% attack speed, -8% health; bites often poison with AP."},
   {"name": "Stoneskin Wyrm", "niche": "Petrify tank", "look": "guardian", "color": "c8c0a8", "mods": {"hp": 1.15, "armor": 0.05}, "perks": {"thorns": 0.1},
    "text": "+15% health, +5 armor, reflects 10% of damage taken."},
  ],
@@ -136,8 +136,8 @@ const DATA := {
  "unicorn": [
   {"name": "Astral Paragon", "niche": "Main healer", "look": "guardian", "color": "fffbe6", "sig": {"power": 1.3, "cd": 0.85},
    "text": "Radiant Horn heals 30% more and returns 15% sooner."},
-  {"name": "Starlance Charger", "niche": "Holy bruiser", "look": "ravager", "color": "ffd36a", "mods": {"attack": 1.15, "hp": 1.08}, "perks": {"lifesteal": 0.08},
-   "text": "+15% damage, +8% health, heals 8% of basic damage."},
+  {"name": "Starlance Charger", "niche": "Holy bruiser", "look": "ravager", "color": "ffd36a", "mods": {"potency": 1.15, "hp": 1.08}, "perks": {"lifesteal": 0.08},
+   "text": "+15% ability power, +8% health, heals 8% of basic damage."},
   {"name": "Moonlit Seer", "niche": "Protective caster", "look": "arcanist", "color": "cbb1ff", "grant": {"effect": "ward", "name": "Moonveil", "cd": 14.0}, "mods": {"potency": 1.1},
    "text": "New ability Moonveil shields the team. +10% ability power."},
  ],
@@ -184,8 +184,8 @@ const DATA := {
  "hydra": [
   {"name": "Undying Crown", "niche": "Regenerating tank", "look": "guardian", "color": "97eda6", "perks": {"regen": 0.01}, "sig": {"power": 1.2},
    "text": "Regenerates 1% of max health every second; Regrowth heals 20% more."},
-  {"name": "Venomous Heads", "niche": "Poison cleaver", "look": "ravager", "color": "b7ed69", "mods": {"attack": 1.12}, "perks": {"on_hit": ["venom", 0.4]},
-   "text": "+12% damage; every head's bite often poisons."},
+  {"name": "Venomous Heads", "niche": "Poison cleaver", "look": "ravager", "color": "b7ed69", "mods": {"potency": 1.12, "haste": 1.10, "hp": 0.92}, "perks": {"on_hit": ["venom", 0.4]},
+   "text": "+12% ability power, +10% attack speed, -8% health; every head's bite often poisons with AP."},
   {"name": "Marsh Leviathan", "niche": "Drain bruiser", "look": "arcanist", "color": "6fa86a", "grant": {"effect": "drain", "name": "Marsh Drain", "cd": 12.0}, "perks": {"lifesteal": 0.06},
    "text": "New ability Marsh Drain steals health; heals 6% of basic damage."},
  ],
@@ -248,8 +248,8 @@ const DATA := {
  "pegasus": [
   {"name": "Dawn Herald", "niche": "Speed support", "look": "guardian", "color": "ffe9b8", "sig": {"power": 1.3, "cd": 0.85},
    "text": "Tailwind grants 30% more and returns 15% sooner."},
-  {"name": "Skylance Paladin", "niche": "Diving support", "look": "ravager", "color": "ffd36a", "mods": {"attack": 1.15, "hp": 1.1, "speed": 1.08},
-   "text": "+15% damage, +10% health, +8% move speed."},
+  {"name": "Skylance Paladin", "niche": "Diving support", "look": "ravager", "color": "ffd36a", "mods": {"potency": 1.15, "hp": 1.1, "speed": 1.08},
+   "text": "+15% ability power, +10% health, +8% move speed."},
   {"name": "Cloud Shepherd", "niche": "Healer", "look": "arcanist", "color": "d8f0ff", "grant": {"effect": "renew", "name": "Cloudmend", "cd": 13.0}, "perks": {"ward": 0.03},
    "text": "New ability Cloudmend heals nearby allies; every cast shields the most wounded ally for 3% of its health."},
  ],
@@ -258,8 +258,8 @@ const DATA := {
    "text": "Brood spiderlings hit 30% harder and are summoned 20% sooner."},
   {"name": "Silk Weaver", "niche": "Root controller", "look": "arcanist", "color": "e0e0ff", "grant": {"effect": "roots", "name": "Web Snare", "cd": 12.0}, "perks": {"on_hit": ["root", 0.1]},
    "text": "New ability Web Snare roots a cluster; bites can root."},
-  {"name": "Venom Matriarch", "niche": "Poison carry", "look": "ravager", "color": "b7ed69", "mods": {"attack": 1.12}, "perks": {"on_hit": ["venom", 0.4]},
-   "text": "+12% damage; bites often poison."},
+  {"name": "Venom Matriarch", "niche": "Poison carry", "look": "ravager", "color": "b7ed69", "mods": {"potency": 1.12, "haste": 1.10, "hp": 0.92}, "perks": {"on_hit": ["venom", 0.4]},
+   "text": "+12% ability power, +10% attack speed, -8% health; bites often poison with AP."},
  ],
  "salamander": [
   {"name": "Molten Heart", "niche": "Lava caster", "look": "arcanist", "color": "ff5a14", "sig": {"power": 1.3, "cd": 0.85}, "mods": {"potency": 1.08},
@@ -279,7 +279,19 @@ static func entry(key: String) -> Dictionary:
 	var parts = key.split(":")
 	var list: Array = DATA.get(parts[0], [])
 	var i = int(parts[1])
-	return list[i] if i >= 0 and i < list.size() else {}
+	if i<0 or i>=list.size():return {}
+	var result=list[i].duplicate(true)
+	var path=SkillScaling.audited(parts[0],"signature").get("build_path","ap")
+	var old="potency" if path=="ad" else "attack"
+	var primary="attack" if path=="ad" else "potency"
+	var mods=result.get("mods",{})
+	if float(mods.get(old,1.0))>1.0:
+		var amount=roundi((mods[old]-1)*100)
+		mods[primary]=float(mods.get(primary,1.0))*float(mods[old]);mods.erase(old);result.mods=mods
+		var replacement="+%d%% %s"%[amount,"attack damage" if path=="ad" else "ability power"]
+		for label in ["AP","ability power","ability potency","damage","attack damage"]:
+			result.text=result.text.replace("+%d%% %s"%[amount,label],replacement)
+	return result
 
 static func of(hero: Dictionary) -> Dictionary:
 	return entry(str(hero.get("evolution", "")))
@@ -322,7 +334,7 @@ static func art(key: String) -> String:
 	if e.is_empty(): return key
 	if not e.get("grant", {}).is_empty(): return e.grant.effect
 	if not e.get("sig", {}).is_empty(): return HeroData.species[key.split(":")[0]].ab
-	return {"guardian": "ward", "ravager": "ambush"}.get(e.look, "wisps")
+	return HeroData.species[key.split(":")[0]].ab
 
 static func look(key: String) -> String:
 	if key in ["ravager", "guardian", "arcanist", "ascended"]: return key

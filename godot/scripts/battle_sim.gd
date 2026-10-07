@@ -15,12 +15,12 @@ var ticks = 0
 var silent = false
 var battle_seed = 0
 var team_cast := [-10.0, -10.0]   # when each team's latest skill lands (CombatPacing.TEAM_SPACING)
-const BOUNDS = Vector2(12.2, 7.5)
+const BOUNDS = ArenaGrid.BOUNDS
 # Body radius per species (sim units), measured from each model's footprint.
 const BODY = {"arachne":0.83,"basilisk":0.68,"cerberus":0.68,"chimera":0.68,"cyclops":0.68,"direwolf":0.68,"gargoyle":0.68,"golem":0.68,"griffin":0.68,"harpy":0.68,"hydra":0.68,"jackalope":0.68,"kirin":0.68,"kitsune":0.68,"manticore":0.68,"minotaur":0.68,"naga":0.68,"nekomata":0.68,"nemean":0.71,"owlbear":0.68,"pegasus":0.68,"phoenix":0.68,"salamander":0.69,"sphinx":0.68,"thunderbird":0.68,"treant":0.68,"troll":0.68,"unicorn":0.68,"wendigo":0.68,"wyvern":0.68,"yeti":0.68,"zaratan":0.68}
 
-const FORMATION_COLUMNS = [-10.0, -7.4, -5.0]
-const FORMATION_ROW_GAP = 3.1
+const FORMATION_COLUMNS = ArenaGrid.FORMATION_COLUMNS
+const FORMATION_ROW_GAP = ArenaGrid.ROW_GAP
 
 func setup(left: Array, right: Array, seed_value: int, rival_quality: float = 1.0) -> void:
  units.clear(); projectiles.clear(); zones.clear()
@@ -36,15 +36,13 @@ func setup(left: Array, right: Array, seed_value: int, rival_quality: float = 1.
    var hero = list[i]
    var slot = int(hero.get("slot", i))
    if slot < 0: slot = i
-   var col = slot % 3
-   var row = slot / 3
-   var x = FORMATION_COLUMNS[col]
-   var pos = Vector2(x if team == 0 else -x, (row - 2) * FORMATION_ROW_GAP)
+   var pos = ArenaGrid.formation_position(slot, team)
    var unit = add_unit(hero, team, pos, rival_quality if team else 1.0)
    if elite:
     unit.max_hp *= CombatPacing.ELITE_SQUAD.hp; unit.hp = unit.max_hp
     unit.attack *= CombatPacing.ELITE_SQUAD.attack; unit.attack_basic = unit.get("attack_basic", unit.attack) * CombatPacing.ELITE_SQUAD.attack
     unit.elite = true
+    unit.skill_base *= 1.20;unit.ability_power *= 1.20
 
 func add_unit(hero: Dictionary, team: int, pos: Vector2, quality: float = 1.0, owner: int = -1) -> Dictionary:
  hero=hero.duplicate(true)
@@ -54,6 +52,7 @@ func add_unit(hero: Dictionary, team: int, pos: Vector2, quality: float = 1.0, o
  var s = HeroData.stats(hero, quality)
  var u = {"uid": uid, "hero": hero.duplicate(true), "team": team, "pos": pos, "heading": PI / 2 if team == 0 else -PI / 2, "hp": s.hp, "max_hp": s.hp, "attack": s.attack, "armor": s.armor, "speed": s.speed, "range": s.range, "interval": s.interval, "cd": rng.randf_range(1.3, 2.8), "attack_timer": rng.randf_range(0.0, 0.4), "windup": 0.0, "target": -1, "pending_target": -1, "status": {}, "shield": 0.0, "shield_time": 0.0, "cast_time": 0.0, "alive": true, "moving": false, "reborn": false, "summon": owner >= 0, "owner": owner, "ttl": 16.0, "damage": 0.0, "healing": 0.0, "blocked": 0.0, "kills": 0, "kill_chain": 0, "last_kill": -20.0, "ability_cds": {}, "radius": BODY.get(hero.sp, 0.72)}
  u.items = {}; u.tactics = BattleTactics.for_hero(hero)
+ for key in ["ability_power","skill_base","base_hp","base_armor","base_interval"]:u[key]=s[key]
  if owner < 0 and float(Evolutions.perk(hero, "regen", 0.0)) > 0.0: u.evo_regen = float(Evolutions.perk(hero, "regen", 0.0))
  u.velocity = Vector2.ZERO
  u.start_pos = pos; u.area_wait = {}; u.recovery = 0.0; u.windup_total = 0.0
@@ -66,13 +65,17 @@ func add_unit(hero: Dictionary, team: int, pos: Vector2, quality: float = 1.0, o
   u.max_hp *= CombatPacing.HP_SCALE; u.hp = u.max_hp; u.attack_basic = u.attack * CombatPacing.BASIC_SCALE
  else:
   u.attack_basic = u.attack
+ if owner < 0 and HeroData.species[hero.sp].role == "Artillery": u.attack_basic *= 1.30
  if owner >= 0:
   u.max_hp *= 0.21; u.hp = u.max_hp; u.attack *= 0.36; u.radius = 0.3
   u.range = 0.7; u.speed *= 1.2
  uid += 1
  units.append(u)
  Forge.setup_unit(self, u)
- emit({"type": "spawn", "uid": u.uid, "pos": pos})
+ u.attack_hexes = ArenaGrid.attack_hexes(u.range)
+ relocate_hex(u, pos)
+ u.start_pos = u.pos
+ emit({"type": "spawn", "uid": u.uid, "pos": u.pos})
  return u
 
 func emit(e: Dictionary) -> void:
@@ -97,6 +100,76 @@ func find_unit(id: int) -> Dictionary:
  for u in units:
   if u.uid == id: return u
  return {}
+
+func occupied_cells(except_uid: int = -1) -> Dictionary:
+ var occupied = {}
+ for unit in units:
+  if not unit.alive or unit.uid == except_uid or not unit.has("cell"): continue
+  occupied[unit.cell] = true
+  if unit.has("next_cell"): occupied[unit.next_cell] = true
+ return occupied
+
+func relocate_hex(unit: Dictionary, destination: Vector2) -> void:
+ var blocked_cells = occupied_cells(unit.uid)
+ var best = unit.get("cell",ArenaGrid.nearest(destination))
+ var closest_distance = INF
+ for cell in ArenaGrid.cells():
+  if blocked_cells.has(cell): continue
+  var d = ArenaGrid.point(cell).distance_squared_to(destination)
+  if d < closest_distance: closest_distance = d; best = cell
+ unit.cell = best; unit.pos = ArenaGrid.point(best)
+ unit.erase("next_cell"); unit.velocity = Vector2.ZERO; unit.moving = false
+
+func swap_hexes(a: Dictionary, b: Dictionary) -> void:
+ var cell = a.cell; a.cell = b.cell; b.cell = cell
+ for unit in [a,b]:
+  unit.erase("next_cell"); unit.pos = ArenaGrid.point(unit.cell); unit.velocity = Vector2.ZERO; unit.moving = false
+
+func in_attack_range(a: Dictionary, b: Dictionary) -> bool:
+ return not a.has("next_cell") and ArenaGrid.distance(a.cell,b.cell) <= a.attack_hexes
+
+func begin_hex_step(unit: Dictionary, target: Dictionary, lurking: bool=false, retreat: bool=false) -> void:
+ var occupied = occupied_cells(unit.uid)
+ var start: Vector2i = unit.cell
+ var goal: Vector2i = target.cell
+ if lurking:
+  goal = ArenaGrid.nearest(Vector2(lerpf(unit.start_pos.x,0.0,0.5),signf(unit.start_pos.y)*6.6))
+ elif unit.tactics.opening == "flank" and time < 4.0:
+  goal = ArenaGrid.nearest(Vector2(target.pos.x,signf(unit.start_pos.y)*6.8))
+ if retreat:
+  var best = start; var best_distance = ArenaGrid.distance(start,target.cell)
+  for cell in ArenaGrid.neighbors(start):
+   if not occupied.has(cell) and ArenaGrid.distance(cell,target.cell)>best_distance:
+    best=cell;best_distance=ArenaGrid.distance(cell,target.cell)
+  if best!=start: unit.next_cell=best
+  return
+ # Breadth-first search finds the shortest open route to a firing hex.
+ var frontier: Array[Vector2i] = [start]
+ var previous = {start:start}
+ var found = start
+ var index = 0
+ while index < frontier.size():
+  var cell = frontier[index]; index += 1
+  if cell!=start and (ArenaGrid.distance(cell,goal)<=unit.attack_hexes if goal==target.cell else cell==goal):
+   found=cell;break
+  for neighbor in ArenaGrid.neighbors(cell):
+   if occupied.has(neighbor) or previous.has(neighbor): continue
+   previous[neighbor]=cell;frontier.append(neighbor)
+ if found==start:return
+ while previous[found]!=start:found=previous[found]
+ unit.next_cell=found
+
+func advance_hex_step(unit: Dictionary, dt: float) -> void:
+ var destination = ArenaGrid.point(unit.next_cell)
+ var direction = destination-unit.pos
+ var speed = unit.speed*(0.55 if active(unit,"slow") else 1.0)*(1.22 if active(unit,"rally") else 1.0)
+ unit.velocity=direction.normalized()*speed
+ unit.heading=atan2(direction.x,direction.y);unit.moving=true
+ unit.pos=unit.pos.move_toward(destination,speed*dt)
+ if unit.pos.is_equal_approx(destination):
+  unit.cell=unit.next_cell;unit.erase("next_cell")
+  unit.pos=destination;unit.velocity=Vector2.ZERO;unit.moving=false
+  ItemFeedback.augment(self,unit,"move",unit)
 
 func living(team: int, include_summons: bool = true) -> Array:
  return units.filter(func(u): return u.alive and u.team == team and (include_summons or not u.summon))
@@ -177,7 +250,9 @@ func area_ready(u: Dictionary, effect: String, center: Vector2, radius: float) -
  return false
 
 func near_foes(u: Dictionary, center: Vector2, radius: float) -> Array:
- return foes(u).filter(func(e): return e.pos.distance_to(center) <= radius + e.radius)
+ var center_cell=ArenaGrid.nearest(center)
+ var hex_radius=maxi(1,roundi(radius/ArenaGrid.ROW_GAP))
+ return foes(u).filter(func(e): return ArenaGrid.distance(e.cell,center_cell)<=hex_radius)
 
 ## Crowd control credit: whoever acted last is credited with the control time they apply to foes.
 var cc_source: Dictionary = {}
@@ -185,9 +260,16 @@ const CC_WEIGHT := {"stun": 1.0, "root": 1.0, "silence": 1.0, "fear": 1.0, "slow
 
 func status(u: Dictionary, key: String, seconds: float) -> void:
  if not u.alive: return
+ var original_seconds=seconds
  seconds = Forge.status_mod(u, key, seconds)
+ if seconds<original_seconds:
+  ItemFeedback.augment(self,u,"resist",u)
+  if key=="slow" and Forge.has(u,"pilgrim"):ItemFeedback.signal_effect(self,u,"pilgrim",u)
+  if key in ["stun","root","silence"] and Forge.has(u,"stoneskin") and u.hp/u.max_hp>.5:ItemFeedback.signal_effect(self,u,"stoneskin",u)
  if seconds <= 0.0: return
- if ItemEffects.has(u,"windstep") and key in ["stun","root","slow"]: seconds*=0.7
+ if ItemEffects.has(u,"windstep") and key in ["stun","root","slow"]:
+  seconds*=0.7
+  if seconds>0:ItemFeedback.signal_effect(self,u,"windstep",u)
  if CC_WEIGHT.has(key) and not cc_source.is_empty() and cc_source.team != u.team:
   cc_source.cc = cc_source.get("cc", 0.0) + seconds * CC_WEIGHT[key]
  u.status[key] = maxf(u.status.get(key, 0.0), seconds)
@@ -198,17 +280,25 @@ func status(u: Dictionary, key: String, seconds: float) -> void:
   u.erase("pending_cast"); u.cast_time = 0.0
 
 func shield(u: Dictionary, value: float) -> void:
+ var original_value=value
  value = Forge.shield_mod(u, value)
+ if value>original_value:ItemFeedback.signal_effect(self,u,"worldtree",u)
+ value *= CombatPacing.sustain_factor(time)
  u.shield = minf(u.max_hp * 0.55, u.shield + value)
  u.shield_time = 5.0
 
 func heal(source: Dictionary, target: Dictionary, amount: float, credit: String = "") -> void:
  if not target.alive: return
  amount = Forge.heal_mod(target, amount, source)
+ if HeroData.species.get(source.hero.sp,{}).get("role","")=="Support":
+  var support_count=living(source.team,false).filter(func(u):return HeroData.species.get(u.hero.sp,{}).get("role","")=="Support").size()
+  amount*=CombatPacing.support_heal_factor(support_count)
+ amount *= CombatPacing.sustain_factor(time)
  if active(target,"scorch"):
   var owner_unit=find_unit(int(target.get("scorch_source",-1)))
-  if not owner_unit.is_empty():track(owner_unit,"healing_denied",minf(amount,target.max_hp-target.hp)-minf(amount*0.65,target.max_hp-target.hp),"item:emberfang")
-  amount*=0.65
+  var healing_factor=.50 if not owner_unit.is_empty() and Forge.has(owner_unit,"grievous") else .65
+  if not owner_unit.is_empty():track(owner_unit,"healing_denied",minf(amount,target.max_hp-target.hp)-minf(amount*healing_factor,target.max_hp-target.hp),"item:grievous" if healing_factor==.50 else "item:emberfang")
+  amount*=healing_factor
  var actual = minf(amount, target.max_hp - target.hp)
  target.hp += actual; source.healing += actual; target.healing_received += actual
  if target.summon:
@@ -219,6 +309,10 @@ func heal(source: Dictionary, target: Dictionary, amount: float, credit: String 
  if source.summon:
   var owner_unit = find_unit(source.owner)
   if not owner_unit.is_empty(): owner_unit.healing += actual
+ if actual>0:
+  ItemFeedback.credited(self,source,target,credit,actual)
+  if Forge.has(source,"chalice"):ItemFeedback.signal_effect(self,source,"chalice",target,"proc",actual)
+  if Forge.has(target,"worldtree"):ItemFeedback.signal_effect(self,target,"worldtree",target,"proc",actual)
  if actual > 0: emit({"type": "heal", "uid": target.uid, "source": source.uid, "amount": actual, "pos": target.pos, "credit": credit if not credit.is_empty() else source.credit})
 
  ItemEffects.on_heal(self,source,target,actual,credit)
@@ -228,6 +322,10 @@ var reflecting := false
 func hurt(source: Dictionary, target: Dictionary, amount: float, magical: bool = true, credit: String = "") -> void:
  if not target.alive: return
  var hit_credit=credit if not credit.is_empty() else str(source.credit)
+ if hit_credit=="signature":magical=SkillScaling.magical(source.hero.sp,HeroData.species[source.hero.sp].ab)
+ elif hit_credit.begins_with("ability:"):
+  var skill_key=hit_credit.trim_prefix("ability:")
+  magical=SkillScaling.magical(source.hero.sp,HeroData.learned_ability(source.hero.sp,int(skill_key)).effect,skill_key)
  if magical and ItemEffects.has(target,"spellguard"):
   track(target,"mitigated",amount*.12,"item:spellguard");amount*=.88
  if hit_credit=="basic" and target.shield>0:RoleItems.trigger(self,source,"shield_hit",target)
@@ -264,11 +362,19 @@ func hurt(source: Dictionary, target: Dictionary, amount: float, magical: bool =
   var ls = float(Evolutions.perk(source.hero, "lifesteal", 0.0))
   if ls > 0.0: heal(source, source, actual * ls, "lifesteal")
   var oh = Evolutions.perk(source.hero, "on_hit", [])
-  if oh is Array and oh.size() == 2 and target.alive and rng.randf() < float(oh[1]): apply_rider(source, target, str(oh[0]), 1.0)
+  if oh is Array and oh.size() == 2 and target.alive and rng.randf() < float(oh[1]):
+   var rider_power=source.attack if SkillScaling.audited(source.hero.sp,"signature").get("build_path","ap")=="ad" else source.ability_power
+   var previous_credit=source.credit;source.credit="evolution"
+   apply_rider(source,target,str(oh[0]),rider_power)
+   source.credit=previous_credit
  var th = float(Evolutions.perk(target.hero, "thorns", 0.0)) if not target.summon else 0.0
  if th > 0.0 and actual > 0 and source.alive and not reflecting and source.uid != target.uid:
   reflecting = true; hurt(target, source, actual * th, true, "thorns"); reflecting = false
  if actual > 0: emit({"type": "hit", "uid": target.uid, "source": source.uid, "amount": actual, "pos": target.pos, "credit": credit if not credit.is_empty() else source.credit})
+ if actual>0:
+  ItemFeedback.credited(self,source,target,hit_credit,actual)
+  ItemFeedback.augment(self,target,"guard",target)
+  if hit_credit=="basic":ItemFeedback.augment(self,source,"basic",target)
  ItemEffects.on_hit(self,source,target,actual,hit_credit)
  Forge.after_hit(self, source, target, actual, magical, hit_credit)
  if not target.alive: return
@@ -304,7 +410,7 @@ func attack(u: Dictionary, target: Dictionary) -> void:
  emit({"type": "release", "uid": u.uid, "pos": u.pos, "target": target.pos, "ranged": u.range > 2})
  var amount = u.get("attack_basic", u.attack)
  if u.range > 2:
-  var duration = clampf(u.pos.distance_to(target.pos) / 12.0, 0.18, 0.9)
+  var duration = clampf(u.pos.distance_to(target.pos) / (8.0 if is_artillery(u) else 10.0), 0.28, 1.35)
   launch(u, target, amount, duration, false, HeroData.species[u.hero.sp].ab)
  else:
   hurt(u, target, amount, false)
@@ -325,11 +431,11 @@ func step(dt: float) -> void:
     if p.get("area", false):
      for e in near_foes(source, target.pos, 2.4):
       hurt(source, e, p.amount,true,p.get("credit","basic")); status(e, "stun", 0.6)
-     emit({"type": "impact", "pos": target.pos, "effect": p.effect, "credit": p.credit, "uid": source.uid})
+     emit({"type": "impact", "pos": target.pos, "effect": p.effect, "credit": p.credit, "uid": source.uid, "heavy": p.get("heavy", false)})
     else:
      if target.alive:
       hurt(source, target, p.amount, p.magical,p.get("credit","basic"))
-      emit({"type": "impact", "pos": target.pos, "effect": p.effect, "credit": p.credit, "uid": source.uid, "small": true})
+      emit({"type": "impact", "pos": target.pos, "effect": p.effect, "credit": p.credit, "uid": source.uid, "small": true, "heavy": p.get("heavy", false)})
    projectiles.erase(p)
  for zone in zones.duplicate():
   zone.remaining -= dt
@@ -373,6 +479,9 @@ func step(dt: float) -> void:
   for key in u.ability_cds: u.ability_cds[key] = maxf(0, u.ability_cds[key] - dt)
   if active(u, "stun"):
    u.windup = 0.0; u.erase("pending_cast"); continue
+  if u.has("next_cell"):
+   if not active(u,"root"): advance_hex_step(u,dt)
+   continue
   if u.has("pending_cast"):
    var pending = u.pending_cast
    if active(u, "silence"):
@@ -395,9 +504,9 @@ func step(dt: float) -> void:
    u.windup -= dt
    if u.windup <= 0:
     var target = find_unit(u.pending_target)
-    if not target.is_empty() and target.alive and u.pos.distance_to(target.pos) <= u.range + 1.5: attack(u, target)
+    if not target.is_empty() and target.alive and in_attack_range(u, target): attack(u, target)
     u.attack_timer = u.interval
-    u.recovery = 0.22; u.recovery_clip = "attack"
+    u.recovery = 0.36 if is_artillery(u) else 0.22; u.recovery_clip = "attack"
    continue
   var lurking = u.tactics.opening == "lurk" and not u.get("dove", false) and not u.summon
   if lurking and lurk_trigger(u):
@@ -422,53 +531,16 @@ func step(dt: float) -> void:
     u.cast_time = 0.6; casted = true
    if not casted and u.tactics.abilities != "learned": casted = try_learned(u, target)
    if casted: continue
-  var distance = direction.length()
-  var reach = u.range + (u.radius + target.radius) * 0.73
-  if u.range > 2 and (u.tactics.distance == "close" or u.tactics.posture == "aggressive"): reach = maxf(2.5, u.range * 0.7)
-  if distance <= reach and u.attack_timer <= 0:
+  var engaged = in_attack_range(u, target)
+  if engaged and u.attack_timer <= 0:
    u.velocity = Vector2.ZERO
-   u.windup = 0.32 if u.range < 2 else 0.40; u.windup_total = u.windup; u.pending_target = target.uid
+   u.windup = 0.62 if is_artillery(u) else (0.32 if u.range < 2 else 0.44); u.windup_total = u.windup; u.pending_target = target.uid
    emit({"type": "attack", "uid": u.uid, "pos": u.pos, "target": target.pos, "duration": u.windup})
   elif not active(u, "root"):
-   var move = Vector2.ZERO
-   var engaged = distance <= (reach - 0.1 if u.moving else reach)   # arrive, then plant the feet
-   if not engaged:
-    var destination = target.pos
-    # Approach an open shoulder instead of sending every melee fighter to
-    # the target's centre. Keep the side stable throughout the engagement.
-    if u.range <= 2 and distance < reach + 4.0:
-     var side = 1.0 if u.uid % 2 == 0 else -1.0
-     var crowded = false
-     for ally in living(u.team):
-      if ally.uid != u.uid and ally.target == target.uid and ally.pos.distance_to(target.pos) < reach+1.0: crowded = true; break
-     if crowded:
-      var outward = (u.pos-target.pos).normalized().rotated(side*0.65)
-      destination = target.pos + outward*(reach-0.25)
-    move = (destination-u.pos).normalized() * clampf((distance-reach+0.55)/1.2,0.25,1.0)
-   elif u.range > 2 and u.tactics.distance != "close" and u.tactics.posture != "aggressive":
-    var safety = maxf(2.2, u.range * 0.72) if u.tactics.distance == "kite" else maxf(2.6, u.range * 0.60)
-    if distance < safety: move = -direction.normalized() * 0.8
-   if lurking:
-    # Shadow the edge of the arena on our own half, ready to pounce.
-    var lside = 1.0 if u.start_pos.y >= 0 else -1.0
-    var spot = Vector2(lerpf(u.start_pos.x, 0.0, 0.5), lside * 6.6)
-    move = (spot - u.pos) if (spot - u.pos).length() > 0.4 else Vector2.ZERO
-    if move.length() > 1.0: move = move.normalized()
-   elif u.tactics.opening == "hold" and time < 3.0: move = Vector2.ZERO
-   elif u.tactics.opening == "flank" and time < 4.0 and distance > reach:
-    var side = 1.0 if u.start_pos.y >= 0 else -1.0
-    var waypoint = Vector2(target.pos.x, side * 6.8)
-    move = (waypoint - u.pos).normalized()
-   var speed = u.speed * (0.55 if active(u, "slow") else 1.0)
-   if active(u, "rally"): speed *= 1.22
-   if move.length_squared() > 0.01: move = steer_clear(u, move); move = blocked(u, move)
-   var desired_velocity = move * speed
-   u.velocity = u.velocity.move_toward(desired_velocity, speed * (9.0 if move.is_zero_approx() else 5.0) * dt)
-   u.pos += u.velocity * dt; u.moving = u.velocity.length() > 0.3
-   # Face the route while travelling, then settle toward the opponent.
-   if u.moving and distance > reach + 0.8:
-    u.heading = atan2(u.velocity.x,u.velocity.y)
- separate()
+   var hold = u.tactics.opening == "hold" and time < 3.0
+   if not engaged and not hold: begin_hex_step(u, target, lurking)
+   elif engaged and u.tactics.distance == "kite" and u.attack_hexes > 1 and ArenaGrid.distance(u.cell,target.cell) < u.attack_hexes - 1:
+    begin_hex_step(u,target,false,true)
  var a = living(0, false); var b = living(1, false)
  if a.is_empty() or b.is_empty():
   finished = true; winner = 0 if b.is_empty() and not a.is_empty() else 1 if a.is_empty() and not b.is_empty() else -1
@@ -497,58 +569,17 @@ func try_learned(u: Dictionary, target: Dictionary) -> bool:
    u.ability_cds[key] = CombatPacing.ability_cd(u.hero, key); u.cast_time = 0.65; return true
  return false
 
+func is_artillery(u: Dictionary) -> bool:
+ return not u.summon and HeroData.species[u.hero.sp].role == "Artillery"
+
 func launch(u: Dictionary, target: Dictionary, amount: float, duration: float, magical: bool, effect: String, area: bool = false) -> void:
  shot_id += 1
- projectiles.append({"id": shot_id, "source": u.uid, "target": target.uid, "amount": amount, "remaining": duration, "duration": duration, "credit":u.credit, "origin": u.pos, "last_pos": target.pos, "magical": magical, "effect": effect, "area": area})
- emit({"type": "projectile", "uid": u.uid, "target_uid": target.uid, "pos": u.pos, "target": target.pos, "duration": duration, "effect": effect})
-
-func steer_clear(u: Dictionary, desired: Vector2) -> Vector2:
- var avoid = Vector2.ZERO
- for ally in units:
-  if not ally.alive or ally.uid == u.uid or ally.uid == u.target: continue
-  var delta = u.pos - ally.pos
-  var spacing = 1.25 if u.summon or ally.summon else 2.1
-  if delta.length_squared() > 0.001 and delta.length() < spacing:
-   avoid += delta.normalized() * (1.0 - delta.length() / spacing)
- # Preserve forward progress; separation bends the route without stopping it.
- return (desired + avoid * 1.4).normalized() * desired.length()
-
-# Don't walk into bodies: remove the part of the step that pushes into a unit in contact.
-func blocked(u: Dictionary, move: Vector2) -> Vector2:
- for other in units:
-  if not other.alive or other.uid == u.uid: continue
-  var delta = other.pos - u.pos; var dist = delta.length()
-  var contact = u.radius + other.radius + 0.25
-  if dist < 0.001 or dist > contact: continue
-  var n = delta / dist; var into = move.dot(n)
-  if into > 0.0: move -= n * into * clampf((contact - dist) / 0.25 + 0.5, 0.0, 1.0) * (1.0 if other.team == u.team else 0.55)
- return move
-
-func planted(u: Dictionary) -> bool:
- return u.windup > 0 or u.get("recovery", 0.0) > 0 or u.has("pending_cast") or u.cast_time > 0 or not u.moving
-
-func separate() -> void:
- # A few relaxation passes; whoever is mid-swing or standing their ground is "heavy",
- # so walkers slide around them instead of shoving them across the floor.
- for _pass in range(3):
-  for i in range(units.size()):
-   var a = units[i]
-   if not a.alive: continue
-   for j in range(i + 1, units.size()):
-    var b = units[j]
-    if not b.alive: continue
-    var delta = b.pos - a.pos
-    var distance = delta.length()
-    var minimum = a.radius + b.radius + 0.15
-    if distance < minimum:
-     var wa = 0.2 if planted(a) else 1.0; var wb = 0.2 if planted(b) else 1.0
-     var n = delta / distance if distance > 0.001 else Vector2(0, 1)
-     var overlap = minimum - distance
-     a.pos -= n * overlap * wa / (wa + wb); b.pos += n * overlap * wb / (wa + wb)
- for u in units:
-  if u.alive: u.pos = u.pos.clamp(-BOUNDS, BOUNDS)
+ var heavy = is_artillery(u) or effect in ["meteor", "boulder"]
+ projectiles.append({"id": shot_id, "source": u.uid, "target": target.uid, "amount": amount, "remaining": duration, "duration": duration, "credit":u.credit, "origin": u.pos, "last_pos": target.pos, "magical": magical, "effect": effect, "area": area, "heavy": heavy})
+ emit({"type": "projectile", "uid": u.uid, "target_uid": target.uid, "pos": u.pos, "target": target.pos, "duration": duration, "effect": effect, "heavy": heavy})
 
 func cast_visual(u: Dictionary, effect: String, label_text: String, target: Vector2) -> void:
+ ItemFeedback.augment(self,u,"cast",u)
  ItemEffects.on_cast(self,u)
  Forge.on_cast(self, u, find_unit(int(u.target)))
  var ward_share = float(Evolutions.perk(u.hero, "ward", 0.0)) if not u.summon else 0.0
@@ -564,18 +595,23 @@ func cast_visual(u: Dictionary, effect: String, label_text: String, target: Vect
  emit({"type": "cast", "uid": u.uid, "effect": effect, "name": label_text, "pos": u.pos, "target": target})
 
 func leap(u: Dictionary, target: Dictionary) -> void:
- u.pos = target.pos + (u.pos - target.pos).normalized() * 1.3
+ relocate_hex(u, target.pos + (u.pos - target.pos).normalized() * ArenaGrid.ROW_GAP)
 
 func poison(u: Dictionary, target: Dictionary, seconds: float, power: float, kind: String = "poison") -> void:
- status(target, kind, seconds)
+ var dot_credit="on_hit" if u.credit=="basic" else u.credit
  for dot in target.dots:
   if dot.source == u.uid and dot.kind == kind:
-   dot.remaining = seconds; dot.damage = power; dot.credit = u.credit; return
- target.dots.append({"source": u.uid, "kind": kind, "credit":u.credit, "remaining": seconds, "damage": power})
+   # A weak on-hit rider must not erase a stronger spell or steal its damage credit.
+   if power>=dot.damage:
+    dot.remaining=seconds;dot.damage=power;dot.credit=dot_credit;status(target,kind,seconds)
+   return
+ status(target,kind,seconds)
+ target.dots.append({"source": u.uid, "kind": kind, "credit":dot_credit, "remaining": seconds, "damage": power})
 
 func cast_signature(u: Dictionary, target: Dictionary) -> bool:
  cc_source = u
  var key = HeroData.species[u.hero.sp].ab
+ if key in ["howl","brood"] and living(u.team).filter(func(v):return v.summon and v.owner==u.uid).size()>=3:return false
  if not u.get("casting_resolution", false) and u.tactics.target == "natural":
   var candidates = foes(u).filter(func(e): return u.pos.distance_to(e.pos) <= 8.5)
   if key in ["venom", "vanish"]:
@@ -585,10 +621,11 @@ func cast_signature(u: Dictionary, target: Dictionary) -> bool:
    var backline = candidates.filter(func(e): return e.range > 2 and not e.summon)
    backline.sort_custom(func(a, b): return u.pos.distance_to(a.pos) < u.pos.distance_to(b.pos))
    if not backline.is_empty(): target = backline[0]
- var range_limit = 7.0 if u.range > 2 else 3.2
+ var range_limit = maxf(9.5, u.range + 1.0) if u.range > 2 else 3.2
+ if key in ["shriek", "triplebite"]: range_limit = 3.2
  if key in ["gore", "venom", "skystrike", "foxfire", "stonedive", "vanish", "antlerrush", "maul"]: range_limit = 8.5
  var friendly = key in ["rootbloom", "radiance", "tidal", "tailwind", "regrowth", "shellup", "bulwark", "hunger", "howl", "brood", "prideroar", "frostroar"]
- if not friendly and u.pos.distance_to(target.pos) > range_limit: return false
+ if not friendly and ArenaGrid.distance(u.cell,target.cell)>ArenaGrid.attack_hexes(range_limit): return false
  var allies = wounded_allies(u)
  if key in ["rootbloom", "radiance"] and allies[0].hp / allies[0].max_hp > 0.86: return false
  if key == "regrowth" and u.hp / u.max_hp > 0.72: return false
@@ -601,31 +638,35 @@ func cast_signature(u: Dictionary, target: Dictionary) -> bool:
   emit({"type": "telegraph", "credit": u.pending_cast.credit, "uid": u.uid, "pos": u.pos, "target": u.pos if friendly or key in ["shriek", "triplebite"] else target.pos, "effect": key, "name": HeroData.species[u.hero.sp].ability_name})
   return true
  u.credit = "signature"; track(u,"casts",1)
- var strength = (1.0 + (u.hero.signature_rank - 1) * 0.20) * (1.0 + u.hero.get("focus", 0) * 0.08) * HeroData.spell_factor(u.hero)
- var power = u.attack * strength * CombatPacing.power(u.hero, "signature")
+ var strength = (1.0 + (u.hero.signature_rank - 1) * 0.20)
+ var power = SkillScaling.power(u,key) * strength * CombatPacing.power(u.hero, "signature")
+ var utility=clampf(SkillScaling.power(u,key)/u.skill_base,0.65,1.60)
  cast_visual(u, key, HeroData.species[u.hero.sp].ability_name, target.pos)
  match key:
   "gore", "venom", "skystrike", "maul", "stonedive", "vanish", "antlerrush":
    var start = u.pos
    leap(u, target)
-   hurt(u, target, power * (2.1 if key == "vanish" else 1.7))
+   hurt(u, target, power * (2.1 if key == "vanish" else 1.55 if key == "maul" else 1.7))
    if key in ["gore", "skystrike", "stonedive"]: status(target, "stun", 0.8)
    if key == "maul": status(target, "root", 1.5)
    if key == "venom": poison(u, target, 4, power * 0.3)
-   if key == "stonedive": shield(u, u.max_hp * 0.18)
+   if key == "stonedive":
+    shield(u, u.max_hp * 0.18)
+    for e in near_foes(u, target.pos, ArenaGrid.ROW_GAP * 1.05):
+     if e.uid != target.uid: hurt(u, e, power * 0.55)
    if key == "vanish": status(u, "stealth", 0.9)
    if key == "antlerrush":
     for e in foes(u):
      if e.uid != target.uid and Geometry2D.get_closest_point_to_segment(e.pos, start, u.pos).distance_to(e.pos) < 1.7: hurt(u, e, power * 1.4)
   "bulwark", "prideroar", "shellup", "frostroar":
-   shield(u, u.max_hp * 0.24 * strength)
+   shield(u, u.base_hp * CombatPacing.HP_SCALE * 0.24 * strength * utility)
    for e in near_foes(u, u.pos, 3.4):
     e.taunt_by = u.uid; status(e, "taunt", 2.5 * strength)
     if key == "frostroar": status(e, "slow", 3); hurt(u, e, power * 0.6)
-   if key == "shellup": status(u, "shell", 3 * strength)
+   if key == "shellup": status(u, "shell", minf(4.5,3 * strength * utility))
    if key == "prideroar":
     for a in allies:
-     if a.pos.distance_to(u.pos) < 5: status(a, "rally", 4 * strength)
+     if a.pos.distance_to(u.pos) < 5: status(a, "rally", minf(6.0,4 * strength * utility))
   "smash", "shriek", "triplebite":
    var victims = near_foes(u, target.pos if key == "smash" else u.pos, 3.0)
    if key == "triplebite": victims = victims.slice(0, 3)
@@ -634,21 +675,21 @@ func cast_signature(u: Dictionary, target: Dictionary) -> bool:
     if key == "shriek": status(e, "silence", 2.5)
     elif key == "triplebite": poison(u, e, 3, power * 0.20, "bleed")
     else: status(e, "slow", 2.5)
-  "hunger": status(u, "hunger", 5 * strength); status(u, "rally", 5 * strength)
+  "hunger": status(u, "hunger", minf(7.0,5 * strength * utility)); status(u, "rally", minf(7.0,5 * strength * utility))
   "howl", "brood", "foxfire":
    var pets = living(u.team).filter(func(a): return a.summon and a.owner == u.uid)
    if pets.size() < 3:
-    for i in range(3 if key == "brood" else 2):
+    for i in range(mini(3 if key == "brood" else 2,3-pets.size())):
      var pet = HeroData.make_hero("arachne" if key == "brood" else "direwolf" if key == "howl" else "kitsune", "pet", "Broodling" if key == "brood" else "Spirit", int(u.hero.level))
-     add_unit(pet, u.team, u.pos + Vector2(rng.randf_range(-1, 1), rng.randf_range(-1, 1)), strength, u.uid)
+     add_unit(pet, u.team, u.pos + Vector2(rng.randf_range(-1, 1), rng.randf_range(-1, 1)), strength * utility, u.uid)
    if key == "foxfire": leap(u, target); shield(u, u.max_hp * 0.12)
   "acid", "flamewave", "magma":
-   zones.append({"source": u.uid, "pos": target.pos, "credit":u.credit, "radius": 2.5, "damage": power * 0.43, "remaining": 4.0, "effect": key})
+   zones.append({"source": u.uid, "pos": target.pos, "credit":u.credit, "radius": ArenaGrid.ROW_GAP, "damage": power * 0.43, "remaining": 4.0, "effect": key})
    for e in near_foes(u, target.pos, 2.5): hurt(u, e, power * 0.65)
   "chain":
    var struck = []; var current = target; var origin = u.pos
    for jump in range(4):
-    hurt(u, current, power * 1.05 * pow(0.90, jump)); struck.append(current.uid)
+    hurt(u, current, power * 1.15 * pow(0.90, jump)); struck.append(current.uid)
     emit({"type": "bolt", "uid": u.uid, "pos": origin, "target": current.pos, "effect": key})
     origin = current.pos
     var options = foes(u).filter(func(e): return not struck.has(e.uid) and e.pos.distance_to(origin) < 4.8)
@@ -661,18 +702,18 @@ func cast_signature(u: Dictionary, target: Dictionary) -> bool:
     var index = rng.randi_range(0, victims.size() - 1); var e = victims[index]; victims.remove_at(index)
     hurt(u, e, power * 1.05)
     emit({"type": "bolt", "uid": u.uid, "pos": u.pos, "target": e.pos, "effect": key})
-  "gaze": hurt(u, target, power * 1.2); status(target, "stun", 1.6)
+  "gaze": hurt(u, target, power * 1.3); status(target, "stun", 1.6)
   "rootbloom": heal(u, allies[0], power * 2.3); status(target, "root", 1.3)
   "tidal":
    for a in allies:
-    if a.pos.distance_to(u.pos) < 5.2: shield(a, power * 1.8)
+    if a.pos.distance_to(u.pos) < 6.0: shield(a, power * 2.0)
   "radiance":
    for a in allies:
     if a.pos.distance_to(u.pos) < 5.2:
      heal(u, a, power * 1.6)
      for k in ["stun", "root", "poison", "slow"]: a.status.erase(k)
      a.dots = a.dots.filter(func(dot): return dot.kind != "poison")
-  "regrowth": heal(u, u, u.max_hp * 0.23 * strength); status(u, "rally", 4)
+  "regrowth": heal(u, u, u.base_hp * CombatPacing.HP_SCALE * 0.23 * strength * utility); status(u, "rally", 4)
   "threefold":
    for i in range(3): hurt(u, target, power * 0.72)
    poison(u, target, 3, power * 0.22, "burn")
@@ -680,40 +721,50 @@ func cast_signature(u: Dictionary, target: Dictionary) -> bool:
   "riddle": hurt(u, target, power * 0.8); status(target, "confuse", 2.5)
   "tailwind":
    for a in allies:
-    if a.pos.distance_to(u.pos) < 6: status(a, "rally", 5 * strength)
+    if a.pos.distance_to(u.pos) < 6: status(a, "rally", minf(7.0,5 * strength * utility))
  return true
 
 func projectile_ability(u: Dictionary, target: Dictionary, power: float) -> void:
- launch(u, target, power, 0.75, true, "meteor", true)
+ launch(u, target, power, clampf(u.pos.distance_to(target.pos) / 8.0, 0.7, 1.5), true, "meteor", true)
 
 func cast_learned(u: Dictionary, target: Dictionary, a: Dictionary, rank: int) -> bool:
  cc_source = u
  var effect = a.effect
- var support = effect in ["renew", "ward", "rally"]
- if not support and u.pos.distance_to(target.pos) > a.range: return false
+ var support = effect in ["renew", "ward", "rally", "brood"]
+ if effect=="brood" and living(u.team).filter(func(v):return v.summon and v.owner==u.uid).size()>=3:return false
+ if not support and ArenaGrid.distance(u.cell,target.cell)>ArenaGrid.attack_hexes(a.range): return false
  var allies = wounded_allies(u)
  if effect == "renew" and allies[0].hp / allies[0].max_hp > 0.82: return false
- if support and u.pos.distance_to(target.pos) > 8: return false
+ if support and effect!="brood" and u.pos.distance_to(target.pos) > 8: return false
  if not u.get("casting_resolution", false):
-  if effect in ["meteor", "quake", "whirl", "fear", "toxic", "fire", "gust", "silence", "frost", "roots"]:
+  if effect in ["meteor", "quake", "whirl", "fear", "toxic", "fire", "gust", "silence", "frost", "roots", "magma"]:
    if not area_ready(u, effect, u.pos if effect in ["quake", "whirl", "fear"] else target.pos, 2.5): return false
   team_cast[u.team] = time + SkillCombat.windup(effect)
   u.pending_cast = {"kind": "learned", "target": target.uid, "delay": SkillCombat.windup(effect), "total": SkillCombat.windup(effect), "effect": effect, "name": a.name, "credit": "ability:" + a.key, "ability": a, "rank": rank}
   emit({"type": "telegraph", "credit": u.pending_cast.credit, "uid": u.uid, "pos": u.pos, "target": u.pos if support or effect in ["quake", "whirl", "fear"] else target.pos, "effect": effect, "name": a.name})
   return true
  u.credit = "ability:" + a.key; track(u,"casts",1)
- var strength = (1.0 + (rank - 1) * 0.2) * CombatPacing.power(u.hero, a.key) * (1.0 + u.hero.get("focus", 0) * 0.08) * HeroData.spell_factor(u.hero)
- var power = u.attack * strength * float(a.get("power", 1.0))
+ var strength = (1.0 + (rank - 1) * 0.2) * CombatPacing.power(u.hero, a.key)
+ var power = SkillScaling.power(u,effect,str(a.key)) * strength * float(a.get("power", 1.0))
+ var utility=clampf(SkillScaling.power(u,effect,str(a.key))/u.skill_base,0.65,1.60)
  cast_visual(u, effect, a.name, target.pos)
  apply_rider(u, target, str(a.get("rider", "none")), power)
  match effect:
+  "magma":
+   zones.append({"source":u.uid,"pos":target.pos,"credit":u.credit,"radius":ArenaGrid.ROW_GAP,"damage":power*0.35,"remaining":4.0,"effect":"magma"})
+   for v in near_foes(u,target.pos,2.5):hurt(u,v,power*0.6)
+  "brood":
+   var count=living(u.team).filter(func(v):return v.summon and v.owner==u.uid).size()
+   for i in range(mini(2,3-count)):
+    var pet=HeroData.make_hero("arachne","pet","Spiderling",int(u.hero.level))
+    add_unit(pet,u.team,u.pos+Vector2(rng.randf_range(-1,1),rng.randf_range(-1,1)),strength*utility,u.uid)
   "renew":
    for v in allies.slice(0, 3): heal(u, v, power * 1.3 + v.max_hp * 0.08)
   "ward", "rally":
    for v in allies:
     if v.pos.distance_to(u.pos) <= a.range:
-     shield(v, u.max_hp * (0.22 if effect == "ward" else 0.08) * strength)
-     if effect == "rally": status(v, "rally", 4 * strength)
+     shield(v, u.base_hp * CombatPacing.HP_SCALE * (0.22 if effect == "ward" else 0.08) * strength * utility)
+     if effect == "rally": status(v, "rally", minf(6.0,4 * strength * utility))
   "meteor": projectile_ability(u, target, power * 1.8)
   "storm", "wisps":
    for v in foes(u).slice(0, 3):
@@ -742,10 +793,10 @@ func cast_learned(u: Dictionary, target: Dictionary, a: Dictionary, rank: int) -
     match effect:
      "quake": hurt(u, v, power * 1.5); status(v, "stun", 0.8)
      "whirl": hurt(u, v, power * 2.0)
-     "fear": status(v, "weaken", 4 * strength)
+     "fear": status(v, "weaken", minf(6.0,4 * strength * utility))
      "toxic": poison(u, v, 4, power * 0.4)
      "fire": hurt(u, v, power * 1.2); poison(u, v, 3, power * 0.3, "burn")
-     "gust": hurt(u, v, power * 1.3); v.pos += (v.pos - u.pos).normalized() * 1.4; status(v, "slow", 2)
+     "gust": hurt(u, v, power * 1.3); relocate_hex(v, v.pos + (v.pos - u.pos).normalized() * ArenaGrid.ROW_GAP); status(v, "slow", 2)
      "silence": hurt(u, v, power * 0.9); status(v, "silence", 2.5)
      "frost": hurt(u, v, power * 1.1); status(v, "stun", 0.8)
      "roots": hurt(u, v, power); status(v, "root", 1.8)

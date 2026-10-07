@@ -62,7 +62,7 @@ static func open(c: Campaign,id: String) -> Dictionary:
  if medal=="Gold":loot.append(wild[rng.randi_range(0,wild.size()-1)])
  var coins={"Gold":150,"Silver":100,"Bronze":60}[medal]
  for item_id in loot:
-  c.state.inventory.append(item_id);var info=Forge.info(item_id)
+  c.state.inventory.append(item_id);c.state.bag_unread=true;var info=Forge.info(item_id)
   rewards.append({"kind":"item","item":item_id,"title":info.name,"detail":info.description})
  c.state.gold+=coins;c.state.earned_gold=int(c.state.get("earned_gold",0))+coins
  rewards.append({"kind":"gold","title":"%d gold"%coins,"detail":"Prize purse for a %s finish."%medal.to_lower()})

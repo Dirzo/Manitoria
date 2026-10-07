@@ -83,7 +83,7 @@ const BALANCE := {
 	"salamander": 0.958,
 	"sphinx": 1.131,
 	"thunderbird": 1.072,
-	"troll": 1.064,
+	"troll": 1.095,
 	"unicorn": 1.031,
 	"wendigo": 1.015,
 	"yeti": 0.952,

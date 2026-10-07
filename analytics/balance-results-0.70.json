@@ -1,0 +1,377 @@
+{
+  "version": "0.70",
+  "complete": true,
+  "changes": [
+    [
+      "Owlbear",
+      "Maul damage coefficient: 1.70 → 1.55",
+      "58.0% team wins; strong across most cups and non-greedy purchasing policies."
+    ],
+    [
+      "Naga",
+      "Tidal Ward: radius 5.2 → 6.0; power 1.8 → 2.0; base cooldown 10s → 9s",
+      "42.8% team wins; weakest support across every cup. Shield utility is not inferred from its zero direct-damage statistic."
+    ],
+    [
+      "Gargoyle",
+      "Stone Dive adds 0.55-power splash to nearby enemies. Suggested core favors armor/AP.",
+      "42.7% team wins; the previous single-target implementation did not match its promised area impact."
+    ],
+    [
+      "Storm Kirin",
+      "Chain Lightning coefficient per bounce: 1.05 → 1.15",
+      "44.0% team wins; particularly weak in the first two cups."
+    ],
+    [
+      "Basilisk",
+      "Petrifying Gaze coefficient: 1.20 → 1.30; stun stays 1.6s",
+      "43.5% team wins; a small damage increase preserves its control niche."
+    ],
+    [
+      "Cave Troll",
+      "Species health/attack tuning: 1.064 → 1.095",
+      "44.5% team wins, with weakness across all four purchasing policies."
+    ],
+    [
+      "Saint’s Rosary",
+      "Opening team heal: 6% → 5% max health",
+      "Largest supported positive marginal item effect in the initial eight-setup screen."
+    ],
+    [
+      "Sugar Rush",
+      "Health drain: 1% → 0.6% max health/second; 15% floor remains",
+      "Largest negative screen result, supported by a health cost that accumulates heavily during long fights."
+    ]
+  ],
+  "champions": [
+    {
+      "sp": "minotaur",
+      "n": 410,
+      "before": 0.5487804878048781,
+      "after": 0.5390243902439025,
+      "before_dps": 38.04954422201657,
+      "after_dps": 37.08815403686838
+    },
+    {
+      "sp": "golem",
+      "n": 794,
+      "before": 0.46851385390428213,
+      "after": 0.47103274559193953,
+      "before_dps": 14.216085732534232,
+      "after_dps": 14.15717366461517
+    },
+    {
+      "sp": "troll",
+      "n": 346,
+      "before": 0.44508670520231214,
+      "after": 0.47109826589595377,
+      "before_dps": 30.312416146316995,
+      "after_dps": 31.78081249284146
+    },
+    {
+      "sp": "wendigo",
+      "n": 374,
+      "before": 0.4919786096256685,
+      "after": 0.4946524064171123,
+      "before_dps": 36.436477990898794,
+      "after_dps": 35.20386964625814
+    },
+    {
+      "sp": "direwolf",
+      "n": 342,
+      "before": 0.5,
+      "after": 0.5087719298245614,
+      "before_dps": 39.269500548903316,
+      "after_dps": 38.26929893952988
+    },
+    {
+      "sp": "manticore",
+      "n": 350,
+      "before": 0.48,
+      "after": 0.4828571428571429,
+      "before_dps": 52.34822054072317,
+      "after_dps": 52.69932243812713
+    },
+    {
+      "sp": "griffin",
+      "n": 324,
+      "before": 0.5740740740740741,
+      "after": 0.5709876543209876,
+      "before_dps": 54.318723127388175,
+      "after_dps": 52.992903103514216
+    },
+    {
+      "sp": "kitsune",
+      "n": 404,
+      "before": 0.5396039603960396,
+      "after": 0.5297029702970297,
+      "before_dps": 47.524563940573415,
+      "after_dps": 47.141158013054664
+    },
+    {
+      "sp": "wyvern",
+      "n": 320,
+      "before": 0.50625,
+      "after": 0.503125,
+      "before_dps": 47.31903166537978,
+      "after_dps": 46.55052755978467
+    },
+    {
+      "sp": "harpy",
+      "n": 290,
+      "before": 0.4586206896551724,
+      "after": 0.4586206896551724,
+      "before_dps": 32.06421666060616,
+      "after_dps": 32.18690964315848
+    },
+    {
+      "sp": "phoenix",
+      "n": 306,
+      "before": 0.4934640522875817,
+      "after": 0.5098039215686274,
+      "before_dps": 41.611320521151754,
+      "after_dps": 40.44697652900819
+    },
+    {
+      "sp": "kirin",
+      "n": 300,
+      "before": 0.44,
+      "after": 0.44333333333333336,
+      "before_dps": 35.27114330146393,
+      "after_dps": 35.4130850776915
+    },
+    {
+      "sp": "basilisk",
+      "n": 248,
+      "before": 0.43548387096774194,
+      "after": 0.41935483870967744,
+      "before_dps": 36.85046723066944,
+      "after_dps": 36.23179529295386
+    },
+    {
+      "sp": "treant",
+      "n": 750,
+      "before": 0.548,
+      "after": 0.5346666666666666,
+      "before_dps": 13.497655482192034,
+      "after_dps": 13.42371338926308
+    },
+    {
+      "sp": "naga",
+      "n": 794,
+      "before": 0.4282115869017632,
+      "after": 0.4659949622166247,
+      "before_dps": 18.468880147924988,
+      "after_dps": 18.30283203084288
+    },
+    {
+      "sp": "unicorn",
+      "n": 724,
+      "before": 0.47099447513812154,
+      "after": 0.4613259668508287,
+      "before_dps": 18.510198121985027,
+      "after_dps": 18.325410039601813
+    },
+    {
+      "sp": "cerberus",
+      "n": 556,
+      "before": 0.4658273381294964,
+      "after": 0.447841726618705,
+      "before_dps": 54.71768534552044,
+      "after_dps": 53.97412767455413
+    },
+    {
+      "sp": "nemean",
+      "n": 540,
+      "before": 0.5203703703703704,
+      "after": 0.5148148148148148,
+      "before_dps": 23.50817813129811,
+      "after_dps": 23.10936206423667
+    },
+    {
+      "sp": "yeti",
+      "n": 788,
+      "before": 0.5368020304568528,
+      "after": 0.5393401015228426,
+      "before_dps": 25.36012847326297,
+      "after_dps": 24.954485902690884
+    },
+    {
+      "sp": "zaratan",
+      "n": 822,
+      "before": 0.5389294403892944,
+      "after": 0.5291970802919708,
+      "before_dps": 15.13244723544876,
+      "after_dps": 14.762335398776312
+    },
+    {
+      "sp": "owlbear",
+      "n": 402,
+      "before": 0.5796019900497512,
+      "after": 0.5771144278606966,
+      "before_dps": 48.148000482895384,
+      "after_dps": 46.80719264986525
+    },
+    {
+      "sp": "hydra",
+      "n": 412,
+      "before": 0.47815533980582525,
+      "after": 0.49271844660194175,
+      "before_dps": 33.23687483260147,
+      "after_dps": 33.01701372700522
+    },
+    {
+      "sp": "chimera",
+      "n": 424,
+      "before": 0.5212264150943396,
+      "after": 0.5023584905660378,
+      "before_dps": 44.7781815954761,
+      "after_dps": 44.874846526502026
+    },
+    {
+      "sp": "gargoyle",
+      "n": 368,
+      "before": 0.4266304347826087,
+      "after": 0.44021739130434784,
+      "before_dps": 29.486857731500436,
+      "after_dps": 30.194202746847157
+    },
+    {
+      "sp": "nekomata",
+      "n": 350,
+      "before": 0.4685714285714286,
+      "after": 0.47714285714285715,
+      "before_dps": 44.75172553995234,
+      "after_dps": 44.95997812413307
+    },
+    {
+      "sp": "jackalope",
+      "n": 334,
+      "before": 0.44011976047904194,
+      "after": 0.4491017964071856,
+      "before_dps": 38.08692984579573,
+      "after_dps": 38.19939953233473
+    },
+    {
+      "sp": "cyclops",
+      "n": 286,
+      "before": 0.5559440559440559,
+      "after": 0.5594405594405595,
+      "before_dps": 49.1355649856035,
+      "after_dps": 49.403016799484156
+    },
+    {
+      "sp": "thunderbird",
+      "n": 272,
+      "before": 0.5441176470588235,
+      "after": 0.5147058823529411,
+      "before_dps": 41.97808870384346,
+      "after_dps": 42.18125241789431
+    },
+    {
+      "sp": "sphinx",
+      "n": 290,
+      "before": 0.5241379310344828,
+      "after": 0.5241379310344828,
+      "before_dps": 35.93127568051898,
+      "after_dps": 36.72682548863224
+    },
+    {
+      "sp": "pegasus",
+      "n": 814,
+      "before": 0.5503685503685504,
+      "after": 0.5343980343980343,
+      "before_dps": 26.249697315053247,
+      "after_dps": 26.157161392249705
+    },
+    {
+      "sp": "arachne",
+      "n": 312,
+      "before": 0.4775641025641026,
+      "after": 0.5,
+      "before_dps": 37.04545135410263,
+      "after_dps": 36.176861002957565
+    },
+    {
+      "sp": "salamander",
+      "n": 276,
+      "before": 0.4746376811594203,
+      "after": 0.463768115942029,
+      "before_dps": 45.677215592377195,
+      "after_dps": 44.2070784140764
+    }
+  ],
+  "items": [
+    {
+      "id": "rosary",
+      "name": "Saint's Rosary",
+      "before_margin": 0.3322140166889732,
+      "before_interval": [
+        -0.016247700035941337,
+        0.6806757334138878
+      ],
+      "before_win": 0.5729166666666666,
+      "before_control": 0.5416666666666666,
+      "after_margin": 0.32212106803940455,
+      "after_interval": [
+        -0.016304012719585648,
+        0.6605461487983948
+      ],
+      "after_win": 0.5520833333333334,
+      "after_control": 0.5416666666666666
+    },
+    {
+      "id": "sugarrush",
+      "name": "Sugar Rush",
+      "before_margin": -0.3810123182524508,
+      "before_interval": [
+        -0.9802191077065452,
+        0.21819447120164354
+      ],
+      "before_win": 0.375,
+      "before_control": 0.3958333333333333,
+      "after_margin": 0.06873014015600888,
+      "after_interval": [
+        -0.5902561571593646,
+        0.7277164374713824
+      ],
+      "after_win": 0.4166666666666667,
+      "after_control": 0.3645833333333333
+    }
+  ],
+  "validation_battles": 2304,
+  "baseline_battles": 5888,
+  "total_battles": 8192,
+  "manifest": [
+    {
+      "file": "analytics-post-champions-a.jsonl",
+      "games": 384,
+      "sha256": "91d297bd79be33292d17761b093e3e04861ba60b804434378f89c8c4c30321c1"
+    },
+    {
+      "file": "analytics-post-champions-b.jsonl",
+      "games": 384,
+      "sha256": "490cef82b280ef5aaaf11ecb519e716b1ff0000e828a3989e20e78815bcbcb7c"
+    },
+    {
+      "file": "analytics-post-champions-c.jsonl",
+      "games": 384,
+      "sha256": "ed4e1cc857b23f5f5b93a68421626962b64c18e6a8858a3e43fe5ea0e5a8e70a"
+    },
+    {
+      "file": "analytics-post-champions-d.jsonl",
+      "games": 384,
+      "sha256": "3feba9ca068a44eeb280f810d53b46a8e4478ecb381c631bd2a37c8c7a67fb6e"
+    },
+    {
+      "file": "analytics-pre-item-followup.jsonl",
+      "games": 384,
+      "sha256": "0978bf8637276a545d44893aeee238e7fdeab066cde808bccd256087f4b578b7"
+    },
+    {
+      "file": "analytics-post-item-followup.jsonl",
+      "games": 384,
+      "sha256": "09e8d43289cabae255215f707cff21882826d9d411eb16d3d09b8b552c83bcd0"
+    }
+  ]
+}

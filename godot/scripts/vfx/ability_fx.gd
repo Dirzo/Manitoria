@@ -33,7 +33,7 @@ const STYLE := {
 static func element(sp: String) -> String:
 	return ELEMENT.get(sp, "holy")
 
-static func ctx(sp: String, palette_color: Color = Color(0, 0, 0, 0), rarity: String = "Uncommon") -> Dictionary:
+static func ctx(sp: String, palette_color: Color = Color(0, 0, 0, 0), rarity: String = "Uncommon",credit: String="signature",effect: String="") -> Dictionary:
 	var el = element(sp); var st = STYLE[el]
 	var main = Color(st[0])
 	# Blend the card palette in so each ability painting still reads in its effect.
@@ -43,7 +43,7 @@ static func ctx(sp: String, palette_color: Color = Color(0, 0, 0, 0), rarity: St
 	# A neighbouring hue gives every burst two tones instead of one flat colour.
 	var alt = Color.from_hsv(fposmod(main.h + ALT_SHIFT.get(el, 0.08), 1.0), clampf(main.s * 1.1, 0.0, 1.0), clampf(main.v * 1.05, 0.0, 1.0))
 	var boost = 1.25 if rarity == "Uncommon" else (1.6 if rarity == "Rare" else 2.0)
-	return {"sp": sp, "el": el, "color": main, "hot": hot, "alt": alt, "motif": st[2], "smoke": st[3], "boost": boost, "rarity": rarity}
+	return SkillVFX.decorate({"sp": sp, "el": el, "color": main, "hot": hot, "alt": alt, "motif": st[2], "smoke": st[3], "boost": boost, "rarity": rarity},credit,effect)
 
 # Hue nudge for each element's second tone (fire leans magenta-red, storms lean violet, ...).
 const ALT_SHIFT := {"fire": -0.06, "lightning": 0.1, "water": -0.08, "ice": 0.12, "earth": -0.05, "nature": -0.12, "poison": 0.2, "wind": 0.45, "holy": -0.08, "shadow": 0.12, "spirit": 0.1}
@@ -60,6 +60,7 @@ static func windup(vfx: VFX, c: Dictionary, at: Vector3, duration: float) -> voi
 
 # ---------------------------------------------------------------- per-family compositions
 static func play(vfx: VFX, family: String, c: Dictionary, from: Vector3, to: Vector3, targets: Array = []) -> void:
+	if SkillVFX.play(vfx,family,c,from,to,targets):return
 	var fn = "fx_" + family
 	var me = AbilityFX.new()
 	if me.has_method(fn): me.call(fn, vfx, c, from, to, targets)
@@ -215,7 +216,7 @@ func fx_gaze(vfx: VFX, c: Dictionary, from: Vector3, to: Vector3, _t: Array) -> 
 func fx_fire(vfx: VFX, c: Dictionary, from: Vector3, to: Vector3, _t: Array) -> void:
 	var d = _dir(from, to); var mouth = from + Vector3.UP * 1.2 + d * 0.8
 	var dist = maxf(2.0, mouth.distance_to(to))
-	var tongue_tint = c.color if c.el == "fire" else c.color.lerp(Color("ff7a2a"), 0.2)
+	var tongue_tint = c.color
 	for i in range(22):
 		var delay = i * 0.025
 		var start = mouth
@@ -230,7 +231,7 @@ func fx_fire(vfx: VFX, c: Dictionary, from: Vector3, to: Vector3, _t: Array) -> 
 	for i in range(5):
 		var p = to + Vector3(randf_range(-1.1, 1.1), 0, randf_range(-1.1, 1.1))
 		vfx.flame(p, Vector2(0.7, 1.3), tongue_tint, 1.6, 0.4 + i * 0.05)
-	vfx.rune(to, 2.4, Color("ff7a2a"), 4, 2.2, 0.35, 1.4)
+	vfx.rune(to, 2.4, c.color, 4, 2.2, 0.35, 1.4)
 	vfx.smoke(to + Vector3.UP * 1.6, 2.8, Color(0.2, 0.16, 0.14, 0.5), 2.2, 0.5)
 
 func fx_flamewave(vfx, c, f, t, x): fx_fire(vfx, c, f, t, x)
@@ -499,6 +500,7 @@ static func knockout(vfx: VFX, c: Dictionary, at: Vector3) -> void:
 static func projectile(vfx: VFX, c: Dictionary, effect: String) -> Node3D:
 	# Returns a node the arena moves along the projectile path each frame; trails are emitted by `trail`.
 	var root := Node3D.new()
+	SkillVFX.projectile_mesh(root,c,effect)
 	var core := MeshInstance3D.new(); core.mesh = VFX.quad()
 	var m := ShaderMaterial.new(); m.shader = VFX.SHADERS.glow
 	m.set_shader_parameter("tint", c.hot); m.set_shader_parameter("mode", 1); m.set_shader_parameter("intensity", 2.4)
@@ -507,22 +509,32 @@ static func projectile(vfx: VFX, c: Dictionary, effect: String) -> Node3D:
 	var m2 := ShaderMaterial.new(); m2.shader = VFX.SHADERS.glow
 	m2.set_shader_parameter("tint", c.color); m2.set_shader_parameter("mode", 1); m2.set_shader_parameter("intensity", 1.4); m2.set_shader_parameter("hardness", 1.3)
 	halo.material_override = m2; root.add_child(halo)
-	if effect in ["meteor", "boulder"]:
+	if effect in ["meteor", "boulder"] and c.el in ["earth","fire"]:
 		var rock := MeshInstance3D.new(); rock.mesh = VFX.rock_mesh(0.42, 3, 1)
 		var rm := ShaderMaterial.new(); rm.shader = VFX.SHADERS.rock
-		rm.set_shader_parameter("stone", Color("4a3b31")); rm.set_shader_parameter("molten", 1.0 if c.el in ["fire", "earth"] else 0.4); rm.set_shader_parameter("glow_color", c.color if c.el != "earth" else Color("ff7a2a"))
+		rm.set_shader_parameter("stone", Color("4a3b31")); rm.set_shader_parameter("molten", 1.0 if c.el=="fire" else 0.25); rm.set_shader_parameter("glow_color", c.color)
 		rock.material_override = rm; root.add_child(rock); root.set_meta("spin", rock)
 		core.scale = Vector3.ONE * 1.6; halo.scale = Vector3.ONE * 3.0
 	else:
 		core.scale = Vector3.ONE * 0.45; halo.scale = Vector3.ONE * 1.3
+		if effect in ["meteor","boulder"]:
+			var payload=MeshInstance3D.new()
+			if c.el=="ice":
+				var shard=PrismMesh.new();shard.size=Vector3(.4,.9,.4);payload.mesh=shard;payload.rotation.x=-PI*.5
+			else:
+				var orb=SphereMesh.new();orb.radius=.4;orb.height=.8;payload.mesh=orb
+			var material=StandardMaterial3D.new();material.shading_mode=BaseMaterial3D.SHADING_MODE_UNSHADED;material.albedo_color=c.color;material.emission_enabled=true;material.emission=c.hot*.6
+			payload.material_override=material;root.add_child(payload);root.set_meta("skill_id",c.get("skill_id",""))
+			core.scale=Vector3.ONE*1.2;halo.scale=Vector3.ONE*2.0
 	return root
 
 static func trail(vfx: VFX, c: Dictionary, effect: String, at: Vector3, dir: Vector3) -> void:
 	# Called a few times per second by the arena for each live projectile.
 	if effect in ["meteor", "boulder"]:
-		vfx.flame(at - Vector3.UP * 0.4, Vector2(1.0, 1.6), c.color if c.el == "fire" else Color("ff6a1c"), 0.35)
-		vfx.smoke(at, 1.2, Color(0.22, 0.18, 0.16, 0.5), 1.0, 0.0, Vector3(0, 0.3, 0))
-		vfx.spray(at, 4, "ember", c.hot, Vector2(0.5, 1.5), Vector2(0.3, 0.6), 0.08, -dir, 0.6, 1.0, 0.8)
+		if c.el=="fire":vfx.flame(at - Vector3.UP * 0.4, Vector2(1.0, 1.6), c.color, 0.35)
+		else:vfx.glow(at,1.0,c.color,.35,1,0,1.4)
+		vfx.smoke(at, 1.2, c.smoke, .55, 0.0, -dir*.4)
+		vfx.spray(at, 4, c.motif, c.hot, Vector2(0.5, 1.5), Vector2(0.3, 0.6), 0.08, -dir, 0.6, 1.0, 0.8)
 	else:
 		vfx.glow(at, 0.55, c.color, 0.3, 0, 0.0, 1.6)
 		vfx.spray(at, 3, c.motif if c.motif != "shard" else "spark", c.hot, Vector2(0.3, 1.0), Vector2(0.2, 0.45), 0.06, -dir, 0.8, 0.0, 1.0)

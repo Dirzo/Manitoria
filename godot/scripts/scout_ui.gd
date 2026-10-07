@@ -12,6 +12,8 @@ static func open(game: Node, opponent: Dictionary, tip := "") -> void:
 	if tip != "": game.label(dialog.box, tip, 15, Color("c8ff9d"), true)
 	var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 10); dialog.box.add_child(row)
 	var q = c.quality() if c and not c.state.is_empty() else 1.0
+	if c and c.state.has("tour"):
+		game.label(dialog.box,"Cup %d · %s · Recruit between cups; participants earn 160 training XP when you qualify for the next cup."%[int(c.state.tour.level),str(c.state.difficulty)],13,Color("c8dcb1"),true)
 	for h in opponent.get("roster", []): card(game, row, h, q)
 	game.label(dialog.box, "Stats include their rivals' strength bonus at this difficulty. Grades compare each stat with every champion at the same level. Hover anything for details.", 12, Color("9fb0b8"), true)
 

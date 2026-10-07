@@ -13,6 +13,7 @@ var paused=false
 var accumulator=0.0
 var speed=1.0
 var loop_count=0
+var unlocked=false
 
 func build() -> void:
  set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -20,8 +21,8 @@ func build() -> void:
  var frame=FantasyFrame.new();add_child(frame);frame.position=Vector2(32,112);frame.size=Vector2(1536,750);frame.accent=RarityStyle.color(card.rarity)
  var box=VBoxContainer.new();box.add_theme_constant_override("separation",12);frame.add_child(box)
  var header=HBoxContainer.new();box.add_child(header)
- var name_label=game.label(header,card.name,30,game.GOLD,false);name_label.size_flags_horizontal=Control.SIZE_EXPAND_FILL
- game.button(header,"Back to choices ×",close)
+ var name_label=game.label(header,("SKILL LEARNED · " if unlocked else "")+card.name,30,game.GOLD,false);name_label.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+ game.button(header,"Continue ×" if unlocked else "Back to choices ×",close)
  var body=HBoxContainer.new();body.add_theme_constant_override("separation",20);box.add_child(body)
  var left=VBoxContainer.new();left.custom_minimum_size.x=995;body.add_child(left)
  var container=SubViewportContainer.new();container.custom_minimum_size=Vector2(995,484);container.stretch=true;left.add_child(container)
@@ -39,7 +40,12 @@ func build() -> void:
  status_label=game.label(left,"",19,game.GOLD,false)
  var right=VBoxContainer.new();right.custom_minimum_size.x=450;right.size_flags_horizontal=Control.SIZE_EXPAND_FILL;right.add_theme_constant_override("separation",12);body.add_child(right)
  var art=AbilityArt.icon(right,AbilityArt.card_key(hero,card),136);RarityStyle.decorate(art,card.rarity)
- game.label(right,"AFTER CHOOSING THIS CARD" if card.type in ["ability","signature"] else ("WITH THIS EVOLUTION" if card.type=="evolution" else "SIGNATURE WITH THIS UPGRADE"),13,game.GOLD)
+ if unlocked:
+  art.pivot_offset=Vector2(68,68);art.scale=Vector2.ONE*.45;art.modulate.a=0
+  var reveal=create_tween().set_parallel(true)
+  reveal.tween_property(art,"scale",Vector2.ONE,.65).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+  reveal.tween_property(art,"modulate:a",1.0,.35)
+ game.label(right,"YOUR NEW SKILL" if unlocked else "AFTER CHOOSING THIS CARD" if card.type in ["ability","signature"] else ("WITH THIS EVOLUTION" if card.type=="evolution" else "SIGNATURE WITH THIS UPGRADE"),13,game.GOLD)
  game.label(right,card.description,18)
  game.label(right,"Blue allies start wounded. Red enemies stay still so you can compare coverage.",16,game.MUTED)
  outcome_label=game.label(right,"",21,game.GOLD)

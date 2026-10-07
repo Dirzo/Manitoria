@@ -1,0 +1,304 @@
+{
+  "version": "0.69",
+  "tests": [
+    {
+      "name": "champion_stars_test",
+      "checks": 109,
+      "failures": 0,
+      "scope": "packed"
+    },
+    {
+      "name": "rival_economy_test",
+      "checks": 9181,
+      "failures": 0,
+      "scope": "packed"
+    },
+    {
+      "name": "shop_economy_test",
+      "checks": 22564,
+      "failures": 0,
+      "scope": "packed"
+    },
+    {
+      "name": "tour_balance_test",
+      "checks": 13626,
+      "failures": 0,
+      "scope": "packed"
+    },
+    {
+      "name": "skill_balance_test",
+      "checks": 464,
+      "failures": 0,
+      "scope": "packed"
+    },
+    {
+      "name": "item_feedback_test",
+      "checks": 1228,
+      "failures": 0,
+      "scope": "packed"
+    },
+    {
+      "name": "sustain_balance_test",
+      "checks": 9,
+      "failures": 0,
+      "scope": "packed"
+    },
+    {
+      "name": "shop_carousel_test",
+      "checks": 32,
+      "failures": 0,
+      "scope": "packed graphical"
+    },
+    {
+      "name": "shop_stress_test",
+      "checks": 221,
+      "failures": 0,
+      "scope": "packed graphical"
+    },
+    {
+      "name": "champion_stars_ui_test",
+      "checks": 9,
+      "failures": 0,
+      "scope": "packed graphical"
+    },
+    {
+      "name": "full_tour_smoke",
+      "checks": 293,
+      "failures": 0,
+      "scope": "packed; deliberately boosted player for transition coverage"
+    },
+    {
+      "name": "cup_training_test",
+      "checks": 26,
+      "failures": 0,
+      "scope": "source"
+    }
+  ],
+  "total_checks": 47762,
+  "copy_thresholds": {
+    "two_star": 3,
+    "three_star": 6,
+    "includes_original": true
+  },
+  "rival_economy": {
+    "funded": true,
+    "match_rewards_shared": true,
+    "debt_allowed": false,
+    "viewing_grants_upgrades": false,
+    "seeds_tested": 3
+  },
+  "balance": {
+    "ad_primary_attack_multiplier": 1.12,
+    "grievous_healing_reduction": 0.5,
+    "chalice_outgoing_heal_bonus": 0.25,
+    "support_heal_factors": [
+      1.0,
+      0.7,
+      0.4
+    ],
+    "overtime_start_seconds": 60,
+    "overtime_sustain_decrease_per_second": 0.02,
+    "overtime_sustain_floor": 0.05
+  },
+  "matchup_samples": [
+    {
+      "scope": "18 mirrored cup-four attack matchups; corrected Support kit/tactics; before final Chalice reduction",
+      "rows": [
+        {
+          "a": "Attack tempo",
+          "b": "Spell control",
+          "cup": 4,
+          "difficulty": "Keeper",
+          "draws": 0,
+          "fights": 2,
+          "seconds": 22.8833333333336,
+          "timeouts": 0,
+          "wins_a": 1,
+          "wins_b": 1
+        },
+        {
+          "a": "Attack tempo",
+          "b": "Sustain support",
+          "cup": 4,
+          "difficulty": "Keeper",
+          "draws": 0,
+          "fights": 2,
+          "seconds": 25.3000000000004,
+          "timeouts": 0,
+          "wins_a": 0,
+          "wins_b": 2
+        },
+        {
+          "a": "Attack tempo",
+          "b": "Tank carry",
+          "cup": 4,
+          "difficulty": "Keeper",
+          "draws": 0,
+          "fights": 2,
+          "seconds": 124.933333333329,
+          "timeouts": 1,
+          "wins_a": 1,
+          "wins_b": 1
+        },
+        {
+          "a": "Attack tempo",
+          "b": "Spell control",
+          "cup": 4,
+          "difficulty": "Standard",
+          "draws": 0,
+          "fights": 2,
+          "seconds": 22.8833333333336,
+          "timeouts": 0,
+          "wins_a": 1,
+          "wins_b": 1
+        },
+        {
+          "a": "Attack tempo",
+          "b": "Sustain support",
+          "cup": 4,
+          "difficulty": "Standard",
+          "draws": 0,
+          "fights": 2,
+          "seconds": 19.3000000000001,
+          "timeouts": 0,
+          "wins_a": 0,
+          "wins_b": 2
+        },
+        {
+          "a": "Attack tempo",
+          "b": "Tank carry",
+          "cup": 4,
+          "difficulty": "Standard",
+          "draws": 0,
+          "fights": 2,
+          "seconds": 95.5499999999971,
+          "timeouts": 0,
+          "wins_a": 2,
+          "wins_b": 0
+        },
+        {
+          "a": "Attack tempo",
+          "b": "Spell control",
+          "cup": 4,
+          "difficulty": "Champion",
+          "draws": 0,
+          "fights": 2,
+          "seconds": 23.1500000000003,
+          "timeouts": 0,
+          "wins_a": 1,
+          "wins_b": 1
+        },
+        {
+          "a": "Attack tempo",
+          "b": "Sustain support",
+          "cup": 4,
+          "difficulty": "Champion",
+          "draws": 0,
+          "fights": 2,
+          "seconds": 18.8166666666668,
+          "timeouts": 0,
+          "wins_a": 0,
+          "wins_b": 2
+        },
+        {
+          "a": "Attack tempo",
+          "b": "Tank carry",
+          "cup": 4,
+          "difficulty": "Champion",
+          "draws": 0,
+          "fights": 2,
+          "seconds": 106.13333333333,
+          "timeouts": 0,
+          "wins_a": 1,
+          "wins_b": 1
+        }
+      ]
+    },
+    {
+      "scope": "12 mirrored cup-four anti-sustain matchups with shipping combat values",
+      "rows": [
+        {
+          "a": "Attack tempo",
+          "b": "Sustain support",
+          "cup": 4,
+          "difficulty": "Keeper",
+          "draws": 0,
+          "fights": 2,
+          "seconds": 24.4500000000004,
+          "timeouts": 0,
+          "wins_a": 0,
+          "wins_b": 2
+        },
+        {
+          "a": "Spell control",
+          "b": "Sustain support",
+          "cup": 4,
+          "difficulty": "Keeper",
+          "draws": 0,
+          "fights": 2,
+          "seconds": 21.4000000000002,
+          "timeouts": 0,
+          "wins_a": 0,
+          "wins_b": 2
+        },
+        {
+          "a": "Attack tempo",
+          "b": "Sustain support",
+          "cup": 4,
+          "difficulty": "Standard",
+          "draws": 0,
+          "fights": 2,
+          "seconds": 18.4333333333334,
+          "timeouts": 0,
+          "wins_a": 0,
+          "wins_b": 2
+        },
+        {
+          "a": "Spell control",
+          "b": "Sustain support",
+          "cup": 4,
+          "difficulty": "Standard",
+          "draws": 0,
+          "fights": 2,
+          "seconds": 42.9833333333335,
+          "timeouts": 0,
+          "wins_a": 0,
+          "wins_b": 2
+        },
+        {
+          "a": "Attack tempo",
+          "b": "Sustain support",
+          "cup": 4,
+          "difficulty": "Champion",
+          "draws": 0,
+          "fights": 2,
+          "seconds": 19.1666666666668,
+          "timeouts": 0,
+          "wins_a": 0,
+          "wins_b": 2
+        },
+        {
+          "a": "Spell control",
+          "b": "Sustain support",
+          "cup": 4,
+          "difficulty": "Champion",
+          "draws": 0,
+          "fights": 2,
+          "seconds": 40.5500000000003,
+          "timeouts": 0,
+          "wins_a": 1,
+          "wins_b": 1
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Small fixed-composition samples are not population win rates.",
+    "Sustain support won 11 of 12 final anti-sustain sample matches; further matchup tuning is warranted.",
+    "The five-cup flow uses an intentionally boosted player and is not balance evidence.",
+    "No measured frame-rate or exhaustive hardware compatibility claim.",
+    "Rival training and skill quality retain difficulty rules; shared economy does not imply identical XP policies."
+  ],
+  "original_user_saves_modified": false,
+  "github_pushed": false
+}

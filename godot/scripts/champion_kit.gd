@@ -3,7 +3,9 @@ extends RefCounted
 
 static func entries(hero: Dictionary) -> Array:
  var sp=HeroData.species[hero.sp]
+ var scaling=SkillScaling.description(hero.sp,sp.ab)
  var list=[{"name":sp.ability_name,"summary":HeroData.signature_summary(hero.sp),"description":sp.ability_description,"rank":hero.signature_rank,"art":sp.ab,"rarity":RarityStyle.for_skill(hero,"signature"),"cooldown":CombatPacing.signature_cd(hero),"signature":true}]
+ list[0].description=sp.ability_description.replace("% attack","% skill power").replace("% damage","% skill power")+"\n"+scaling
  for key in hero.learned:
   var ability=HeroData.learned_ability(hero.sp,int(key))
   list.append({"name":ability.name,"summary":ability.summary,"description":ability.description,"rank":int(hero.learned[key]),"art":"discovery:%s:%s"%[hero.sp,key],"rarity":RarityStyle.for_skill(hero,"ability:"+key),"cooldown":CombatPacing.ability_cd(hero,key),"signature":false})
@@ -11,7 +13,7 @@ static func entries(hero: Dictionary) -> Array:
  var gi=Evolutions.grant_index(str(hero.get("evolution","")))
  if gi>=0:
   var g=HeroData.learned_ability(hero.sp,gi)
-  list.append({"name":g.name,"summary":"EVOLUTION · "+g.summary,"description":g.description,"rank":1,"art":g.effect,"rarity":"Rare","cooldown":g.cooldown,"signature":false})
+  list.append({"name":g.name,"summary":"EVOLUTION · "+g.summary,"description":g.description,"rank":1,"art":"discovery:%s:%d"%[hero.sp,gi],"rarity":"Rare","cooldown":g.cooldown,"signature":false})
  return list
 
 static func build(game: Node,parent: Node,hero: Dictionary,height: int=235) -> void:
@@ -38,6 +40,9 @@ static func row(game: Node,parent: Node,entry: Dictionary,detailed: bool) -> voi
  if entry.cooldown>0:info+=" · %.1fs"%entry.cooldown
  game.label(head,info,11,game.MUTED,false)
  var sm=game.label(text,entry.summary,13,game.WHITE,false);sm.clip_text=true;sm.text_overrun_behavior=TextServer.OVERRUN_TRIM_ELLIPSIS;sm.custom_minimum_size.x=60
+ var scale_line=str(entry.description).split("Scaling: ")
+ if scale_line.size()>1:
+  game.label(text,"Scaling: "+scale_line[1].split(".")[0]+(" · AS bonus" if entry.description.contains("Attack speed also") else ""),11,Color("bba2ff"))
  var tip=entry.name+"\n"+entry.description+"\n"+info+(" · +%d%% from rank"%((entry.rank-1)*20) if entry.rank>1 else "")
  for c in [icon,nm,sm]:c.tooltip_text=tip;c.mouse_filter=Control.MOUSE_FILTER_STOP
- if detailed:game.label(text,entry.description,12,Color("c9d6dc"))
+ if detailed:game.label(text,str(entry.description).split("Scaling: ")[0],12,Color("c9d6dc"))

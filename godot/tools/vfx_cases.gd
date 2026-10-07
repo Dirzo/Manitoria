@@ -4,11 +4,22 @@ extends RefCounted
 func _model(root: Node3D, sp: String, pos: Vector3, face: Vector3, scale: float = 0.72) -> void:
 	var n = load("res://assets/beasts/%s.glb" % sp).instantiate()
 	n.position = pos; n.scale = Vector3.ONE * scale; root.add_child(n)
-	n.look_at(pos - (face - pos), Vector3.UP)
+	n.rotation.y=atan2(face.x-pos.x,face.z-pos.z)
 	var ap = n.find_children("*", "AnimationPlayer", true, false)
 	if ap.size() > 0 and ap[0].has_animation("idle"): ap[0].play("idle"); ap[0].seek(0.5, true); ap[0].pause()
 
 func stage(name: String, vfx: VFX, root: Node3D) -> void:
+	if name.begins_with("item-"):
+		var id=name.trim_prefix("item-");var from=Vector3(-3,0,0);var to=Vector3(2,0,0)
+		_model(root,"minotaur",from,to);_model(root,"golem",to,from,.55)
+		ItemFeedback.play(vfx,{"item_id":id,"stage":"proc"},from,to);return
+	if name.begins_with("skill-"):
+		var parts=name.split("-");var sp=parts[1];var key=parts[2]
+		var a=SkillScaling.audited(sp,key);var caster=Vector3(-3,0,0);var target=Vector3(2,0,0)
+		_model(root,sp,caster,target);_model(root,"golem",target,caster,.55)
+		var credit="signature" if key=="signature" else "ability:"+key
+		var c=AbilityFX.ctx(sp,Color.TRANSPARENT,"Rare",credit,a.effect)
+		AbilityFX.cast_flash(vfx,c,caster);AbilityFX.play(vfx,a.effect,c,caster,target,[target]);return
 	if name.begins_with("fam-"):
 		# fam-<family>-<caster species>
 		var parts = name.split("-")

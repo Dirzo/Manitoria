@@ -1,0 +1,518 @@
+{
+  "before": {
+    "fights": 480,
+    "rows": [
+      {
+        "cup": 1,
+        "difficulty": "Keeper",
+        "draws": 0,
+        "duration": 57.001041666666,
+        "fights": 32,
+        "player_level": 1,
+        "rival_level": 1,
+        "survival": 0.525,
+        "timeouts": 0,
+        "win_rate": 0.96875,
+        "wins": 31
+      },
+      {
+        "cup": 2,
+        "difficulty": "Keeper",
+        "draws": 0,
+        "duration": 39.4479166666666,
+        "fights": 32,
+        "player_level": 5,
+        "rival_level": 4,
+        "survival": 0.71875,
+        "timeouts": 0,
+        "win_rate": 0.96875,
+        "wins": 31
+      },
+      {
+        "cup": 3,
+        "difficulty": "Keeper",
+        "draws": 0,
+        "duration": 52.5427083333325,
+        "fights": 32,
+        "player_level": 7,
+        "rival_level": 8,
+        "survival": 0.2625,
+        "timeouts": 1,
+        "win_rate": 0.34375,
+        "wins": 11
+      },
+      {
+        "cup": 4,
+        "difficulty": "Keeper",
+        "draws": 0,
+        "duration": 58.252083333332,
+        "fights": 32,
+        "player_level": 9,
+        "rival_level": 11,
+        "survival": 0.19375,
+        "timeouts": 4,
+        "win_rate": 0.21875,
+        "wins": 7
+      },
+      {
+        "cup": 5,
+        "difficulty": "Keeper",
+        "draws": 0,
+        "duration": 47.3729166666657,
+        "fights": 32,
+        "player_level": 11,
+        "rival_level": 14,
+        "survival": 0.05,
+        "timeouts": 4,
+        "win_rate": 0.0625,
+        "wins": 2
+      },
+      {
+        "cup": 1,
+        "difficulty": "Standard",
+        "draws": 0,
+        "duration": 62.8854166666657,
+        "fights": 32,
+        "player_level": 1,
+        "rival_level": 1,
+        "survival": 0.29375,
+        "timeouts": 0,
+        "win_rate": 0.5625,
+        "wins": 18
+      },
+      {
+        "cup": 2,
+        "difficulty": "Standard",
+        "draws": 0,
+        "duration": 48.7822916666662,
+        "fights": 32,
+        "player_level": 5,
+        "rival_level": 5,
+        "survival": 0.18125,
+        "timeouts": 0,
+        "win_rate": 0.25,
+        "wins": 8
+      },
+      {
+        "cup": 3,
+        "difficulty": "Standard",
+        "draws": 0,
+        "duration": 44.3031249999994,
+        "fights": 32,
+        "player_level": 7,
+        "rival_level": 9,
+        "survival": 0.075,
+        "timeouts": 1,
+        "win_rate": 0.09375,
+        "wins": 3
+      },
+      {
+        "cup": 4,
+        "difficulty": "Standard",
+        "draws": 0,
+        "duration": 47.6072916666659,
+        "fights": 32,
+        "player_level": 9,
+        "rival_level": 12,
+        "survival": 0.06875,
+        "timeouts": 2,
+        "win_rate": 0.125,
+        "wins": 4
+      },
+      {
+        "cup": 5,
+        "difficulty": "Standard",
+        "draws": 0,
+        "duration": 43.3312499999991,
+        "fights": 32,
+        "player_level": 11,
+        "rival_level": 15,
+        "survival": 0.01875,
+        "timeouts": 2,
+        "win_rate": 0.0,
+        "wins": 0
+      },
+      {
+        "cup": 1,
+        "difficulty": "Champion",
+        "draws": 0,
+        "duration": 47.4385416666665,
+        "fights": 32,
+        "player_level": 1,
+        "rival_level": 2,
+        "survival": 0.0,
+        "timeouts": 0,
+        "win_rate": 0.0,
+        "wins": 0
+      },
+      {
+        "cup": 2,
+        "difficulty": "Champion",
+        "draws": 0,
+        "duration": 43.9062499999996,
+        "fights": 32,
+        "player_level": 5,
+        "rival_level": 6,
+        "survival": 0.0,
+        "timeouts": 0,
+        "win_rate": 0.0,
+        "wins": 0
+      },
+      {
+        "cup": 3,
+        "difficulty": "Champion",
+        "draws": 0,
+        "duration": 33.1697916666665,
+        "fights": 32,
+        "player_level": 7,
+        "rival_level": 10,
+        "survival": 0.0,
+        "timeouts": 0,
+        "win_rate": 0.0,
+        "wins": 0
+      },
+      {
+        "cup": 4,
+        "difficulty": "Champion",
+        "draws": 0,
+        "duration": 34.0124999999996,
+        "fights": 32,
+        "player_level": 9,
+        "rival_level": 13,
+        "survival": 0.0,
+        "timeouts": 0,
+        "win_rate": 0.0,
+        "wins": 0
+      },
+      {
+        "cup": 5,
+        "difficulty": "Champion",
+        "draws": 0,
+        "duration": 31.358333333333,
+        "fights": 32,
+        "player_level": 11,
+        "rival_level": 16,
+        "survival": 0.0,
+        "timeouts": 0,
+        "win_rate": 0.0,
+        "wins": 0
+      }
+    ]
+  },
+  "after": {
+    "fights": 240,
+    "rows": [
+      {
+        "cup": 1,
+        "difficulty": "Keeper",
+        "draws": 0,
+        "duration": 53.7437499999995,
+        "fights": 16,
+        "player_level": 1,
+        "rival_level": 1,
+        "survival": 0.5875,
+        "timeouts": 0,
+        "win_rate": 0.9375,
+        "wins": 15
+      },
+      {
+        "cup": 2,
+        "difficulty": "Keeper",
+        "draws": 0,
+        "duration": 30.7104166666668,
+        "fights": 16,
+        "player_level": 6,
+        "rival_level": 4,
+        "survival": 0.875,
+        "timeouts": 0,
+        "win_rate": 1.0,
+        "wins": 16
+      },
+      {
+        "cup": 3,
+        "difficulty": "Keeper",
+        "draws": 0,
+        "duration": 35.2083333333333,
+        "fights": 16,
+        "player_level": 8,
+        "rival_level": 7,
+        "survival": 0.775,
+        "timeouts": 0,
+        "win_rate": 1.0,
+        "wins": 16
+      },
+      {
+        "cup": 4,
+        "difficulty": "Keeper",
+        "draws": 0,
+        "duration": 31.6312500000001,
+        "fights": 16,
+        "player_level": 11,
+        "rival_level": 9,
+        "survival": 0.7375,
+        "timeouts": 0,
+        "win_rate": 0.9375,
+        "wins": 15
+      },
+      {
+        "cup": 5,
+        "difficulty": "Keeper",
+        "draws": 0,
+        "duration": 39.3312499999996,
+        "fights": 16,
+        "player_level": 13,
+        "rival_level": 11,
+        "survival": 0.7,
+        "timeouts": 1,
+        "win_rate": 1.0,
+        "wins": 16
+      },
+      {
+        "cup": 1,
+        "difficulty": "Standard",
+        "draws": 0,
+        "duration": 58.8333333333325,
+        "fights": 16,
+        "player_level": 1,
+        "rival_level": 1,
+        "survival": 0.2875,
+        "timeouts": 0,
+        "win_rate": 0.5625,
+        "wins": 9
+      },
+      {
+        "cup": 2,
+        "difficulty": "Standard",
+        "draws": 0,
+        "duration": 41.6895833333333,
+        "fights": 16,
+        "player_level": 6,
+        "rival_level": 5,
+        "survival": 0.65,
+        "timeouts": 0,
+        "win_rate": 0.875,
+        "wins": 14
+      },
+      {
+        "cup": 3,
+        "difficulty": "Standard",
+        "draws": 0,
+        "duration": 43.4812499999995,
+        "fights": 16,
+        "player_level": 8,
+        "rival_level": 8,
+        "survival": 0.425,
+        "timeouts": 1,
+        "win_rate": 0.6875,
+        "wins": 11
+      },
+      {
+        "cup": 4,
+        "difficulty": "Standard",
+        "draws": 0,
+        "duration": 43.2124999999995,
+        "fights": 16,
+        "player_level": 11,
+        "rival_level": 10,
+        "survival": 0.525,
+        "timeouts": 1,
+        "win_rate": 0.8125,
+        "wins": 13
+      },
+      {
+        "cup": 5,
+        "difficulty": "Standard",
+        "draws": 0,
+        "duration": 48.6499999999991,
+        "fights": 16,
+        "player_level": 13,
+        "rival_level": 12,
+        "survival": 0.4125,
+        "timeouts": 1,
+        "win_rate": 0.5625,
+        "wins": 9
+      },
+      {
+        "cup": 1,
+        "difficulty": "Champion",
+        "draws": 0,
+        "duration": 59.3541666666659,
+        "fights": 16,
+        "player_level": 1,
+        "rival_level": 1,
+        "survival": 0.2125,
+        "timeouts": 0,
+        "win_rate": 0.4375,
+        "wins": 7
+      },
+      {
+        "cup": 2,
+        "difficulty": "Champion",
+        "draws": 0,
+        "duration": 49.2770833333327,
+        "fights": 16,
+        "player_level": 6,
+        "rival_level": 6,
+        "survival": 0.2125,
+        "timeouts": 0,
+        "win_rate": 0.375,
+        "wins": 6
+      },
+      {
+        "cup": 3,
+        "difficulty": "Champion",
+        "draws": 0,
+        "duration": 47.666666666666,
+        "fights": 16,
+        "player_level": 8,
+        "rival_level": 9,
+        "survival": 0.175,
+        "timeouts": 0,
+        "win_rate": 0.3125,
+        "wins": 5
+      },
+      {
+        "cup": 4,
+        "difficulty": "Champion",
+        "draws": 0,
+        "duration": 49.3166666666659,
+        "fights": 16,
+        "player_level": 11,
+        "rival_level": 11,
+        "survival": 0.175,
+        "timeouts": 1,
+        "win_rate": 0.25,
+        "wins": 4
+      },
+      {
+        "cup": 5,
+        "difficulty": "Champion",
+        "draws": 0,
+        "duration": 47.7437499999991,
+        "fights": 16,
+        "player_level": 13,
+        "rival_level": 13,
+        "survival": 0.1625,
+        "timeouts": 0,
+        "win_rate": 0.1875,
+        "wins": 3
+      }
+    ]
+  },
+  "saved_before": [
+    {
+      "draws": 0,
+      "fights": 4,
+      "opponent": "Dread Wyverns",
+      "remaining": 0.25,
+      "revised": false,
+      "wins": 1
+    },
+    {
+      "draws": 0,
+      "fights": 4,
+      "opponent": "Ashen Crown",
+      "remaining": 0.0,
+      "revised": false,
+      "wins": 0
+    },
+    {
+      "draws": 0,
+      "fights": 4,
+      "opponent": "Moonlit Wardens",
+      "remaining": 0.1,
+      "revised": false,
+      "wins": 1
+    },
+    {
+      "draws": 0,
+      "fights": 4,
+      "opponent": "Iron Orchard",
+      "remaining": 0.65,
+      "revised": false,
+      "wins": 3
+    },
+    {
+      "draws": 0,
+      "fights": 4,
+      "opponent": "Stormbound",
+      "remaining": 0.2,
+      "revised": false,
+      "wins": 1
+    },
+    {
+      "draws": 0,
+      "fights": 4,
+      "opponent": "Thorn Company",
+      "remaining": 0.45,
+      "revised": false,
+      "wins": 3
+    },
+    {
+      "draws": 0,
+      "fights": 4,
+      "opponent": "Ivory Pact",
+      "remaining": 0.0,
+      "revised": false,
+      "wins": 0
+    }
+  ],
+  "saved_after": [
+    {
+      "draws": 0,
+      "fights": 4,
+      "opponent": "Dread Wyverns",
+      "remaining": 0.75,
+      "revised": true,
+      "wins": 4
+    },
+    {
+      "draws": 0,
+      "fights": 4,
+      "opponent": "Ashen Crown",
+      "remaining": 0.0,
+      "revised": true,
+      "wins": 0
+    },
+    {
+      "draws": 0,
+      "fights": 4,
+      "opponent": "Moonlit Wardens",
+      "remaining": 1.0,
+      "revised": true,
+      "wins": 4
+    },
+    {
+      "draws": 0,
+      "fights": 4,
+      "opponent": "Iron Orchard",
+      "remaining": 0.95,
+      "revised": true,
+      "wins": 4
+    },
+    {
+      "draws": 0,
+      "fights": 4,
+      "opponent": "Stormbound",
+      "remaining": 0.5,
+      "revised": true,
+      "wins": 3
+    },
+    {
+      "draws": 0,
+      "fights": 4,
+      "opponent": "Thorn Company",
+      "remaining": 0.85,
+      "revised": true,
+      "wins": 4
+    },
+    {
+      "draws": 0,
+      "fights": 4,
+      "opponent": "Ivory Pact",
+      "remaining": 0.75,
+      "revised": true,
+      "wins": 3
+    }
+  ]
+}

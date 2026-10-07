@@ -18,6 +18,7 @@ func build() -> void:
  campaign = game.campaign; state = campaign.state; prefs = game.desk_state
  var nav = HBoxContainer.new(); add_child(nav); nav.position = Vector2(26, 122); nav.size = Vector2(1548, 48)
  for item in [["overview", "Overview"], ["matches", "Matches"], ["roster", "Roster"], ["club", "Club"], ["market", "Market"], ["intel", "Intel"]]:
+  if item[0]=="market" and not campaign.recruitment_open():continue
   var b = action(nav, ("World Tour" if item[0]=="overview" else "Journal" if item[0]=="matches" else "League" if item[0]=="intel" else item[1]) if state.has("tour") else item[1], func(): navigate(item[0]), game.tab == item[0]); b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
  var scroll = ScrollContainer.new(); add_child(scroll); scroll.position = Vector2(26, 184); scroll.size = Vector2(1548, 618)
  scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -97,7 +98,7 @@ func team_strip(parent: Node, heroes: Array, yours: bool) -> void:
    var b = action(c, "Lv %d · %s" % [h.level, HeroData.line(h.sp)], func(): profile(h, yours)); b.custom_minimum_size.y = 32; b.add_theme_font_size_override("font_size", 12)
   else:
    var empty = text(c, "+", 42, MUTED); empty.custom_minimum_size.y = 96; empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-   action(c, "Recruit", func(): navigate("market"))
+   if campaign.recruitment_open():action(c, "Recruit", func(): navigate("market"))
 
 func next_fixture() -> void:
  var fixture = card(body)
@@ -183,6 +184,11 @@ func filters(parent: Node, key: String, values: Array) -> void:
   action(row, value.capitalize(), func(): prefs[key] = value; game.render(), prefs[key] == value)
 
 func market() -> void:
+ if not campaign.recruitment_open():
+  heading("ROSTER LOCKED","Stick with your squad through this cup. Recruitment reopens between cups when you continue with this team.")
+  action(body,"Review current team",func():navigate("roster"),true)
+  return
+ champion_copies()
  text(body, "DRAFT BOARD", 32)
  var open_slots = maxi(0, Campaign.MAX_SQUAD - campaign.lineup().size())
  var counts = {"Front": 0, "Flank": 0, "Back": 0}
@@ -196,7 +202,7 @@ func market() -> void:
  var gap = Control.new(); gap.custom_minimum_size.x = 30; bars.add_child(gap)
  DraftBoard.view_bar(game, bars)
  var sort = prefs.get("sort", "Board")
- var pool = state.market.filter(func(h): return prefs.role == "All" or HeroData.line(h.sp) == prefs.role)
+ var pool = state.market.filter(func(h): return not state.roster.any(func(owned):return owned.sp==h.sp) and (prefs.role == "All" or HeroData.line(h.sp) == prefs.role))
  if pool.is_empty(): text(body, "No creatures in this role. Choose another filter.", 20, MUTED); return
  var opts = func(h):
   return {"on_scout": func(): game.sound.announce(h.sp); profile(h, false),
@@ -218,6 +224,32 @@ func market() -> void:
   var price_text = "%d gold" % prices.min() if prices.min() == prices.max() else "%d–%d gold · priced by rolls & level" % [prices.min(), prices.max()]
   text(body, "%s  ·  %s" % [t.to_upper(), price_text], 22, Color(League.TIER_COLOR[t]))
   DraftBoard.grid(game, body, heroes, opts, 4, 372, 220)
+
+## Always-available copy offers for owned champions, including the Legendary headliner.
+func champion_copies() -> void:
+ if state.roster.is_empty():return
+ text(body,"CHAMPION COPIES",24,GOLD)
+ text(body,"3 copies → two stars · 6 copies → three stars. Buy for the champion you want to grow; your roster stays intact. Copies are sold during the draft and between cups.",16,MUTED)
+ text(body,"Two stars: +18% HP, +12% AD/AP · Three stars: +50% HP, +35% AD/AP · Original copy counts toward the total.",14,GOLD)
+ var grid=GridContainer.new();grid.columns=3;grid.add_theme_constant_override("h_separation",12);grid.add_theme_constant_override("v_separation",12);body.add_child(grid)
+ for h in state.roster:
+  var box=card(grid);box.get_parent().custom_minimum_size.x=430
+  var row=horizontal(box);portrait(row,h.sp,64)
+  var details=column(row)
+  text(details,h.name+" · "+HeroData.species[h.sp].n,18)
+  text(details,ChampionStars.label(h),16,GOLD).tooltip_text=ChampionStars.description(h)
+  var cost=League.cost(h.sp)
+  var offer=campaign.copy_offer(h);var gains=[]
+  for key in HeroData.ROLL_KEYS:
+   if int(offer[key])>int(HeroData.rolls(h)[key]):gains.append("%s +%d"%[StatHex.GUIDE[key].name,int(offer[key])-int(HeroData.rolls(h)[key])])
+  text(box," · ".join(gains) if not gains.is_empty() else "Stronger rolls protected · advances stars",13,TEAL)
+  var button=action(box,"Three stars · complete" if ChampionStars.tier(h)==3 else "Buy copy · %d gold"%cost,func():
+   var previous=ChampionStars.tier(h)
+   if campaign.buy_champion_copy(h.id):
+    game.selected_id=h.id;game.sound.cue("upgrade",true);game.render()
+    game.toast(h.name+" · "+ChampionStars.label(h)+(" · STAR UPGRADE!" if ChampionStars.tier(h)>previous else ""))
+   else:game.toast(campaign.last_error),true,ChampionStars.tier(h)==3 or int(state.gold)<cost or (not state.get("tour",{}).get("intermission",false) and not campaign.lineup_ready()))
+  button.tooltip_text=ChampionStars.description(h)+("\nField at least four champions to unlock copy purchases." if not state.get("tour",{}).get("intermission",false) and not campaign.lineup_ready() else "")
 
 ## Warn when a pick would leave too little gold to field a full five.
 func draft_with_check(h: Dictionary) -> void:
@@ -271,6 +303,7 @@ func profile(h: Dictionary, yours: bool) -> void:
  for clip in ["idle", "walk", "attack", "cast"]: action(poses, clip.capitalize(), func(): preview.play(clip))
  var stats = HeroData.stats(h)
  text(left, "LEVEL %d  /  %s  /  %s" % [h.level, HeroData.species[h.sp].role.to_upper(), League.tier(h.sp).to_upper()], 16, TEAL)
+ text(left,ChampionStars.label(h),16,GOLD).tooltip_text=ChampionStars.description(h)
  TraitUI.line(game, left, h)
  TraitUI.rolls(game, left, h, true)
  GearUI.recommended_row(game, left, h, 40)
@@ -291,7 +324,7 @@ func profile(h: Dictionary, yours: bool) -> void:
   var sell_b = action(left, "Sell for %d gold (50%%)" % refund, func():
    FlowUI.confirm(game, "Sell " + h.name + "?", "%s leaves the guild for %d gold (half of the %d paid). Equipped items go to your bag." % [h.name, refund, int(h.get("price", League.cost(h.sp)))], "Sell for %d gold" % refund, func():
     if campaign.sell(h.id): dialog.root.queue_free(); game.sound.cue("contest_lock"); game.render(); game.toast("%s sold · +%d gold" % [h.name, refund])
-    else: game.toast(campaign.last_error)), false, h.id == str(state.get("headliner", "")))
+    else: game.toast(campaign.last_error)), false, h.id == str(state.get("headliner", "")) or not campaign.recruitment_open())
   if h.id == str(state.get("headliner", "")): sell_b.tooltip_text = "Your headliner can't be sold."
  # Middle: the stat hexagon, what each stat does, and how this champion grows.
  var mid = column(split, false); mid.custom_minimum_size.x = 440
@@ -332,7 +365,7 @@ func profile(h: Dictionary, yours: bool) -> void:
    for key in GearUI.slot_keys(h):GearUI.slot(game,slots,h,key,78)
    GearUI.bag(game,right,h)
 
- if h in state.market:
+ if h in state.market and campaign.recruitment_open():
   action(left, "Recruit · %dg" % h.price, func(): campaign.recruit(h.id); game.render(), true, state.gold < h.price or state.roster.size() >= 12)
 
 func field_hero(h: Dictionary) -> void:

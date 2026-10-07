@@ -19,7 +19,7 @@ static func ready(sim: BattleSim, u: Dictionary, id: String, cooldown: float) ->
 
 static func proc(sim: BattleSim, u: Dictionary, id: String, target: Dictionary) -> void:
  sim.track(u,"casts",1,"item:"+id)
- sim.emit({"type":"item_proc","uid":u.uid,"pos":u.pos,"target":target.pos,"credit":"item:"+id,"name":definition(id).name})
+ ItemFeedback.signal_effect(sim,u,id,target)
 
 static func ward(sim: BattleSim, u: Dictionary, target: Dictionary, amount: float, id: String) -> void:
  var before=float(target.shield)
@@ -30,6 +30,7 @@ static func ward(sim: BattleSim, u: Dictionary, target: Dictionary, amount: floa
 static func opening(sim: BattleSim, u: Dictionary) -> void:
  if u.items.get("opened",false): return
  u.items.opened=true
+ ItemFeedback.opening(sim,u)
  if has(u,"barding"): ward(sim,u,u,u.max_hp*0.12,"barding")
  RoleItems.trigger(sim,u,"opening")
 

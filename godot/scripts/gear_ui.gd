@@ -39,7 +39,8 @@ static func can_drop(game: Node,data: Variant,hero_id: String,_slot: String="",b
  if bag:return kind=="equipped"
  var hero=c.hero_by_id(hero_id)
  if kind=="offer":return hero in c.state.roster
- return hero in c.state.roster and (kind!="equipped" or data.owner!=hero_id) and fits(hero,id)
+ var swap_ok=kind=="equipped" and _slot in slot_keys(hero) and hero.get("equipment",{}).has(_slot)
+ return hero in c.state.roster and (kind!="equipped" or data.owner!=hero_id) and (fits(hero,id) or swap_ok)
 
 static func apply_drop(game: Node,data: Dictionary,hero_id: String,_slot: String="",bag: bool=false) -> bool:
  if not can_drop(game,data,hero_id,_slot,bag):
@@ -47,13 +48,14 @@ static func apply_drop(game: Node,data: Dictionary,hero_id: String,_slot: String
   if not h.is_empty() and not fits(h,str(data.get("id",""))):game.toast("%s already carries three items. Unequip one first."%h.name)
   return false
  var c: Campaign=game.campaign;var ok=false
+ var swapping=data.kind=="equipped" and not bag and c.hero_by_id(hero_id).get("equipment",{}).has(_slot)
  var before=c.hero_by_id(hero_id).get("equipment",{}).values().duplicate() if not bag else []
  match data.kind:
   "bag":ok=c.equip(hero_id,data.id)
   "offer":ok=c.buy_and_equip(int(data.index),hero_id)
   "equipped":
    if bag:ok=c.unequip(data.owner,str(data.slot))
-   else:ok=c.transfer_item(data.owner,hero_id,str(data.slot))
+   else:ok=c.transfer_item(data.owner,hero_id,str(data.slot),_slot)
  if ok and not bag:
   for v in c.hero_by_id(hero_id).get("equipment",{}).values():
    if Forge.ITEMS.get(str(v),{}).get("wild",false) and str(v) not in before:Callable(FlowUI,"banner").call_deferred(game,"LEGENDARY!",Color("ffd36e"),Forge.ITEMS[str(v)].name+" equipped")
@@ -61,9 +63,10 @@ static func apply_drop(game: Node,data: Dictionary,hero_id: String,_slot: String
   c.last_error="";game.sound.cue("upgrade");game.toast("%s is full · sent to your bag"%c.hero_by_id(hero_id).name);game.render();return true
  if ok:
   game.sound.cue("upgrade")
+  if data.kind=="equipped" and not bag:game.toast(("Swapped items with " if swapping else "Moved item to ")+c.hero_by_id(hero_id).name)
   if not bag:
    for v in c.hero_by_id(hero_id).get("equipment",{}).values():
-    if Forge.is_item(str(v)) and str(v) not in before:game.toast("Forged %s!"%Forge.ITEMS[str(v)].name);game.sound.cue("upgrade",true);break
+    if Forge.is_component(str(data.id)) and Forge.is_item(str(v)) and str(v) not in before and not swapping:game.toast("Forged %s!"%Forge.ITEMS[str(v)].name);game.sound.cue("upgrade",true);break
   game.render()
  else:game.toast(c.last_error if not c.last_error.is_empty() else "Could not equip this item.")
  return ok
@@ -201,6 +204,17 @@ static func picker(game: Node,hero: Dictionary,key: String) -> void:
   game.button(info,"Unequip",func():
    if c.unequip(hero.id,key):game.render()
    else:game.toast(c.last_error))
+  game.label(dialog.box,"MOVE OR SWAP · Choose a slot on another champion",14,game.GOLD)
+  var destinations=HFlowContainer.new();dialog.box.add_child(destinations)
+  for other in c.state.roster:
+   if other.id==hero.id:continue
+   var card=VBoxContainer.new();destinations.add_child(card);game.label(card,other.name,14,game.GOLD)
+   var targets=HBoxContainer.new();card.add_child(targets)
+   for destination in slot_keys(other):
+    var worn=str(other.get("equipment",{}).get(destination,""))
+    var button=token(game,targets,Forge.info(worn) if worn!="" else {"art":"focus","name":"Empty slot"},48)
+    button.tooltip_text=("Swap with "+Forge.info(worn).name if worn!="" else "Move to empty slot")+" on "+other.name
+    button.pressed.connect(func():apply_drop(game,{"kind":"equipped","owner":hero.id,"slot":key,"id":id},other.id,destination))
  var scroll=ScrollContainer.new();scroll.size_flags_vertical=Control.SIZE_EXPAND_FILL;dialog.box.add_child(scroll)
  var grid=GridContainer.new();grid.columns=8;grid.add_theme_constant_override("h_separation",12);grid.add_theme_constant_override("v_separation",12);scroll.add_child(grid)
  var seen=[]
@@ -232,7 +246,7 @@ static func inspect(game: Node,item: Dictionary,data: Dictionary={}) -> void:
    if game.campaign.sell_item(item.id):game.render()
    else:game.toast(game.campaign.last_error))
 
-static func bag(game: Node,parent: Node,hero: Dictionary) -> void:
+static func bag(game: Node,parent: Node,hero: Dictionary,compact: bool=false) -> void:
  var c: Campaign=game.campaign
  var row=HBoxContainer.new();parent.add_child(row)
  var title=game.label(row,"BAG",16,game.GOLD,false);title.size_flags_horizontal=Control.SIZE_EXPAND_FILL
@@ -240,19 +254,38 @@ static func bag(game: Node,parent: Node,hero: Dictionary) -> void:
  game.button(row,"Forge (%d)"%n if n>0 else "Forge",func():forge_dialog(game),n>0).tooltip_text="Combine components from your bag"
  game.button(row,"Recipe book",func():recipe_book(game)).tooltip_text="Every component pair and what it forges"
  var target=GearToken.new();target.game=game;target.bag_target=true;target.text="↓ Unequip";target.custom_minimum_size=Vector2(120,36);row.add_child(target);target.tooltip_text="Drop worn items here to return them to your bag."
- var scroll=ScrollContainer.new();scroll.custom_minimum_size.y=82;scroll.vertical_scroll_mode=ScrollContainer.SCROLL_MODE_DISABLED;parent.add_child(scroll)
+ if compact:
+  for child in row.get_children():
+   if child is Button:child.custom_minimum_size.y=36;child.add_theme_font_size_override("font_size",16)
+ var scroll=ScrollContainer.new();scroll.custom_minimum_size.y=64 if compact else 82;scroll.vertical_scroll_mode=ScrollContainer.SCROLL_MODE_DISABLED;parent.add_child(scroll)
  var strip=HBoxContainer.new();strip.add_theme_constant_override("separation",10);scroll.add_child(strip)
  var seen=[]
  for id in c.state.inventory:
   if id in seen or not Forge.valid(str(id)):continue
   seen.append(id);var item=Forge.info(id)
-  var button=token(game,strip,item,70);button.payload={"kind":"bag","id":id};button.name="Bag_"+id
+  var button=token(game,strip,item,52 if compact else 70);button.payload={"kind":"bag","id":id};button.name="Bag_"+id
   button.pressed.connect(func():apply_drop(game,{"kind":"bag","id":id},hero.id))
   button.gui_input.connect(func(event):
    if event is InputEventMouseButton and event.pressed and event.button_index==MOUSE_BUTTON_RIGHT:inspect(game,item,{"kind":"bag","id":id}))
   if c.state.inventory.count(id)>1:
-   var count=game.label(button,str(c.state.inventory.count(id)),16,game.GOLD,false);count.position=Vector2(52,45);count.mouse_filter=Control.MOUSE_FILTER_IGNORE
+   var count=game.label(button,str(c.state.inventory.count(id)),16,game.GOLD,false);count.position=Vector2(35,31) if compact else Vector2(52,45);count.mouse_filter=Control.MOUSE_FILTER_IGNORE
  if seen.is_empty():game.label(strip,"Your spare items appear here.",16,game.MUTED,false)
+
+static func open_bag(game: Node) -> void:
+ game.campaign.state.bag_seen=game.campaign.state.inventory.duplicate()
+ game.campaign.state.bag_unread=false
+ game.campaign.save()
+ game.render()
+ var dialog=modal(game,"Bag · Equip, forge and store",Vector2(1100,620))
+ bag(game,dialog.box,selected(game))
+ game.label(dialog.box,"Drag spare items to a champion. Drag worn items to ↓ Unequip. Right-click a spare item for details.",15,game.MUTED)
+ team_strip(game,dialog.box,44)
+
+static func manage_team(game: Node) -> void:
+ var dialog=modal(game,"Team equipment · Move / swap",Vector2(1160,600))
+ game.label(dialog.box,"Drag a worn item to another champion's slot. An occupied slot swaps both items; an empty slot transfers. Click any worn item to choose a destination.",17,game.MUTED)
+ team_strip(game,dialog.box,48)
+ bag(game,dialog.box,selected(game),true)
 
 static func forgeable(c: Campaign) -> Array:
  var comps=[]
@@ -323,9 +356,9 @@ static func team_strip(game: Node,parent: Node,slot_px: int=34) -> void:
 static func recommended_row(game: Node,parent: Node,hero: Dictionary,px: int=46) -> void:
  var row=HBoxContainer.new();row.add_theme_constant_override("separation",8);parent.add_child(row)
  var cap=game.label(row,"RECOMMENDED",12,Color("ffd36e"),false);cap.size_flags_vertical=Control.SIZE_SHRINK_CENTER
- cap.tooltip_text="A core build for %s. Shop offers that build toward it are marked ★."%HeroData.species[hero.sp].n;cap.mouse_filter=Control.MOUSE_FILTER_STOP
+ cap.tooltip_text="Suggested for %s's signature, learned skills and stat scaling. Shop components for these items are marked ★."%HeroData.species[hero.sp].n;cap.mouse_filter=Control.MOUSE_FILTER_STOP
  var owned=hero.get("equipment",{}).values()
- for id in Forge.recommended(hero.sp):
+ for id in Forge.recommended(hero.sp,hero):
   var item=Forge.info(id);var t=token(game,row,item,px)
   if id in owned:
    var ok=game.label(t,"✓",18,Color("6fe08a"),false);ok.position=Vector2(px-16,-4);ok.mouse_filter=Control.MOUSE_FILTER_IGNORE

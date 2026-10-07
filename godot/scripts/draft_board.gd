@@ -129,7 +129,7 @@ static func _row(game: Node, list: Node, h: Dictionary, o: Dictionary, columns: 
 	var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 4); panel.add_child(row)
 	var r = HeroData.rolls(h); var w = HeroData.role_weights(h.sp)
 	for col in columns:
-		var c = _cell(row, col[2], 58)
+		var c = _cell(row, col[2], 96)
 		match col[1] if col[0] != "" or col[1] != "" else ("art" if c.get_parent().get_index() == 0 else "action"):
 			"art":
 				var b = Button.new(); b.custom_minimum_size = Vector2(52, 52); c.add_child(b)
@@ -160,7 +160,12 @@ static func _row(game: Node, list: Node, h: Dictionary, o: Dictionary, columns: 
 				fv.mouse_filter = Control.MOUSE_FILTER_STOP; fv.tooltip_text = TraitUI.fit_reason(h)
 				game.label(fv, fi[0], 14, fi[1], false).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 				if c.get_parent().custom_minimum_size.x > 120:
-					var why = game.label(fv, TraitUI.fit_reason(h, true), 11, fi[1].darkened(0.1), false); why.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+					var why = game.label(fv, TraitUI.fit_reason(h, true), 11, fi[1].darkened(0.1), true); why.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+					fv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+					why.custom_minimum_size = Vector2(col[2] - 12, 60)
+					why.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+					why.clip_text = true
+					why.name = "FitDescription"
 			"Price":
 				game.label(c, "%d" % int(h.get("price", 0)), 15, Color("ffdf7e"), false)
 			"action":

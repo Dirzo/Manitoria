@@ -1,0 +1,676 @@
+--- a/godot/scripts/battle_sim.gd
++++ b/godot/scripts/battle_sim.gd
+@@ -646,11 +646,14 @@
+   "gore", "venom", "skystrike", "maul", "stonedive", "vanish", "antlerrush":
+    var start = u.pos
+    leap(u, target)
+-   hurt(u, target, power * (2.1 if key == "vanish" else 1.7))
++   hurt(u, target, power * (2.1 if key == "vanish" else 1.55 if key == "maul" else 1.7))
+    if key in ["gore", "skystrike", "stonedive"]: status(target, "stun", 0.8)
+    if key == "maul": status(target, "root", 1.5)
+    if key == "venom": poison(u, target, 4, power * 0.3)
+-   if key == "stonedive": shield(u, u.max_hp * 0.18)
++   if key == "stonedive":
++    shield(u, u.max_hp * 0.18)
++    for e in near_foes(u, target.pos, ArenaGrid.ROW_GAP * 1.05):
++     if e.uid != target.uid: hurt(u, e, power * 0.55)
+    if key == "vanish": status(u, "stealth", 0.9)
+    if key == "antlerrush":
+     for e in foes(u):
+@@ -686,7 +689,7 @@
+   "chain":
+    var struck = []; var current = target; var origin = u.pos
+    for jump in range(4):
+-    hurt(u, current, power * 1.05 * pow(0.90, jump)); struck.append(current.uid)
++    hurt(u, current, power * 1.15 * pow(0.90, jump)); struck.append(current.uid)
+     emit({"type": "bolt", "uid": u.uid, "pos": origin, "target": current.pos, "effect": key})
+     origin = current.pos
+     var options = foes(u).filter(func(e): return not struck.has(e.uid) and e.pos.distance_to(origin) < 4.8)
+@@ -699,11 +702,11 @@
+     var index = rng.randi_range(0, victims.size() - 1); var e = victims[index]; victims.remove_at(index)
+     hurt(u, e, power * 1.05)
+     emit({"type": "bolt", "uid": u.uid, "pos": u.pos, "target": e.pos, "effect": key})
+-  "gaze": hurt(u, target, power * 1.2); status(target, "stun", 1.6)
++  "gaze": hurt(u, target, power * 1.3); status(target, "stun", 1.6)
+   "rootbloom": heal(u, allies[0], power * 2.3); status(target, "root", 1.3)
+   "tidal":
+    for a in allies:
+-    if a.pos.distance_to(u.pos) < 5.2: shield(a, power * 1.8)
++    if a.pos.distance_to(u.pos) < 6.0: shield(a, power * 2.0)
+   "radiance":
+    for a in allies:
+     if a.pos.distance_to(u.pos) < 5.2:
+--- a/godot/scripts/league.gd
++++ b/godot/scripts/league.gd
+@@ -83,7 +83,7 @@
+ 	"salamander": 0.958,
+ 	"sphinx": 1.131,
+ 	"thunderbird": 1.072,
+-	"troll": 1.064,
++	"troll": 1.095,
+ 	"unicorn": 1.031,
+ 	"wendigo": 1.015,
+ 	"yeti": 0.952,
+--- a/godot/scripts/forge.gd
++++ b/godot/scripts/forge.gd
+@@ -52,7 +52,7 @@
+ 	"quiver":      {"recipe": ["feather", "ember"], "name": "Arcane Quiver", "art": "barrage", "text": "Every third basic attack explodes for 60% ability power around the target."},
+ 	"quicksilver": {"recipe": ["feather", "moon"], "name": "Quicksilver", "art": "gust", "text": "Each basic attack shortens all your skill cooldowns by 0.25s."},
+ 	"hunter":      {"recipe": ["feather", "seed"], "name": "Hunter's Mark", "art": "ambush", "text": "Basic attacks Weaken the target (-25% damage) for 2s."},
+-	"sugarrush":   {"recipe": ["feather", "coin"], "name": "Sugar Rush", "art": "tailwind", "wild": true, "x": {"haste": 0.40, "speed": 0.30}, "text": "WILD: +40% attack speed and +30% move speed, but lose 1% max health every second (stops at 15%)."},
++	"sugarrush":   {"recipe": ["feather", "coin"], "name": "Sugar Rush", "art": "tailwind", "wild": true, "x": {"haste": 0.40, "speed": 0.30}, "text": "WILD: +40% attack speed and +30% move speed, but lose 0.6% max health every second (stops at 15%)."},
+ 	"archmage":    {"recipe": ["ember", "ember"], "name": "Archmage Orb", "art": "arcanist", "x": {"potency": 0.20}, "text": "+20% extra ability power."},
+ 	"crown":       {"recipe": ["ember", "moon"], "name": "Blue Crown", "art": "stormcall", "x": {"cd": 0.88}, "text": "Skills recharge 12% faster (plus the Moonstone)."},
+ 	"scepter":     {"recipe": ["ember", "seed"], "name": "Verdant Scepter", "art": "renew", "text": "Ability damage also heals your most wounded ally for 25% of it."},
+@@ -104,7 +104,7 @@
+ 	"aegis":          {"recipe": ["relic", "plate"], "name": "Sanctified Aegis", "art": "bulwark", "text": "Start every fight by shielding all allies for 8% of your max health."},
+ 	"pilgrim":        {"recipe": ["relic", "feather"], "name": "Pilgrim's Boots", "art": "tailwind", "x": {"speed": 0.12}, "text": "+12% move speed. Immune to slows."},
+ 	"halo":           {"recipe": ["relic", "ember"], "name": "Halo of Dawn", "art": "radiance", "x": {"potency": 0.10, "hp": 0.05}, "text": "+10% ability power, +5% health. Your skills cleanse stuns, roots and silences from the nearest ally."},
+-	"rosary":         {"recipe": ["relic", "moon"], "name": "Saint's Rosary", "art": "rally", "text": "Your first skill of the fight heals the whole team for 6%."},
++	"rosary":         {"recipe": ["relic", "moon"], "name": "Saint's Rosary", "art": "rally", "text": "Your first skill of the fight heals the whole team for 5%."},
+ 	"chalice":        {"recipe": ["relic", "seed"], "name": "Chalice of Renewal", "art": "regrowth", "x": {"potency": 0.08}, "text": "+8% more ability power. Heals you give are 25% stronger."},
+ 	"divine":         {"recipe": ["relic", "coin"], "name": "Divine Intervention", "art": "guardian", "wild": true, "text": "WILD: once per fight, the first ally to fall below 15% becomes invulnerable for 2.5s."},
+ 	"grail":          {"recipe": ["relic", "relic"], "name": "Holy Grail", "art": "radiance", "x": {"tenacity": 0.35}, "text": "+35% more crowd-control resistance. Regenerate 0.9% health per second."},
+@@ -200,7 +200,7 @@
+ 	var t = sim.time
+ 	if has(u, "colossus") and t - u.fx.last_hit > 3.0 and u.hp < u.max_hp: sim.heal(u, u, u.max_hp * 0.012 * dt, "item:colossus")
+ 	if has(u, "worldtree") and u.hp < u.max_hp: sim.heal(u, u, u.max_hp * 0.008 * dt, "item:worldtree")
+-	if has(u, "sugarrush") and u.hp > u.max_hp * 0.15: u.hp = maxf(u.max_hp * 0.15, u.hp - u.max_hp * 0.01 * dt)
++	if has(u, "sugarrush") and u.hp > u.max_hp * 0.15: u.hp = maxf(u.max_hp * 0.15, u.hp - u.max_hp * 0.006 * dt)
+ 	if has(u, "drum") and ready(sim, u, "drum", 7.0):
+ 		for a in sim.living(u.team, false):
+ 			if a.pos.distance_to(u.pos) <= 5.0: sim.status(a, "rally", 2.5)
+@@ -416,7 +416,7 @@
+ 			proc(sim, u, "halo", allies[0])
+ 	if has(u, "rosary") and not u.fx.get("rosary", false):
+ 		u.fx.rosary = true
+-		for a in sim.living(u.team, false): sim.heal(u, a, a.max_hp * 0.06, "item:rosary")
++		for a in sim.living(u.team, false): sim.heal(u, a, a.max_hp * 0.05, "item:rosary")
+ 		proc(sim, u, "rosary", u)
+ 	if has(u, "chaos") and not target.is_empty():
+ 		var roll = sim.rng.randi_range(0, 2)
+@@ -510,7 +510,7 @@
+ 	"basilisk": ["witherbloom", "crown", "plaguetome"], "treant": ["chalice", "scepter", "lifebloom"], "naga": ["rosary", "aegis", "chalice"],
+ 	"unicorn": ["halo", "rosary", "martyr"], "cerberus": ["frenzy", "bloodmaw", "spellblade"], "nemean": ["titan", "ironbark", "aegis"],
+ 	"yeti": ["ironbark", "stoneskin", "spikes"], "zaratan": ["bell", "colossus", "runeward"], "owlbear": ["crusader", "titan", "thornlash"],
+-	"hydra": ["worldtree", "hydravenom", "grievous"], "chimera": ["spellblade", "crusader", "quicksilver"], "gargoyle": ["runeward", "mirror", "bastion"],
++	"hydra": ["worldtree", "hydravenom", "grievous"], "chimera": ["spellblade", "crusader", "quicksilver"], "gargoyle": ["runeward", "stormmantle", "archmage"],
+ 	"nekomata": ["assassinkit", "shadowblade", "nightshroud"], "jackalope": ["frenzy", "pilgrim", "executioner"], "cyclops": ["tusk", "executioner", "spellblade"],
+ 	"thunderbird": ["archmage", "stormorb", "crown"], "sphinx": ["crown", "hourglass", "witherbloom"], "pegasus": ["drum", "rosary", "pilgrim"],
+ 	"arachne": ["archmage", "crown", "plaguetome"], "salamander": ["plaguetome", "archmage", "grievous"],
+--- a/godot/data/species.json
++++ b/godot/data/species.json
+@@ -357,7 +357,7 @@
+     "size": 15,
+     "hue": 175,
+     "ab": "tidal",
+-    "cd": 10,
++    "cd": 9,
+     "b": [
+       -4,
+       0,
+@@ -787,4 +787,4 @@
+     "ability_name": "Magma Burst",
+     "ability_description": "Erupts a pool of lava that burns and slows foes standing in it."
+   }
+-}+}
+--- a/godot/data/skill-audit.json
++++ b/godot/data/skill-audit.json
+@@ -131,7 +131,7 @@
+         "ad": 0.1
+       },
+       "magical": true,
+-      "description": "Maze Wall: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Maze Wall: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 14.0,
+       "power": 1.0,
+       "theme": "bronze horns, labyrinth masonry, blood-red banners and charging bull strength",
+@@ -271,7 +271,7 @@
+         "ad": 0.1
+       },
+       "magical": true,
+-      "description": "Granite Covenant: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Granite Covenant: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 13.0,
+       "power": 1.0,
+       "theme": "granite fists, blue crystal shards and protective engraved runes",
+@@ -287,7 +287,7 @@
+         "ad": 0.1
+       },
+       "magical": true,
+-      "description": "Runic Bulwark: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Runic Bulwark: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 14.0,
+       "power": 1.0,
+       "theme": "granite fists, blue crystal shards and protective engraved runes",
+@@ -418,7 +418,7 @@
+         "ad": 0.25
+       },
+       "magical": true,
+-      "description": "Mountain's Patience: Heal the three most wounded allies for 130% skill power plus 8% of each ally\u2019s health.",
++      "description": "Mountain's Patience: Heal the three most wounded allies for 130% skill power plus 8% of each ally’s health.",
+       "cooldown": 13.0,
+       "power": 1.0,
+       "theme": "granite fists, blue crystal shards and protective engraved runes",
+@@ -434,7 +434,7 @@
+         "ad": 0.1
+       },
+       "magical": true,
+-      "description": "Living Mountain: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Living Mountain: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 20.0,
+       "power": 1.0,
+       "theme": "granite fists, blue crystal shards and protective engraved runes",
+@@ -450,7 +450,7 @@
+         "ad": 0.1
+       },
+       "magical": true,
+-      "description": "Rune Ward: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Rune Ward: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 15.0,
+       "power": 1.0,
+       "theme": "granite fists, blue crystal shards and protective engraved runes",
+@@ -497,7 +497,7 @@
+         "ad": 0.25
+       },
+       "magical": true,
+-      "description": "Second Wind: Heal the three most wounded allies for 130% skill power plus 8% of each ally\u2019s health.",
++      "description": "Second Wind: Heal the three most wounded allies for 130% skill power plus 8% of each ally’s health.",
+       "cooldown": 12.0,
+       "power": 1.0,
+       "theme": "mossy hide, bog sludge, bone clubs and stubborn regeneration",
+@@ -616,7 +616,7 @@
+         "ad": 0.1
+       },
+       "magical": true,
+-      "description": "Moss Blanket: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Moss Blanket: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 14.0,
+       "power": 1.0,
+       "theme": "mossy hide, bog sludge, bone clubs and stubborn regeneration",
+@@ -662,7 +662,7 @@
+         "ad": 0.25
+       },
+       "magical": true,
+-      "description": "Mossblood Colossus: Heal the three most wounded allies for 130% skill power plus 8% of each ally\u2019s health.",
++      "description": "Mossblood Colossus: Heal the three most wounded allies for 130% skill power plus 8% of each ally’s health.",
+       "cooldown": 20.0,
+       "power": 1.0,
+       "theme": "mossy hide, bog sludge, bone clubs and stubborn regeneration",
+@@ -677,7 +677,7 @@
+         "ad": 0.25
+       },
+       "magical": true,
+-      "description": "Bog Renewal: Heal the three most wounded allies for 130% skill power plus 8% of each ally\u2019s health.",
++      "description": "Bog Renewal: Heal the three most wounded allies for 130% skill power plus 8% of each ally’s health.",
+       "cooldown": 13.0,
+       "power": 1.0,
+       "theme": "mossy hide, bog sludge, bone clubs and stubborn regeneration",
+@@ -1034,7 +1034,7 @@
+         "ad": 0.75
+       },
+       "magical": true,
+-      "description": "Den Guard: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Den Guard: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 14.0,
+       "power": 1.0,
+       "theme": "silver moonlight, wolf fangs, a coordinated hunting pack and winter trails",
+@@ -1455,7 +1455,7 @@
+         "ad": 0.75
+       },
+       "magical": true,
+-      "description": "Golden Gale: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Golden Gale: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 14.0,
+       "power": 1.0,
+       "theme": "golden eagle talons, lion courage, feather blades and diving wind",
+@@ -1585,7 +1585,7 @@
+         "ap": 0.75
+       },
+       "magical": true,
+-      "description": "Moonlit Veil: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Moonlit Veil: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 13.0,
+       "power": 1.0,
+       "theme": "violet foxfire, spectral tails, shrine charms and trickster illusions",
+@@ -1670,7 +1670,7 @@
+         "ap": 0.75
+       },
+       "magical": true,
+-      "description": "Shrine Blessing: Heal the three most wounded allies for 130% skill power plus 8% of each ally\u2019s health.",
++      "description": "Shrine Blessing: Heal the three most wounded allies for 130% skill power plus 8% of each ally’s health.",
+       "cooldown": 13.0,
+       "power": 1.0,
+       "theme": "violet foxfire, spectral tails, shrine charms and trickster illusions",
+@@ -1942,7 +1942,7 @@
+         "ad": 0.75
+       },
+       "magical": true,
+-      "description": "Clutch Guardian: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Clutch Guardian: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 14.0,
+       "power": 1.0,
+       "theme": "acid-green breath, stinging tail spikes and caustic wingbeats",
+@@ -2073,7 +2073,7 @@
+         "ad": 0.75
+       },
+       "magical": true,
+-      "description": "Plumage Wall: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Plumage Wall: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 14.0,
+       "power": 1.0,
+       "theme": "teal storm feathers, curved talons and disorienting siren song",
+@@ -2219,7 +2219,7 @@
+         "ap": 0.75
+       },
+       "magical": true,
+-      "description": "Cinder Sanctuary: Heal the three most wounded allies for 130% skill power plus 8% of each ally\u2019s health.",
++      "description": "Cinder Sanctuary: Heal the three most wounded allies for 130% skill power plus 8% of each ally’s health.",
+       "cooldown": 12.0,
+       "power": 1.0,
+       "theme": "solar fire, golden feathers, healing embers and rebirth from ash",
+@@ -2248,7 +2248,7 @@
+         "ap": 0.75
+       },
+       "magical": true,
+-      "description": "Ember Wings: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Ember Wings: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 14.0,
+       "power": 1.0,
+       "theme": "solar fire, golden feathers, healing embers and rebirth from ash",
+@@ -2277,7 +2277,7 @@
+         "ap": 0.75
+       },
+       "magical": true,
+-      "description": "Rebirth Flame: Heal the three most wounded allies for 130% skill power plus 8% of each ally\u2019s health.",
++      "description": "Rebirth Flame: Heal the three most wounded allies for 130% skill power plus 8% of each ally’s health.",
+       "cooldown": 13.0,
+       "power": 1.0,
+       "theme": "solar fire, golden feathers, healing embers and rebirth from ash",
+@@ -2377,7 +2377,7 @@
+         "ap": 0.75
+       },
+       "magical": true,
+-      "description": "Dawn Eternal: Heal the three most wounded allies for 130% skill power plus 8% of each ally\u2019s health.",
++      "description": "Dawn Eternal: Heal the three most wounded allies for 130% skill power plus 8% of each ally’s health.",
+       "cooldown": 20.0,
+       "power": 1.0,
+       "theme": "solar fire, golden feathers, healing embers and rebirth from ash",
+@@ -2392,7 +2392,7 @@
+         "ap": 0.75
+       },
+       "magical": true,
+-      "description": "Ember Renewal: Heal the three most wounded allies for 130% skill power plus 8% of each ally\u2019s health.",
++      "description": "Ember Renewal: Heal the three most wounded allies for 130% skill power plus 8% of each ally’s health.",
+       "cooldown": 13.0,
+       "power": 1.0,
+       "theme": "solar fire, golden feathers, healing embers and rebirth from ash",
+@@ -2493,7 +2493,7 @@
+         "ap": 0.75
+       },
+       "magical": true,
+-      "description": "Heaven's Mercy: Heal the three most wounded allies for 130% skill power plus 8% of each ally\u2019s health.",
++      "description": "Heaven's Mercy: Heal the three most wounded allies for 130% skill power plus 8% of each ally’s health.",
+       "cooldown": 13.0,
+       "power": 1.0,
+       "theme": "jade antlers, celestial lightning, thunder hooves and benevolent blessings",
+@@ -2550,7 +2550,7 @@
+         "ap": 0.75
+       },
+       "magical": true,
+-      "description": "Benevolent Ward: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Benevolent Ward: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 14.0,
+       "power": 1.0,
+       "theme": "jade antlers, celestial lightning, thunder hooves and benevolent blessings",
+@@ -2721,7 +2721,7 @@
+         "ap": 0.75
+       },
+       "magical": true,
+-      "description": "Fossil Shell: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Fossil Shell: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 14.0,
+       "power": 1.0,
+       "theme": "emerald serpent eyes, petrified stone, venom fangs and heavy coils",
+@@ -2750,7 +2750,7 @@
+         "ap": 0.75
+       },
+       "magical": true,
+-      "description": "Shed Skin: Heal the three most wounded allies for 130% skill power plus 8% of each ally\u2019s health.",
++      "description": "Shed Skin: Heal the three most wounded allies for 130% skill power plus 8% of each ally’s health.",
+       "cooldown": 13.0,
+       "power": 1.0,
+       "theme": "emerald serpent eyes, petrified stone, venom fangs and heavy coils",
+@@ -2839,7 +2839,7 @@
+         "ap": 0.1
+       },
+       "magical": true,
+-      "description": "Heartwood Covenant: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Heartwood Covenant: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 13.0,
+       "power": 1.0,
+       "theme": "living roots, thorn branches, amber sap and protective ancient bark",
+@@ -2869,7 +2869,7 @@
+         "ap": 0.75
+       },
+       "magical": true,
+-      "description": "Sapflow: Heal the three most wounded allies for 130% skill power plus 8% of each ally\u2019s health.",
++      "description": "Sapflow: Heal the three most wounded allies for 130% skill power plus 8% of each ally’s health.",
+       "cooldown": 13.0,
+       "power": 1.0,
+       "theme": "living roots, thorn branches, amber sap and protective ancient bark",
+@@ -3034,7 +3034,7 @@
+       },
+       "magical": true,
+       "description": "Shields every nearby ally.",
+-      "cooldown": 10.0,
++      "cooldown": 9.0,
+       "power": 1.0,
+       "theme": "turquoise tides, pearl magic, serpent coils and siren currents",
+       "build_path": "ap"
+@@ -3062,7 +3062,7 @@
+         "ap": 0.75
+       },
+       "magical": true,
+-      "description": "Moonwell: Heal the three most wounded allies for 130% skill power plus 8% of each ally\u2019s health.",
++      "description": "Moonwell: Heal the three most wounded allies for 130% skill power plus 8% of each ally’s health.",
+       "cooldown": 12.0,
+       "power": 1.0,
+       "theme": "turquoise tides, pearl magic, serpent coils and siren currents",
+@@ -3119,7 +3119,7 @@
+         "ap": 0.75
+       },
+       "magical": true,
+-      "description": "Pearl Shield: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Pearl Shield: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 14.0,
+       "power": 1.0,
+       "theme": "turquoise tides, pearl magic, serpent coils and siren currents",
+@@ -3219,7 +3219,7 @@
+         "ap": 0.75
+       },
+       "magical": true,
+-      "description": "Pearl Empress: Heal the three most wounded allies for 130% skill power plus 8% of each ally\u2019s health.",
++      "description": "Pearl Empress: Heal the three most wounded allies for 130% skill power plus 8% of each ally’s health.",
+       "cooldown": 20.0,
+       "power": 1.0,
+       "theme": "turquoise tides, pearl magic, serpent coils and siren currents",
+@@ -3279,7 +3279,7 @@
+         "ap": 0.75
+       },
+       "magical": true,
+-      "description": "Dawn's Embrace: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Dawn's Embrace: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 13.0,
+       "power": 1.0,
+       "theme": "silver horn, opalescent starlight, purifying radiance and healing moonlight",
+@@ -3379,7 +3379,7 @@
+         "ap": 0.75
+       },
+       "magical": true,
+-      "description": "Healing Light: Heal the three most wounded allies for 130% skill power plus 8% of each ally\u2019s health.",
++      "description": "Healing Light: Heal the three most wounded allies for 130% skill power plus 8% of each ally’s health.",
+       "cooldown": 13.0,
+       "power": 1.0,
+       "theme": "silver horn, opalescent starlight, purifying radiance and healing moonlight",
+@@ -3436,7 +3436,7 @@
+         "ap": 0.75
+       },
+       "magical": true,
+-      "description": "Astral Paragon: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Astral Paragon: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 20.0,
+       "power": 1.0,
+       "theme": "silver horn, opalescent starlight, purifying radiance and healing moonlight",
+@@ -3451,7 +3451,7 @@
+         "ap": 0.75
+       },
+       "magical": true,
+-      "description": "Moonveil: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Moonveil: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 14.0,
+       "power": 1.0,
+       "theme": "silver horn, opalescent starlight, purifying radiance and healing moonlight",
+@@ -3555,7 +3555,7 @@
+         "ad": 0.75
+       },
+       "magical": true,
+-      "description": "Guardian of Gates: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Guardian of Gates: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 14.0,
+       "power": 1.0,
+       "theme": "three infernal canine heads, iron gate chains and brimstone breath",
+@@ -3717,7 +3717,7 @@
+         "ad": 0.1
+       },
+       "magical": true,
+-      "description": "Lionheart Covenant: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Lionheart Covenant: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 13.0,
+       "power": 1.0,
+       "theme": "golden lion mane, impervious hide, royal claws and commanding roars",
+@@ -3883,7 +3883,7 @@
+         "ad": 0.75
+       },
+       "magical": true,
+-      "description": "Crown Guard: Heal the three most wounded allies for 130% skill power plus 8% of each ally\u2019s health.",
++      "description": "Crown Guard: Heal the three most wounded allies for 130% skill power plus 8% of each ally’s health.",
+       "cooldown": 13.0,
+       "power": 1.0,
+       "theme": "golden lion mane, impervious hide, royal claws and commanding roars",
+@@ -4038,7 +4038,7 @@
+         "ap": 0.1
+       },
+       "magical": true,
+-      "description": "Ice Armor: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Ice Armor: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 14.0,
+       "power": 1.0,
+       "theme": "ice-crusted fists, snowballs, glacial armor and avalanches",
+@@ -4176,7 +4176,7 @@
+         "ap": 0.25
+       },
+       "magical": true,
+-      "description": "Island Sanctuary: Heal the three most wounded allies for 130% skill power plus 8% of each ally\u2019s health.",
++      "description": "Island Sanctuary: Heal the three most wounded allies for 130% skill power plus 8% of each ally’s health.",
+       "cooldown": 12.0,
+       "power": 1.0,
+       "theme": "island turtle shell, coral reefs, kelp snares and crushing tides",
+@@ -4207,7 +4207,7 @@
+         "ap": 0.1
+       },
+       "magical": true,
+-      "description": "Coral Shield: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Coral Shield: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 14.0,
+       "power": 1.0,
+       "theme": "island turtle shell, coral reefs, kelp snares and crushing tides",
+@@ -4494,7 +4494,7 @@
+         "ad": 0.1
+       },
+       "magical": true,
+-      "description": "Forest Guard: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Forest Guard: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 14.0,
+       "power": 1.0,
+       "theme": "feathered bear claws, forest instincts, heavy mauling and protective den",
+@@ -4540,7 +4540,7 @@
+         "ad": 0.25
+       },
+       "magical": true,
+-      "description": "Hibernation: Heal the three most wounded allies for 130% skill power plus 8% of each ally\u2019s health.",
++      "description": "Hibernation: Heal the three most wounded allies for 130% skill power plus 8% of each ally’s health.",
+       "cooldown": 13.0,
+       "power": 1.0,
+       "theme": "feathered bear claws, forest instincts, heavy mauling and protective den",
+@@ -4632,7 +4632,7 @@
+         "ad": 0.25
+       },
+       "magical": true,
+-      "description": "Undying Vigor: Heal the three most wounded allies for 130% skill power plus 8% of each ally\u2019s health.",
++      "description": "Undying Vigor: Heal the three most wounded allies for 130% skill power plus 8% of each ally’s health.",
+       "cooldown": 12.0,
+       "power": 1.0,
+       "theme": "multiple emerald serpent heads, swamp venom and regenerating flesh",
+@@ -4663,7 +4663,7 @@
+         "ad": 0.75
+       },
+       "magical": true,
+-      "description": "Regenerating Heads: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Regenerating Heads: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 14.0,
+       "power": 1.0,
+       "theme": "multiple emerald serpent heads, swamp venom and regenerating flesh",
+@@ -4793,7 +4793,7 @@
+         "ad": 0.25
+       },
+       "magical": true,
+-      "description": "Undying Crown: Heal the three most wounded allies for 130% skill power plus 8% of each ally\u2019s health.",
++      "description": "Undying Crown: Heal the three most wounded allies for 130% skill power plus 8% of each ally’s health.",
+       "cooldown": 20.0,
+       "power": 1.0,
+       "theme": "multiple emerald serpent heads, swamp venom and regenerating flesh",
+@@ -5058,7 +5058,7 @@
+         "ap": 0.1
+       },
+       "magical": true,
+-      "description": "Stonewatch: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Stonewatch: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 13.0,
+       "power": 1.0,
+       "theme": "gothic stone wings, cathedral bells, granite skin and violet runes",
+@@ -5089,7 +5089,7 @@
+         "ap": 0.1
+       },
+       "magical": true,
+-      "description": "Gothic Ward: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Gothic Ward: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 14.0,
+       "power": 1.0,
+       "theme": "gothic stone wings, cathedral bells, granite skin and violet runes",
+@@ -5147,7 +5147,7 @@
+         "ap": 0.25
+       },
+       "magical": true,
+-      "description": "Statue Form: Heal the three most wounded allies for 130% skill power plus 8% of each ally\u2019s health.",
++      "description": "Statue Form: Heal the three most wounded allies for 130% skill power plus 8% of each ally’s health.",
+       "cooldown": 13.0,
+       "power": 1.0,
+       "theme": "gothic stone wings, cathedral bells, granite skin and violet runes",
+@@ -5224,7 +5224,7 @@
+         "ap": 0.1
+       },
+       "magical": true,
+-      "description": "Cathedral Sentinel: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Cathedral Sentinel: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 20.0,
+       "power": 1.0,
+       "theme": "gothic stone wings, cathedral bells, granite skin and violet runes",
+@@ -5398,7 +5398,7 @@
+         "ap": 0.75
+       },
+       "magical": true,
+-      "description": "Nine Lives: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Nine Lives: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 14.0,
+       "power": 1.0,
+       "theme": "twin ghost-cat tails, cursed claws, violet spirit fire and shadow ambushes",
+@@ -5573,7 +5573,7 @@
+         "ad": 0.75
+       },
+       "magical": true,
+-      "description": "Clover Charm: Heal the three most wounded allies for 130% skill power plus 8% of each ally\u2019s health.",
++      "description": "Clover Charm: Heal the three most wounded allies for 130% skill power plus 8% of each ally’s health.",
+       "cooldown": 13.0,
+       "power": 1.0,
+       "theme": "briar antlers, swift rabbit kicks, burrow trails and lucky clover charms",
+@@ -5616,7 +5616,7 @@
+         "ad": 0.75
+       },
+       "magical": true,
+-      "description": "Wild Warren: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Wild Warren: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 14.0,
+       "power": 1.0,
+       "theme": "briar antlers, swift rabbit kicks, burrow trails and lucky clover charms",
+@@ -5824,7 +5824,7 @@
+         "ad": 0.1
+       },
+       "magical": true,
+-      "description": "Mountain Guard: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Mountain Guard: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 14.0,
+       "power": 1.0,
+       "theme": "one burning eye, massive thrown boulders, forge iron and titan strength",
+@@ -6026,7 +6026,7 @@
+         "ap": 0.75
+       },
+       "magical": true,
+-      "description": "Rain Dance: Heal the three most wounded allies for 130% skill power plus 8% of each ally\u2019s health.",
++      "description": "Rain Dance: Heal the three most wounded allies for 130% skill power plus 8% of each ally’s health.",
+       "cooldown": 13.0,
+       "power": 1.0,
+       "theme": "blue lightning, bronze talons, charged feather volleys and thunderclouds",
+@@ -6212,7 +6212,7 @@
+         "ap": 0.75
+       },
+       "magical": true,
+-      "description": "Pharaoh's Ward: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Pharaoh's Ward: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 14.0,
+       "power": 1.0,
+       "theme": "golden hieroglyphs, ancient riddles, desert sand and oracle starlight",
+@@ -6227,7 +6227,7 @@
+         "ap": 0.75
+       },
+       "magical": true,
+-      "description": "Wisdom's Light: Heal the three most wounded allies for 130% skill power plus 8% of each ally\u2019s health.",
++      "description": "Wisdom's Light: Heal the three most wounded allies for 130% skill power plus 8% of each ally’s health.",
+       "cooldown": 13.0,
+       "power": 1.0,
+       "theme": "golden hieroglyphs, ancient riddles, desert sand and oracle starlight",
+@@ -6343,7 +6343,7 @@
+         "ap": 0.75
+       },
+       "magical": true,
+-      "description": "Dawnflight: Heal the three most wounded allies for 130% skill power plus 8% of each ally\u2019s health.",
++      "description": "Dawnflight: Heal the three most wounded allies for 130% skill power plus 8% of each ally’s health.",
+       "cooldown": 12.0,
+       "power": 1.0,
+       "theme": "white wings, aurora trails, celestial hooves and healing cloud winds",
+@@ -6400,7 +6400,7 @@
+         "ap": 0.75
+       },
+       "magical": true,
+-      "description": "Cloud Shield: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Cloud Shield: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 14.0,
+       "power": 1.0,
+       "theme": "white wings, aurora trails, celestial hooves and healing cloud winds",
+@@ -6528,7 +6528,7 @@
+         "ap": 0.75
+       },
+       "magical": true,
+-      "description": "Cloudmend: Heal the three most wounded allies for 130% skill power plus 8% of each ally\u2019s health.",
++      "description": "Cloudmend: Heal the three most wounded allies for 130% skill power plus 8% of each ally’s health.",
+       "cooldown": 13.0,
+       "power": 1.0,
+       "theme": "white wings, aurora trails, celestial hooves and healing cloud winds",
+@@ -6643,7 +6643,7 @@
+         "ap": 0.85
+       },
+       "magical": true,
+-      "description": "Cocoon: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Cocoon: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 14.0,
+       "power": 1.0,
+       "theme": "violet silken webs, emerald venom sacs, spiderlings and protective cocoons",
+@@ -6870,7 +6870,7 @@
+         "ap": 0.75
+       },
+       "magical": true,
+-      "description": "Magma Shell: Shield nearby allies for 22% of your base health for 5s, amplified by this skill\u2019s scaling.",
++      "description": "Magma Shell: Shield nearby allies for 22% of your base health for 5s, amplified by this skill’s scaling.",
+       "cooldown": 14.0,
+       "power": 1.0,
+       "theme": "molten scales, orange magma, volcanic ash and burning firebolts",

@@ -245,9 +245,13 @@ static func event_sound(e: Dictionary, unit: Dictionary) -> Dictionary:
  var effect = EFFECT_FAMILY.get(e.get("effect", ""), family)
  var result = {"key": "", "gain": -9.0, "priority": 1, "gap": 0.1}
  match e.type:
-  "item_proc":
-   var item=ItemEffects.definition(str(e.get("credit","")).trim_prefix("item:"))
-   result.key=EFFECT_FAMILY.get(item.get("sfx",item.get("art","ward")),"shield");result.gain=-22;result.gap=0.45
+  "item_feedback":
+   if e.stage=="equip":return result
+   var item_family=ItemFeedback.profile(e.item_id).family
+   result.key={"strike":"impact_metal","guard":"shield","heal":"heal","lightning":"lightning","poison":"venom","shadow":"shadow","tempo":"spirit","fire":"fire","growth":"nature","arcane":"holy"}.get(item_family,"spirit")
+   result.gain=-16 if e.stage=="proc" else -27
+   result.priority=2 if e.stage=="proc" else 1;result.gap=.20 if e.stage=="proc" else .5
+   if e.stage=="proc" and ItemEffects.definition(e.item_id).get("wild",false):result.priority=3;result.gain=-12
   "telegraph": return result
   "cast":
    result.key = "hero_" + sp if HeroData.species.has(sp) and e.effect == HeroData.species[sp].ab else effect
@@ -277,7 +281,7 @@ func battle_event(e: Dictionary, unit: Dictionary, pan: float = 0.0) -> void:
  if sound.key.is_empty(): return
  var now = Time.get_ticks_msec() / 1000.0
  # Wall-clock limits prevent 4x speed, DoTs and summons becoming an audio flood.
- var gate = e.type + (str(e.get("uid", -1)) if e.type in ["death", "interrupt"] else "")
+ var gate = ("item_"+str(e.get("stage","")) if e.type=="item_feedback" else e.type) + (str(e.get("uid", -1)) if e.type in ["death", "interrupt"] else "")
  if now - last_event.get(gate, -100.0) < sound.gap: return
  last_event[gate] = now
  var variant = 0.97 + float(int(e.get("uid", 0)) % 5) * 0.015

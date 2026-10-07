@@ -1,0 +1,138 @@
+{
+  "counts": {
+    "ad": 174,
+    "ap": 174,
+    "utility": 125
+  },
+  "champions": {
+    "minotaur": {
+      "path": "AD",
+      "damage_actions": 11
+    },
+    "golem": {
+      "path": "AD",
+      "damage_actions": 9
+    },
+    "troll": {
+      "path": "AD",
+      "damage_actions": 9
+    },
+    "wendigo": {
+      "path": "AD",
+      "damage_actions": 11
+    },
+    "direwolf": {
+      "path": "AD",
+      "damage_actions": 8
+    },
+    "manticore": {
+      "path": "AD",
+      "damage_actions": 13
+    },
+    "griffin": {
+      "path": "AD",
+      "damage_actions": 13
+    },
+    "kitsune": {
+      "path": "AP",
+      "damage_actions": 12
+    },
+    "wyvern": {
+      "path": "AD",
+      "damage_actions": 13
+    },
+    "harpy": {
+      "path": "AD",
+      "damage_actions": 11
+    },
+    "phoenix": {
+      "path": "AP",
+      "damage_actions": 9
+    },
+    "kirin": {
+      "path": "AP",
+      "damage_actions": 12
+    },
+    "basilisk": {
+      "path": "AP",
+      "damage_actions": 12
+    },
+    "treant": {
+      "path": "AP",
+      "damage_actions": 10
+    },
+    "naga": {
+      "path": "AP",
+      "damage_actions": 10
+    },
+    "unicorn": {
+      "path": "AP",
+      "damage_actions": 9
+    },
+    "cerberus": {
+      "path": "AD",
+      "damage_actions": 13
+    },
+    "nemean": {
+      "path": "AD",
+      "damage_actions": 7
+    },
+    "yeti": {
+      "path": "AP",
+      "damage_actions": 11
+    },
+    "zaratan": {
+      "path": "AP",
+      "damage_actions": 10
+    },
+    "owlbear": {
+      "path": "AD",
+      "damage_actions": 10
+    },
+    "hydra": {
+      "path": "AD",
+      "damage_actions": 10
+    },
+    "chimera": {
+      "path": "AD",
+      "damage_actions": 12
+    },
+    "gargoyle": {
+      "path": "AP",
+      "damage_actions": 8
+    },
+    "nekomata": {
+      "path": "AP",
+      "damage_actions": 13
+    },
+    "jackalope": {
+      "path": "AD",
+      "damage_actions": 11
+    },
+    "cyclops": {
+      "path": "AD",
+      "damage_actions": 13
+    },
+    "thunderbird": {
+      "path": "AP",
+      "damage_actions": 12
+    },
+    "sphinx": {
+      "path": "AP",
+      "damage_actions": 13
+    },
+    "pegasus": {
+      "path": "AP",
+      "damage_actions": 10
+    },
+    "arachne": {
+      "path": "AP",
+      "damage_actions": 11
+    },
+    "salamander": {
+      "path": "AP",
+      "damage_actions": 12
+    }
+  },
+  "rule": "Direct-damage actions are 174 AD and 174 AP. Utility actions keep defensive channels and their champion primary channel. Damage type remains thematic and independent of the scaling stat."
+}

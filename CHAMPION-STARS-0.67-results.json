@@ -1,0 +1,272 @@
+{
+  "saved_run": "The Soggy Biscuit Brigade",
+  "difficulty": "Champion",
+  "method": "Two fixed seeds, both board sides, all seven saved rival clubs. Existing player items and skills retained; 800 reachable XP per completed cup, with level rewards spent on existing skills (first offer; focus when available). Rival levels, growth choices, equipment and rarity follow current policy. No star purchases. Controlled cup-opening replays, not full tournament or population win-rate estimates.",
+  "cups": {
+    "3": [
+      {
+        "cup": 3,
+        "draws": 0,
+        "fights": 4,
+        "opponent": "Dread Wyverns",
+        "remaining": 0.75,
+        "revised": true,
+        "wins": 4
+      },
+      {
+        "cup": 3,
+        "draws": 0,
+        "fights": 4,
+        "opponent": "Ashen Crown",
+        "remaining": 0.0,
+        "revised": true,
+        "wins": 0
+      },
+      {
+        "cup": 3,
+        "draws": 0,
+        "fights": 4,
+        "opponent": "Moonlit Wardens",
+        "remaining": 1.0,
+        "revised": true,
+        "wins": 4
+      },
+      {
+        "cup": 3,
+        "draws": 0,
+        "fights": 4,
+        "opponent": "Iron Orchard",
+        "remaining": 0.95,
+        "revised": true,
+        "wins": 4
+      },
+      {
+        "cup": 3,
+        "draws": 0,
+        "fights": 4,
+        "opponent": "Stormbound",
+        "remaining": 0.5,
+        "revised": true,
+        "wins": 3
+      },
+      {
+        "cup": 3,
+        "draws": 0,
+        "fights": 4,
+        "opponent": "Thorn Company",
+        "remaining": 0.85,
+        "revised": true,
+        "wins": 4
+      },
+      {
+        "cup": 3,
+        "draws": 0,
+        "fights": 4,
+        "opponent": "Ivory Pact",
+        "remaining": 0.75,
+        "revised": true,
+        "wins": 3
+      }
+    ],
+    "4": [
+      {
+        "cup": 4,
+        "draws": 0,
+        "fights": 4,
+        "opponent": "Dread Wyverns",
+        "remaining": 0.6,
+        "revised": true,
+        "wins": 3
+      },
+      {
+        "cup": 4,
+        "draws": 0,
+        "fights": 4,
+        "opponent": "Ashen Crown",
+        "remaining": 0.0,
+        "revised": true,
+        "wins": 0
+      },
+      {
+        "cup": 4,
+        "draws": 0,
+        "fights": 4,
+        "opponent": "Moonlit Wardens",
+        "remaining": 1.0,
+        "revised": true,
+        "wins": 4
+      },
+      {
+        "cup": 4,
+        "draws": 0,
+        "fights": 4,
+        "opponent": "Iron Orchard",
+        "remaining": 0.95,
+        "revised": true,
+        "wins": 4
+      },
+      {
+        "cup": 4,
+        "draws": 0,
+        "fights": 4,
+        "opponent": "Stormbound",
+        "remaining": 0.2,
+        "revised": true,
+        "wins": 1
+      },
+      {
+        "cup": 4,
+        "draws": 0,
+        "fights": 4,
+        "opponent": "Thorn Company",
+        "remaining": 0.85,
+        "revised": true,
+        "wins": 4
+      },
+      {
+        "cup": 4,
+        "draws": 0,
+        "fights": 4,
+        "opponent": "Ivory Pact",
+        "remaining": 0.75,
+        "revised": true,
+        "wins": 4
+      }
+    ],
+    "5": [
+      {
+        "cup": 5,
+        "draws": 0,
+        "fights": 4,
+        "opponent": "Dread Wyverns",
+        "remaining": 0.75,
+        "revised": true,
+        "wins": 4
+      },
+      {
+        "cup": 5,
+        "draws": 0,
+        "fights": 4,
+        "opponent": "Ashen Crown",
+        "remaining": 0.0,
+        "revised": true,
+        "wins": 0
+      },
+      {
+        "cup": 5,
+        "draws": 0,
+        "fights": 4,
+        "opponent": "Moonlit Wardens",
+        "remaining": 0.8,
+        "revised": true,
+        "wins": 4
+      },
+      {
+        "cup": 5,
+        "draws": 0,
+        "fights": 4,
+        "opponent": "Iron Orchard",
+        "remaining": 0.95,
+        "revised": true,
+        "wins": 4
+      },
+      {
+        "cup": 5,
+        "draws": 0,
+        "fights": 4,
+        "opponent": "Stormbound",
+        "remaining": 0.0,
+        "revised": true,
+        "wins": 0
+      },
+      {
+        "cup": 5,
+        "draws": 0,
+        "fights": 4,
+        "opponent": "Thorn Company",
+        "remaining": 0.8,
+        "revised": true,
+        "wins": 4
+      },
+      {
+        "cup": 5,
+        "draws": 0,
+        "fights": 4,
+        "opponent": "Ivory Pact",
+        "remaining": 0.55,
+        "revised": true,
+        "wins": 3
+      }
+    ]
+  },
+  "first_offer_build_benchmark": {
+    "fights": 80,
+    "rows": [
+      {
+        "cup": 1,
+        "difficulty": "Champion",
+        "draws": 0,
+        "duration": 59.3541666666659,
+        "fights": 16,
+        "player_level": 1,
+        "rival_level": 1,
+        "survival": 0.2125,
+        "timeouts": 0,
+        "win_rate": 0.4375,
+        "wins": 7
+      },
+      {
+        "cup": 2,
+        "difficulty": "Champion",
+        "draws": 0,
+        "duration": 49.2770833333327,
+        "fights": 16,
+        "player_level": 6,
+        "rival_level": 6,
+        "survival": 0.2125,
+        "timeouts": 0,
+        "win_rate": 0.375,
+        "wins": 6
+      },
+      {
+        "cup": 3,
+        "difficulty": "Champion",
+        "draws": 0,
+        "duration": 47.666666666666,
+        "fights": 16,
+        "player_level": 8,
+        "rival_level": 9,
+        "survival": 0.175,
+        "timeouts": 0,
+        "win_rate": 0.3125,
+        "wins": 5
+      },
+      {
+        "cup": 4,
+        "difficulty": "Champion",
+        "draws": 0,
+        "duration": 49.5312499999991,
+        "fights": 16,
+        "player_level": 11,
+        "rival_level": 10,
+        "survival": 0.3875,
+        "timeouts": 1,
+        "win_rate": 0.5625,
+        "wins": 9
+      },
+      {
+        "cup": 5,
+        "difficulty": "Champion",
+        "draws": 0,
+        "duration": 47.5187499999993,
+        "fights": 16,
+        "player_level": 13,
+        "rival_level": 12,
+        "survival": 0.375,
+        "timeouts": 1,
+        "win_rate": 0.5,
+        "wins": 8
+      }
+    ]
+  }
+}
