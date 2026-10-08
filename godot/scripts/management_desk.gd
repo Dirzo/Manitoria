@@ -43,7 +43,7 @@ func build() -> void:
  if state.get("tour",{}).get("complete",false): next = "Tour complete"
  if Dungeon.active(campaign) and not state.tour.get("shop",false):
   var dg = state.dungeon
-  next = "Fight  ▶" if dg.fight else "Descend  ▶" if state.tour.get("intermission",false) else "Dungeon conquered" if state.tour.get("complete",false) else "Choose a room  ▶"
+  next = "Fight  ▶" if dg.fight else "Bank or go endless  ▶" if dg.get("awaiting_endless", false) else "Descend  ▶" if state.tour.get("intermission",false) else "Dungeon conquered" if state.tour.get("complete",false) else "Choose a room  ▶"
  if not campaign.pending_heroes().is_empty(): next = "Level ups  ▶"
  elif not state.has("tour") and state.round >= 17: next = "Next season  ▶"
  if state.roster.size() < Campaign.MIN_SQUAD and game.tab != "market":

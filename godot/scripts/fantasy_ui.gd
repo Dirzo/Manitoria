@@ -12,10 +12,11 @@ static func menu(game: Node) -> void:
   frame.add_theme_stylebox_override("panel",game.style(Color(.055,.10,.12,.9),entry[2],12,16,0))
   var box=VBoxContainer.new();frame.add_child(box);AbilityArt.icon(box,entry[1],196)
   var button=game.button(box,entry[0],entry[3],true,i==0 and latest==0);button.custom_minimum_size.y=62;button.add_theme_font_size_override("font_size",23)
-  if entry[0]=="Dungeon":frame.tooltip_text="A branching descent in the spirit of The Last Flame: choose rooms, guard your flames, defeat three Wardens.";button.name="DungeonMenuButton"
+  if entry[0]=="Dungeon":frame.tooltip_text="A branching descent in the spirit of The Last Flame and Guildrun: choose rooms, collect relics, build run-trait synergies, defeat three Wardens, then chase a high score in the endless depths.";button.name="DungeonMenuButton"
   frame.mouse_entered.connect(func():frame.modulate=Color(1.13,1.13,1.13));frame.mouse_exited.connect(func():frame.modulate=Color.WHITE)
  var lab=game.button(game.ui,"Speedrun stat check",game.start_speedrun,true);lab.position=Vector2(1040,767);lab.size=Vector2(380,46);lab.name="SpeedrunMenuButton"
  var saves=game.button(game.ui,"Saved campaigns",func():save_picker(game));saves.position=Vector2(620,767);saves.size=Vector2(360,46)
+ var hs=game.button(game.ui,"Dungeon high scores",func():DungeonUI.high_scores(game));hs.position=Vector2(180,767);hs.size=Vector2(380,46);hs.name="DungeonScoresButton"
  if FileAccess.file_exists("user://speedrun_draft.json"):
   var resume=game.button(game.ui,"Resume speedrun draft",game.resume_speedrun);resume.position=Vector2(1040,823);resume.size=Vector2(380,40)
  var version=game.label(game.ui,"Windows edition 0.73 · Speedrun Stat Check",14,Color("eee3cf"),false);version.position=Vector2(30,861)

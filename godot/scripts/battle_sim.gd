@@ -15,6 +15,8 @@ var ticks = 0
 var silent = false
 var battle_seed = 0
 var team_cast := [-10.0, -10.0]   # when each team's latest skill lands (CombatPacing.TEAM_SPACING)
+## Run-wide modifiers per team (dungeon relics and run traits), applied once the fighters are placed.
+var team_mods: Array = [[], []]
 const BOUNDS = ArenaGrid.BOUNDS
 # Body radius per species (sim units), measured from each model's footprint.
 const BODY = {"arachne":0.83,"basilisk":0.68,"cerberus":0.68,"chimera":0.68,"cyclops":0.68,"direwolf":0.68,"gargoyle":0.68,"golem":0.68,"griffin":0.68,"harpy":0.68,"hydra":0.68,"jackalope":0.68,"kirin":0.68,"kitsune":0.68,"manticore":0.68,"minotaur":0.68,"naga":0.68,"nekomata":0.68,"nemean":0.71,"owlbear":0.68,"pegasus":0.68,"phoenix":0.68,"salamander":0.69,"sphinx":0.68,"thunderbird":0.68,"treant":0.68,"troll":0.68,"unicorn":0.68,"wendigo":0.68,"wyvern":0.68,"yeti":0.68,"zaratan":0.68}
@@ -43,6 +45,8 @@ func setup(left: Array, right: Array, seed_value: int, rival_quality: float = 1.
     unit.attack *= CombatPacing.ELITE_SQUAD.attack; unit.attack_basic = unit.get("attack_basic", unit.attack) * CombatPacing.ELITE_SQUAD.attack
     unit.elite = true
     unit.skill_base *= 1.20;unit.ability_power *= 1.20
+ for u in units:
+  if not u.summon and not team_mods[u.team].is_empty(): Relics.apply(self, u, team_mods[u.team])
 
 func add_unit(hero: Dictionary, team: int, pos: Vector2, quality: float = 1.0, owner: int = -1) -> Dictionary:
  hero=hero.duplicate(true)
@@ -72,6 +76,7 @@ func add_unit(hero: Dictionary, team: int, pos: Vector2, quality: float = 1.0, o
  uid += 1
  units.append(u)
  Forge.setup_unit(self, u)
+ if owner < 0 and hero.has("monster"): Bestiary.apply(self, u)
  u.attack_hexes = ArenaGrid.attack_hexes(u.range)
  relocate_hex(u, pos)
  u.start_pos = u.pos
@@ -472,6 +477,8 @@ func step(dt: float) -> void:
     u.alive = false; emit({"type": "death", "uid": u.uid, "pos": u.pos}); continue
   if u.hero.sp == "troll": heal(u, u, u.max_hp * 0.007 * dt,"regeneration")
   if not u.summon and u.has("evo_regen"): heal(u, u, u.max_hp * u.evo_regen * dt, "regeneration")
+  if not u.summon and u.has("run_regen"): heal(u, u, u.max_hp * u.run_regen * dt, "regeneration")
+  if u.has("boss"): Bestiary.tick(self, u, dt)
   u.cd = maxf(0, u.cd - dt)
   u.cast_time = maxf(0, u.cast_time - dt)
   u.recovery = maxf(0, u.recovery - dt)

@@ -108,7 +108,7 @@ func _ready() -> void:
     if qa == "dungeon_fight":
      dg.row = int(dg.row) - 1; dg.col = 0; dg.trail.pop_back()
      Dungeon.enter(campaign, Dungeon.reachable(campaign)[0])
-    if qa == "dungeon_loot": Dungeon.offer_loot(campaign, "item", 3)
+    if qa == "dungeon_loot": Dungeon.offer_loot(campaign, "relic")
     if qa == "dungeon_event": dg.event = Dungeon.EVENTS[1].duplicate(true)
    if qa in ["dungeon_intro", "dungeon_result"]:
     for h in campaign.state.roster: h.pending = []; h.rewards = []
@@ -117,11 +117,30 @@ func _ready() -> void:
     var test_sim = BattleSim.new(); test_sim.silent = true
     test_sim.setup(campaign.lineup(), campaign.opponent().roster, campaign.match_seed(), campaign.quality()); test_sim.run_to_end(); campaign.resolve(test_sim)
     sim = test_sim
-   if qa == "dungeon_menu": phase = "menu"
+   if qa in ["dungeon_trail", "dungeon_boss", "dungeon_endless", "dungeon_market"]:
+    dg.relics = ["giants_belt", "vampiric_chalice", "headliner_crown", "trait_emblem:" + str(dg.traits.active[0]), "ember_heart"]
+   if qa == "dungeon_endless":
+    dg.awaiting_endless = true; dg.score = 6120; dg.wardens = 3
+   if qa == "dungeon_boss":
+    for h in campaign.state.roster: h.pending = []; h.rewards = []; h.level = 6
+    dg.row = Dungeon.ROWS - 2; dg.col = 0; dg.trail = [0, 0, 0, 0, 0, 0, 0]; dg.event = {}; dg.loot = []
+    Dungeon.enter(campaign, 0)
+   if qa == "dungeon_scores":
+    for i in range(4):
+     campaign.state.dungeon.final_score = null; campaign.state.dungeon.erase("final_score"); campaign.state.name = ["Ravenmoor Menagerie", "Ashfall Lodge", "The Gilded Paw", "Moonlit Wardens"][i]; dg.score = [6120, 4210, 2890, 950][i]; dg.wardens = [3, 2, 1, 0][i]; dg.act = [4, 3, 2, 1][i]
+     Dungeon.bank_score(campaign, ["Retired", "Fallen", "Fallen", "Fallen"][i])
+   if qa == "dungeon_boss":
+    phase = "prep"; render(); begin_battle()
+   elif qa == "dungeon_menu": phase = "menu"
    elif qa == "dungeon_intro": phase = "intro"
    elif qa == "dungeon_result": phase = "result"
+   elif qa == "dungeon_market": phase = "hub"; tab = "market"
    else: phase = "hub"; tab = "overview"
-   render()
+   if qa != "dungeon_boss": render()
+   if qa == "dungeon_scores": DungeonUI.high_scores(self)
+   if has_meta("qa_scroll"):
+    await get_tree().process_frame
+    for sc in ui.find_children("*","ScrollContainer",true,false): sc.scroll_vertical=int(get_meta("qa_scroll"))
   elif qa == "starter":
    campaign.new_run("Ravenmoor Menagerie",97,731);phase="starter";render()
   elif qa in ["skill_preview","heal_preview"]:
@@ -469,7 +488,7 @@ func build_new() -> void:
  label(box, "DIFFICULTY", 15, GOLD)
  var diff = HBoxContainer.new(); diff.add_theme_constant_override("separation", 8); box.add_child(diff)
  var diff_tips = [["Keeper", "Relaxed · finish top 5 to survive a cup"], ["Standard", "Fair fights · finish top 4"], ["Champion", "Brutal rivals · finish top 3"]]
- if new_mode == "dungeon": diff_tips = [["Keeper", "Relaxed · carry 4 flames"], ["Standard", "Fair fights · carry 3 flames"], ["Champion", "Brutal rivals · carry 2 flames"]]
+ if new_mode == "dungeon": diff_tips = [["Keeper", "Relaxed · 4 lives · score ×0.8"], ["Standard", "Fair fights · 3 lives · score ×1"], ["Champion", "Brutal rivals · 2 lives · score ×1.35"]]
  for d in diff_tips:
   var db = button(diff, d[0], func(): new_difficulty = d[0]; new_challenge_rank=0; render(), new_difficulty == d[0]); db.tooltip_text = d[1]; db.size_flags_horizontal = Control.SIZE_EXPAND_FILL
  var challenge=OptionButton.new();box.add_child(challenge);challenge.add_item("Standard difficulty rules · no challenge modifier")
@@ -542,7 +561,9 @@ func build_runover() -> void:
  if Dungeon.active(campaign):
   var dg = st.dungeon
   label(col, "%s difficulty · Dungeon · reached %s, room %d" % [st.difficulty, Dungeon.depth(campaign).name, int(dg.row) + 1], 18)
-  label(col, "%d fights · %d won · %d elites · %d Warden%s defeated" % [int(dg.fights), int(dg.wins), int(dg.elites), dg.history.size(), "" if dg.history.size() == 1 else "s"], 18)
+  label(col, "%d fights · %d won · %d elites · %d Warden%s defeated · %d relics" % [int(dg.fights), int(dg.wins), int(dg.elites), dg.history.size(), "" if dg.history.size() == 1 else "s", dg.get("relics", []).size()], 18)
+  var place = Dungeon.rank_of(campaign)
+  label(col, "FINAL SCORE %d%s" % [int(dg.get("final_score", Dungeon.final_score(campaign))), ("  ·  #%d ON YOUR HIGH SCORES" % place) if place > 0 else ""], 22, GOLD)
  else:
   label(col, "%s difficulty · %d cups contested · %d cup%s won" % [st.difficulty, hist.size(), int(st.get("trophies", 0)), "" if int(st.get("trophies", 0)) == 1 else "s"], 18)
   label(col, "Best finish: %s · Reached %s" % [TournamentRewardsUI._place_text(best) if best < 9 else "—", WorldTour.region(campaign).place if not t.is_empty() else "—"], 18)
@@ -736,6 +757,7 @@ func begin_battle() -> void:
   arena.clear_fighters(); arena.live = true; arena.camera.h_offset = 0; arena.target_distance = 31 if tactical else 34; arena.target_pitch = 0.95; arena.target_yaw = 0.0
   if arena.clarity: arena.clarity.tactical = tactical
   sim = BattleSim.new(); sim.action.connect(on_battle_event)
+  if not exhibition: sim.team_mods = campaign.battle_mods()
   sim.setup(campaign.lineup(), exhibition_rivals if exhibition else campaign.opponent().roster, campaign.match_seed(), 1.0 if exhibition else campaign.quality())
   sound.announce("battle", true)
   countdown = COUNTDOWN; countdown_shown = -1; arena.target_yaw = 0.55; arena.camera_yaw = 0.55; arena.target_distance += 6.0
@@ -859,8 +881,11 @@ func build_result() -> void:
   FlowUI.chip(self, chips, "heart", "%d/5 alive" % (5 - fallen), "Survivors · everyone recovers before the next fight", Color("ff9aa5"))
   var xp = label(chips, "+%d XP" % (80 if won else 65), 21, Color("9fd8ff"), false); xp.tooltip_text = "XP for every fielded hero"; xp.mouse_filter = Control.MOUSE_FILTER_STOP
  if not exhibition and report.get("dungeon", false):
-  var flame_text = "A FLAME GUTTERS · %d LEFT" % int(report.get("flames", 0)) if report.get("flame_lost", false) else ("THE LAST FLAME ENDURES · DUNGEON CONQUERED" if report.get("dungeon_cleared", false) else ("WARDEN DEFEATED · THE WAY DOWN IS OPEN" if report.get("warden_down", false) else "ROOM CLEARED · CHOOSE YOUR SPOILS ON THE MAP"))
-  var fl = label(box, flame_text, 26, Color("ff8a7a") if report.get("flame_lost", false) else GOLD); fl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+  var lost = report.get("life_lost", false) or report.get("flame_lost", false)
+  var verdict_text = ("LIFE LOST · %d LEFT" % int(report.get("lives", 0))) if lost else ("DUNGEON CONQUERED · BANK YOUR SCORE OR GO ENDLESS" if report.get("dungeon_cleared", false) else ("WARDEN DEFEATED · THE WAY DOWN IS OPEN" if report.get("warden_down", false) else "ROOM CLEARED · CHOOSE YOUR SPOILS ON THE MAP"))
+  var fl = label(box, verdict_text, 26, Color("ff8a7a") if lost else GOLD); fl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+  if int(report.get("points", 0)) > 0:
+   var pts = label(box, "+%d POINTS · %d TOTAL" % [int(report.points), int(campaign.state.dungeon.score)], 18, Color("9fd8ff")); pts.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
  if not exhibition and report.has("tour_level"):
   if report.has("tournament_won"):
    var cup = label(box, ("CUP WON · GOLD CHEST" if report.tournament_won else "CUP OVER · %s%s" % [TournamentRewardsUI._place_text(int(report.get("place",0))).to_upper(), " · %s CHEST" % str(report.medal).to_upper() if report.has("medal") else ""]), 26, GOLD)
@@ -888,8 +913,9 @@ func build_result() -> void:
  toggle.pressed.emit()
  var pending = campaign.pending_heroes().size()
  if campaign.state.get("run_over", false) and not exhibition and report.get("dungeon", false):
-  label(box, "YOUR LAST FLAME HAS GONE OUT · THE RUN IS OVER", 30, Color("ff8a7a"))
-  label(box, "%s fell in %s after %d fights." % [campaign.state.name, Dungeon.depth(campaign).name, int(campaign.state.dungeon.fights)], 17, MUTED)
+  label(box, "OUT OF LIVES · THE RUN IS OVER", 30, Color("ff8a7a"))
+  var place = Dungeon.rank_of(campaign)
+  label(box, "%s fell in %s after %d fights. Final score: %d%s." % [campaign.state.name, Dungeon.depth(campaign).name, int(campaign.state.dungeon.fights), int(campaign.state.dungeon.get("final_score", 0)), (" · #%d on your high scores" % place) if place > 0 else ""], 17, MUTED)
   var dend = panel(Rect2(400,792,800,85))
   button(dend, "See the guild's final record  →", func(): phase = "runover"; render(), true)
   return
@@ -1064,7 +1090,7 @@ func _process(dt: float) -> void:
  elif sim and phase in ["menu", "new", "hub", "prep"]: arena.sync(sim, dt)
  if not qa.is_empty() and not qa_taken:
   qa_elapsed += dt
-  if qa_elapsed > (12 if qa in ["arena", "evolved_arena", "exhibition", "tour_arena"] else 7 if qa in ["intro","chest"] else 4 if qa in ["guild_demo","draft_demo","builds_demo","tree_demo","evolution","levelup","tour_intro"] else 1.65 if qa in ["attacks_slam","attacks_weapon"] else 1.43 if qa.begins_with("attacks_") else 2 if qa.begins_with("particles_") else 3):
+  if qa_elapsed > (12 if qa in ["arena", "evolved_arena", "exhibition", "tour_arena", "dungeon_boss"] else 7 if qa in ["intro","chest"] else 4 if qa in ["guild_demo","draft_demo","builds_demo","tree_demo","evolution","levelup","tour_intro"] else 1.65 if qa in ["attacks_slam","attacks_weapon"] else 1.43 if qa.begins_with("attacks_") else 2 if qa.begins_with("particles_") else 3):
    qa_taken = true
    await RenderingServer.frame_post_draw
    if not qa_capture.is_empty():

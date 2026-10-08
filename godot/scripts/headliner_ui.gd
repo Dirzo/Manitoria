@@ -33,6 +33,7 @@ static func starter(game: Node) -> void:
   DraftBoard.grid(game,left,legends,opts,4,200,166)
  var detail=game.panel(Rect2(1016,128,558,652));game.label(detail,hero.name+"  ·  "+HeroData.species[chosen].n,28,game.GOLD)
  game.label(detail,"%s  ·  %s"%[HeroData.species[chosen].role.to_upper(),League.NICHE.get(chosen,"")],15,Color(League.TIER_COLOR.Legendary))
+ if Dungeon.active(game.campaign):game.label(detail,"RUN TRAITS · "+RunTraits.tag_text(game.campaign,chosen).to_upper(),14,Color("9fd8ff")).tooltip_text="\n\n".join(RunTraits.of(game.campaign,chosen).map(func(t):return DungeonUI.trait_tooltip(t)))
  SplashArt.make(detail,chosen,Vector2(0,150),true)
  TraitUI.line(game,detail,hero,true)
  # Stat hexagon beside a short guide: where this champion excels, and what each stat does (hover).

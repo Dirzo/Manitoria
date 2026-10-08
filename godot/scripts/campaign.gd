@@ -203,6 +203,10 @@ func opponent() -> Dictionary:
   if pair.has(0): return state.clubs[int(pair[1] if pair[0] == 0 else pair[0]) - 1]
  return state.clubs[0]
 
+## Run-wide combat modifiers per team (dungeon relics and run traits); empty elsewhere.
+func battle_mods() -> Array:
+ return Dungeon.battle_mods(self) if Dungeon.active(self) else [[], []]
+
 func match_seed() -> int:
  if state.has("tour"): return int(state.seed+700000+state.tour.serial*31)
  return int(state.seed + state.season * 1000 + state.round * 17)
@@ -441,6 +445,7 @@ func load_slot(slot: int) -> bool:
  HeroData.run_salt = str(state.get("salt", state.get("seed", "")))
  League.run_tiers = state.get("tiers", {}) if state.get("tiers") is Dictionary else {}
  ensure_management()
+ Dungeon.migrate(self)
  return true
 
 # New management fields are additive, so existing 0.3 campaign slots still load.

@@ -62,6 +62,15 @@ static func card(game: Node, parent: Node, h: Dictionary, o: Dictionary, width :
 	var t = Traits.trait_of(h); var ideal = Traits.is_ideal(h)
 	var tl = game.label(box, ("★ " if ideal else "") + t + "  ·  " + Traits.TRAITS[t].up, 13, TraitUI.IDEAL if ideal else Color("c9d6dc"), false)
 	tl.clip_text = true; tl.mouse_filter = Control.MOUSE_FILTER_STOP; tl.tooltip_text = Traits.describe(h) + "\nIdeal: " + " · ".join(Traits.info(h.sp).ideal)
+	# Dungeon run traits: two per species, rolled fresh each run.
+	if game.campaign and Dungeon.active(game.campaign):
+		var tags = HBoxContainer.new(); tags.add_theme_constant_override("separation", 6); box.add_child(tags)
+		for id in RunTraits.of(game.campaign, h.sp):
+			var info = RunTraits.info(id)
+			var chip = PanelContainer.new(); tags.add_child(chip); chip.mouse_filter = Control.MOUSE_FILTER_STOP
+			chip.add_theme_stylebox_override("panel", game.style(Color(info.color).darkened(0.72), Color(info.color), 6, 4, 1))
+			game.label(chip, info.name.to_upper(), 12, Color(info.color), false)
+			chip.tooltip_text = DungeonUI.trait_tooltip(id)
 	# Stat rolls + fit
 	var stats = HBoxContainer.new(); box.add_child(stats); stats.custom_minimum_size.x = width - 20
 	TraitUI.roll_chips(game, stats, h, 12 if width >= 300 else 10, width < 260)

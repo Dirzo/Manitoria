@@ -88,10 +88,11 @@ static func run_bar(game: Node, parent: Node) -> void:
 	chip(game, row, "coin", str(int(c.state.gold)), "Gold", Color("ffdf7e"))
 	if Dungeon.active(c):
 		var d = c.state.dungeon
-		var flames = HBoxContainer.new(); flames.add_theme_constant_override("separation", 1); row.add_child(flames)
-		flames.mouse_filter = Control.MOUSE_FILTER_STOP
-		flames.tooltip_text = "Flames: every lost fight snuffs one out. Campfires and Wardens rekindle them.\n%d / %d burning" % [int(d.flames), int(d.max_flames)]
-		for i in range(int(d.max_flames)): glyph(flames, "flame", 24, i < int(d.flames))
+		var lives = HBoxContainer.new(); lives.add_theme_constant_override("separation", 1); row.add_child(lives)
+		lives.mouse_filter = Control.MOUSE_FILTER_STOP
+		lives.tooltip_text = "Lives: every lost fight costs one. Campfires and Wardens restore them.\n%d / %d left" % [int(d.lives), int(d.max_lives)]
+		for i in range(int(d.max_lives)): glyph(lives, "heart", 22, i < int(d.lives))
+		chip(game, row, "star", str(int(d.score)), "Score so far (before difficulty multiplier and lives bonus)", Color("9fd8ff"))
 	elif c.state.has("tour") and not c.state.roster.is_empty():
 		var lost = WorldTour.losses(c, 0)
 		var hearts = HBoxContainer.new(); hearts.add_theme_constant_override("separation", 2); row.add_child(hearts)

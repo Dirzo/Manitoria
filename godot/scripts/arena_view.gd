@@ -374,6 +374,7 @@ func spawn(u: Dictionary) -> void:
  # Every mesh shares one overlay so the whole body flashes when struck or casting.
  var flash_mat = ShaderMaterial.new(); flash_mat.shader = HITFLASH
  for mi in model.find_children("*", "MeshInstance3D", true, false): mi.material_overlay = flash_mat
+ if u.hero.has("monster"): Bestiary.dress(model, flash_mat, u.hero, u.summon)
  models[u.uid] = {"root": holder, "motion":motion, "stride":0.0, "recoil":Vector3.ZERO, "aura": aura, "model": model, "player": player, "bar": bar, "bars": bars, "ring": circle, "state": "idle", "lock": 0.0, "dead": false, "hp_label": hp_label, "cast_bar": cast_bar, "bubble": bubble, "shield_bar":shield_bar, "stagger": 0.0, "death_elapsed": 0.0, "arc": {}, "last_target": world_point(u.pos), "ground_speed": 0.0, "walk_hold": 0.0, "turn_rate": 0.0, "name_label": name_label, "tempo": randf_range(0.92, 1.08), "flash": flash_mat, "flash_amt": 0.0, "born": 0.0 if (u.summon or (sim_ref != null and sim_ref.time > 0.5)) else 1.0}
  holder.position = world_point(u.pos)
  model.rotation.y = u.heading

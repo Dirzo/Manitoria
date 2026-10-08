@@ -61,7 +61,8 @@ func stakes(c: Campaign) -> String:
  if not c.state.has("tour"):return "MEET THE CONTESTANTS"
  if Dungeon.active(c):
   var kind=str(Dungeon.node(c).get("type","battle"))
-  return "%s   ·   %s   ·   LOSE → %s"%[Dungeon.stage_label(c).to_upper(),"%d FLAME%s BURNING"%[int(c.state.dungeon.flames),"" if int(c.state.dungeon.flames)==1 else "S"],"THE LAST FLAME GOES OUT" if int(c.state.dungeon.flames)<=1 else ("LOSE A FLAME, FACE IT AGAIN" if kind=="boss" else "LOSE A FLAME")]
+  var lives=int(c.state.dungeon.lives)
+  return "%s   ·   %d LI%s LEFT   ·   LOSE → %s"%[Dungeon.stage_label(c).to_upper(),lives,"FE" if lives==1 else "VES","RUN OVER" if lives<=1 else ("LOSE A LIFE, FACE IT AGAIN" if kind=="boss" else "LOSE A LIFE")]
  var b=c.state.tour.get("bracket",{});var m=WorldTour.current_match(c)
  if b.is_empty():return str(m.get("label","")).to_upper()
  var idx=b.matches.find(m);var win="";var lose=""
