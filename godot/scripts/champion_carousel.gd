@@ -87,7 +87,7 @@ func _ready() -> void:
   target.add_theme_stylebox_override("focus", game.style(Color(0, 0, 0, 0), game.GOLD, 6, 0, 2))
   target.tooltip_text = "%s · %s\nClick to feature · drop equipment here" % [hero.name, HeroData.species[hero.sp].n]
   target.pressed.connect(func(): select_hero(hero.id))
-  var caption = game.label(self, hero.name+" "+"★".repeat(ChampionStars.tier(hero)), 20 if off == 0 else 14, game.GOLD if off == 0 else game.MUTED, false)
+  var caption = game.label(self, hero.name, 20 if off == 0 else 14, game.GOLD if off == 0 else game.MUTED, false)
   caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
   entries.append({"model":model,"tween":tween,"root": pivot, "target": target, "caption": caption, "offset": off})
  # Put the selected champion's hit target above the receding ones.
@@ -113,7 +113,7 @@ func refresh_selection() -> void:
   var was_visible=entry.root.visible;entry.root.visible=abs(off)<=2 or was_visible
   entry.offset=off;entry.root.get_node("FeaturedPlinth").visible=off==0
   for mesh in entry.model.find_children("*","MeshInstance3D",true,false):mesh.transparency=0.0 if off==0 else .32
-  entry.caption.text=hero.name+" "+"★".repeat(ChampionStars.tier(hero))
+  entry.caption.text=hero.name
   entry.caption.add_theme_font_size_override("font_size",20 if off==0 else 14)
   entry.caption.modulate=game.GOLD if off==0 else game.MUTED
   entry.target.tooltip_text=hero.name+" · "+ChampionStars.label(hero)+"\n"+ChampionStars.evolution_label(hero)+"\nClick to feature · drop equipment here"

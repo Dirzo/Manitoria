@@ -86,34 +86,13 @@ func recruit(id: String) -> bool:
    return save()
  return false
 
-## The copy counter includes the original hero; purchased copies never occupy roster slots.
+## Compatibility for older callers: champion copies have been retired.
 func copy_purchases_open() -> bool:
- if state.get("run_over",false) or state.get("tour",{}).get("complete",false):return false
- return recruitment_open() or bool(state.get("tour",{}).get("shop",false))
-
-func copy_offer(h: Dictionary) -> Dictionary:
- var t=state.get("tour",{})
- return ChampionStars.offer(h,str(state.get("seed",0))+"|"+str(t.get("serial",0))+"|"+str(t.get("rerolls",0)))
-
-func buy_champion_copy(id: String) -> bool:
- if not copy_purchases_open():last_error="Buy owned champion copies in the shop or between cups.";return false
- if state.has("tour") and not state.tour.get("shop",false) and not state.tour.get("intermission",false) and not lineup_ready():last_error="Field at least four champions before buying copies.";return false
- var h=hero_by_id(id)
- if h.is_empty() or h not in state.roster:last_error="Choose a champion in your roster.";return false
- if ChampionStars.copies(h)>=6:last_error="This champion is already three stars.";return false
- var cost=League.cost(h.sp)
- if int(state.gold)<cost:last_error="You need %d gold for this copy."%cost;return false
- var before=state.duplicate(true)
- var old_star=ChampionStars.tier(h)
- var prior_stats=StatHex.effective(h)
- var improved=ChampionStars.merge(h,copy_offer(h))
- state.gold-=cost;h.copies=ChampionStars.copies(h)+1
- h.copy_feedback={"before":prior_stats,"after":StatHex.effective(h),"improved":improved,"serial":int(state.get("tour",{}).get("serial",0))}
- h.copy_gold=int(h.get("copy_gold",0))+cost
- state.selected=h.id
- add_news("Star upgrade · "+h.name if ChampionStars.tier(h)>old_star else "Champion copy · "+h.name,ChampionStars.label(h)+" · bought for %d gold"%cost)
- if save():return true
- state=before
+ return false
+func copy_offer(_h: Dictionary) -> Dictionary:
+ return {}
+func buy_champion_copy(_id: String) -> bool:
+ last_error="Champion copies are retired. Develop champions through skills, items and evolutions."
  return false
 
 func refresh_market() -> bool:
@@ -427,9 +406,10 @@ func ensure_unique_names() -> void:
 
 func save() -> bool:
  if state.is_empty(): return false
+ if state.get("speedrun_memory",false):return true
  ensure_unique_names()
- TrophyVault.sync(self)
- var path = save_path(int(state.slot))
+ if not state.get("speedrun_lab",false):TrophyVault.sync(self)
+ var path = "user://speedrun_draft.json" if state.get("speedrun_lab",false) else save_path(int(state.slot))
  var f = FileAccess.open(path + ".tmp", FileAccess.WRITE)
  if f == null: last_error = "Could not save. Your current campaign is still open."; return false
  f.store_string(JSON.stringify(state)); f.close()
@@ -438,7 +418,7 @@ func save() -> bool:
   if err != OK: last_error = "Could not create the save backup."; return false
  var error = DirAccess.rename_absolute(path + ".tmp", path)
  last_error = "" if error == OK else "Could not finish saving the campaign."
- if error == OK and not RunDatabase.flush(self):last_error="Campaign saved; Atlas write is pending and will retry on the next save."
+ if error == OK and not state.get("speedrun_lab",false) and not RunDatabase.flush(self):last_error="Campaign saved; Atlas write is pending and will retry on the next save."
  return error == OK
 
 static func valid(data: Variant) -> bool:
@@ -464,7 +444,11 @@ func load_slot(slot: int) -> bool:
 
 # New management fields are additive, so existing 0.3 campaign slots still load.
 func ensure_management() -> void:
- TrophyVault.sync(self)
+ if not state.get("speedrun_lab",false):TrophyVault.sync(self)
+ for h in state.get("roster",[])+state.get("market",[]):
+  h.erase("copies");h.erase("copy_feedback")
+ for cl in state.get("clubs",[]):
+  for h in cl.roster:h.erase("copies");h.erase("copy_feedback")
  if not state.has("headliner") or not state.roster.any(func(h):return h.id==state.headliner):
   state.headliner=state.roster[0].id if not state.roster.is_empty() else ""
  if state.has("tour"):

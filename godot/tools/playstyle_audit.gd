@@ -27,20 +27,12 @@ func team(style: String,difficulty: String,cup: int,seed: int) -> Array:
    h.tactics={"target":"healers","teamwork":"assist","opening":"flank" if HeroData.line(h.sp)=="Flank" else "advance"}
   if HeroData.species[h.sp].role=="Support":h.tactics=BattleTactics.PRESETS.Support.duplicate(true)
   h.equipment={};heroes.append(h)
- # Tank strategy commits to a six-copy carry; others start with an item foundation.
- if style=="Tank carry":
-  while ChampionStars.copies(heroes[0])<6 and budget>=League.cost(heroes[0].sp):
-   var h=heroes[0];budget-=League.cost(h.sp);ChampionStars.merge(h,ChampionStars.offer(h,"style"));h.copies=ChampionStars.copies(h)+1
  for slot in range(3):
   for h in heroes:
    var item=(["frenzy","tusk","grievous"][slot] if style=="Attack tempo" and OS.get_environment("STYLE_COUNTER")=="1" and h.sp in ["jackalope","direwolf"] else Forge.recommended(h.sp,h)[slot]);
    if style=="Spell control" and OS.get_environment("STYLE_COUNTER")=="1" and slot==2 and h.sp=="phoenix":item="grievous"
    var cost=RivalEconomy.item_cost(item)
    if budget>=cost:h.equipment[str(slot)]=item;budget-=cost
- if style!="Tank carry":
-  for h in heroes:
-   while ChampionStars.copies(h)<3 and budget>=League.cost(h.sp):
-    budget-=League.cost(h.sp);ChampionStars.merge(h,ChampionStars.offer(h,"style"));h.copies=ChampionStars.copies(h)+1
  return heroes
 func run() -> void:
  HeroData.load_data();HeroData.run_salt="playstyle-audit";League.run_tiers={};ItemFeedback.enabled=false

@@ -34,17 +34,6 @@ func run() -> void:
       enemy.equipment=Forge.rival_loadout(enemy,WorldTour.stage(c),difficulty)
       var club={"roster":[enemy]};c.state.clubs=[club];WorldTour.outfit_clubs(c)
       rivals.append(enemy)
-     # Spend earned gold after item costs, using cheap copies first; never grant free stars.
-     var budget=0
-     for previous in range(1,cup):budget+=4*TourBalance.match_gold(previous,difficulty,true)+150+[1,6,11,15,20][previous-1]*15
-     budget-=5*[0,1,2,2,3][cup-1]*140
-     var purchasing=players.duplicate();purchasing.sort_custom(func(a,b):return League.cost(a.sp)<League.cost(b.sp))
-     for h in purchasing:
-      var cost=League.cost(h.sp)
-      if budget<cost*2:continue
-      for copy in range(2):
-       ChampionStars.merge(h,ChampionStars.offer(h,"budget-audit"));h.copies=ChampionStars.copies(h)+1;budget-=cost;row.copy_gold+=cost
-      row.star_champions+=1
      for side in range(2):
       var sim=BattleSim.new();sim.silent=true
       sim.setup(players if side==0 else rivals,rivals if side==0 else players,901+seed,c.quality() if side==0 else 1.0)

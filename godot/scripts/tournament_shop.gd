@@ -28,20 +28,8 @@ static func build(game: Node) -> void:
  if hero.get("build_goal","Adaptive")!="Adaptive":game.label(right,"RUN PLAN · %s item priority"%hero.build_goal,13,Color("8effac"))
  game.label(right,"%d AP · %.2f attacks/s · %d%% shorter skill cooldowns"%[stats.ability_power,1.0/stats.interval,roundi((1.0-HeroData.cooldown_factor(hero))*100)],12,Color("bba2ff"))
  game.label(right,"Attack range: %d hexes · Move one hex at a time"%ArenaGrid.attack_hexes(stats.range),13,game.MUTED)
- var copy_box=VBoxContainer.new();right.add_child(copy_box)
- game.label(copy_box,"CHAMPION MARKET · improve this champion",14,game.GOLD,false)
- var offered=c.copy_offer(hero);var current=HeroData.rolls(hero);var improvements=[]
- for key in HeroData.ROLL_KEYS:
-  if int(offered[key])>int(current[key]):improvements.append("%s %d→%d"%[StatHex.GUIDE[key].name,current[key],offered[key]])
- game.label(copy_box,"Fully upgraded · strongest rolls retained" if ChampionStars.tier(hero)==3 else " · ".join(improvements) if not improvements.is_empty() else "No higher rolls this offer · still advances stars",12,Color("8effac"))
- var copy_button=game.button(copy_box,"Three stars · complete" if ChampionStars.tier(hero)==3 else "Buy "+HeroData.species[hero.sp].n+" copy · %d gold"%League.cost(hero.sp),func():
-  if c.buy_champion_copy(hero.id):
-   game.sound.cue("upgrade",true);game.render();game.toast(hero.name+" · "+ChampionStars.label(hero))
-  else:game.toast(c.last_error),true,ChampionStars.tier(hero)==3 or c.state.gold<League.cost(hero.sp))
- copy_button.name="ShopChampionCopy";copy_button.add_theme_font_size_override("font_size",16)
- copy_button.tooltip_text=ChampionStars.description(hero)+"\nOnly your existing champion improves. Recruit new species between cups. Item rerolls also change these offers."
  var hex=StatHex.make(right,hero,Vector2(470,160));hex.name="ShopChampionStatHex"
- game.label(right,"Green = current stats · gold outline = before last copy purchase",11,game.MUTED)
+ game.label(right,"Current combat stats · XP, items and evolution",11,game.MUTED)
  var gear=VBoxContainer.new();right.add_child(gear)
  var equipment_heading=HBoxContainer.new();gear.add_child(equipment_heading)
  game.label(equipment_heading,"CURRENT ITEMS",13,game.GOLD,false).size_flags_horizontal=Control.SIZE_EXPAND_FILL

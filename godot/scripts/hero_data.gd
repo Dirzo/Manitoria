@@ -301,11 +301,6 @@ static func stats(hero: Dictionary, quality: float = 1.0) -> Dictionary:
  if hero.get("apex", "") == "apex_stats": result.hp *= 1.0 + APEX_STAT; result.attack *= 1.0 + APEX_STAT
  # Physical kits face full armor mitigation; keep their primary damage competitive with spells.
  if SkillScaling.audited(hero.sp,"signature").get("build_path","ap")=="ad":result.attack*=1.12
- # Stars multiply each independent damage channel once. Base health follows star health
- # so health-scaling skills do not also receive the health bonus a second time.
- result.hp*=ChampionStars.health(hero);result.base_hp*=ChampionStars.health(hero)
- result.attack*=ChampionStars.damage(hero)
- result.ability_power*=ChampionStars.damage(hero);result.skill_base*=ChampionStars.damage(hero)
  return result
 
 ## Second evolution (Apex) at level 16: one permanent choice.
@@ -330,7 +325,7 @@ static func item_slots(hero: Dictionary) -> int:
 ## quality (rarity, rolls, temperament) instead, via power_quality(), so a strong roll reads green early.
 static func power(hero: Dictionary) -> int:
  var lvl = int(hero.get("level", 1))
- return clampi(roundi((power_quality(hero) - 40.0) * 0.8 + (lvl - 1) * 3.15 + [0,6,13][ChampionStars.tier(hero)-1]), 1, 100)
+ return clampi(roundi((power_quality(hero) - 40.0) * 0.8 + (lvl - 1) * 3.15), 1, 100)
 
 ## Level-neutral quality on the old 40-99 rating scale (what the Power colour is based on).
 static func power_quality(hero: Dictionary) -> float:

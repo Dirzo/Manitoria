@@ -5,6 +5,7 @@ const INK = Color("0e1b26")
 const WHITE = Color("fff5df")
 const MUTED = Color("c2c4d6")
 var campaign = Campaign.new()
+var speedrun_lab: SpeedrunLab
 var arena: ArenaView
 var sound: SoundDesign
 var ui: Control
@@ -85,7 +86,18 @@ func _ready() -> void:
   campaign.state.gold = 200
   if qa_level > 1: campaign.state.tour.level = qa_level; campaign.state.trophies = qa_level - 1
   selected_id = campaign.state.roster[0].id
-  if qa == "starter":
+  if qa in ["speedrun","speedrun_results"]:
+   start_speedrun();campaign.state.speedrun_memory=true
+   campaign.choose_starter(League.tiers().Legendary[0]);campaign.recruit(campaign.state.market.filter(func(h):return League.tier(h.sp)=="Epic")[0].id)
+   for i in range(3):campaign.recruit(campaign.state.market.filter(func(h):return League.tier(h.sp)=="Common")[0].id)
+   for h in campaign.lineup():
+    for id in Forge.recommended(h.sp,h):speedrun_lab.plan.items.append({"id":id,"target":h.id})
+   if qa=="speedrun_results":
+    var records=JSON.parse_string(FileAccess.get_file_as_string(SpeedrunLab.RESULTS_PATH))
+    if records is Array and records.any(func(r):return r.complete):speedrun_lab.result=records.filter(func(r):return r.complete)[0]
+   phase="speedrun";render()
+   print("PACKED SPEEDRUN: ready=",campaign.lineup_ready()," priorities=",speedrun_lab.plan.items.size()," simulate_button=",ui.find_child("SpeedrunSimulate",true,false)!=null," copy_button_removed=",ui.find_child("ShopChampionCopy",true,false)==null)
+  elif qa == "starter":
    campaign.new_run("Ravenmoor Menagerie",97,731);phase="starter";render()
   elif qa in ["skill_preview","heal_preview"]:
    var h=campaign.state.roster[0];h.sp="golem" if qa=="skill_preview" else "unicorn";h.level=3
@@ -339,8 +351,8 @@ func render() -> void:
    ui.remove_child(child);set_meta("retained_shop_carousel",child)
   else:child.queue_free();ui.remove_child(child)
  match_label = null; event_box = null
- arena.visible = phase not in ["hub", "menu", "new", "shop", "starter", "intro", "runover"]
- if phase in ["hub", "menu", "new", "shop", "starter", "intro", "runover"]:
+ arena.visible = phase not in ["hub", "menu", "new", "shop", "starter", "intro", "runover", "speedrun"]
+ if phase in ["hub", "menu", "new", "shop", "starter", "intro", "runover", "speedrun"]:
   sim = null
   var backdrop=ClubBackdrop.new();backdrop.theme_name=ClubBackdrop.theme_for(self);backdrop.shade=.08 if phase=="menu" else .30;ui.add_child(backdrop)
  # Between cups: land on the recruit board with the new champions (once per break).
@@ -359,6 +371,7 @@ func render() -> void:
  elif phase == "battle": build_battle_hud()
  elif phase == "result": build_result()
  elif phase == "upgrade": build_upgrade()
+ elif phase == "speedrun": SpeedrunUI.build(self,speedrun_lab)
  elif phase == "shop": TournamentShop.build(self)
  elif phase == "starter": HeadlinerUI.starter(self)
  elif phase == "intro":
@@ -516,6 +529,27 @@ func found_club() -> void:
   dialog.confirmed.connect(func(): start_club(name_value, new_slot)); dialog.popup_centered(Vector2i(520, 180))
  else: start_club(name_value, new_slot)
 
+func start_speedrun() -> void:
+ if is_instance_valid(speedrun_lab) and speedrun_lab.running:
+  phase="speedrun";render();return
+ if not is_instance_valid(speedrun_lab):
+  speedrun_lab=SpeedrunLab.new();speedrun_lab.game=self;add_child(speedrun_lab)
+ exhibition=false
+ campaign=Campaign.new();campaign.new_run("Speedrun laboratory",98,0,"Standard")
+ campaign.state.speedrun_lab=true;campaign.state.challenge_rank=0
+ campaign.save();speedrun_lab.reset_plan();selected_id="";tab="market";phase="starter";render()
+
+func resume_speedrun() -> void:
+ if is_instance_valid(speedrun_lab) and speedrun_lab.running:phase="speedrun";render();return
+ var data=JSON.parse_string(FileAccess.get_file_as_string("user://speedrun_draft.json"))
+ if not Campaign.valid(data) or not data.get("speedrun_lab",false):toast("The speedrun draft could not be read.");return
+ if not is_instance_valid(speedrun_lab):speedrun_lab=SpeedrunLab.new();speedrun_lab.game=self;add_child(speedrun_lab)
+ campaign=Campaign.new();campaign.state=data;HeroData.run_salt=str(data.get("salt",data.seed));League.run_tiers=data.get("tiers",{});campaign.ensure_management()
+ speedrun_lab.reset_plan()
+ if data.get("speedrun_plan") is Dictionary:speedrun_lab.plan=data.speedrun_plan.duplicate(true)
+ exhibition=false;selected_id=str(data.get("selected",""));tab="market"
+ phase="speedrun" if campaign.lineup_ready() else "starter" if campaign.state.roster.is_empty() else "hub";render()
+
 func start_club(name_value: String, slot: int) -> void:
  exhibition = false
  campaign.new_run(name_value, slot, 0, new_difficulty)
@@ -544,6 +578,9 @@ func controls_hint() -> void:
  l.position = Vector2(400, 820); l.size = Vector2(790, 25); l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 func prepare_match() -> void:
+ if campaign.state.get("speedrun_lab",false):
+  if not campaign.lineup_ready():toast("Draft four or five champions first.");return
+  phase="speedrun";render();return
  if not campaign.pending_heroes().is_empty(): phase = "upgrade"; render(); return
  if campaign.state.get("tour",{}).get("shop",false): phase="shop"; render(); return
  if campaign.state.get("tour",{}).get("complete",false) or (not campaign.state.has("tour") and campaign.state.round >= 17): tab = "overview"; phase = "hub"; render(); return
@@ -630,6 +667,7 @@ func demo_stage() -> void:
 
 # The contestant intro screen is retired: matches start straight in the arena with a countdown.
 func introduce_match() -> void:
+ if campaign.state.get("speedrun_lab",false):prepare_match();return
  if not campaign.lineup_ready() or not campaign.pending_heroes().is_empty():return
  if campaign.state.has("tour"): WorldTour.end_intermission(campaign)
  if campaign.state.get("tour",{}).get("shop",false) or campaign.state.get("tour",{}).get("complete",false):return
@@ -926,6 +964,7 @@ func toggle_effects() -> void:
  render()
 
 func quit_to_menu() -> void:
+ if is_instance_valid(speedrun_lab) and speedrun_lab.running:speedrun_lab.cancelled=true
  if exhibition:
   exhibition = false; campaign = Campaign.new(); phase = "menu"; paused = false; render(); return
  if not campaign.save(): toast(campaign.last_error); return

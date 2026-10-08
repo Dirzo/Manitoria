@@ -1,6 +1,6 @@
 # Manitoria
 
-The native Godot edition is now **0.72**, with a populated, queryable 8,192-match Playtest Atlas plus a persistent in-game Run Atlas, player and CPU match evidence, draft statistics, a post-draft decision matrix and an opt-in Ascension ladder. It retains 0.70's measured balance pass, hex combat, stars, skills, artwork and item feedback/audio. Its editable project is in [`godot/`](godot/README.md). See [Playtest Atlas instructions](PLAYTEST-ATLAS-0.72.md) and [personal Run Atlas instructions](RUN-ATLAS-0.71.md).
+The native Godot edition is now **0.73 — Speedrun Stat Check**. Draft normally, choose a hex formation, up to twenty ordered item purchases and champion evolution/build priorities, then simulate five or ten full cups with player and CPU match evidence. Champion-copy purchases and star bonuses have been retired. The populated 8,192-match Playtest Atlas, personal Run Atlas and regular campaigns remain available. See [Speedrun controls and benchmark rules](SPEEDRUN-STAT-CHECK-0.73.md), [Playtest Atlas instructions](PLAYTEST-ATLAS-0.72.md) and the editable [godot/](godot/README.md) project.
 
 Explore [`Manitoria Atlas`](analytics/index.html) for all 32 champion pages, the 136-item screen and patch comparisons from 8,192 simulated matches. See the [0.70 balance notes](BALANCE-ATLAS-0.70.md) for changes, validation and sample limitations. Pages hosting setup is documented in [`analytics/README.md`](analytics/README.md).
 

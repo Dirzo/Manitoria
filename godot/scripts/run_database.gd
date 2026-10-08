@@ -1,7 +1,7 @@
 class_name RunDatabase
 extends RefCounted
 const DIR = "user://atlas_runs"
-const PATCH = "0.72"
+const PATCH = "0.73"
 static var cache: Dictionary={}
 static var run_cache: Array=[]
 static var run_cache_ready=false

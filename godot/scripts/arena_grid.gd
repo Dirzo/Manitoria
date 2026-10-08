@@ -9,14 +9,18 @@ const HEX_RADIUS = 1.9
 const ROW_GAP = 3.2908965344 # sqrt(3) * HEX_RADIUS
 const FORMATION_COLUMNS = [-11.4, -8.55, -5.7]
 const FLOOR_RADII = Vector2(17.1, 11.799) * LINEAR_SCALE
+static var cached_cells: Array[Vector2i] = []
+static var cached_neighbors: Dictionary = {}
 
 static func cells() -> Array[Vector2i]:
+ if not cached_cells.is_empty():return cached_cells
  var out: Array[Vector2i] = []
  for q in range(-4, 5):
   for row in range(-3, 4):
    var p = center(q, row)
    if absf(p.x) <= BOUNDS.x and absf(p.y) <= BOUNDS.y: out.append(Vector2i(q, row))
- return out
+ out.make_read_only();cached_cells=out
+ return cached_cells
 
 static func point(cell: Vector2i) -> Vector2:
  return center(cell.x, cell.y)
@@ -37,9 +41,11 @@ static func distance(a: Vector2i, b: Vector2i) -> int:
  return maxi(absi(d.x), maxi(absi(d.y), absi(d.x + d.y)))
 
 static func neighbors(cell: Vector2i) -> Array[Vector2i]:
+ if cached_neighbors.has(cell):return cached_neighbors[cell]
  var out: Array[Vector2i] = []
  for candidate in cells():
   if distance(cell, candidate) == 1: out.append(candidate)
+ out.make_read_only();cached_neighbors[cell]=out
  return out
 
 static func attack_hexes(world_range: float) -> int:

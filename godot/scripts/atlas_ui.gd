@@ -5,7 +5,8 @@ static func launchers(game: Node) -> void:
  var row=HBoxContainer.new();game.ui.add_child(row);row.position=Vector2(1190,102)
  var b=game.button(row,"Atlas",func():open(game));b.custom_minimum_size=Vector2(110,32);b.add_theme_font_size_override("font_size",14)
  if not game.campaign.state.get("roster",[]).is_empty():
-  var p=game.button(row,"Run plan",func():matrix(game));p.custom_minimum_size=Vector2(110,32);p.add_theme_font_size_override("font_size",14)
+  var lab=game.campaign.state.get("speedrun_lab",false)
+  var p=game.button(row,"Speedrun plan" if lab else "Run plan",game.prepare_match if lab else func():matrix(game));p.custom_minimum_size=Vector2(110,32);p.add_theme_font_size_override("font_size",14)
 
 static func selector(parent: Node,values: Array,current: String,callback: Callable) -> OptionButton:
  var pick=OptionButton.new();pick.custom_minimum_size=Vector2(130,40);pick.size_flags_vertical=Control.SIZE_SHRINK_CENTER;parent.add_child(pick)

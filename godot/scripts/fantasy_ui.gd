@@ -13,8 +13,11 @@ static func menu(game: Node) -> void:
   var box=VBoxContainer.new();frame.add_child(box);AbilityArt.icon(box,entry[1],196)
   var button=game.button(box,entry[0],entry[3],true,i==0 and latest==0);button.custom_minimum_size.y=62;button.add_theme_font_size_override("font_size",23)
   frame.mouse_entered.connect(func():frame.modulate=Color(1.13,1.13,1.13));frame.mouse_exited.connect(func():frame.modulate=Color.WHITE)
+ var lab=game.button(game.ui,"Speedrun stat check",game.start_speedrun,true);lab.position=Vector2(1040,767);lab.size=Vector2(380,46);lab.name="SpeedrunMenuButton"
  var saves=game.button(game.ui,"Saved campaigns",func():save_picker(game));saves.position=Vector2(620,767);saves.size=Vector2(360,46)
- var version=game.label(game.ui,"Windows edition 0.72 · Populated Playtest Atlas",14,Color("eee3cf"),false);version.position=Vector2(30,861)
+ if FileAccess.file_exists("user://speedrun_draft.json"):
+  var resume=game.button(game.ui,"Resume speedrun draft",game.resume_speedrun);resume.position=Vector2(1040,823);resume.size=Vector2(380,40)
+ var version=game.label(game.ui,"Windows edition 0.73 · Speedrun Stat Check",14,Color("eee3cf"),false);version.position=Vector2(30,861)
 
 static func save_picker(game: Node) -> void:
  var dialog=GearUI.modal(game,"Your campaigns")
@@ -68,7 +71,7 @@ void fragment(){
  elif game.exhibition:kicker="EXHIBITION";place="The Living Arena";stage="Champion showcase"
  elif touring:
   var t=c.state.tour
-  kicker="%s  ·  CUP %d OF %d"%[str(r.name).to_upper(),WorldTour.shown_level(c),WorldTour.MAX_LEVEL]
+  kicker="%s  ·  CUP %d OF %d"%[str(r.name).to_upper(),WorldTour.shown_level(c),WorldTour.cup_limit(c)]
   place=str(r.place)
   stage=_stage_text(c)
  else:kicker="";place="Manitoria";stage=game.stage_label()

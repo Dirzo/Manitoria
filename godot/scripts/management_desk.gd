@@ -18,6 +18,7 @@ func build() -> void:
  campaign = game.campaign; state = campaign.state; prefs = game.desk_state
  var nav = HBoxContainer.new(); add_child(nav); nav.position = Vector2(26, 122); nav.size = Vector2(1548, 48)
  for item in [["overview", "Overview"], ["matches", "Matches"], ["roster", "Roster"], ["club", "Club"], ["market", "Market"], ["intel", "Intel"]]:
+  if state.get("speedrun_lab",false) and item[0] not in ["market","roster"]:continue
   if item[0]=="market" and not campaign.recruitment_open():continue
   var b = action(nav, ("World Tour" if item[0]=="overview" else "Journal" if item[0]=="matches" else "League" if item[0]=="intel" else item[1]) if state.has("tour") else item[1], func(): navigate(item[0]), game.tab == item[0]); b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
  var scroll = ScrollContainer.new(); add_child(scroll); scroll.position = Vector2(26, 184); scroll.size = Vector2(1548, 618)
@@ -36,6 +37,7 @@ func build() -> void:
  var help = action(row, "?", game.show_guide); help.tooltip_text = "Keeper's guide"; help.custom_minimum_size.x = 48
  var spacer = Control.new(); spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL; row.add_child(spacer)
  var next = "Draft squad  ▶" if state.roster.size() < Campaign.MIN_SQUAD else "Fight  ▶"
+ if state.get("speedrun_lab",false) and campaign.lineup_ready():next="Plan speedrun ▶"
  if state.get("tour",{}).get("shop",false): next = "Shop  ▶"
  if state.get("tour",{}).get("intermission",false): next = "Start next cup  ▶"
  if state.get("tour",{}).get("complete",false): next = "Tour complete"
@@ -188,7 +190,6 @@ func market() -> void:
   heading("ROSTER LOCKED","Stick with your squad through this cup. Recruitment reopens between cups when you continue with this team.")
   action(body,"Review current team",func():navigate("roster"),true)
   return
- champion_copies()
  text(body, "DRAFT BOARD", 32)
  var open_slots = maxi(0, Campaign.MAX_SQUAD - campaign.lineup().size())
  var counts = {"Front": 0, "Flank": 0, "Back": 0}
@@ -224,32 +225,6 @@ func market() -> void:
   var price_text = "%d gold" % prices.min() if prices.min() == prices.max() else "%d–%d gold · priced by rolls & level" % [prices.min(), prices.max()]
   text(body, "%s  ·  %s" % [t.to_upper(), price_text], 22, Color(League.TIER_COLOR[t]))
   DraftBoard.grid(game, body, heroes, opts, 4, 372, 220)
-
-## Always-available copy offers for owned champions, including the Legendary headliner.
-func champion_copies() -> void:
- if state.roster.is_empty():return
- text(body,"CHAMPION COPIES",24,GOLD)
- text(body,"3 copies → two stars · 6 copies → three stars. Buy for the champion you want to grow; your roster stays intact. Copies are sold during the draft and between cups.",16,MUTED)
- text(body,"Two stars: +18% HP, +12% AD/AP · Three stars: +50% HP, +35% AD/AP · Original copy counts toward the total.",14,GOLD)
- var grid=GridContainer.new();grid.columns=3;grid.add_theme_constant_override("h_separation",12);grid.add_theme_constant_override("v_separation",12);body.add_child(grid)
- for h in state.roster:
-  var box=card(grid);box.get_parent().custom_minimum_size.x=430
-  var row=horizontal(box);portrait(row,h.sp,64)
-  var details=column(row)
-  text(details,h.name+" · "+HeroData.species[h.sp].n,18)
-  text(details,ChampionStars.label(h),16,GOLD).tooltip_text=ChampionStars.description(h)
-  var cost=League.cost(h.sp)
-  var offer=campaign.copy_offer(h);var gains=[]
-  for key in HeroData.ROLL_KEYS:
-   if int(offer[key])>int(HeroData.rolls(h)[key]):gains.append("%s +%d"%[StatHex.GUIDE[key].name,int(offer[key])-int(HeroData.rolls(h)[key])])
-  text(box," · ".join(gains) if not gains.is_empty() else "Stronger rolls protected · advances stars",13,TEAL)
-  var button=action(box,"Three stars · complete" if ChampionStars.tier(h)==3 else "Buy copy · %d gold"%cost,func():
-   var previous=ChampionStars.tier(h)
-   if campaign.buy_champion_copy(h.id):
-    game.selected_id=h.id;game.sound.cue("upgrade",true);game.render()
-    game.toast(h.name+" · "+ChampionStars.label(h)+(" · STAR UPGRADE!" if ChampionStars.tier(h)>previous else ""))
-   else:game.toast(campaign.last_error),true,ChampionStars.tier(h)==3 or int(state.gold)<cost or (not state.get("tour",{}).get("intermission",false) and not campaign.lineup_ready()))
-  button.tooltip_text=ChampionStars.description(h)+("\nField at least four champions to unlock copy purchases." if not state.get("tour",{}).get("intermission",false) and not campaign.lineup_ready() else "")
 
 ## Warn when a pick would leave too little gold to field a full five.
 func draft_with_check(h: Dictionary) -> void:

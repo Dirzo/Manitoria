@@ -1,3 +1,7 @@
+# Manitoria 0.73 — Speedrun Stat Check
+
+Normal draft, hex formation, twenty item priorities, build/evolution choices and full five- or ten-cup simulations. Champion copies and star bonuses are retired. See [controls, benchmark rules and validation](../SPEEDRUN-STAT-CHECK-0.73.md).
+
 # Manitoria 0.60 — Hex Arena
 
 30% more playable arena area, hex paving and deployment, longer-range artillery, and a rotating champion shop with items beneath the featured champion. See [HEX-ARENA.md](HEX-ARENA.md) for controls, combat changes and validation.

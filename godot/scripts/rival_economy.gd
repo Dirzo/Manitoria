@@ -1,6 +1,6 @@
 class_name RivalEconomy
 extends RefCounted
-## Saved wallets. Buying development consumes the same component and copy prices as the player.
+## Saved wallets. Buying development consumes the same component prices as the player.
 static func item_cost(id: String) -> int:
  if Forge.is_item(id):
   var total=0
@@ -13,7 +13,7 @@ static func ensure(club: Dictionary) -> void:
  for h in club.roster:draft+=League.cost(h.sp)
  club.development_gold=maxi(0,League.START_GOLD-draft)
  club.development_earned=0;club.development_spent=0;club.development_purchases=0
- # Existing saves keep previously granted equipment and stars; no retroactive debt.
+ # Existing saves keep previously granted equipment; no retroactive debt.
 static func earn(c: Campaign,club: Dictionary,won: bool) -> void:
  ensure(club)
  var amount=TourBalance.match_gold(int(c.state.tour.level),str(c.state.difficulty),won)
@@ -42,14 +42,6 @@ static func develop(c: Campaign,club: Dictionary) -> void:
     if not Forge.is_item(id) or old not in Forge.ITEMS[id].recipe:credit/=2
    var cost=maxi(0,item_cost(id)-credit)
    if pay(club,cost):h.equipment[key]=id
- # Partial copies are legal and improve rolls; star thresholds still require three / six.
- var candidates=heroes.duplicate();candidates.sort_custom(func(a,b):return League.cost(a.sp)<League.cost(b.sp))
- for h in candidates:
-  var target=TourBalance.rival_copies(int(c.state.tour.level),str(c.state.difficulty),str(h.id))
-  while ChampionStars.copies(h)<target:
-   if not pay(club,League.cost(h.sp)):break
-   ChampionStars.merge(h,ChampionStars.offer(h,str(c.state.seed)+"|rival"));h.copies=ChampionStars.copies(h)+1
-
 static func prize(c: Campaign,club: Dictionary,place: int) -> void:
  ensure(club)
  var cup=int(c.state.tour.level)

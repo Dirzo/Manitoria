@@ -24,16 +24,14 @@ func run() -> void:
  check(chosen.target.target_hero==game.selected_id,"Visible selection matches the item recipient")
  game.campaign.state.gold=10000
  var hero=GearUI.selected(game);hero.level=10;hero.evolution=Evolutions.options(hero.sp)[0]
- while ChampionStars.copies(hero)<6:
-  check(game.campaign.buy_champion_copy(hero.id),"Buy every copy up to three stars")
-  game.render();await process_frame
- check(game.ui.find_child("ChampionCarousel",true,false).get_instance_id()==instance,"Purchases preserve the stage")
+ hero.equipment={"0":"stormorb","1":"archmage"};game.render();await process_frame
+ check(game.ui.find_child("ChampionCarousel",true,false).get_instance_id()==instance,"Item changes preserve the stage")
  var labels=game.ui.find_children("*","Label",true,false)
- check(labels.any(func(l):return l.text.contains("3-star")),"Explicit three-star denotation is visible")
- check(labels.any(func(l):return l.text==ChampionStars.evolution_label(hero)),"Named evolution is visible independently from stars")
+ check(game.ui.find_child("ShopChampionCopy",true,false)==null,"Champion-copy market removed")
+ check(labels.any(func(l):return l.text==ChampionStars.evolution_label(hero)),"Named evolution remains visible")
  check(HeroData.item_slots(hero)==4,"Evolution unlocks the correct equipment slot")
  await create_timer(1).timeout;await RenderingServer.frame_post_draw
- get_root().get_texture().get_image().save_png("user://shop-stress-three-star-evolved.png")
+ get_root().get_texture().get_image().save_png("user://shop-stress-evolved-073.png")
  game.sound.stop_all();game.queue_free();await process_frame
  print("Shop rotation/purchase stress: ",checks," checks, ",failures," failures")
  quit(1 if failures else 0)

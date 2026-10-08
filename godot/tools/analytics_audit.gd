@@ -31,19 +31,10 @@ func develop(club: Dictionary,cup: int,difficulty: String,strategy: String,rng: 
   while h.level<goal:
    h.level+=1;HeroData.apply_choice(h,choose(HeroData.choices(h,true,rng),h,strategy,rng))
   h.equipment={};h.tactics=BattleTactics.for_hero(h)
- var carry=club.roster[0]
- if strategy=="Tank carry":
-  carry=club.roster.filter(func(h):return HeroData.species[h.sp].role in ["Tank","Bruiser","Warden"])[0] if club.roster.any(func(h):return HeroData.species[h.sp].role in ["Tank","Bruiser","Warden"]) else carry
-  while ChampionStars.copies(carry)<6 and funds>=League.cost(carry.sp):
-   funds-=League.cost(carry.sp);spent+=League.cost(carry.sp);ChampionStars.merge(carry,ChampionStars.offer(carry,"audit"));carry.copies=ChampionStars.copies(carry)+1
  for slot in range(3):
   for h in club.roster:
    var rec=Forge.recommended(h.sp,h);var id=rec[slot];var cost=RivalEconomy.item_cost(id)
    if funds>=cost:h.equipment[str(slot)]=id;funds-=cost;spent+=cost
- if strategy!="Tank carry":
-  for h in club.roster:
-   while ChampionStars.copies(h)<3 and funds>=League.cost(h.sp):
-    funds-=League.cost(h.sp);spent+=League.cost(h.sp);ChampionStars.merge(h,ChampionStars.offer(h,"audit"));h.copies=ChampionStars.copies(h)+1
  assert(funds>=0 and spent+funds==earned)
  return {"roster":club.roster,"strategy":strategy,"spent":spent,"remaining":funds,"elite":club.elite}
 func draft(rng: RandomNumberGenerator,id: String,anchor: String="") -> Dictionary:

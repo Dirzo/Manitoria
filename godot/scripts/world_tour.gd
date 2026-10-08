@@ -6,8 +6,11 @@ const MAX_LEVEL = 5
 ## gear and rarity are staggered so several upgrades do not all land on one cup boundary.
 const PLAYER_XP := 2.0   # Match XP and training camps fit the five-cup progression.
 
+static func cup_limit(c: Campaign) -> int:
+ return int(c.state.get("speedrun_cups",5)) if c.state.get("speedrun_lab",false) else MAX_LEVEL
+
 static func stage(c: Campaign) -> int:
- return 1 + roundi(float(int(c.state.tour.level) - 1) * 19.0 / float(MAX_LEVEL - 1))
+ return mini(20,1 + roundi(float(int(c.state.tour.level) - 1) * 19.0 / float(MAX_LEVEL - 1)))
 const REGIONS = [
  {"name":"Verdant Crown", "place":"Briarwild Conservatory", "theme":"Forest", "color":"82d99c", "floor":"345044", "sky":"a7d5b3", "roster":["golem","treant","direwolf","harpy","unicorn"]},
  {"name":"Ember Crucible", "place":"Cinderfall Caldera", "theme":"Volcanic", "color":"ffad76", "floor":"44322f", "sky":"f1ad88", "roster":["minotaur","cerberus","chimera","phoenix","salamander"]},
@@ -72,7 +75,7 @@ static func stock(c: Campaign) -> Array:
 static func resolve(c: Campaign, sim: BattleSim) -> bool:
  if c.state.tour.complete or c.state.tour.shop or not sim.finished or sim.battle_seed!=c.match_seed(): return false
  var before=c.state.duplicate(true);var t=c.state.tour;var r=region(c)
- RunDatabase.capture(c,sim,"player","player_%d"%int(t.serial))
+ if not c.state.get("speedrun_lab",false):RunDatabase.capture(c,sim,"player","player_%d"%int(t.serial))
  var rng=RandomNumberGenerator.new();rng.seed=c.match_seed()+801
  var reward=TourBalance.match_gold(int(t.level),str(c.state.get("difficulty","Standard")),sim.winner==0)
  var rival=opponent(c);var m=current_match(c)
@@ -99,24 +102,24 @@ static func resolve(c: Campaign, sim: BattleSim) -> bool:
   for h in c.state.roster:
    if t.get("cup_played",{}).has(h.id):
     h.tour_points=int(h.get("tour_points",0))+cup_pts
-    if place<=survival_place(c) and int(t.level)<MAX_LEVEL:
+    if (place<=survival_place(c) or c.state.get("speedrun_lab",false)) and int(t.level)<cup_limit(c):
      var match_xp=int(h.get("last_xp",0))
      c.gain_xp(h,TourBalance.TRAINING_XP,true,true,rng);h.last_xp+=match_xp
-  if place<=survival_place(c) and int(t.level)<MAX_LEVEL:c.add_news("Cup training", "Your cup participants earned 160 XP at training camp before the next cup.")
+  if (place<=survival_place(c) or c.state.get("speedrun_lab",false)) and int(t.level)<cup_limit(c):c.add_news("Cup training", "Your cup participants earned 160 XP at training camp before the next cup.")
   t.erase("cup_played")
   League.weekly_update(c)
   # Podium finishes earn a medal chest; everyone moves on to the next cup regardless.
   var medal={1:"Gold",2:"Silver",3:"Bronze"}.get(place,"")
   if promoted:c.state.trophies+=1
-  if medal!="":
+  if medal!="" and not c.state.get("speedrun_lab",false):
    TrophyVault.award(c,medal)
    report.chest=true;report.medal=medal
   # Knocked out below the difficulty's survival line: the run ends here.
   var cutoff=survival_place(c)
-  if place>cutoff:
+  if place>cutoff and not c.state.get("speedrun_lab",false):
    c.state.run_over=true;report.run_over=true;report.cutoff=cutoff
    c.add_news("The run is over","%s finished %s at %s. %s runs must finish %s or better."%[c.state.name,TournamentRewardsUI._place_text(place),r.place,c.state.difficulty,TournamentRewardsUI._place_text(cutoff)])
-  elif t.level>=MAX_LEVEL:t.complete=true
+  elif t.level>=cup_limit(c):t.complete=true
   else:t.level+=1
   t.attempt=1
   t.bout=0;t.wins=0
@@ -246,7 +249,10 @@ static func step(c: Campaign) -> void:
   var sim=BattleSim.new();sim.silent=true
   sim.setup(team_roster(c,m.team_a),team_roster(c,m.team_b),int(c.state.seed)+int(c.state.tour.level)*900+i*31+int(c.state.tour.attempt)*7)
   sim.run_to_end()
-  RunDatabase.capture(c,sim,"cpu","cpu_%d_%d_%d"%[int(c.state.tour.level),int(c.state.tour.attempt),i])
+  if c.state.get("speedrun_lab",false):
+   if not c.state.has("speedrun_cpu"):c.state.speedrun_cpu=[]
+   c.state.speedrun_cpu.append({"cup":int(c.state.tour.level),"stage":m.label,"team_a":team_name(c,m.team_a),"team_b":team_name(c,m.team_b),"winner":sim.winner,"duration":sim.time,"rows":sim.report_rows(),"seed":sim.battle_seed})
+  if not c.state.get("speedrun_lab",false):RunDatabase.capture(c,sim,"cpu","cpu_%d_%d_%d"%[int(c.state.tour.level),int(c.state.tour.attempt),i])
   var won_a=sim.winner!=1
   m.winner=m.team_a if won_a else m.team_b;m.loser=m.team_b if won_a else m.team_a
   for side in [0,1]:

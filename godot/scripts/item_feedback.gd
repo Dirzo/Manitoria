@@ -50,7 +50,7 @@ static func profile(id: String) -> Dictionary:
  return {"id":id,"name":item.get("name",id),"family":family,"color":color,"motif":motif,"variant":abs(hash(id))%6}
 
 static func signal_effect(sim: BattleSim,u: Dictionary,id: String,target: Dictionary,stage: String="proc",amount: float=0) -> void:
- if not enabled or u.summon or ItemEffects.definition(id).is_empty():return
+ if sim.silent or not enabled or u.summon or ItemEffects.definition(id).is_empty():return
  if not u.has("item_feedback"):u.item_feedback={}
  var key=id+":"+stage
  if sim.time<float(u.item_feedback.get(key,-1)):return
@@ -65,7 +65,7 @@ static func stats(id: String) -> Dictionary:
  return Forge.stats_of(id) if Forge.valid(id) else ItemEffects.definition(id)
 
 static func augment(sim: BattleSim,u: Dictionary,event: String,target: Dictionary={}) -> void:
- if u.summon:return
+ if sim.silent or not enabled or u.summon:return
  for id in u.hero.get("equipment",{}).values():
   var s=stats(id);var applies=false
   match event:
@@ -79,6 +79,7 @@ static func augment(sim: BattleSim,u: Dictionary,event: String,target: Dictionar
   if applies:signal_effect(sim,u,id,target,"augment")
 
 static func credited(sim: BattleSim,u: Dictionary,target: Dictionary,credit: String,amount: float) -> void:
+ if sim.silent or not enabled:return
  if amount<=0 or not credit.begins_with("item:"):return
  var id=credit.trim_prefix("item:")
  if id=="lifesteal":
