@@ -14,7 +14,7 @@ static func menu(game: Node) -> void:
   var button=game.button(box,entry[0],entry[3],true,i==0 and latest==0);button.custom_minimum_size.y=62;button.add_theme_font_size_override("font_size",23)
   frame.mouse_entered.connect(func():frame.modulate=Color(1.13,1.13,1.13));frame.mouse_exited.connect(func():frame.modulate=Color.WHITE)
  var saves=game.button(game.ui,"Saved campaigns",func():save_picker(game));saves.position=Vector2(620,767);saves.size=Vector2(360,46)
- var version=game.label(game.ui,"Windows edition 0.71 · Run Atlas & Decision Matrix",14,Color("eee3cf"),false);version.position=Vector2(30,861)
+ var version=game.label(game.ui,"Windows edition 0.72 · Populated Playtest Atlas",14,Color("eee3cf"),false);version.position=Vector2(30,861)
 
 static func save_picker(game: Node) -> void:
  var dialog=GearUI.modal(game,"Your campaigns")

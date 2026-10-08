@@ -14,6 +14,8 @@ static func selector(parent: Node,values: Array,current: String,callback: Callab
  return pick
 
 static func open(game: Node,filters: Dictionary={},sp: String="") -> void:
+ if filters.is_empty() or filters.get("side","")=="research":
+  PlaytestAtlas.open(game,{},"champions" if sp.is_empty() else "champion",sp);return
  var dlg=GearUI.modal(game,"RUN ATLAS · Your collected evidence",Vector2(1380,740))
  var row=HBoxContainer.new();dlg.box.add_child(row)
  var source=str(filters.get("side","player"))
@@ -27,7 +29,7 @@ static func open(game: Node,filters: Dictionary={},sp: String="") -> void:
  game.button(extra,"Items",func():items(game,filters))
  game.button(extra,"Run history",func():history(game))
  game.label(extra,"Rules version",13,game.WHITE,false)
- selector(extra,["all","0.71"],str(filters.get("patch","all")),func(v):dlg.root.queue_free();var f=filters.duplicate();f.patch=v;open(game,f))
+ selector(extra,["all","0.71","0.72"],str(filters.get("patch","all")),func(v):dlg.root.queue_free();var f=filters.duplicate();f.patch=v;open(game,f))
  var ranks=["All challenges","Normal rules"]
  for rank in range(1,11):ranks.append("Ascension %d"%rank)
  selector(extra,ranks,"All challenges" if int(filters.get("challenge",-1))<0 else "Normal rules" if int(filters.challenge)==0 else "Ascension %d"%int(filters.challenge),func(v):dlg.root.queue_free();var f=filters.duplicate();f.challenge=-1 if v=="All challenges" else 0 if v=="Normal rules" else int(v.split(" ")[-1]);open(game,f))
@@ -96,6 +98,7 @@ static func matrix(game: Node) -> void:
    else:game.toast(c.last_error),true))
 
 static func items(game: Node,filters: Dictionary) -> void:
+ if filters.get("side","")=="research":PlaytestAtlas.open(game,{},"items");return
  var source=str(filters.get("side","player"))
  var data=RunDatabase.read_json("res://data/atlas_research.json") if source=="research" else RunDatabase.aggregate(filters.merged({"side":source},true))
  var totals={}

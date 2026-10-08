@@ -1,0 +1,81 @@
+{
+  "total_matches": 8192,
+  "datasets": {
+    "pre": 5888,
+    "post": 1920,
+    "expanded": 384
+  },
+  "raw_batches": [
+    {
+      "file": "analytics-champions-a.jsonl",
+      "matches": 768,
+      "sha256": "75e8a49039b6acc292f724ac54e981df4d5617f8a09571c987cb9bc4faa0798c"
+    },
+    {
+      "file": "analytics-champions-b.jsonl",
+      "matches": 768,
+      "sha256": "684af8027b34c7c3913606a6866e0774bb09398ac76fdd3a9df22ffd970c1de5"
+    },
+    {
+      "file": "analytics-items-a.jsonl",
+      "matches": 1088,
+      "sha256": "3cd72ce9da35bcd11594a636b6d8853c4c60690c6fde51dde4e6ed2977d96f92"
+    },
+    {
+      "file": "analytics-items-b.jsonl",
+      "matches": 1088,
+      "sha256": "442a4e814c751d2581a10cb58bd8a54a9a0d01d3d28227055f23333f6159d338"
+    },
+    {
+      "file": "analytics-items-c.jsonl",
+      "matches": 1088,
+      "sha256": "c6454461c027fc0bce37b53cdb0e04cf141b1a7d09063315d28d5681288e6c45"
+    },
+    {
+      "file": "analytics-items-d.jsonl",
+      "matches": 1088,
+      "sha256": "df81441df5fd0b1f81277d723882dca1f5fa5023bb4cc8514b0cdb31d9d64eaa"
+    },
+    {
+      "file": "analytics-post-champions-a.jsonl",
+      "matches": 384,
+      "sha256": "91d297bd79be33292d17761b093e3e04861ba60b804434378f89c8c4c30321c1"
+    },
+    {
+      "file": "analytics-post-champions-b.jsonl",
+      "matches": 384,
+      "sha256": "490cef82b280ef5aaaf11ecb519e716b1ff0000e828a3989e20e78815bcbcb7c"
+    },
+    {
+      "file": "analytics-post-champions-c.jsonl",
+      "matches": 384,
+      "sha256": "ed4e1cc857b23f5f5b93a68421626962b64c18e6a8858a3e43fe5ea0e5a8e70a"
+    },
+    {
+      "file": "analytics-post-champions-d.jsonl",
+      "matches": 384,
+      "sha256": "3feba9ca068a44eeb280f810d53b46a8e4478ecb381c631bd2a37c8c7a67fb6e"
+    },
+    {
+      "file": "analytics-pre-item-followup.jsonl",
+      "matches": 384,
+      "sha256": "0978bf8637276a545d44893aeee238e7fdeab066cde808bccd256087f4b578b7"
+    },
+    {
+      "file": "analytics-post-item-followup.jsonl",
+      "matches": 384,
+      "sha256": "09e8d43289cabae255215f707cff21882826d9d411eb16d3d09b8b552c83bcd0"
+    }
+  ],
+  "files": {
+    "balance.json": "ea3ae1f16845479668584928da5ffef44a0c4cf19bbcff9c417efb72bc03bcb2",
+    "expanded.json": "726cfca4c936eb0427348df5e648a4083e359e2400a787c18c4cfa0823e6602b",
+    "post.json": "93ebd1fd7338d2d235f5f12e3142c0542470356e06cc27825290084068600c62",
+    "pre.json": "40a21aed74451d62d3e9a0b076db9cb8cdacaf5f2d20255fcb24537b6ec47039"
+  },
+  "raw_archive": {
+    "file": "raw-audit.zip",
+    "bytes": 10319045,
+    "sha256": "d8650895766a60a3d19fea2f20c03e9ab21ace29e863b826ac559535234d4148"
+  }
+}
