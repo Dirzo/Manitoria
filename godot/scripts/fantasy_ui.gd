@@ -30,11 +30,10 @@ static func save_picker(game: Node) -> void:
 
 static func header(game: Node) -> void:
  if game.phase in ["menu","new"]:
-  var row=HBoxContainer.new();game.ui.add_child(row);row.position=Vector2(1452,28)
-  row.position=Vector2(1390,28)
-  game.button(row,"♪",game.toggle_music).tooltip_text="Music on/off"
-  game.button(row,"⚙",func():FlowUI.settings(game)).tooltip_text="Settings: music, effects and announcer volume"
-  game.button(row,"Exit",game.close_game)
+  var row=HBoxContainer.new();game.ui.add_child(row);row.position=Vector2(1600-3*48-2*8-22,24);row.add_theme_constant_override("separation",8)
+  HudKit.medallion(row,game,"music","","Music on/off",game.toggle_music,false,48).muted=not game.sound.music_enabled
+  HudKit.medallion(row,game,"gear","","Settings: music, effects and announcer volume",func():FlowUI.settings(game),false,48)
+  HudKit.medallion(row,game,"close","","Exit the game",game.close_game,false,48)
   return
  location_banner(game)
 
@@ -95,13 +94,12 @@ void fragment(){
  if touring and game.phase!="starter" and not Dungeon.active(c):
   var road=TourPath.new();road.level=WorldTour.shown_level(c);game.ui.add_child(road);road.position=Vector2(1112,40);road.size=Vector2(312,62)
   var cap=game.label(game.ui,"WORLD TOUR",11,Color(1,1,1,.6),false);cap.position=Vector2(1112,12);cap.size=Vector2(290,18);cap.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
- var tools=VBoxContainer.new();game.ui.add_child(tools);tools.position=Vector2(1446,14);tools.add_theme_constant_override("separation",6)
- var row=HBoxContainer.new();row.add_theme_constant_override("separation",6);tools.add_child(row)
- var mb=game.button(row,"♪",game.toggle_music);mb.tooltip_text="Music: "+("on" if game.sound.music_enabled else "off");mb.custom_minimum_size=Vector2(56,40)
- var fb=game.button(row,"FX",game.toggle_effects);fb.tooltip_text="Sound effects: "+("on" if game.sound.effects_enabled else "off");fb.custom_minimum_size=Vector2(56,40)
- var row2=HBoxContainer.new();row2.add_theme_constant_override("separation",6);tools.add_child(row2)
- var sb=game.button(row2,"⚙",func():FlowUI.settings(game));sb.tooltip_text="Settings: music, effects and announcer volume";sb.custom_minimum_size=Vector2(44,40)
- var menu_button=game.button(row2,"Menu",game.quit_to_menu if game.phase!="new" else func():game.phase="menu";game.render());menu_button.custom_minimum_size=Vector2(68,40)
+ # Controls: four small medallions, no boxes.
+ var row=HBoxContainer.new();game.ui.add_child(row);row.position=Vector2(1600-4*46-3*6-18,18);row.add_theme_constant_override("separation",6)
+ HudKit.medallion(row,game,"music","","Music: "+("on" if game.sound.music_enabled else "off"),game.toggle_music,false,46).muted=not game.sound.music_enabled
+ HudKit.medallion(row,game,"sound","","Sound effects: "+("on" if game.sound.effects_enabled else "off"),game.toggle_effects,false,46).muted=not game.sound.effects_enabled
+ HudKit.medallion(row,game,"gear","","Settings: music, effects and announcer volume",func():FlowUI.settings(game),false,46)
+ HudKit.medallion(row,game,"menu","","Main menu",game.quit_to_menu if game.phase!="new" else func():game.phase="menu";game.render(),false,46)
 
 static func _stage_text(c: Campaign) -> String:
  var t=c.state.tour

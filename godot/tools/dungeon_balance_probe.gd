@@ -18,6 +18,14 @@ func equip_all(c: Campaign) -> void:
    if c.free_slot(h) != "" and c.equip(h.id, item): break
 
 func settle(c: Campaign, rng: RandomNumberGenerator) -> void:
+ # Drafts: take the offer sharing the most traits with the guild (ties: first offered).
+ var draft = c.state.dungeon.get("draft", {})
+ if not draft.is_empty():
+  var best = 0; var best_n = -1
+  for i in range(draft.offers.size()):
+   var n = Dungeon.shared_traits(c, draft.offers[i].sp).size()
+   if n > best_n: best = i; best_n = n
+  if not Dungeon.take_champion(c, best): Dungeon.skip_draft(c)
  if not c.state.dungeon.get("instance_choices", []).is_empty():
   var choices = c.state.dungeon.instance_choices
   Dungeon.choose_instance(c, choices[rng.randi_range(0, choices.size() - 1)])
@@ -40,6 +48,8 @@ func settle(c: Campaign, rng: RandomNumberGenerator) -> void:
   for i in range(c.state.tour.stock.size()):
    var id = str(c.state.tour.stock[i])
    if id != "" and int(c.state.gold) >= int(Forge.info(id).price) + 40: c.buy_item(i)
+  if Dungeon.shop_draft_open(c) and int(c.state.gold) >= Dungeon.shop_draft_cost(c) + 40:
+   Dungeon.buy_shop_draft(c); settle(c, rng)
   WorldTour.leave_shop(c)
  if c.state.tour.get("intermission", false):
   # New recruits: replace the weakest Common if gold allows.
@@ -54,12 +64,7 @@ func play(seed: int, difficulty: String, endless: bool) -> Dictionary:
  Dungeon.start(c); c.state.speedrun_memory = true    # never touch disk
  var rng = RandomNumberGenerator.new(); rng.seed = seed
  var legends = League.tiers().Legendary
- c.choose_starter(legends[seed % legends.size()])
- var epics = c.state.market.filter(func(h): return League.tier(h.sp) == "Epic")
- c.recruit(epics[rng.randi_range(0, epics.size() - 1)].id)
- for i in range(3):
-  var commons = c.state.market.filter(func(h): return League.tier(h.sp) == "Common")
-  c.recruit(commons[rng.randi_range(0, commons.size() - 1)].id)
+ c.choose_starter(legends[seed % legends.size()])   # opens the partner draft
  var steps = 0
  while steps < 120:
   settle(c, rng)

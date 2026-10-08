@@ -1,6 +1,8 @@
 # Manitoria
 
-**New: Dungeon mode.** A branching descent in the spirit of *The Last Flame* and *Guildrun*. Choose your path through ten themed instances, from the Blight Forest and Mana Caverns to the Magma Depths and the Void Rift. Each has its own monsters, Warden boss and cave arena. Collect relics, build run-trait synergies, and chase a high score in the endless depths. Choose **Dungeon** on the main menu, next to **New club**. See [Dungeon mode](DUNGEON-MODE.md).
+**New: Dungeon mode.** A branching descent in the spirit of *The Last Flame* and *Guildrun*. Choose your path through ten themed instances, from the Blight Forest and Mana Caverns to the Magma Depths and the Void Rift. Each has its own monsters, Warden boss and cave arena. Start with your headliner and a partner, then draft more champions from picks of five at checkpoints, on the stairs and at outfitters, up to six. Collect relics, build run-trait synergies, and chase a high score in the endless depths. Choose **Dungeon** on the main menu, next to **New club**. See [Dungeon mode](DUNGEON-MODE.md).
+
+**New: game-style UI.** Battles now use round medallion controls and a carved scoreboard. The team damage panels fade in from the screen edges and hide with one click. Every screen shares one material: dark lacquer, bronze rims and gold on hover.
 
 The native Godot edition is now **0.73 — Speedrun Stat Check**. Draft normally, choose a hex formation, up to twenty ordered item purchases and champion evolution/build priorities, then simulate five or ten full cups with player and CPU match evidence. Champion-copy purchases and star bonuses have been retired. The populated 8,192-match Playtest Atlas, personal Run Atlas and regular campaigns remain available. See [Speedrun controls and benchmark rules](SPEEDRUN-STAT-CHECK-0.73.md), [Playtest Atlas instructions](PLAYTEST-ATLAS-0.72.md) and the editable [godot/](godot/README.md) project.
 

@@ -191,7 +191,7 @@ static func modal(game: Node,title: String,size: Vector2=Vector2(920,520)) -> Di
  var frame=FantasyFrame.new();shade.add_child(frame);frame.size=size;frame.position=(Vector2(1600,900)-size)*0.5
  var box=VBoxContainer.new();frame.add_child(box);var row=HBoxContainer.new();box.add_child(row)
  var label=game.label(row,title,28);label.size_flags_horizontal=Control.SIZE_EXPAND_FILL
- game.button(row,"×",func():shade.queue_free()).tooltip_text="Close"
+ HudKit.medallion(row,game,"close","","Close",func():shade.queue_free(),false,42)
  return {"root":shade,"box":box}
 
 static func picker(game: Node,hero: Dictionary,key: String) -> void:

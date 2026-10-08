@@ -2,7 +2,7 @@
 
 A run type next to the guild run (World Tour). It's inspired by the map-crawl of *The Last Flame* and *Slay the Spire*, and by the relic and synergy builds of *Guildrun* and auto-chess games.
 
-The opening is the same as the guild run: found a guild, sign a Legendary headliner, then draft a squad. After that you descend through three depths one room at a time. Wins earn components, items and relics; your squad builds run-trait synergies; and the run ends with a score on your local high-score table.
+You found a guild and sign a Legendary headliner, as in the guild run. Then you pick a **partner** from five champions and descend with just the two of them. More champions join along the way (up to six). You descend through three depths one room at a time. Wins earn components, items and relics; your squad builds run-trait synergies; and the run ends with a score on your local high-score table.
 
 ## How to start
 
@@ -64,6 +64,30 @@ The Dungeon tab is one game-style screen in the dungeon's own look: bronze-trimm
   - *Choose your path:* instance cards with art, Warden portrait and monster portraits;
   - *Bank or go endless*, and *run complete / out of lives*;
   - framed dialogs for rewards (cards that rise in one by one), events, traits, high scores and the guide.
+
+## Building the guild: champion drafts
+
+There's no market and no recruit board in a dungeon run. The guild grows through drafts instead, like *The Last Flame*:
+
+- **Headliner:** the same Legendary signing as the guild run.
+- **Partner:** right after signing, choose one of five champions. You can't pass on this one.
+- **Checkpoints:** row 4 of every depth is a waystone. It offers a free pick of five.
+- **Stairs:** after each Warden, a free pick of five waits at the top of the next staircase.
+- **Outfitters:** once per shop you can hire from five for gold (110 + 30 per depth, up to depth 6).
+- **Six at most.** Once the guild has six champions, drafts stop.
+
+Every draft works the same way:
+
+- Five Epic and Common species you don't already own.
+- Their stats are rolled fresh at your squad's average level.
+- Offers are *weighted* toward species that share an awakened trait with your guild. A shared trait is likely but never guaranteed. Cards that share one carry a gold **✦ Synergy** tag naming the trait.
+- You can pass on a free pick for +25 gold, or pass on a shop hire for nothing.
+
+Fights scale with the guild:
+
+- Monster packs and lost guilds field as many as you do, capped at five, so a sixth champion is a real advantage.
+- A Warden brings no escorts against two or three champions, one against four, and two against five or more. Its health and damage scale with your party size up to five.
+- While the guild has fewer than five champions, opponents are slightly weaker (−4% per missing champion).
 
 ## Lives
 
@@ -147,27 +171,46 @@ Monster stats ignore the run's random draft tiers, so a Warden is equally strong
 After the third Warden you choose between two options:
 
 - **Bank score:** the run ends as *Conquered*.
-- **Into the endless depths:** the run continues through new depths. Enemy strength compounds by +20% per endless depth, and Wardens return with +35% health and damage per depth number. Each depth still opens with a recruit board, one restored life and training. Use **Retire** in the Dungeon tab at any time to bank the score; otherwise the run ends when your lives run out.
+- **Into the endless depths:** the run continues through new depths. Enemy strength compounds by +20% per endless depth, and Wardens return with +35% health and damage per depth number. Each depth still opens with a champion draft (until you have six), one restored life and training. Use **Retire** in the Dungeon tab at any time to bank the score; otherwise the run ends when your lives run out.
 
 ## Balance
 
 Two probes, both headless:
 
-- **`tools/dungeon_balance_probe.gd`** plays full runs with real fights. Its auto-player drafts normally, picks instances and rooms at random, equips everything it gets and buys gear. It has no formation or tactics planning, so real players should do better.
+- **`tools/dungeon_balance_probe.gd`** plays full runs with real fights. Its auto-player takes the draft offer that shares the most traits, picks instances and rooms at random, equips everything it gets, buys gear, and hires at outfitters when it can spare the gold. It has no formation or tactics planning, so real players should do better.
 - **`tools/warden_probe.gd`** fights every Warden against the same reference squads at each depth and finds the stat weight that hits a target win rate. Each Warden has one weight per depth. Summoners need more at depth 2–3, where their adds fall behind your squad. The weights are scaled against the Wardens tuned in real runs (the Rootmother at depth 1, Magmaw at depth 2, the Keeper at depth 3).
 
-Standard, 24 full runs, with random instances:
+Standard, 24 full runs, with random instances and the champion-draft flow (headliner and partner first, then drafts up to six):
 
 | Room | Depth 1 | Depth 2 | Depth 3 |
 | --- | --- | --- | --- |
-| Skirmish | 76% | 89% | 78% |
-| Elite | 93% | 83% | 89% |
-| Warden (per attempt) | 74% | 47% | 74% |
+| Skirmish | 88% | 85% | 92% |
+| Elite | 77% | 55% | 100% |
+| Warden (per attempt) | 96% | 55% | 84% |
 
-- **Full clears:** 14 of 24 runs cleared all three depths.
+- **Full clears:** 16 of 24 runs cleared all three depths, the same rate as before drafts replaced the market.
 - **Endless:** earlier probes had runs end between endless depths 2 and 3 (enemy strength compounds +20% per endless depth).
 
 Each Warden appears only a handful of times in 24 runs, so per-Warden numbers are noisy. Magmaw has consistently been the hardest and the Frost Matriarch the easiest, and both have since been nudged toward the middle. Treat all of this as a starting point for playtesting.
+
+## Combat HUD (all modes)
+
+The battle screen has no boxes around its controls:
+
+- **Scoreboard:** a carved, tapered banner hangs under the title with the live count and clock.
+- **Controls:** round bronze medallions sit on the battlefield, bottom right:
+  - pause/resume;
+  - speed, which cycles 1× → 2× → 4× → tactical ¾×;
+  - reset camera;
+  - follow the action;
+  - team damage panels on/off;
+  - tactical view.
+- **Team panels:** no frames. Each panel fades in from its screen edge, with slim bars. The damage medallion hides them both.
+- **Combat log:** the last three lines float over the arena, newest brightest.
+
+Music, sound, settings and menu are matching medallions in the top-right corner of every screen, and every dialog closes with a round **×** medallion.
+
+The whole game now uses the same material: dark lacquer plates, bronze rims and gold on hover. This covers buttons, panels, text fields, dropdowns, tooltips, scrollbars, sliders and progress bars. The main call-to-action is a gilded ember plaque. `Main.style()` moves the old slate and teal surfaces onto the warm palette, so older screens match without being rewritten. The pieces are in `godot/scripts/hud_kit.gd`.
 
 ## Files
 
@@ -191,7 +234,7 @@ PROBE_RUNS=16 godot --headless --path godot -s tools/dungeon_balance_probe.gd
 QA captures:
 
 - `--qa=dungeon_menu`, `dungeon_trail`, `dungeon_fight`, `dungeon_loot`, `dungeon_event`, `dungeon_intro`, `dungeon_result`
-- `dungeon_market`, `dungeon_endless`, `dungeon_scores`, `dungeon_boss`, `dungeon_paths`, `dungeon_stage`
+- `dungeon_draft` (a checkpoint pick of five), `dungeon_market`, `dungeon_endless`, `dungeon_scores`, `dungeon_boss`, `dungeon_paths`, `dungeon_stage`
 - Add `QA_INSTANCE=<id>` to pick the instance, for example `QA_INSTANCE=storm_spire … --qa=dungeon_stage`.
 
 Saves from the first dungeon build (which used "flames") load as lives automatically.

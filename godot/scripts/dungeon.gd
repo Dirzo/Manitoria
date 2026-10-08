@@ -13,6 +13,9 @@ extends RefCounted
 
 const ACTS := 3                 # the classic descent; endless depths continue past it
 const ROWS := 8                 # seven rooms, then the Warden
+const MAX_CHAMPIONS := 6       # the guild grows from headliner + partner to six
+const DRAFT_SIZE := 5           # champions offered at each draft
+const SLOTS := [5, 11, 7, 3, 9, 13]   # formation slots for up to six monsters
 const LIVES := {"Keeper": 4, "Standard": 3, "Champion": 2}
 const XP_SCALE := 2.6           # fewer fights than the five cups, so each one teaches more
 const CAMP_XP := 120
@@ -23,6 +26,7 @@ const ROOMS := {
  "shop":     {"name": "Outfitter", "glyph": "coin", "color": "c8ff9d", "text": "A hidden merchant. Buy and forge gear, then move on."},
  "rest":     {"name": "Campfire", "glyph": "flame", "color": "ffb35c", "text": "Rest to restore a life, or train the squad."},
  "event":    {"name": "Unknown", "glyph": "roll", "color": "b9a2ff", "text": "Something waits in the dark. Choose how to face it."},
+ "checkpoint": {"name": "Checkpoint", "glyph": "banner", "color": "8fe0c0", "text": "A lost champion waits at the waystone. Choose one of five to join the guild (until you have six)."},
  "treasure": {"name": "Treasure", "glyph": "trophy", "color": "ffd36e", "text": "A sealed chest: gold and one of three finished items."},
  "boss":     {"name": "Warden", "glyph": "skull", "color": "ff5a6a", "text": "The boss of this depth. Defeat it to descend. Losing costs a life and you must try again."},
 }
@@ -151,13 +155,14 @@ static func generate(c: Campaign, act: int) -> Array:
 static func room_type(rng: RandomNumberGenerator, r: int) -> String:
  if r == ROWS - 1: return "boss"
  if r == 0: return "battle"
- if r == 3: return "treasure"
+ if r == 3: return "checkpoint"
  if r == ROWS - 2: return "rest"
  var roll = rng.randf()
  if r >= 2 and roll < 0.16: return "elite"
  if roll < 0.30: return "event"
  if roll < 0.42: return "shop"
  if r >= 2 and roll < 0.50: return "rest"
+ if r >= 2 and roll < 0.57: return "treasure"
  return "battle"
 
 static func node(c: Campaign, row: int = -99, col: int = -99) -> Dictionary:
@@ -177,7 +182,7 @@ static func reachable(c: Campaign) -> Array:
 ## Something must be settled before moving: a fight, spoils, an event, the outfitter or a choice.
 static func busy(c: Campaign) -> bool:
  var d = c.state.dungeon
- return d.fight or not d.get("instance_choices", []).is_empty() or not d.loot.is_empty() or not d.event.is_empty() or d.awaiting_endless or c.state.tour.get("shop", false) or c.state.tour.get("intermission", false) or c.state.get("run_over", false) or c.state.tour.get("complete", false)
+ return d.fight or not d.get("draft", {}).is_empty() or not d.get("instance_choices", []).is_empty() or not d.loot.is_empty() or not d.event.is_empty() or d.awaiting_endless or c.state.tour.get("shop", false) or c.state.tour.get("intermission", false) or c.state.get("run_over", false) or c.state.tour.get("complete", false)
 
 static func enter(c: Campaign, col: int) -> String:
  var d = c.state.dungeon
@@ -208,6 +213,11 @@ static func enter(c: Campaign, col: int) -> String:
     if int(ch.get("gamble", 0)) > int(c.state.gold): ch.disabled = true
     if int(ch.get("lives", 0)) > 0 and int(d.lives) >= int(d.max_lives): ch.disabled = true
    d.event = e
+  "checkpoint":
+   n.done = true
+   if c.state.roster.size() < MAX_CHAMPIONS: offer_draft(c, "checkpoint", 0)
+   else:
+    offer_loot(c, "item"); c.add_news("Checkpoint", "Your guild is full: the waystone offers a finished item instead.")
   "treasure":
    n.done = true
    var gold = 60 + 20 * mini(int(d.act), 6); c.state.gold += gold; c.state.earned_gold += gold
@@ -303,9 +313,11 @@ static func quality(c: Campaign) -> float:
  var d = c.state.dungeon; var t = c.state.tour
  var base = TourBalance.quality(int(t.level), mini(3, maxi(0, int(d.row)) / 2), str(c.state.difficulty)) * (1.0 + 0.02 * clampi(int(c.state.get("challenge_rank", 0)), 0, 10))
  var kind = str(fight_node(c).get("type", "battle"))
- var mult = {"battle": 0.97, "elite": 1.06, "boss": 1.0}.get(kind, 1.0)
+ var mult = {"battle": 0.97, "elite": 1.02, "boss": 1.0}.get(kind, 1.0)
  if kind == "battle" and int(d.act) == 1 and int(d.row) <= 2: mult = 0.92 if int(d.row) <= 0 else 0.94
  mult *= 1.0 + 0.05 * (mini(int(d.act), ACTS) - 1)   # each classic depth is a little meaner
+ # A guild still gathering its champions fights a little softer opposition.
+ mult *= minf(1.0, 0.8 + 0.04 * party(c))
  if int(d.act) > ACTS: mult *= pow(1.2, int(d.act) - ACTS)   # endless compounds, so every run ends somewhere
  return base * mult
 
@@ -342,19 +354,23 @@ static func guild_at(c: Campaign, row: int, col: int) -> Dictionary:
  if c.state.clubs.size() < 7: c.draft_rivals()
  var index = 1 + abs(hash(str(c.state.seed) + "|elite|%d|%d|%d" % [int(c.state.dungeon.act), row, col])) % c.state.clubs.size()
  var cl = WorldTour.club(c, index)
- return {"name": "%s (lost in the dark)" % cl.name, "roster": cl.roster, "practice": false, "club": index}
+ # A lost guild sends as many champions as you field: its strongest.
+ var roster = cl.roster.duplicate(); roster.sort_custom(func(a, b): return HeroData.power(a) > HeroData.power(b))
+ roster = roster.slice(0, mini(roster.size(), mini(party(c), 5)))
+ return {"name": "%s (lost in the dark)" % cl.name, "roster": roster, "practice": false, "club": index}
 
 static func pack(c: Campaign, row: int, col: int, alpha: bool) -> Dictionary:
  var d = c.state.dungeon; var t = c.state.tour
  var rng = RandomNumberGenerator.new(); rng.seed = hash(str(c.state.seed) + "|pack|%d|%d|%d" % [int(d.act), row, col])
  var pool = DungeonInstances.info(instance_id(c)).mobs.duplicate()
- var size = 4 if int(d.act) == 1 and row <= 1 else 5
+ # Packs match the guild up to five; a sixth champion is pure advantage.
+ var size = mini(party(c), 5)
  var st = WorldTour.stage(c); var diff = str(c.state.get("difficulty", "Standard"))
  var heroes = []
  for i in range(size):
   var key = pool[rng.randi_range(0, pool.size() - 1)]
   var id = "dg_%d_%d_%d_%d" % [int(d.act), row, col, i]
-  var h = Bestiary.make(key, id, TourBalance.level(int(t.level), diff, id), st, diff, Campaign.FORMATION[i])
+  var h = Bestiary.make(key, id, TourBalance.level(int(t.level), diff, id), st, diff, SLOTS[i])
   if alpha and i == 0: h.name = "Alpha " + h.name; h.vigor = int(h.get("vigor", 0)) + 3; h.force = int(h.get("force", 0)) + 2
   heroes.append(h)
  var lead = Bestiary.info(str(heroes[0].monster)).name
@@ -368,13 +384,14 @@ static func boss_fight(c: Campaign, row: int) -> Dictionary:
  var st = WorldTour.stage(c); var diff = str(c.state.get("difficulty", "Standard"))
  var level = TourBalance.level(int(t.level), diff)
  var heroes = [Bestiary.make(key, "boss_%d" % int(d.act), level, st, diff, Campaign.FORMATION[0])]
- heroes[0].depth = mini(int(d.act), ACTS)
+ heroes[0].depth = mini(int(d.act), ACTS); heroes[0].party = party(c)
  # Endless Wardens return stronger each cycle instead of starting over.
  if int(d.act) > ACTS: heroes[0].empower = 0.35 * (int(d.act) - 1)
  var pool = DungeonInstances.info(instance_id(c)).mobs
- for i in range(2):
+ # Escorts grow with the guild: none against two or three champions, two against five or more.
+ for i in range(clampi(party(c) - 3, 0, 2)):
   var id = "boss_%d_escort_%d" % [int(d.act), i]
-  heroes.append(Bestiary.make(pool[abs(hash(id + str(c.state.seed))) % pool.size()], id, maxi(1, level - 1), st, diff, Campaign.FORMATION[i + 3]))
+  heroes.append(Bestiary.make(pool[abs(hash(id + str(c.state.seed))) % pool.size()], id, maxi(1, level - 1), st, diff, SLOTS[i + 3]))
  return {"name": "%s · Warden of %s" % [b.name, str(DungeonInstances.info(instance_id(c)).name).trim_prefix("The ")], "roster": heroes, "practice": false, "boss": key}
 
 static func stage_label(c: Campaign) -> String:
@@ -457,7 +474,104 @@ static func descend(c: Campaign) -> void:
  for h in c.lineup(): c.gain_xp(h, TourBalance.TRAINING_XP, true, true, rng)
  d.act = int(d.act) + 1; d.row = -1; d.col = -1; d.trail = []; d.map = []; sync_level(c)
  d.instance = ""; d.instance_choices = DungeonInstances.offer(d.visited, str(c.state.seed))
- t.intermission = true; t.erase("intermission_seen"); c.state.market_wave = int(c.state.get("market_wave", 0)) + 1; c.create_market()
+ # A champion waits on the stairs (until the guild has six).
+ if c.state.roster.size() < MAX_CHAMPIONS: offer_draft(c, "warden", 0)
+
+# ------------------------------------------------------------------ Champion drafts
+## How many champions the guild fields; fights are sized to match (at least two foes).
+static func party(c: Campaign) -> int:
+ return clampi(c.lineup().size(), 2, MAX_CHAMPIONS)
+
+## After the headliner is signed: the partner draft opens and the founding fund becomes travel money.
+static func after_headliner(c: Campaign) -> void:
+ c.state.gold = mini(int(c.state.gold), 150)
+ c.state.draft_done = true
+ offer_draft(c, "partner", 0)
+
+## Five champions to choose from. Stats are rolled fresh for each one; species that share an
+## awakened trait with the guild are likelier to appear, but nothing is guaranteed.
+static func offer_draft(c: Campaign, kind: String, cost: int) -> void:
+ var d = c.state.dungeon
+ var rng = RandomNumberGenerator.new(); rng.seed = hash(str(c.state.seed) + "|draft|%s|%d|%d|%d" % [kind, int(d.act), int(d.row), c.state.roster.size()])
+ var owned = c.state.roster.map(func(h): return h.sp)
+ var mine = {}
+ for h in c.state.roster:
+  for t in RunTraits.of(c, h.sp): mine[t] = true
+ var pool = []
+ for sp in League.tiers().get("Epic", []) + League.tiers().get("Common", []):
+  if sp in owned or sp in pool: continue
+  pool.append(sp)
+ pool.sort()
+ var picks = []
+ while picks.size() < DRAFT_SIZE and not pool.is_empty():
+  var weights = pool.map(func(sp): return 1.0 + 1.6 * RunTraits.of(c, sp).filter(func(t): return mine.has(t)).size())
+  var total = 0.0
+  for w in weights: total += w
+  var roll = rng.randf() * total; var pick = 0
+  for i in range(weights.size()):
+   roll -= weights[i]
+   if roll <= 0.0: pick = i; break
+  picks.append(pool[pick]); pool.remove_at(pick)
+ var level = 1
+ if not c.lineup().is_empty():
+  var sum = 0
+  for h in c.lineup(): sum += int(h.level)
+  level = clampi(roundi(float(sum) / c.lineup().size()), 1, 18)
+ var offers = []
+ for sp in picks:
+  var id = "h%d" % int(c.state.next_id); c.state.next_id = int(c.state.next_id) + 1
+  var h = HeroData.make_hero(sp, id, HeroData.themed_name(sp, id), level)
+  for k in range(mini(3, maxi(0, level - 1))): h.learned[str(k)] = 1
+  if level >= 5: h.signature_rank = 2
+  h.price = 0
+  offers.append(h)
+ d.draft = {"kind": kind, "offers": offers, "cost": cost}
+
+## Traits a draft offer shares with the guild (for the "synergy" mark on its card).
+static func shared_traits(c: Campaign, sp: String) -> Array:
+ var mine = {}
+ for h in c.state.roster:
+  for t in RunTraits.of(c, h.sp): mine[t] = true
+ return RunTraits.of(c, sp).filter(func(t): return mine.has(t))
+
+static func take_champion(c: Campaign, index: int) -> bool:
+ var d = c.state.dungeon; var draft = d.get("draft", {})
+ if draft.is_empty() or index < 0 or index >= draft.offers.size(): return false
+ if c.state.roster.size() >= MAX_CHAMPIONS: c.last_error = "Your guild already has six champions."; return false
+ if int(c.state.gold) < int(draft.cost): c.last_error = "Not enough gold."; return false
+ var before = c.state.duplicate(true)
+ var h = draft.offers[index].duplicate(true)
+ c.state.gold = int(c.state.gold) - int(draft.cost)
+ h.slot = c.standard_slot(h, c.lineup().map(func(o): return o.slot)) if c.lineup().size() < MAX_CHAMPIONS else -1
+ c.state.roster.append(h); c.state.selected = h.id
+ d.draft = {}
+ add_score(c, 25)
+ c.add_news("%s joins the guild" % h.name, "%s · %s" % [HeroData.species[h.sp].n, RunTraits.tag_text(c, h.sp)])
+ if c.save(): return true
+ c.state = before; return false
+
+static func skip_draft(c: Campaign) -> bool:
+ var d = c.state.dungeon
+ if d.get("draft", {}).is_empty() or str(d.draft.kind) == "partner": return false
+ var before = c.state.duplicate(true)
+ if int(d.draft.cost) == 0: c.state.gold = int(c.state.gold) + 25
+ d.draft = {}
+ if c.save(): return true
+ c.state = before; return false
+
+## Outfitters sell one champion draft per visit.
+static func shop_draft_cost(c: Campaign) -> int:
+ return 110 + 30 * mini(int(c.state.dungeon.act), 6)
+
+static func shop_draft_open(c: Campaign) -> bool:
+ return c.state.tour.get("shop", false) and c.state.roster.size() < MAX_CHAMPIONS and int(c.state.dungeon.get("shop_draft_serial", -1)) != int(c.state.tour.serial)
+
+static func buy_shop_draft(c: Campaign) -> bool:
+ if not shop_draft_open(c): c.last_error = "No champion for hire here."; return false
+ if int(c.state.gold) < shop_draft_cost(c): c.last_error = "Not enough gold."; return false
+ c.state.dungeon.shop_draft_serial = int(c.state.tour.serial)
+ offer_draft(c, "shop", shop_draft_cost(c))
+ return c.save()
 
 # ------------------------------------------------------------------ Fights
 static func resolve(c: Campaign, sim: BattleSim) -> bool:

@@ -48,7 +48,9 @@ static func starter(game: Node) -> void:
  ChampionKit.build(game,detail,hero,110)
  var pick=FlowUI.cta(game,game.ui,"Sign  ·  %d gold  ▶"%League.cost(chosen),func():
   if game.campaign.choose_starter(chosen):
-   game.selected_id=game.campaign.state.selected;game.sound.cue("contest_lock");game.phase="hub";game.tab="market";game.render();FlowUI.banner(game,"DRAFT YOUR SQUAD",Color("ffd36e"))
+   game.selected_id=game.campaign.state.selected;game.sound.cue("contest_lock");game.phase="hub"
+   if Dungeon.active(game.campaign):game.tab="overview";game.render();FlowUI.banner(game,"CHOOSE A PARTNER",Color("ffd36e"))
+   else:game.tab="market";game.render();FlowUI.banner(game,"DRAFT YOUR SQUAD",Color("ffd36e"))
   else:game.toast(game.campaign.last_error if not game.campaign.last_error.is_empty() else "Could not sign this champion."))
  pick.position=Vector2(1016,798);pick.size=Vector2(558,66)
 

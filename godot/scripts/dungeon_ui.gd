@@ -91,13 +91,14 @@ static func vignette(parent: Control, rect: Rect2, color: Color, strength := 0.7
  return v
 
 ## Framed dialog: dim the screen, centre a plate with a title. Returns {root, box}.
-static func dialog(game: Node, title: String, size: Vector2, accent := GOLDEN) -> Dictionary:
+static func dialog(game: Node, title: String, size: Vector2, accent := GOLDEN, closable := true) -> Dictionary:
  var shade = ColorRect.new(); game.ui.add_child(shade); shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); shade.color = Color(0.01, 0.01, 0.02, 0.8)
  shade.mouse_filter = Control.MOUSE_FILTER_STOP
  var p = plate(shade, Rect2((Vector2(1600, 900) - size) * 0.5, size), accent)
  heading(game, p, title, Vector2(28, 18), 30, PARCH)
  var rule = ColorRect.new(); p.add_child(rule); rule.position = Vector2(28, 64); rule.size = Vector2(size.x - 56, 1); rule.color = Color(accent, 0.45); rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
- var close = button(game, p, "×", func(): shade.queue_free(), false, Vector2(44, 40)); close.position = Vector2(size.x - 62, 16)
+ if closable:
+  var close = HudKit.medallion(p, game, "close", "", "Close", func(): shade.queue_free(), false, 44); close.position = Vector2(size.x - 64, 12)
  var box = VBoxContainer.new(); p.add_child(box); box.position = Vector2(28, 80); box.size = Vector2(size.x - 56, size.y - 100); box.add_theme_constant_override("separation", 12)
  shade.modulate.a = 0.0; shade.create_tween().tween_property(shade, "modulate:a", 1.0, 0.16)
  return {"root": shade, "box": box, "panel": p}
@@ -108,6 +109,7 @@ static func restyle(game: Node, b: Button, primary := false, selected := false) 
  b.add_theme_stylebox_override("normal", skin(GOLDEN if (primary or selected) else BRONZE, base, 6, true))
  b.add_theme_stylebox_override("hover", skin(PARCH if primary else GOLDEN, base.lightened(0.15), 6, true))
  b.add_theme_stylebox_override("pressed", skin(GOLDEN, base.darkened(0.25), 6, false))
+ b.add_theme_stylebox_override("disabled", skin(Color(BRONZE, 0.35), Color(0.08, 0.07, 0.09, 0.8), 6, false, 1))
  b.add_theme_color_override("font_color", PARCH if (primary or selected) else Color(PARCH, 0.8)); b.add_theme_color_override("font_hover_color", Color.WHITE)
 
 static func rarity_color(rarity: String) -> Color:
@@ -214,6 +216,7 @@ static func overview(desk: ManagementDesk) -> void:
  elif d.awaiting_endless: endless_overlay(game, stage, c)
  # Anything waiting in the current room opens straight away.
  elif not d.loot.is_empty(): game.get_tree().process_frame.connect(func(): loot_modal(game), CONNECT_ONE_SHOT)
+ if not d.get("draft", {}).is_empty(): game.get_tree().process_frame.connect(func(): draft_dialog(game), CONNECT_ONE_SHOT)
  elif not d.event.is_empty(): game.get_tree().process_frame.connect(func(): event_modal(game), CONNECT_ONE_SHOT)
 
 ## Instance seal, name, depth pips · relic belt · tools.
@@ -515,6 +518,34 @@ static func loot_modal(game: Node) -> void:
  var skip_row = HBoxContainer.new(); skip_row.alignment = BoxContainer.ALIGNMENT_CENTER; dlg.box.add_child(skip_row)
  button(game, skip_row, "Skip  ·  +25 gold", func():
   if Dungeon.skip_loot(c): dlg.root.queue_free(); game.render(), false, Vector2(220, 44))
+
+## Five champions to choose from: the same cards as the guild-run draft board (art, random stat
+## rolls, run traits), with the traits each one shares with your guild called out above it.
+static func draft_dialog(game: Node) -> void:
+ var c: Campaign = game.campaign; var d = c.state.dungeon; var draft = d.get("draft", {})
+ if draft.is_empty(): return
+ var titles = {"partner": "Choose your partner", "checkpoint": "A champion waits at the waystone", "warden": "A champion waits on the stairs", "shop": "Champions for hire"}
+ var dlg = dialog(game, str(titles.get(str(draft.kind), "Choose a champion")), Vector2(1540, 610), GOLDEN, str(draft.kind) != "partner")
+ var cost = int(draft.cost)
+ text(game, dlg.box, ("Your headliner needs a partner. " if str(draft.kind) == "partner" else "") + "Pick one of five. Their stats are rolled fresh; ✦ marks traits they share with your guild." + ("  ·  Costs %d gold." % cost if cost > 0 else "") + "  ·  Guild %d / %d" % [c.state.roster.size(), Dungeon.MAX_CHAMPIONS], Vector2.ZERO, 15, MUTE)
+ var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 10); dlg.box.add_child(row)
+ for i in range(draft.offers.size()):
+  var h = draft.offers[i]; var index = i
+  var col = VBoxContainer.new(); col.add_theme_constant_override("separation", 6); row.add_child(col)
+  var shared = Dungeon.shared_traits(c, h.sp)
+  var tag = Panel.new(); tag.custom_minimum_size = Vector2(286, 30); col.add_child(tag)
+  tag.add_theme_stylebox_override("panel", skin(GOLDEN if not shared.is_empty() else Color(BRONZE, 0.4), Color("3a2a10") if not shared.is_empty() else Color(0.06, 0.05, 0.08), 6, false, 1))
+  text(game, tag, ("✦ Synergy · " + ", ".join(shared.map(func(t): return RunTraits.info(t).name))) if not shared.is_empty() else "No shared traits yet", Vector2(0, 5), 13, GOLDEN if not shared.is_empty() else MUTE, 286, HORIZONTAL_ALIGNMENT_CENTER)
+  DraftBoard.card(game, col, h, {"on_draft": func():
+   if Dungeon.take_champion(c, index): dlg.root.queue_free(); game.sound.cue("contest_lock"); game.render(); FlowUI.banner(game, "%s JOINS" % str(h.name).to_upper(), Color("ffd36e"))
+   else: game.toast(c.last_error),
+   "draft_text": ("Hire · %d gold" % cost) if cost > 0 else "Choose", "draft_disabled": int(c.state.gold) < cost}, 286, 168)
+  col.modulate.a = 0.0
+  col.create_tween().tween_property(col, "modulate:a", 1.0, 0.25).set_delay(0.07 * i)
+ if str(draft.kind) != "partner":
+  var skip_row = HBoxContainer.new(); skip_row.alignment = BoxContainer.ALIGNMENT_CENTER; dlg.box.add_child(skip_row)
+  button(game, skip_row, "Pass" + ("  ·  +25 gold" if cost == 0 else ""), func():
+   if Dungeon.skip_draft(c): dlg.root.queue_free(); game.render(), false, Vector2(220, 44))
 
 static func relic_modal(game: Node) -> void:
  loot_modal(game)

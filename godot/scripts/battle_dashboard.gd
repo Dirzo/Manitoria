@@ -11,12 +11,16 @@ var team_totals: Array = []
 func _ready() -> void:
  set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
  mouse_filter = Control.MOUSE_FILTER_IGNORE
+ visible = game.hud_stats
  for team in range(2):
-  var panel = PanelContainer.new(); add_child(panel); panel.position = Vector2(26 if team == 0 else 1334, 236); panel.size = Vector2(240, 0)
-  panel.add_theme_stylebox_override("panel",game.style(Color(0.025,0.06,0.085,0.92),Color("314c58"),12,12))
+  # No box: the panel fades in from its screen edge.
+  HudKit.edge_fade(self, Rect2(0 if team == 0 else 1260, 200, 340, 480), team == 0, 0.78)
+  var panel = PanelContainer.new(); add_child(panel); panel.position = Vector2(22 if team == 0 else 1338, 232); panel.size = Vector2(240, 0)
+  panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
   var list = VBoxContainer.new(); list.add_theme_constant_override("separation",10); panel.add_child(list)
   var head = HBoxContainer.new(); list.add_child(head)
-  game.label(head,"YOUR TEAM" if team == 0 else "OPPONENTS",12,game.GOLD,false).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+  var head_label = game.label(head,"YOUR TEAM" if team == 0 else "OPPONENTS",14,Color("e3c589"),false); head_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+  head_label.add_theme_font_override("font", load(game.TITLE_FONT))
   team_totals.append(game.label(head,"0 dmg",12,Color("8fd7ff") if team == 0 else Color("ffa98f"),false))
   for u in game.sim.units:
    if u.team != team or u.summon: continue
@@ -27,8 +31,8 @@ func _ready() -> void:
    var stack = VBoxContainer.new(); stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL; stack.add_theme_constant_override("separation",3); row.add_child(stack)
    var name_label = game.label(stack,u.hero.name,16,game.WHITE,false)
    var bar = ProgressBar.new(); bar.max_value = u.max_hp; bar.value = u.hp; bar.show_percentage = false; bar.custom_minimum_size.y = 7; stack.add_child(bar)
-   bar.add_theme_stylebox_override("background",game.style(Color("263641"),Color.TRANSPARENT,3,0,0))
-   bar.add_theme_stylebox_override("fill",game.style(Color("70d6bd") if team == 0 else Color("ed9c80"),Color.TRANSPARENT,3,0,0))
+   bar.add_theme_stylebox_override("background",DungeonUI.skin(Color("5a4a34"),Color(0.05,0.04,0.06,0.9),3,false,1))
+   bar.add_theme_stylebox_override("fill",DungeonUI.skin(Color(0,0,0,0),Color("70d6bd") if team == 0 else Color("ed9c80"),3,false,0))
    # Live damage meter: scaled to the biggest hitter on the field.
    var dmg_row = HBoxContainer.new(); dmg_row.add_theme_constant_override("separation",4); stack.add_child(dmg_row)
    var dmg = ProgressBar.new(); dmg.max_value = 1; dmg.value = 0; dmg.show_percentage = false; dmg.custom_minimum_size = Vector2(110,6); dmg.size_flags_vertical = Control.SIZE_SHRINK_CENTER; dmg_row.add_child(dmg)
@@ -38,10 +42,10 @@ func _ready() -> void:
    var status = game.label(stack,"",11,game.MUTED,false); status.visible = false
    rows[u.uid] = {"bar":bar,"status":status,"portrait":portrait,"name":name_label,"dmg":dmg,"dmg_label":dmg_label,"team":team}
  var panel = PanelContainer.new(); add_child(panel); panel.position = Vector2(385,652); panel.size = Vector2(830,127)
- panel.add_theme_stylebox_override("panel",game.style(Color(0.025,0.06,0.085,0.95),Color("395561"),12,12))
+ panel.add_theme_stylebox_override("panel",DungeonUI.skin(Color("8a6a3a"),Color(0.05,0.04,0.07,0.94),8,true,2))
  detail = VBoxContainer.new(); detail.add_theme_constant_override("separation",7); panel.add_child(detail)
  detail_panel = panel; panel.visible = false
- var hint = game.label(self,"Click a portrait to inspect",12,Color(1,1,1,0.45),false); hint.position = Vector2(30,214)
+ var hint = game.label(self,"Click a portrait to inspect",12,Color(1,1,1,0.45),false); hint.position = Vector2(26,560)
 func inspect(id: int) -> void:
  if id == selected_uid and detail_panel.visible:
   detail_panel.visible = false; selected_uid = -1; return
@@ -53,7 +57,7 @@ func inspect(id: int) -> void:
  var branch = u.hero.get("evolution", "")
  var top = HBoxContainer.new(); detail.add_child(top)
  game.label(top,u.hero.name + "  /  " + HeroData.species[u.hero.sp].n + ("  ·  " + HeroData.evolution_info(u.hero).name if not branch.is_empty() else ""),13,game.GOLD,false).size_flags_horizontal = Control.SIZE_EXPAND_FILL
- var close = game.button(top,"×",func(): detail_panel.visible = false; selected_uid = -1); close.custom_minimum_size = Vector2(32,26)
+ var close = HudKit.medallion(top,game,"close","","Close",func(): detail_panel.visible = false; selected_uid = -1,false,32)
  var row = HBoxContainer.new(); row.add_theme_constant_override("separation",12); detail.add_child(row)
  add_ability(row,HeroData.species[u.hero.sp].ability_name,HeroData.signature_summary(u.hero.sp)+"\n\n"+HeroData.species[u.hero.sp].ability_description,"signature",u.hero.signature_rank)
  for key in u.hero.learned:

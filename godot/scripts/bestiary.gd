@@ -136,6 +136,12 @@ static func apply(sim: BattleSim, u: Dictionary) -> void:
  u.max_hp /= tf; u.hp = u.max_hp; u.attack /= tf; u.attack_basic = u.get("attack_basic", u.attack) / tf; u.ability_power /= tf; u.skill_base /= tf
  var mod = (strength(key, int(u.hero.get("depth", 1))) if BOSSES.has(key) else m.get("stats", {})).duplicate()
  var boost = float(u.hero.get("empower", 0.0))
+ # Wardens were tuned against five champions; a smaller guild meets a smaller Warden.
+ if BOSSES.has(key) and u.hero.has("party"):
+  var p = clampi(int(u.hero.party), 1, 5)
+  mod.hp = (1.0 + float(mod.get("hp", 0.0))) * (0.25 + 0.15 * p) - 1.0
+  mod.attack = (1.0 + float(mod.get("attack", 0.0))) * (0.5 + 0.1 * p) - 1.0
+  mod.power = (1.0 + float(mod.get("power", 0.0))) * (0.5 + 0.1 * p) - 1.0
  if boost > 0.0:
   for k in ["hp", "attack", "power"]: mod[k] = (1.0 + float(mod.get(k, 0.0))) * (1.0 + boost) - 1.0
  if m.has("grant"): mod.grant = m.grant

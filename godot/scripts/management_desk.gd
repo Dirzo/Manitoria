@@ -44,20 +44,21 @@ func build() -> void:
  if state.get("tour",{}).get("complete",false): next = "Tour complete"
  if Dungeon.active(campaign) and not state.tour.get("shop",false):
   var dg = state.dungeon
-  next = "Fight  ▶" if dg.fight else "Choose your path  ▶" if not dg.get("instance_choices", []).is_empty() else "Bank or go endless  ▶" if dg.get("awaiting_endless", false) else "Descend  ▶" if state.tour.get("intermission",false) else "Dungeon conquered" if state.tour.get("complete",false) else "Choose a room  ▶"
+  next = "Fight  ▶" if dg.fight else "Choose a champion  ▶" if not dg.get("draft", {}).is_empty() else "Choose your path  ▶" if not dg.get("instance_choices", []).is_empty() else "Bank or go endless  ▶" if dg.get("awaiting_endless", false) else "Descend  ▶" if state.tour.get("intermission",false) else "Dungeon conquered" if state.tour.get("complete",false) else "Choose a room  ▶"
  if not campaign.pending_heroes().is_empty(): next = "Level ups  ▶"
  elif not state.has("tour") and state.round >= 17: next = "Next season  ▶"
- if state.roster.size() < Campaign.MIN_SQUAD and game.tab != "market":
+ var short = state.roster.size() < Campaign.MIN_SQUAD and not Dungeon.active(campaign)
+ if short and game.tab != "market":
   # Point at the draft board rather than a match the player can't play yet.
   FlowUI.cta(game, row, next, func(): navigate("market"))
   return
- if state.roster.size() < Campaign.MIN_SQUAD: next = "Sign %d more" % (Campaign.MIN_SQUAD - state.roster.size())
+ if short: next = "Sign %d more" % (Campaign.MIN_SQUAD - state.roster.size())
  var dock_cta = FlowUI.cta(game, row, next, func():
   if not state.has("tour") and state.round >= 17 and campaign.pending_heroes().is_empty(): campaign.new_season(); game.render()
   elif Dungeon.active(campaign) and not state.tour.get("shop",false) and campaign.pending_heroes().is_empty() and campaign.lineup_ready() and not state.dungeon.fight:
    navigate("overview")   # the path overlay ends the break when an instance is chosen
   elif state.get("tour",{}).get("shop",false) or not campaign.pending_heroes().is_empty() or not campaign.lineup_ready(): game.prepare_match()
-  else: game.introduce_match(), state.roster.size() < Campaign.MIN_SQUAD or state.get("tour",{}).get("complete",false))
+  else: game.introduce_match(), short or state.get("tour",{}).get("complete",false))
  if Dungeon.active(campaign): DungeonUI.restyle(game, dock_cta, true)
 
 func navigate(tab: String) -> void:

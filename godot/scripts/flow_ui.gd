@@ -57,6 +57,10 @@ class Glyph extends Control:
 				if on: draw_colored_polygon(inner, Color("ffe27a"))
 				var edge = outer.duplicate(); edge.append(outer[0])
 				draw_polyline(edge, Color("5a1e08") if on else Color(1, 1, 1, 0.35), maxf(1.0, s * 0.05), true)
+			"banner":
+				var pole = Color("c8a060"); var cloth = Color("8fe0c0") if on else Color(1, 1, 1, 0.2)
+				draw_line(c + Vector2(-s * 0.26, -s * 0.42), c + Vector2(-s * 0.26, s * 0.42), pole, maxf(2.0, s * 0.08), true)
+				draw_colored_polygon(PackedVector2Array([c + Vector2(-s * 0.22, -s * 0.38), c + Vector2(s * 0.34, -s * 0.30), c + Vector2(s * 0.16, -s * 0.12), c + Vector2(s * 0.34, s * 0.06), c + Vector2(-s * 0.22, s * 0.02)]), cloth)
 			"skull":
 				var bone = Color("efe6d2")
 				draw_circle(c + Vector2(0, -s * 0.08), s * 0.34, bone)
@@ -105,9 +109,11 @@ static func run_bar(game: Node, parent: Node) -> void:
 static func cta(game: Node, parent: Node, text: String, callback: Callable, disabled := false, width := 360.0) -> Button:
 	var b = game.button(parent, text, callback, true, disabled)
 	b.custom_minimum_size = Vector2(width, 58); b.add_theme_font_size_override("font_size", 26)
-	b.add_theme_stylebox_override("normal", game.style(Color("2b8a57"), Color("ffe7a6"), 10, 14, 0))
-	b.add_theme_stylebox_override("hover", game.style(Color("36a86a"), Color("fff3cf"), 10, 14, 0))
-	b.add_theme_stylebox_override("pressed", game.style(Color("1f6b43"), Color("ffe7a6"), 10, 14, 0))
+	# The call to action: a gilded ember plaque, the brightest object on any screen.
+	b.add_theme_stylebox_override("normal", DungeonUI.skin(Color("f1d79f"), Color("7a4515"), 8, true, 2))
+	b.add_theme_stylebox_override("hover", DungeonUI.skin(Color("fff3cf"), Color("955a1d"), 8, true, 3))
+	b.add_theme_stylebox_override("pressed", DungeonUI.skin(Color("f1d79f"), Color("552e0c"), 8, false, 2))
+	b.add_theme_font_override("font", load(game.TITLE_FONT)); b.add_theme_color_override("font_color", Color("fff3dc"))
 	if not disabled:
 		var t = b.create_tween().set_loops(); t.set_trans(Tween.TRANS_SINE)
 		t.tween_property(b, "modulate", Color(1.14, 1.14, 1.06), 0.9); t.tween_property(b, "modulate", Color.WHITE, 0.9)

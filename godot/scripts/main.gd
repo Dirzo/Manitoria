@@ -28,6 +28,7 @@ var countdown_label: Label
 var legend_left = 0.0 # Legendary moment: brief slow-motion while a legendary skill lands
 var legend_total = 1.0
 var tactical = false # Tactical view: 0.75x with footprints, target lines and status tags
+var hud_stats = true # combat HUD: team damage panels shown (toggled by the stats medallion)
 var accumulator = 0.0
 var match_label: Label
 var toast_label: Label
@@ -115,6 +116,10 @@ func _ready() -> void:
      Dungeon.enter(campaign, Dungeon.reachable(campaign)[0])
     if qa == "dungeon_loot": Dungeon.offer_loot(campaign, "relic")
     if qa == "dungeon_event": dg.event = Dungeon.EVENTS[1].duplicate(true)
+   if qa == "dungeon_draft":
+    while campaign.state.roster.size() > 2: campaign.state.roster.pop_back()
+    for h in campaign.state.roster: h.pending = []; h.rewards = []
+    Dungeon.offer_draft(campaign, "checkpoint", 0)
    if qa in ["dungeon_intro", "dungeon_result"]:
     for h in campaign.state.roster: h.pending = []; h.rewards = []
     Dungeon.enter(campaign, Dungeon.reachable(campaign)[0])
@@ -317,23 +322,62 @@ func make_theme() -> Theme:
  theme.set_color("font_color", "Label", WHITE)
  theme.set_color("font_outline_color", "Label", Color(0.01, 0.02, 0.03, 0.85))
  theme.set_constant("outline_size", "Label", 4)
- theme.set_color("font_color", "Button", WHITE)
- theme.set_color("font_hover_color", "Button", GOLD)
- theme.set_color("font_disabled_color", "Button", Color("6c818b"))
- theme.set_stylebox("normal", "Button", style(Color("263b43"), Color("9c895d"), 4, 12, 2))
- theme.set_stylebox("hover", "Button", style(Color("405860"), GOLD, 4, 12, 2))
- theme.set_stylebox("pressed", "Button", style(Color("234843"), GOLD, 4, 12, 2))
- theme.set_stylebox("disabled", "Button", style(Color("272e31"), Color("625b63"), 4, 12))
- theme.set_stylebox("focus", "Button", style(Color(0, 0, 0, 0), GOLD, 10, 0, 2))
- theme.set_stylebox("normal", "LineEdit", style(Color("101e2a"), Color("58747b"), 10, 16))
- theme.set_color("font_color", "LineEdit", WHITE)
+ theme.set_color("font_color", "Button", Color("f1e6cc"))
+ theme.set_color("font_hover_color", "Button", Color.WHITE)
+ theme.set_color("font_pressed_color", "Button", GOLD)
+ theme.set_color("font_disabled_color", "Button", Color("7d7364"))
+ theme.set_color("font_outline_color", "Button", Color(0, 0, 0, 0.8))
+ theme.set_constant("outline_size", "Button", 4)
+ # Carved buttons: dark lacquer, bronze rim, gold when hovered. Nothing flat or form-like.
+ theme.set_stylebox("normal", "Button", DungeonUI.skin(Color("8a6a3a"), Color("1d1820"), 7, true, 2))
+ theme.set_stylebox("hover", "Button", DungeonUI.skin(Color("e3c589"), Color("2c2228"), 7, true, 2))
+ theme.set_stylebox("pressed", "Button", DungeonUI.skin(Color("e3c589"), Color("120e12"), 7, false, 2))
+ theme.set_stylebox("disabled", "Button", DungeonUI.skin(Color(0.54, 0.42, 0.23, 0.35), Color(0.08, 0.07, 0.09, 0.8), 7, false, 1))
+ theme.set_stylebox("focus", "Button", StyleBoxEmpty.new())
+ for kind in ["normal", "hover", "pressed", "disabled"]:
+  for b in [theme.get_stylebox(kind, "Button")]: b.content_margin_left = 14; b.content_margin_right = 14; b.content_margin_top = 6; b.content_margin_bottom = 6
+ for kind in ["normal", "hover", "pressed", "disabled", "focus"]: theme.set_stylebox(kind, "OptionButton", theme.get_stylebox(kind, "Button"))
+ theme.set_stylebox("normal", "LineEdit", DungeonUI.skin(Color("6b5434"), Color(0.04, 0.035, 0.05, 0.95), 6, false, 2))
+ theme.set_stylebox("focus", "LineEdit", DungeonUI.skin(Color("e3c589"), Color(0, 0, 0, 0), 6, false, 2))
+ for kind in ["normal", "focus"]: var e = theme.get_stylebox(kind, "LineEdit"); e.content_margin_left = 14; e.content_margin_right = 14; e.content_margin_top = 8; e.content_margin_bottom = 8
+ theme.set_color("font_color", "LineEdit", Color("f1e6cc"))
+ theme.set_color("caret_color", "LineEdit", GOLD)
  theme.set_constant("separation", "VBoxContainer", 14)
  theme.set_constant("separation", "HBoxContainer", 12)
- theme.set_stylebox("panel", "PanelContainer", style(Color(.045,.095,.115,.96), Color("9b8053"), 5, 20, 2))
+ var plate = DungeonUI.skin(Color("6b5232"), Color(0.055, 0.045, 0.06, 0.95), 8, true, 2); plate.set_content_margin_all(20)
+ theme.set_stylebox("panel", "PanelContainer", plate)
+ # Tooltips and popups: parchment-dark scrolls with a gold rim.
+ var tip = DungeonUI.skin(Color("b08a4a"), Color(0.05, 0.04, 0.05, 0.97), 6, true, 1); tip.set_content_margin_all(10)
+ theme.set_stylebox("panel", "TooltipPanel", tip)
+ theme.set_color("font_color", "TooltipLabel", Color("f1e6cc"))
+ theme.set_font_size("font_size", "TooltipLabel", 15)
+ theme.set_stylebox("panel", "PopupMenu", tip)
+ theme.set_stylebox("hover", "PopupMenu", DungeonUI.skin(Color(0, 0, 0, 0), Color(0.89, 0.77, 0.54, 0.18), 4, false, 0))
+ theme.set_color("font_color", "PopupMenu", Color("f1e6cc")); theme.set_color("font_hover_color", "PopupMenu", Color.WHITE)
+ # Scrollbars: a thin bronze rod, no gutter.
+ for bar in ["VScrollBar", "HScrollBar"]:
+  theme.set_stylebox("scroll", bar, DungeonUI.skin(Color(0, 0, 0, 0), Color(0, 0, 0, 0.25), 4, false, 0))
+  theme.set_stylebox("grabber", bar, DungeonUI.skin(Color(0, 0, 0, 0), Color(0.54, 0.42, 0.23, 0.75), 4, false, 0))
+  theme.set_stylebox("grabber_highlight", bar, DungeonUI.skin(Color(0, 0, 0, 0), Color("e3c589"), 4, false, 0))
+  theme.set_stylebox("grabber_pressed", bar, DungeonUI.skin(Color(0, 0, 0, 0), Color("e3c589"), 4, false, 0))
+ theme.set_stylebox("background", "ProgressBar", DungeonUI.skin(Color("5a4a34"), Color(0.05, 0.04, 0.06, 0.9), 4, false, 1))
+ theme.set_stylebox("fill", "ProgressBar", DungeonUI.skin(Color(0, 0, 0, 0), Color("c9a25a"), 4, false, 0))
+ theme.set_stylebox("slider", "HSlider", DungeonUI.skin(Color(0, 0, 0, 0), Color(0.54, 0.42, 0.23, 0.6), 3, false, 0))
+ theme.set_stylebox("grabber_area", "HSlider", DungeonUI.skin(Color(0, 0, 0, 0), Color("c9a25a"), 3, false, 0))
+ theme.set_stylebox("grabber_area_highlight", "HSlider", DungeonUI.skin(Color(0, 0, 0, 0), Color("e3c589"), 3, false, 0))
  return theme
 
+## Moves the old cold slate/teal surfaces onto the warm lacquer-and-bronze palette, so every
+## screen shares one material instead of reading like stacked form boxes. Bright accents
+## (health teal, rarity colours, team tints) are left alone.
+static func warm(c: Color) -> Color:
+ if c.a <= 0.0 or c.s > 0.8 or c.v > 0.55: return c
+ if c.h < 0.38 or c.h > 0.72: return c
+ return Color.from_hsv(0.08 + 0.02 * c.v, c.s * 0.55, c.v * 0.9, c.a)
+
 func style(fill: Color, border: Color, radius: int, margin: int, width: int = 1) -> StyleBoxFlat:
- var s = StyleBoxFlat.new(); s.bg_color = fill; s.border_color = border
+ fill = warm(fill); border = warm(border) if border.v < 0.55 else border
+ var s = StyleBoxFlat.new(); s.bg_color = fill; s.border_color = border; s.anti_aliasing = true
  if margin>=10 and fill.a>.5:
   s.shadow_color=Color(0.0,0.0,0.0,0.35);s.shadow_size=10;s.shadow_offset=Vector2(0,4)
  # Clean look: no decorative outlines. Only emphasis survives (thick rims, or vivid accents
@@ -360,8 +404,7 @@ static func uncial_text(value: String) -> String:
 func button(parent: Node, text_value: String, callback: Callable, primary: bool = false, disabled: bool = false) -> Button:
  var b = Button.new(); b.text = uncial_text(text_value); b.custom_minimum_size.y = 44; b.disabled = disabled
  if primary:
-  b.add_theme_stylebox_override("normal", style(Color("267450"), Color("f1d79f"), 4, 12, 2))
-  b.add_theme_color_override("font_color", WHITE)
+  DungeonUI.restyle(self, b, true)
  b.pressed.connect(callback); parent.add_child(b); return b
 
 func panel(rect: Rect2) -> VBoxContainer:
@@ -647,7 +690,7 @@ func prepare_match() -> void:
  if not campaign.pending_heroes().is_empty(): phase = "upgrade"; render(); return
  if campaign.state.get("tour",{}).get("shop",false): phase="shop"; render(); return
  if campaign.state.get("tour",{}).get("complete",false) or (not campaign.state.has("tour") and campaign.state.round >= 17): tab = "overview"; phase = "hub"; render(); return
- if campaign.state.roster.size() < Campaign.MIN_SQUAD: tab = "market"; phase = "hub"; render(); return
+ if campaign.state.roster.size() < Campaign.MIN_SQUAD and not Dungeon.active(campaign): tab = "market"; phase = "hub"; render(); return
  phase = "prep"; render()
 
 func build_prep() -> void:
@@ -766,7 +809,7 @@ func begin_battle() -> void:
   arena.clear_fighters(); arena.live = true; arena.camera.h_offset = 0; arena.target_distance = 31 if tactical else 34; arena.target_pitch = 0.95; arena.target_yaw = 0.0
   if arena.clarity: arena.clarity.tactical = tactical
   sim = BattleSim.new(); sim.action.connect(on_battle_event)
-  if not exhibition: sim.team_mods = campaign.battle_mods()
+  if not exhibition: sim.team_mods = campaign.battle_mods(); sim.elite_squads = not Dungeon.active(campaign)
   sim.setup(campaign.lineup(), exhibition_rivals if exhibition else campaign.opponent().roster, campaign.match_seed(), 1.0 if exhibition else campaign.quality())
   sound.announce("battle", true)
   countdown = COUNTDOWN; countdown_shown = -1; arena.target_yaw = 0.55; arena.camera_yaw = 0.55; arena.target_distance += 6.0
@@ -802,18 +845,23 @@ func build_battle_hud() -> void:
   countdown_label.add_theme_color_override("font_outline_color", Color(0.05, 0.03, 0.02)); countdown_label.add_theme_constant_override("outline_size", 22)
   countdown_label.add_theme_font_override("font", load(TITLE_FONT))
   countdown_shown = -1
- var top = panel(Rect2(530, 127, 540, 91))
- match_label = label(top, "THE GATES ARE OPEN", 24, GOLD); match_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
- var bottom = panel(Rect2(340, 796, 920, 80))
- var row = HBoxContainer.new(); row.alignment = BoxContainer.ALIGNMENT_CENTER; bottom.add_child(row)
- button(row, "Resume" if paused else "Pause", func(): paused = not paused; render())
- button(row, "Tactical ¾×", func(): set_tactical(true), tactical)
- for value in [1.0, 2.0, 4.0]: button(row, "%dx" % value, func(): set_tactical(false); speed = value; render(), speed == value and not tactical)
- button(row, "Reset camera", func(): arena.target_yaw = 0.0; arena.target_distance = 31 if tactical else 34; arena.target_pitch = 0.95; arena.follow_bias = 0.0)
- var fb = button(row, "◎ Follow action", func(): ArenaView.set_follow(not ArenaView.follow_on); render(), ArenaView.follow_on)
- fb.tooltip_text = "Keep the camera on the fight: pans to where the champions are and zooms to fit them. Scroll still zooms in or out."
- var feed = panel(Rect2(1250, 654, 325, 122))
- event_box = VBoxContainer.new(); event_box.add_theme_constant_override("separation", 5); feed.add_child(event_box)
+ # Scoreboard: a carved banner, not a box.
+ var banner = HudKit.banner(ui, Rect2(540, 124, 520, 62))
+ match_label = label(banner, "THE GATES ARE OPEN", 26, Color("f1e6cc"), false); match_label.position = Vector2(0, 12); match_label.size = Vector2(520, 40)
+ match_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; match_label.add_theme_font_override("font", load(TITLE_FONT))
+ match_label.add_theme_constant_override("outline_size", 6)
+ # Controls: medallions resting on the battlefield, bottom right.
+ var dock = HBoxContainer.new(); ui.add_child(dock); dock.add_theme_constant_override("separation", 10); dock.position = Vector2(1600 - 6 * 64 - 26, 812)
+ HudKit.medallion(dock, self, "play" if paused else "pause", "", "Resume" if paused else "Pause", func(): paused = not paused; render(), paused)
+ var speed_text = "¾" if tactical else ("%d×" % int(speed))
+ HudKit.medallion(dock, self, "", speed_text, "Speed: %s. Click to cycle 1× → 2× → 4× → tactical ¾× (footprints, target lines and status tags)." % speed_text, cycle_speed, speed > 1.0 or tactical)
+ HudKit.medallion(dock, self, "camera", "", "Reset camera", func(): arena.target_yaw = 0.0; arena.target_distance = 31 if tactical else 34; arena.target_pitch = 0.95; arena.follow_bias = 0.0)
+ HudKit.medallion(dock, self, "follow", "", "Follow the action: pan to the fight and zoom to fit it. Scroll still zooms.", func(): ArenaView.set_follow(not ArenaView.follow_on); render(), ArenaView.follow_on)
+ HudKit.medallion(dock, self, "stats", "", ("Hide" if hud_stats else "Show") + " team damage panels", func(): hud_stats = not hud_stats; render(), hud_stats)
+ HudKit.medallion(dock, self, "eye", "", "Tactical view", func(): set_tactical(not tactical), tactical)
+ # Combat log: floating lines over the arena.
+ event_box = VBoxContainer.new(); ui.add_child(event_box); event_box.add_theme_constant_override("separation", 2)
+ event_box.position = Vector2(1210, 700); event_box.size = Vector2(370, 100); event_box.alignment = BoxContainer.ALIGNMENT_END; event_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
  refresh_feed()
 
 func on_battle_event(e: Dictionary) -> void:
@@ -841,7 +889,18 @@ func on_battle_event(e: Dictionary) -> void:
 func refresh_feed() -> void:
  if not is_instance_valid(event_box): return
  for child in event_box.get_children(): child.queue_free(); event_box.remove_child(child)
- for line in event_history.slice(-3): label(event_box, line, 12, MUTED)
+ var lines = event_history.slice(-3)
+ for i in range(lines.size()):
+  var l = label(event_box, lines[i], 14, Color("f1e6cc"), false); l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+  l.add_theme_constant_override("outline_size", 6); l.modulate.a = 0.45 + 0.55 * float(i + 1) / lines.size()
+
+## Speed medallion: 1× → 2× → 4× → tactical ¾× → 1×.
+func cycle_speed() -> void:
+ if tactical: set_tactical(false); speed = 1.0
+ elif speed < 2.0: speed = 2.0
+ elif speed < 4.0: speed = 4.0
+ else: set_tactical(true); return
+ render()
 
 var resolve_thread: Thread
 var resolve_wait := 0.0

@@ -2,7 +2,7 @@ class_name AtlasUI
 extends RefCounted
 
 static func launchers(game: Node) -> void:
- var row=HBoxContainer.new();game.ui.add_child(row);row.position=Vector2(1190,102)
+ var row=HBoxContainer.new();game.ui.add_child(row);row.position=Vector2(1190,102) if game.phase in ["menu","new"] else Vector2(96,764)
  var b=game.button(row,"Atlas",func():open(game));b.custom_minimum_size=Vector2(110,32);b.add_theme_font_size_override("font_size",14)
  if not game.campaign.state.get("roster",[]).is_empty():
   var lab=game.campaign.state.get("speedrun_lab",false)

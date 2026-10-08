@@ -24,6 +24,10 @@ func fight(c: Campaign, win: bool) -> bool:
  return c.resolve(sim)
 
 func settle(c: Campaign) -> void:
+ if not c.state.dungeon.get("draft", {}).is_empty():
+  var before = c.state.roster.size()
+  if before < Dungeon.MAX_CHAMPIONS: check(Dungeon.take_champion(c, 0) and c.state.roster.size() == before + 1, "A drafted champion joins")
+  else: check(Dungeon.skip_draft(c), "A full guild passes on a draft")
  if not c.state.dungeon.get("instance_choices", []).is_empty():
   var pick = c.state.dungeon.instance_choices[0]
   check(Dungeon.choose_instance(c, pick), "Choose an instance")
@@ -57,7 +61,7 @@ func walk_depth(c: Campaign, seen: Dictionary, lose_once: bool) -> void:
   for o in options:
    if str(c.state.dungeon.map[int(c.state.dungeon.row)+1][o].type)=="elite" and not seen.has("elite"):col=o
   var kind=Dungeon.enter(c,col);check(kind!="","Enter room "+str(col));seen[kind]=true
-  if kind=="boss":check(c.opponent().roster.size()==3 and c.opponent().roster[0].has("monster"),"A Warden is a boss with two escorts")
+  if kind=="boss":check(c.opponent().roster.size()==1+clampi(Dungeon.party(c)-3,0,2) and c.opponent().roster[0].has("monster"),"A Warden brings escorts sized to the guild")
   if kind=="battle":check(c.opponent().roster.all(func(h):return h.has("monster")),"Skirmishes are dungeon monsters")
   if kind in ["battle","elite","boss"]:
    if lose_once and not lost and kind=="battle" and c.state.dungeon.lives>1:
@@ -144,7 +148,7 @@ func run() -> void:
  check(c.state.dungeon.relics.size()>=3,"Elites and Wardens grant relics")
  check(c.state.dungeon.history.size()==3,"Three Wardens recorded")
  check(c.state.get("chests",[]).size()==3,"Each Warden drops a medal chest")
- for k in ["battle","elite","boss","treasure","rest"]:check(seen.has(k),"Visited a %s room"%k)
+ for k in ["battle","elite","boss","checkpoint","rest"]:check(seen.has(k),"Visited a %s room"%k)
  check(c.state.dungeon.visited.size()==3 and c.state.dungeon.visited.duplicate().all(func(id):return c.state.dungeon.visited.count(id)==1),"Three different instances on the way down")
  check(Dungeon.go_endless(c),"Descend into the endless depths")
  check(int(c.state.dungeon.act)==4 and c.state.dungeon.endless and c.state.dungeon.instance_choices.size()==2,"Endless depth 4 opens with a new choice")
@@ -160,6 +164,29 @@ func run() -> void:
  check(Dungeon.scores().size()==1 and Dungeon.rank_of(c)==1,"The banked run tops the high-score table")
  check(c.state.gold>=0,"Gold never goes negative")
 
+ # The dungeon draft: headliner, a partner from five, then unlocks up to six.
+ var g=Campaign.new();g.new_run("Draft flow",91,8080,"Standard");Dungeon.start(g)
+ check(g.choose_starter(League.tiers().Legendary[0]),"Sign the headliner")
+ check(g.state.roster.size()==1 and g.state.dungeon.draft.kind=="partner" and g.state.dungeon.draft.offers.size()==Dungeon.DRAFT_SIZE,"A partner draft of five follows the headliner")
+ check(not g.recruitment_open(),"No recruit market in the dungeon")
+ check(not Dungeon.skip_draft(g),"The partner draft cannot be skipped")
+ var offered=g.state.dungeon.draft.offers.map(func(h):return h.sp)
+ check(offered.all(func(sp):return League.tier(sp)!="Legendary") and offered.size()==offered.duplicate().filter(func(x):return true).size(),"Partners are Epic or Common champions")
+ check(g.state.dungeon.draft.offers.all(func(h):return h.has("rolls")) and g.state.dungeon.draft.offers[0].rolls!=g.state.dungeon.draft.offers[1].rolls,"Every offer has its own stat rolls")
+ check(Dungeon.take_champion(g,2) and g.state.roster.size()==2 and g.lineup().size()==2,"The partner joins the formation")
+ check(g.lineup_ready(),"Two champions can fight")
+ check(Dungeon.choose_instance(g,g.state.dungeon.instance_choices[0]),"Enter the first instance")
+ check(Dungeon.opponent(g).roster.size()==2,"Fights are sized to the guild")
+ var hits=0
+ for s in range(30):
+  var probe_c=Campaign.new();probe_c.new_run("Bias %d"%s,91,9000+s,"Standard");Dungeon.start(probe_c);probe_c.choose_starter(League.tiers().Legendary[s%8])
+  hits+=probe_c.state.dungeon.draft.offers.filter(func(h):return not Dungeon.shared_traits(probe_c,h.sp).is_empty()).size()
+ check(hits>30*1.2,"Drafts lean toward champions that share traits (%d synergy offers in 30 drafts)"%hits)
+ while g.state.roster.size()<Dungeon.MAX_CHAMPIONS:
+  Dungeon.offer_draft(g,"checkpoint",0);check(Dungeon.take_champion(g,0),"Unlock a champion")
+ check(g.lineup().size()==6 and g.lineup_ready(),"Six champions take the field")
+ Dungeon.offer_draft(g,"checkpoint",0);check(not Dungeon.take_champion(g,0),"No seventh champion")
+ check(Dungeon.opponent(g).roster.size()==5,"Six champions meet a pack of five")
  # Old saves that still say "flames" load as lives.
  var old=Campaign.new();old.new_run("Old save",97,55,"Standard");Dungeon.start(old)
  old.state.dungeon.flames=2;old.state.dungeon.max_flames=3;old.state.dungeon.erase("lives");old.state.dungeon.erase("max_lives");old.state.dungeon.erase("relics");old.state.dungeon.erase("traits")

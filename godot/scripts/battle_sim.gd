@@ -17,6 +17,8 @@ var battle_seed = 0
 var team_cast := [-10.0, -10.0]   # when each team's latest skill lands (CombatPacing.TEAM_SPACING)
 ## Run-wide modifiers per team (dungeon relics and run traits), applied once the fighters are placed.
 var team_mods: Array = [[], []]
+## The guild run's four-champion "elite squad" bonus; the dungeon sizes fights to the squad instead.
+var elite_squads := true
 const BOUNDS = ArenaGrid.BOUNDS
 # Body radius per species (sim units), measured from each model's footprint.
 const BODY = {"arachne":0.83,"basilisk":0.68,"cerberus":0.68,"chimera":0.68,"cyclops":0.68,"direwolf":0.68,"gargoyle":0.68,"golem":0.68,"griffin":0.68,"harpy":0.68,"hydra":0.68,"jackalope":0.68,"kirin":0.68,"kitsune":0.68,"manticore":0.68,"minotaur":0.68,"naga":0.68,"nekomata":0.68,"nemean":0.71,"owlbear":0.68,"pegasus":0.68,"phoenix":0.68,"salamander":0.69,"sphinx":0.68,"thunderbird":0.68,"treant":0.68,"troll":0.68,"unicorn":0.68,"wendigo":0.68,"wyvern":0.68,"yeti":0.68,"zaratan":0.68}
@@ -33,7 +35,7 @@ func setup(left: Array, right: Array, seed_value: int, rival_quality: float = 1.
  battle_seed = seed_value
  for team in range(2):
   var list = left if team == 0 else right
-  var elite = list.size() == Campaign.MIN_SQUAD
+  var elite = elite_squads and list.size() == Campaign.MIN_SQUAD
   for i in range(list.size()):
    var hero = list[i]
    var slot = int(hero.get("slot", i))
