@@ -31,28 +31,39 @@ Each depth is a branching map of eight rows: seven rows of rooms, then the Warde
 
 ### Arenas
 
-In a dungeon fight the colosseum is replaced by a cave chamber for that instance:
+In a dungeon fight the whole colosseum is replaced by a cave chamber for that instance:
 
-- the grandstands, pillars, banners, braziers and crowd are hidden;
-- a ring of cave rock and hanging stalactites closes the arena in;
-- the instance adds its own set pieces, coloured lamps, fog, floor colour and drifting particles (embers, snow, spores, sparks, dust, motes).
+- **Ground:** a rock-shader floor in the instance's colours, with glowing seams in the Magma Depths, Void Rift, Mana Caverns and Storm Spire.
+- **Hex grid:** only a faint overlay. Hexes are also softer in the colosseum now (lower contrast, thinner gaps).
+- **Walls:** cave rock and stalactites close the chamber in.
+- **Set pieces:** the instance's own (crystals, lava pools, dead trees, ice, flooded columns, mushrooms, bones, pylons, obelisks, void shards).
+- **Atmosphere:** flickering coloured lamps, light shafts falling from the ceiling, two layers of drifting ground mist, two layers of floating particles, thicker fog, and a screen-edge vignette in the instance's colour.
 
-Props stay outside the hex field and are kept low on the camera side, so they never hide fighters. Everything is built from primitives and the game's rock shader, so it works in the Compatibility renderer and needs no new models. Leaving the dungeon (the guild run, exhibition) restores the colosseum exactly.
+Props stay outside the fighting field and are kept low on the camera side. Leaving the dungeon restores the colosseum exactly.
 
 ### The Dungeon screen
 
-The Dungeon tab is a single screen with no scrolling:
+The Dungeon tab is one game-style screen in the dungeon's own look: bronze-trimmed plates, title-font headings and gold buttons. The management tabs and dock button switch to the same look during a dungeon run.
 
-- **Map (left):** framed by the instance's painting, with the instance name, depth, room and tagline.
-- **Sidebar (right):**
-  - **Next:** the fight in front of you (Scout, Formation, Fight), or a pointer to the map, plus the Warden of this depth.
-  - **Relics.**
-  - **Run traits:** your squad's synergies.
-  - **Tools:** Traits, Scores, Vault and Guide.
-- **Overlays** across the whole screen, for decisions that block the map:
-  - **Choose your path:** two instance cards with art, Warden and monster list.
-  - **The dungeon is conquered:** bank your score or go endless.
-  - **Run complete / Out of lives:** score, rank and the route you took.
+- **Top band:**
+  - the instance seal and name;
+  - depth pips coloured by the instances already conquered;
+  - the relic belt;
+  - Traits, Scores and Guide.
+- **Map:**
+  - painted with the instance's art under a vignette;
+  - medallion rooms with bronze rims; open rooms pulse;
+  - the walked path in gold, and animated paths to the rooms you can reach;
+  - unexplored rows fading into darkness;
+  - your headliner's portrait bobbing where the guild stands;
+  - the **Synergies** column on the left, and a **Warden card** (portrait, name, mechanics) on the right.
+- **Squad strip:**
+  - each fielded champion with portrait, level and trait chips;
+  - a **Next** card: the fight with Scout, Formation and Fight, or a pointer to the map.
+- **Overlays and dialogs:**
+  - *Choose your path:* instance cards with art, Warden portrait and monster portraits;
+  - *Bank or go endless*, and *run complete / out of lives*;
+  - framed dialogs for rewards (cards that rise in one by one), events, traits, high scores and the guide.
 
 ## Lives
 
@@ -79,12 +90,33 @@ Effects reuse the game's existing combat hooks (item behaviours, crit, dodge, li
 
 ## Run traits (auto-chess synergies)
 
-Every run rolls **8 of 13 traits**: Wildheart, Bloodfang, Stormcaller, Ironhide, Swiftwing, Moonshadow, Sunforged, Venomkin, Everbloom, Ancient, Packhunter, Runebound and Gravebound.
+Every creature has real tags on three axes, so its synergies make sense:
 
-- **Dealing:** every species is dealt **two** of the 8 for this run, spread evenly. The same Minotaur can be Bloodfang and Ironhide in one run and Stormcaller and Packhunter in the next.
-- **Thresholds:** field **2** or **4** different champions that share a trait to unlock its tiers. Emblem relics add one.
-- **Where they show:** trait chips appear on every draft-board card and on the headliner signing screen. The Dungeon tab shows your squad's active traits, and **Run traits** lists all eight with their tiers and which species carry them.
-- **Scope:** run traits apply only to the player's squad, and only in dungeon mode. The guild run is unchanged.
+| Axis | Traits |
+| --- | --- |
+| **Kin**: what it is | Avian, Ursine, Canine, Feline, Scaled, Draconic, Hoofed, Stoneborn, Giant, Sylvan, Venomous, Spirit |
+| **Element**: what it wields | Fire, Frost, Storm, Tide, Earth, Radiant, Shadow |
+| **Class**: how it fights (from its role) | Bruiser, Guardian, Hunter, Marksman, Mystic, Mender |
+
+Some examples:
+
+- **Owlbear:** Avian, Ursine, Bruiser. It synergises with birds, bears and other bruisers.
+- **Phoenix:** Avian, Spirit, Fire, Mystic.
+- **Zaratan:** Scaled, Stoneborn, Tide, Earth, Guardian.
+
+**Fresh every run:**
+
+- **Awakening:** 14 of the 25 traits awaken. Every species keeps two or three of its own awakened traits; species with only two tags always keep both.
+- **Flavour:** each awakened trait rolls one of two flavours. Avian is *Skyborne* (dodge and speed) one run and *Raptors* (crits) the next. Ursine is *Thick Hide* or *Mauling*; Feline is *Pounce* or *Nine Lives*, which revives at 3.
+- **Thresholds:** small families (four members or fewer) light up at 2 and 3; larger ones at 2 and 4. Each species counts once, and Trait Emblem relics add one.
+- **Scope:** run traits apply to your squad in dungeon mode only.
+
+**Where you see them:**
+
+- trait chips on every draft card and on the headliner signing screen;
+- the **Synergies** column on the map, auto-chess hexagon badges with counts;
+- each champion's chips in the squad strip (lit when active);
+- **Traits**, which lists every awakened trait with its flavour, both tiers and which species carry it.
 
 ## Monsters and Wardens (details)
 

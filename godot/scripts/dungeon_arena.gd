@@ -16,6 +16,7 @@ static func dress(arena: ArenaView, region: Dictionary, root: Node3D) -> void:
  hide_colosseum(arena)
  light(arena, info)
  var rng = RandomNumberGenerator.new(); rng.seed = hash(id + "|arena")
+ ground(arena, root, info)
  cave_wall(arena, root, info, rng)
  match str(info.kit):
   "blight": blight(arena, root, info, rng)
@@ -28,8 +29,10 @@ static func dress(arena: ArenaView, region: Dictionary, root: Node3D) -> void:
   "storm": storm(arena, root, info, rng)
   "tomb": tomb(arena, root, info, rng)
   "void": rift(arena, root, info, rng)
- lamps(arena, root, info)
+ lamps(arena, root, info, rng)
  motes(root, info)
+ mist(arena, root, info)
+ shafts(arena, root, info, rng)
 
 ## Undo everything dress() changed (World Tour regions, exhibitions).
 static func undress(arena: ArenaView) -> void:
@@ -43,15 +46,15 @@ static func undress(arena: ArenaView) -> void:
   var env: Environment = saved.env_node.environment
   for key in saved.env: env.set(key, saved.env[key])
  var hex = arena.get_node_or_null("HexFloor")
- if hex and saved.has("floor"): hex.material_override.albedo_color = saved.floor
+ if hex and saved.has("floor"): hex.material_override = saved.floor
  arena.remove_meta("dungeon_saved")
 
 static func hide_colosseum(arena: ArenaView) -> void:
  if arena.has_meta("dungeon_saved") or not is_instance_valid(arena.world_stage): return
  var saved = {"hidden": [], "lights": [], "env": {}}
  for node in arena.world_stage.get_children():
-  var colosseum = node.is_in_group("arena_perimeter") or node.is_in_group("arena_flames") or (node is MultiMeshInstance3D and node.multimesh and node.multimesh.mesh is CapsuleMesh)
-  if (node is GeometryInstance3D and (node.position.y >= 0.08 or colosseum)) or node is OmniLight3D:
+  # The whole colosseum goes, floor included: each chamber lays its own ground.
+  if node is GeometryInstance3D or node is OmniLight3D:
    if node.visible: node.visible = false; saved.hidden.append(node)
   elif node is DirectionalLight3D:
    saved.lights.append({"node": node, "color": node.light_color, "energy": node.light_energy})
@@ -60,7 +63,7 @@ static func hide_colosseum(arena: ArenaView) -> void:
    for key in ["background_mode", "background_color", "ambient_light_source", "ambient_light_color", "ambient_light_energy", "fog_enabled", "fog_light_color", "fog_density"]:
     saved.env[key] = node.environment.get(key)
  var hex = arena.get_node_or_null("HexFloor")
- if hex: saved.floor = hex.material_override.albedo_color
+ if hex: saved.floor = hex.material_override
  arena.set_meta("dungeon_saved", saved)
 
 static func light(arena: ArenaView, info: Dictionary) -> void:
@@ -73,9 +76,13 @@ static func light(arena: ArenaView, info: Dictionary) -> void:
   var env: Environment = saved.env_node.environment
   env.background_mode = Environment.BG_COLOR; env.background_color = Color(info.fog).darkened(0.35)
   env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR; env.ambient_light_color = Color(info.ambient); env.ambient_light_energy = 0.55
-  env.fog_enabled = true; env.fog_light_color = Color(info.fog); env.fog_density = 0.012
+  env.fog_enabled = true; env.fog_light_color = Color(info.fog); env.fog_density = 0.018
+ # The hex grid becomes a faint overlay on the cave ground: readable, not a chessboard.
  var hex = arena.get_node_or_null("HexFloor")
- if hex: hex.material_override.albedo_color = Color(info.floor).lightened(0.12)
+ if hex:
+  var faint = StandardMaterial3D.new(); faint.albedo_color = Color(Color(info.floor).lightened(0.4), 0.2)
+  faint.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA; faint.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+  hex.material_override = faint
 
 # ------------------------------------------------------------------ Shared pieces
 static func ring(t: float, scale := 1.0) -> Vector3:
@@ -128,10 +135,43 @@ static func scatter(count: int, rng: RandomNumberGenerator, inner := 0.9, outer 
   out.append(ring(t, rng.randf_range(inner, outer)))
  return out
 
-static func lamps(arena: ArenaView, root: Node3D, info: Dictionary) -> void:
- for i in range(6):
-  var p = ring(PI * 1.1 + i * PI * 0.8 / 5.0, 0.86) + Vector3(0, 2.4, 0)
-  var l = OmniLight3D.new(); l.light_color = Color(info.accent); l.light_energy = 1.6; l.omni_range = 9.0; l.position = p; root.add_child(l)
+## Coloured lamps around the chamber that breathe and flicker like torches.
+static func lamps(arena: ArenaView, root: Node3D, info: Dictionary, rng: RandomNumberGenerator) -> void:
+ for i in range(7):
+  var p = ring(PI * 1.05 + i * PI * 0.9 / 6.0, 0.86) + Vector3(0, 2.4, 0)
+  var l = OmniLight3D.new(); l.light_color = Color(info.accent); l.light_energy = 1.6; l.omni_range = 9.5; l.position = p; root.add_child(l)
+  var t = l.create_tween().set_loops(); t.set_trans(Tween.TRANS_SINE)
+  t.tween_property(l, "light_energy", rng.randf_range(1.9, 2.3), rng.randf_range(0.35, 0.9))
+  t.tween_property(l, "light_energy", rng.randf_range(1.1, 1.4), rng.randf_range(0.35, 0.9))
+ # A cool fill from the camera side so fighters never sink into the dark.
+ var fill = OmniLight3D.new(); fill.light_color = Color(info.sky); fill.light_energy = 0.9; fill.omni_range = 26.0; fill.position = Vector3(0, 9.0, RZ * 0.8); root.add_child(fill)
+
+## The cave floor under the hex grid: the rock shader in the instance's colours (with glowing
+## veins in the Magma Depths and Void Rift).
+static func ground(arena: ArenaView, root: Node3D, info: Dictionary) -> void:
+ var molten = {"lava": 0.35, "void": 0.2, "crystals": 0.12, "storm": 0.08}.get(str(info.kit), 0.0)
+ var mat = rock_mat(Color(info.floor).lightened(0.18), Color(info.accent), molten, 5.0)
+ # The rock shader works in mesh space: a small disc scaled up gives broad flagstones, not gravel.
+ var disc = arena.cylinder(root, 4.0, 0.2, Vector3(0, -0.09, 0), mat, 64)
+ disc.scale = Vector3(RX * 1.25 / 4.0, 1.0, RZ * 1.25 / 4.0)
+ disc.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+static func mist(arena: ArenaView, root: Node3D, info: Dictionary) -> void:
+ var plane = PlaneMesh.new(); plane.size = Vector2(RX * 2.3, RZ * 2.3)
+ var m = ShaderMaterial.new(); m.shader = load("res://shaders/vfx/mist.gdshader")
+ m.set_shader_parameter("tint", Color(info.fog).lightened(0.45)); m.set_shader_parameter("density", 0.26 if str(info.kit) in ["blight", "fungal", "water", "ice", "void"] else 0.16)
+ for y in [0.25, 0.7]:
+  var layer = arena.mesh(root, plane, m, Vector3(0, y, 0)); layer.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+## Light falling through cracks in the ceiling at the back of the chamber.
+static func shafts(arena: ArenaView, root: Node3D, info: Dictionary, rng: RandomNumberGenerator) -> void:
+ var m = ShaderMaterial.new(); m.shader = load("res://shaders/vfx/light_shaft.gdshader")
+ m.set_shader_parameter("tint", Color(info.sky).lerp(Color(info.accent), 0.4)); m.set_shader_parameter("strength", 0.45)
+ for i in range(4):
+  var cone = CylinderMesh.new(); cone.top_radius = rng.randf_range(0.5, 0.9); cone.bottom_radius = rng.randf_range(2.2, 3.4); cone.height = 11.0; cone.radial_segments = 16; cone.cap_top = false; cone.cap_bottom = false
+  var x = (i - 1.5) * 8.5 + rng.randf_range(-1.5, 1.5)
+  var beam = arena.mesh(root, cone, m, Vector3(x, 5.0, -RZ * rng.randf_range(0.35, 0.75)))
+  beam.rotation.z = rng.randf_range(-0.18, 0.18); beam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 static func motes(root: Node3D, info: Dictionary) -> void:
  var kit = str(info.kit)
@@ -144,6 +184,10 @@ static func motes(root: Node3D, info: Dictionary) -> void:
  p.direction = Vector3.UP; p.spread = 30.0; p.initial_velocity_min = 0.05; p.initial_velocity_max = 0.25
  p.gravity = {"lava": Vector3(0, 0.45, 0), "ice": Vector3(0.05, -0.35, 0), "storm": Vector3(0.6, 0, 0), "tomb": Vector3(0.25, -0.02, 0), "water": Vector3(0, 0.12, 0), "bones": Vector3(0.05, -0.08, 0)}.get(kit, Vector3(0, 0.03, 0))
  p.scale_amount_min = 0.6; p.scale_amount_max = 1.6 if kit != "ice" else 2.2
+ # A second, slower layer of larger glints close to the floor.
+ var low = p.duplicate(); root.add_child(low)
+ low.amount = 50; low.position = Vector3(0, 1.0, 0); low.emission_box_extents = Vector3(RX * 0.9, 0.8, RZ * 0.9)
+ low.gravity = Vector3(0, 0.05, 0); low.scale_amount_min = 1.5; low.scale_amount_max = 3.0
 
 # ------------------------------------------------------------------ Instance kits
 static func blight(arena: ArenaView, root: Node3D, info: Dictionary, rng: RandomNumberGenerator) -> void:

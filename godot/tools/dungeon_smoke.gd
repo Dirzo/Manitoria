@@ -109,14 +109,17 @@ func run() -> void:
  arena.queue_free()
  # Run traits: eight of the pool, two per species, rolled differently per run.
  var a=RunTraits.roll("alpha");var b=RunTraits.roll("beta")
- check(a.active.size()==RunTraits.ACTIVE,"Eight run traits are active")
- check(a.species.values().all(func(t):return t.size()==2 and t[0]!=t[1]),"Every species carries two different traits")
- check(a.species.values().all(func(t):return t.all(func(x):return x in a.active)),"Species only carry active traits")
- check(a.active!=b.active or a.species!=b.species,"Traits re-roll between runs")
- var tally={}
- for t in a.species.values():
-  for x in t:tally[x]=int(tally.get(x,0))+1
- check(tally.values().max()-tally.values().min()<=2,"Traits are dealt evenly across species")
+ check(a.active.size()>=RunTraits.AWAKEN-2,"About fourteen traits awaken each run")
+ check(a.species.values().all(func(t):return t.size()>=2 and t.size()<=3),"Every species carries two or three traits")
+ for sp in a.species:check(a.species[sp].all(func(x):return x in RunTraits.tags_of(sp)),"%s only carries its own traits"%sp)
+ check(a.species.values().all(func(t):return t.all(func(x):return x in a.active)),"Species only carry awakened traits")
+ check(a.active!=b.active or a.species!=b.species or a.flavour!=b.flavour,"Traits re-roll between runs")
+ check(RunTraits.tags_of("owlbear").has("avian") and RunTraits.tags_of("owlbear").has("ursine") and RunTraits.tags_of("owlbear").has("bruiser"),"The Owlbear is Avian, Ursine and a Bruiser")
+ var flavours={}
+ for s in range(40):
+  var r=RunTraits.roll("f%d"%s)
+  for id in r.flavour:flavours[id+str(r.flavour[id])]=true
+ check(flavours.size()>=40,"Trait flavours vary between runs")
 
  var c=Campaign.new();c.new_run("Dungeon flow",95,4242,"Standard");Dungeon.start(c);squad(c)
  check(Dungeon.active(c),"Dungeon mode is active")

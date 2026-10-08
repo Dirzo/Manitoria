@@ -69,7 +69,8 @@ static func migrate(c: Campaign) -> void:
   if not d.has(key): d[key] = 0
  for key in ["endless", "awaiting_endless"]:
   if not d.has(key): d[key] = false
- if not d.has("traits"): d.traits = RunTraits.roll(str(c.state.get("salt", c.state.seed)))
+ # Runs from before kin / element / class traits roll the new system.
+ if not d.has("traits") or int(d.traits.get("version", 1)) < 2: d.traits = RunTraits.roll(str(c.state.get("salt", c.state.seed)))
  # Before themed instances, depths were fixed; give old runs the matching instance.
  if not d.has("instance"):
   d.instance = ["blight_forest", "magma_depths", "void_rift"][int(d.act) - 1] if int(d.act) <= ACTS else DungeonInstances.ORDER[(int(d.act) - 1) % DungeonInstances.ORDER.size()]

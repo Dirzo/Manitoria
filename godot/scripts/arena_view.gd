@@ -231,7 +231,7 @@ func build_hex_floor() -> void:
  # A six-sided cylinder is a flat-top regular hexagon. A narrow gap exposes the
  # darker stone beneath, making the grid readable without bright combat overlays.
  var shape = CylinderMesh.new()
- shape.top_radius = ArenaGrid.HEX_RADIUS * FLOOR_SCALE * 0.975
+ shape.top_radius = ArenaGrid.HEX_RADIUS * FLOOR_SCALE * 0.985
  shape.bottom_radius = shape.top_radius
  shape.height = 0.06; shape.radial_segments = 6
  var pavers = MultiMesh.new(); pavers.transform_format = MultiMesh.TRANSFORM_3D
@@ -240,7 +240,7 @@ func build_hex_floor() -> void:
  var rng = RandomNumberGenerator.new(); rng.seed = 1017
  for i in range(points.size()):
   pavers.set_instance_transform(i, Transform3D(Basis(Vector3.UP, PI / 6.0), world_point(points[i], 0.035)))
-  var shade = rng.randf_range(0.65, 0.93)
+  var shade = rng.randf_range(0.80, 0.88)   # gentle variation: the grid should read, not shout
   pavers.set_instance_color(i, Color(shade * 0.86, shade * 0.97, shade))
  var mat = material(Color("435b60"), 0.12, 0.87); mat.vertex_color_use_as_albedo = true
  var tiles = MultiMeshInstance3D.new(); tiles.name = "HexFloor"; tiles.multimesh = pavers; tiles.material_override = mat

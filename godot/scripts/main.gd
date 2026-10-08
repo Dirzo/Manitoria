@@ -102,7 +102,9 @@ func _ready() -> void:
    Dungeon.start(campaign); campaign.state.gold = 420
    var dg = campaign.state.dungeon
    # QA_INSTANCE=magma_depths picks the instance; "dungeon_paths" stays on the choice screen.
-   if OS.get_environment("QA_INSTANCE") != "": dg.instance_choices = [OS.get_environment("QA_INSTANCE"), dg.instance_choices[1]]
+   if OS.get_environment("QA_INSTANCE") != "":
+    var other = dg.instance_choices[1] if dg.instance_choices[1] != OS.get_environment("QA_INSTANCE") else dg.instance_choices[0]
+    dg.instance_choices = [OS.get_environment("QA_INSTANCE"), other]
    if qa != "dungeon_paths": Dungeon.choose_instance(campaign, dg.instance_choices[0])
    if qa in ["dungeon_trail", "dungeon_fight", "dungeon_loot", "dungeon_event", "dungeon_menu"]:
     for i in range(3 if qa == "dungeon_trail" else 1):
@@ -788,6 +790,9 @@ func update_countdown() -> void:
   sound.announce("fight" if step <= 0 else "count_%d" % step, true)
 
 func build_battle_hud() -> void:
+ if not exhibition and Dungeon.active(campaign):
+  # Dungeon chambers close in at the edges of the screen.
+  DungeonUI.vignette(ui, Rect2(0, 0, 1600, 900), Color(DungeonInstances.info(Dungeon.instance_id(campaign)).fog).darkened(0.55), 0.85)
  var dashboard = BattleDashboard.new(); dashboard.game = self; ui.add_child(dashboard)
  if countdown > 0.0:
   countdown_label = Label.new(); ui.add_child(countdown_label)
