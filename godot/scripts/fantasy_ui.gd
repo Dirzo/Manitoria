@@ -72,7 +72,7 @@ void fragment(){
  elif game.phase=="starter":kicker="";place="Draft your headliner champion";stage="Your headliner leads the guild. Next you draft the rest of your squad."
  elif game.exhibition:kicker="EXHIBITION";place="The Living Arena";stage="Champion showcase"
  elif touring and Dungeon.active(c):
-  kicker="THE DUNGEON  ·  DEPTH %d OF %d"%[int(c.state.dungeon.act),Dungeon.ACTS]
+  kicker="THE DUNGEON  ·  "+str(Dungeon.depth(c).depth_label).to_upper()
   place=str(Dungeon.depth(c).name)
   stage=Dungeon.stage_label(c)
  elif touring:

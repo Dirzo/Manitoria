@@ -17,19 +17,6 @@ const LIVES := {"Keeper": 4, "Standard": 3, "Champion": 2}
 const XP_SCALE := 2.6           # fewer fights than the five cups, so each one teaches more
 const CAMP_XP := 120
 const SCORES_PATH := "user://dungeon_scores.json"
-const DEPTHS := [
- {"name": "The Rootbound Halls", "region": 0, "text": "Old roots split the stone. Beasts that heal as fast as they bleed lurk in the dark."},
- {"name": "The Cinder Vaults", "region": 1, "text": "Sealed forges still burn here. The fire-born guard what the smiths left behind."},
- {"name": "The Starless Deep", "region": 5, "text": "No light reaches this far down. Something old waits at the bottom."},
-]
-const ENDLESS := [
- {"name": "The Hollow Below", "region": 3, "text": "Past the bottom of the dungeon, the dark keeps going."},
- {"name": "The Drowned Crypt", "region": 2, "text": "Black water and older bones."},
- {"name": "The Shattered Sky", "region": 4, "text": "A cavern so vast it has its own weather."},
- {"name": "The Black Forge", "region": 1, "text": "Someone is still working the anvils down here."},
- {"name": "The Bone Orchard", "region": 0, "text": "Trees of rib and root, heavy with strange fruit."},
- {"name": "The Last Dark", "region": 5, "text": "Nobody has mapped this far. Nobody came back to try."},
-]
 const ROOMS := {
  "battle":   {"name": "Skirmish", "glyph": "swords", "color": "e8c27a", "text": "A pack of dungeon monsters. Win to pick one of three components."},
  "elite":    {"name": "Elite", "glyph": "star", "color": "ff8a7a", "text": "An alpha pack or a rival guild lost in the dark. Hard fight; win to pick one of three relics."},
@@ -39,7 +26,6 @@ const ROOMS := {
  "treasure": {"name": "Treasure", "glyph": "trophy", "color": "ffd36e", "text": "A sealed chest: gold and one of three finished items."},
  "boss":     {"name": "Warden", "glyph": "skull", "color": "ff5a6a", "text": "The boss of this depth. Defeat it to descend. Losing costs a life and you must try again."},
 }
-const PACKS := ["Gloomfang Pack", "Hollow Brood", "Mire Stalkers", "Bone Choir", "Vault Sentries", "Ashen Swarm", "Lantern Eaters", "Cinder Hounds", "Deepcrawlers", "Shade Coven"]
 const EVENTS := [
  {"id": "smith", "title": "The Wandering Smith", "text": "A hooded smith works a portable anvil by candlelight. \"Coin for craft,\" she says.",
   "choices": [{"label": "Commission a piece · 90 gold", "detail": "Pick one of three finished items.", "gold": -90, "loot": "item"}, {"label": "Ask for scraps", "detail": "Gain a random component.", "component": 1}]},
@@ -67,9 +53,10 @@ static func start(c: Campaign) -> void:
  c.state.mode = "dungeon"
  c.state.dungeon = {"act": 1, "row": -1, "col": -1, "lives": lives, "max_lives": lives, "fight": false, "loot": [], "loot_kind": "", "loot_queue": [], "event": {}, "fights": 0, "wins": 0, "elites": 0, "wardens": 0, "rooms": 0, "history": [], "map": [], "trail": [], "relics": [], "score": 0, "endless": false, "awaiting_endless": false}
  c.state.dungeon.traits = RunTraits.roll(str(c.state.get("salt", c.state.seed)))
- c.state.dungeon.map = generate(c, 1)
+ c.state.dungeon.visited = []; c.state.dungeon.instance = ""
+ c.state.dungeon.instance_choices = DungeonInstances.offer([], str(c.state.seed))
  sync_level(c)
- c.add_news("Into the dungeon", "Three depths, three Wardens. Your guild has %d li%s: every lost fight costs one." % [lives, "fe" if lives == 1 else "ves"])
+ c.add_news("Into the dungeon", "Three depths, three Wardens: choose which instance to enter at each descent. Your guild has %d li%s: every lost fight costs one." % [lives, "fe" if lives == 1 else "ves"])
 
 ## Older dungeon saves called lives "flames" and had no relics, traits or score.
 static func migrate(c: Campaign) -> void:
@@ -83,21 +70,42 @@ static func migrate(c: Campaign) -> void:
  for key in ["endless", "awaiting_endless"]:
   if not d.has(key): d[key] = false
  if not d.has("traits"): d.traits = RunTraits.roll(str(c.state.get("salt", c.state.seed)))
+ # Before themed instances, depths were fixed; give old runs the matching instance.
+ if not d.has("instance"):
+  d.instance = ["blight_forest", "magma_depths", "void_rift"][int(d.act) - 1] if int(d.act) <= ACTS else DungeonInstances.ORDER[(int(d.act) - 1) % DungeonInstances.ORDER.size()]
+  d.visited = [d.instance]; d.instance_choices = []
+
+## The instance the guild is in (or about to choose, while the offer is open).
+static func instance_id(c: Campaign) -> String:
+ var d = c.state.dungeon
+ if str(d.get("instance", "")) != "": return str(d.instance)
+ return str(d.get("instance_choices", ["blight_forest"])[0]) if not d.get("instance_choices", []).is_empty() else "blight_forest"
 
 static func depth(c: Campaign) -> Dictionary:
  var act = int(c.state.dungeon.act)
- if act <= ACTS: return DEPTHS[act - 1]
- var e = ENDLESS[(act - ACTS - 1) % ENDLESS.size()].duplicate()
- e.name = "%s · Endless %d" % [e.name, act - ACTS]
- return e
+ var info = DungeonInstances.info(instance_id(c)).duplicate()
+ info.text = info.tagline
+ info.depth_label = ("Endless depth %d" % (act - ACTS)) if act > ACTS else "Depth %d of %d" % [act, ACTS]
+ return info
 
 static func warden(c: Campaign) -> Dictionary:
- return Bestiary.BOSSES[Bestiary.boss_for(int(c.state.dungeon.act))]
+ return Bestiary.BOSSES[str(DungeonInstances.info(instance_id(c)).boss)]
 
+## The arena and banners use this like a World Tour region; "dungeon" tells the arena to dress the stage.
 static func region(c: Campaign) -> Dictionary:
- var r = WorldTour.REGIONS[int(depth(c).region)].duplicate()
- r.name = depth(c).name; r.place = depth(c).name
- return r
+ var i = DungeonInstances.info(instance_id(c))
+ return {"name": i.name, "place": i.name, "theme": DungeonInstances.theme_name(instance_id(c)), "color": i.accent, "floor": i.floor, "sky": i.sky, "dungeon": instance_id(c)}
+
+static func choose_instance(c: Campaign, id: String) -> bool:
+ var d = c.state.dungeon; var t = c.state.tour
+ if id not in d.get("instance_choices", []): c.last_error = "That way is not open."; return false
+ var before = c.state.duplicate(true)
+ d.instance = id; d.visited.append(id); d.instance_choices = []
+ d.map = generate(c, int(d.act)); d.row = -1; d.col = -1; d.trail = []; sync_level(c)
+ if t.get("intermission", false): t.erase("intermission"); t.erase("intermission_seen"); t.cup_started = true
+ c.add_news("Entering " + DungeonInstances.info(id).name, str(DungeonInstances.info(id).tagline))
+ if c.save(): return true
+ c.state = before; return false
 
 ## Tour level follows how far down the guild is, so rival levels, gear and pricing grow
 ## across the descent the same way they grow across five cups, then keep climbing in endless.
@@ -112,7 +120,7 @@ static func sync_level(c: Campaign) -> void:
 
 # ------------------------------------------------------------------ Map
 static func generate(c: Campaign, act: int) -> Array:
- var rng = RandomNumberGenerator.new(); rng.seed = hash(str(c.state.seed) + "|dungeon|" + str(act))
+ var rng = RandomNumberGenerator.new(); rng.seed = hash(str(c.state.seed) + "|dungeon|" + str(act) + "|" + str(c.state.dungeon.get("instance", "")))
  var rows = []
  for r in range(ROWS):
   var count = 1 if r == ROWS - 1 else (3 if r == 0 else rng.randi_range(2, 4))
@@ -160,7 +168,7 @@ static func node(c: Campaign, row: int = -99, col: int = -99) -> Dictionary:
 ## Rooms the guild can step into next.
 static func reachable(c: Campaign) -> Array:
  var d = c.state.dungeon
- if busy(c): return []
+ if busy(c) or d.map.is_empty(): return []
  if int(d.row) < 0: return range(d.map[0].size())
  if int(d.row) >= ROWS - 1: return []
  return node(c).get("links", [])
@@ -168,7 +176,7 @@ static func reachable(c: Campaign) -> Array:
 ## Something must be settled before moving: a fight, spoils, an event, the outfitter or a choice.
 static func busy(c: Campaign) -> bool:
  var d = c.state.dungeon
- return d.fight or not d.loot.is_empty() or not d.event.is_empty() or d.awaiting_endless or c.state.tour.get("shop", false) or c.state.tour.get("intermission", false) or c.state.get("run_over", false) or c.state.tour.get("complete", false)
+ return d.fight or not d.get("instance_choices", []).is_empty() or not d.loot.is_empty() or not d.event.is_empty() or d.awaiting_endless or c.state.tour.get("shop", false) or c.state.tour.get("intermission", false) or c.state.get("run_over", false) or c.state.tour.get("complete", false)
 
 static func enter(c: Campaign, col: int) -> String:
  var d = c.state.dungeon
@@ -296,6 +304,7 @@ static func quality(c: Campaign) -> float:
  var kind = str(fight_node(c).get("type", "battle"))
  var mult = {"battle": 0.97, "elite": 1.06, "boss": 1.0}.get(kind, 1.0)
  if kind == "battle" and int(d.act) == 1 and int(d.row) <= 2: mult = 0.92 if int(d.row) <= 0 else 0.94
+ mult *= 1.0 + 0.05 * (mini(int(d.act), ACTS) - 1)   # each classic depth is a little meaner
  if int(d.act) > ACTS: mult *= pow(1.2, int(d.act) - ACTS)   # endless compounds, so every run ends somewhere
  return base * mult
 
@@ -337,8 +346,7 @@ static func guild_at(c: Campaign, row: int, col: int) -> Dictionary:
 static func pack(c: Campaign, row: int, col: int, alpha: bool) -> Dictionary:
  var d = c.state.dungeon; var t = c.state.tour
  var rng = RandomNumberGenerator.new(); rng.seed = hash(str(c.state.seed) + "|pack|%d|%d|%d" % [int(d.act), row, col])
- var pool = Bestiary.pool(int(d.act))
- if int(d.act) > ACTS: pool += Bestiary.pool(int(d.act) + 1)
+ var pool = DungeonInstances.info(instance_id(c)).mobs.duplicate()
  var size = 4 if int(d.act) == 1 and row <= 1 else 5
  var st = WorldTour.stage(c); var diff = str(c.state.get("difficulty", "Standard"))
  var heroes = []
@@ -348,30 +356,32 @@ static func pack(c: Campaign, row: int, col: int, alpha: bool) -> Dictionary:
   var h = Bestiary.make(key, id, TourBalance.level(int(t.level), diff, id), st, diff, Campaign.FORMATION[i])
   if alpha and i == 0: h.name = "Alpha " + h.name; h.vigor = int(h.get("vigor", 0)) + 3; h.force = int(h.get("force", 0)) + 2
   heroes.append(h)
- var title = PACKS[abs(hash(str(c.state.seed) + str(row) + str(col) + str(d.act))) % PACKS.size()]
+ var lead = Bestiary.info(str(heroes[0].monster)).name
+ var title = "%s %s" % [lead, ["Pack", "Brood", "Horde", "Swarm", "Patrol"][abs(hash(str(c.state.seed) + str(row) + str(col) + str(d.act))) % 5]]
  return {"name": ("Alpha " + title) if alpha else title, "roster": heroes, "practice": false}
 
 ## The Warden: one boss and two escorts from its depth.
 static func boss_fight(c: Campaign, row: int) -> Dictionary:
  var d = c.state.dungeon; var t = c.state.tour
- var key = Bestiary.boss_for(int(d.act)); var b = Bestiary.BOSSES[key]
+ var key = str(DungeonInstances.info(instance_id(c)).boss); var b = Bestiary.BOSSES[key]
  var st = WorldTour.stage(c); var diff = str(c.state.get("difficulty", "Standard"))
  var level = TourBalance.level(int(t.level), diff)
  var heroes = [Bestiary.make(key, "boss_%d" % int(d.act), level, st, diff, Campaign.FORMATION[0])]
+ heroes[0].depth = mini(int(d.act), ACTS)
  # Endless Wardens return stronger each cycle instead of starting over.
  if int(d.act) > ACTS: heroes[0].empower = 0.35 * (int(d.act) - 1)
- var pool = Bestiary.pool(int(d.act))
+ var pool = DungeonInstances.info(instance_id(c)).mobs
  for i in range(2):
   var id = "boss_%d_escort_%d" % [int(d.act), i]
   heroes.append(Bestiary.make(pool[abs(hash(id + str(c.state.seed))) % pool.size()], id, maxi(1, level - 1), st, diff, Campaign.FORMATION[i + 3]))
- return {"name": "%s · %s" % [b.name, b.title], "roster": heroes, "practice": false, "boss": key}
+ return {"name": "%s · Warden of %s" % [b.name, str(DungeonInstances.info(instance_id(c)).name).trim_prefix("The ")], "roster": heroes, "practice": false, "boss": key}
 
 static func stage_label(c: Campaign) -> String:
  var d = c.state.dungeon
  if c.state.tour.get("complete", false): return "Run complete · %d points" % int(d.get("final_score", d.score))
  if c.state.get("run_over", false): return "Out of lives"
  if d.get("awaiting_endless", false): return "The dungeon is conquered"
- if c.state.tour.get("intermission", false): return "Descending to depth %d" % int(d.act)
+ if not d.get("instance_choices", []).is_empty(): return "Choose your path"
  if int(d.row) < 0: return "Choose your first room"
  var n = node(c)
  var room = str(ROOMS.get(str(n.get("type", "battle")), {}).get("name", "Room"))
@@ -444,7 +454,8 @@ static func descend(c: Campaign) -> void:
  var rng = RandomNumberGenerator.new(); rng.seed = hash(str(c.state.seed) + "|descend|%d" % int(d.act))
  d.lives = mini(int(d.max_lives), int(d.lives) + 1)
  for h in c.lineup(): c.gain_xp(h, TourBalance.TRAINING_XP, true, true, rng)
- d.act = int(d.act) + 1; d.row = -1; d.col = -1; d.trail = []; d.map = generate(c, int(d.act)); sync_level(c)
+ d.act = int(d.act) + 1; d.row = -1; d.col = -1; d.trail = []; d.map = []; sync_level(c)
+ d.instance = ""; d.instance_choices = DungeonInstances.offer(d.visited, str(c.state.seed))
  t.intermission = true; t.erase("intermission_seen"); c.state.market_wave = int(c.state.get("market_wave", 0)) + 1; c.create_market()
 
 # ------------------------------------------------------------------ Fights

@@ -18,6 +18,9 @@ func equip_all(c: Campaign) -> void:
    if c.free_slot(h) != "" and c.equip(h.id, item): break
 
 func settle(c: Campaign, rng: RandomNumberGenerator) -> void:
+ if not c.state.dungeon.get("instance_choices", []).is_empty():
+  var choices = c.state.dungeon.instance_choices
+  Dungeon.choose_instance(c, choices[rng.randi_range(0, choices.size() - 1)])
  var guard = 0
  while not c.pending_heroes().is_empty() and guard < 40:
   var h = c.pending_heroes()[0]; c.choose(h.id, 0); guard += 1
@@ -71,6 +74,7 @@ func play(seed: int, difficulty: String, endless: bool) -> Dictionary:
    var sim = BattleSim.new(); sim.silent = true; sim.team_mods = c.battle_mods()
    sim.setup(c.lineup(), c.opponent().roster, c.match_seed(), c.quality()); sim.run_to_end()
    bump("%s · depth %d" % [kind, int(d.act)], sim.winner == 0)
+   if kind == "boss": bump("warden · %s" % str(DungeonInstances.info(Dungeon.instance_id(c)).boss), sim.winner == 0)
    c.resolve(sim)
   else:
    var options = Dungeon.reachable(c)

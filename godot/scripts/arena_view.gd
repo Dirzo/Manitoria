@@ -474,7 +474,9 @@ func play(id: int, clip: String, lock: float = 0.0) -> void:
 func _process(dt: float) -> void:
  elapsed += dt
  if camera: update_camera(dt)
+ var dungeon = has_meta("dungeon_saved")   # dungeon chambers hide the colosseum entirely
  for node in perimeter:
+  if dungeon: node.visible = false; continue
   # Lower camera angles cut away near-side architecture to keep the heroes visible.
   var facing = Vector2(node.position.x, node.position.z).normalized().dot(Vector2(camera.position.x, camera.position.z).normalized())
   node.visible = camera_pitch > 0.69 or facing < 0.30
@@ -858,6 +860,7 @@ func set_region(region: Dictionary) -> void:
  var title=region.get("place","")
  if title==region_name:return
  region_name=title
+ DungeonArena.undress(self)
  if is_instance_valid(world_props):world_props.queue_free()
  world_props=Node3D.new();add_child(world_props)
  world_props.scale=Vector3(FLOOR_SCALE * ArenaGrid.LINEAR_SCALE,1,FLOOR_SCALE * ArenaGrid.LINEAR_SCALE)
@@ -871,6 +874,7 @@ func set_region(region: Dictionary) -> void:
    if not region.is_empty():entry.node.material_override.albedo_color=Color(region.floor)
   for node in world_stage.get_children():
    if node is DirectionalLight3D and node.shadow_enabled:node.light_color=Color(region.get("sky","ffe4c0"))
+ if region.has("dungeon"):DungeonArena.dress(self,region,world_props);return
  if region.is_empty():return
  var tint=Color(region.color);var theme=region.theme
  for side in [-1,1]:

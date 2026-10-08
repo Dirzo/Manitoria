@@ -101,6 +101,9 @@ func _ready() -> void:
   elif qa.begins_with("dungeon"):
    Dungeon.start(campaign); campaign.state.gold = 420
    var dg = campaign.state.dungeon
+   # QA_INSTANCE=magma_depths picks the instance; "dungeon_paths" stays on the choice screen.
+   if OS.get_environment("QA_INSTANCE") != "": dg.instance_choices = [OS.get_environment("QA_INSTANCE"), dg.instance_choices[1]]
+   if qa != "dungeon_paths": Dungeon.choose_instance(campaign, dg.instance_choices[0])
    if qa in ["dungeon_trail", "dungeon_fight", "dungeon_loot", "dungeon_event", "dungeon_menu"]:
     for i in range(3 if qa == "dungeon_trail" else 1):
      Dungeon.enter(campaign, Dungeon.reachable(campaign)[0])
@@ -131,12 +134,16 @@ func _ready() -> void:
      Dungeon.bank_score(campaign, ["Retired", "Fallen", "Fallen", "Fallen"][i])
    if qa == "dungeon_boss":
     phase = "prep"; render(); begin_battle()
+   elif qa == "dungeon_stage":
+    for h in campaign.state.roster: h.pending = []; h.rewards = []
+    Dungeon.enter(campaign, 0); ArenaView.set_follow(false); phase = "prep"; render(); begin_battle(); paused = true
+    arena.target_distance = 50; arena.camera_distance = 50; arena.target_pitch = 0.72; arena.camera_pitch = 0.72; arena.target_yaw = 0.0; arena.camera_yaw = 0.0
    elif qa == "dungeon_menu": phase = "menu"
    elif qa == "dungeon_intro": phase = "intro"
    elif qa == "dungeon_result": phase = "result"
    elif qa == "dungeon_market": phase = "hub"; tab = "market"
    else: phase = "hub"; tab = "overview"
-   if qa != "dungeon_boss": render()
+   if qa not in ["dungeon_boss", "dungeon_stage"]: render()
    if qa == "dungeon_scores": DungeonUI.high_scores(self)
    if has_meta("qa_scroll"):
     await get_tree().process_frame

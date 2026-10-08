@@ -24,6 +24,10 @@ func fight(c: Campaign, win: bool) -> bool:
  return c.resolve(sim)
 
 func settle(c: Campaign) -> void:
+ if not c.state.dungeon.get("instance_choices", []).is_empty():
+  var pick = c.state.dungeon.instance_choices[0]
+  check(Dungeon.choose_instance(c, pick), "Choose an instance")
+  check(c.state.dungeon.instance == pick and not c.state.dungeon.map.is_empty(), "The chosen instance gets its own map")
  while not c.pending_heroes().is_empty():
   var h=c.pending_heroes()[0];check(c.choose(h.id,0),"Level reward applies")
  var d=c.state.dungeon
@@ -81,6 +85,28 @@ func run() -> void:
    check(m.any(func(row):return row.any(func(n):return n.type=="elite")),"Every depth holds an elite")
    for r in range(1,m.size()):
     for j in range(m[r].size()):check(m[r-1].any(func(n):return j in n.links),"Every room has a way in")
+ # Ten instances, each with four monsters and a Warden that exist in the bestiary.
+ check(DungeonInstances.ORDER.size() == 10, "Ten dungeon instances")
+ for id in DungeonInstances.ORDER:
+  var info = DungeonInstances.info(id)
+  check(info.mobs.size() == 4 and info.mobs.all(func(k): return Bestiary.MOBS.has(k)), "%s monsters exist" % id)
+  check(Bestiary.BOSSES.has(info.boss), "%s Warden exists" % id)
+  for k in info.mobs: check(HeroData.species.has(Bestiary.MOBS[k].sp), "%s uses a real creature model" % k)
+ var visited = []
+ for i in range(10):
+  var offer = DungeonInstances.offer(visited, "cycle")
+  check(offer.size() == 2 and offer[0] != offer[1] and (i == 9 or not offer.any(func(id): return id in visited)), "Offers never repeat an instance within a cycle")
+  check(offer.any(func(id): return id not in visited), "Every offer includes an unvisited instance")
+  visited.append(offer[0])
+ check(DungeonInstances.offer(visited, "cycle").size() == 2, "Offers continue after every instance is visited")
+ # Every instance dresses the arena without errors.
+ var arena = ArenaView.new(); root.add_child(arena); await process_frame
+ for id in DungeonInstances.ORDER:
+  var i = DungeonInstances.info(id)
+  arena.set_region({"name": i.name, "place": i.name, "theme": DungeonInstances.theme_name(id), "color": i.accent, "floor": i.floor, "sky": i.sky, "dungeon": id})
+  check(arena.world_props.get_child_count() > 40, "%s arena is dressed" % id)
+ arena.set_region({}); check(not arena.has_meta("dungeon_saved"), "Leaving the dungeon restores the colosseum")
+ arena.queue_free()
  # Run traits: eight of the pool, two per species, rolled differently per run.
  var a=RunTraits.roll("alpha");var b=RunTraits.roll("beta")
  check(a.active.size()==RunTraits.ACTIVE,"Eight run traits are active")
@@ -95,6 +121,7 @@ func run() -> void:
  var c=Campaign.new();c.new_run("Dungeon flow",95,4242,"Standard");Dungeon.start(c);squad(c)
  check(Dungeon.active(c),"Dungeon mode is active")
  check(c.state.dungeon.lives==3,"Standard difficulty has three lives")
+ check(c.state.dungeon.instance_choices.size()==2 and c.state.dungeon.map.is_empty(),"A run opens on a choice of two instances")
  check(WorldTour.opponent(c).roster.size()>=4,"Opponent preview works without a bracket")
  check(not c.state.tour.has("bracket"),"No cup bracket is drawn")
  # Relics and traits reach the fight.
@@ -115,8 +142,9 @@ func run() -> void:
  check(c.state.dungeon.history.size()==3,"Three Wardens recorded")
  check(c.state.get("chests",[]).size()==3,"Each Warden drops a medal chest")
  for k in ["battle","elite","boss","treasure","rest"]:check(seen.has(k),"Visited a %s room"%k)
+ check(c.state.dungeon.visited.size()==3 and c.state.dungeon.visited.duplicate().all(func(id):return c.state.dungeon.visited.count(id)==1),"Three different instances on the way down")
  check(Dungeon.go_endless(c),"Descend into the endless depths")
- check(int(c.state.dungeon.act)==4 and c.state.dungeon.endless,"Endless depth 4 opens")
+ check(int(c.state.dungeon.act)==4 and c.state.dungeon.endless and c.state.dungeon.instance_choices.size()==2,"Endless depth 4 opens with a new choice")
  settle(c)
  var quality_before=c.quality()
  await walk_depth(c,seen,false)
@@ -134,6 +162,10 @@ func run() -> void:
  old.state.dungeon.flames=2;old.state.dungeon.max_flames=3;old.state.dungeon.erase("lives");old.state.dungeon.erase("max_lives");old.state.dungeon.erase("relics");old.state.dungeon.erase("traits")
  Dungeon.migrate(old)
  check(old.state.dungeon.lives==2 and old.state.dungeon.max_lives==3 and old.state.dungeon.has("traits"),"Flame saves migrate to lives")
+ var pre=Campaign.new();pre.new_run("Pre-instance save",98,56,"Standard");Dungeon.start(pre)
+ for k in ["instance","visited","instance_choices"]:pre.state.dungeon.erase(k)
+ pre.state.dungeon.act=2;Dungeon.migrate(pre)
+ check(pre.state.dungeon.instance=="magma_depths" and pre.state.dungeon.instance_choices.is_empty(),"Saves from before instances keep their depth's theme")
 
  # Running out of lives ends the run and banks its score.
  var f=Campaign.new();f.new_run("Snuffed",96,777,"Champion");Dungeon.start(f);squad(f)
@@ -141,6 +173,7 @@ func run() -> void:
  var guard=0
  while not f.state.get("run_over",false) and guard<10:
   settle(f)
+  if f.state.dungeon.map.is_empty():continue
   var opts=Dungeon.reachable(f);var pick=opts[0]
   for o in opts:
    if f.state.dungeon.map[int(f.state.dungeon.row)+1][o].type in ["battle","elite","boss"]:pick=o;break

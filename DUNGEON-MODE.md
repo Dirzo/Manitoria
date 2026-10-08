@@ -10,28 +10,49 @@ On the main menu, choose **Dungeon** (between **New club** and **Exhibition**). 
 
 **Dungeon high scores** on the main menu (and **High scores** in the Dungeon tab) shows your best 15 banked runs.
 
-## The descent
+## The descent: ten instances
 
-| Depth | Name | Warden |
-| --- | --- | --- |
-| 1 | The Rootbound Halls | The Rootmother |
-| 2 | The Cinder Vaults | Magmaw, the Forge Tyrant |
-| 3 | The Starless Deep | The Abyssal Keeper |
-| 4+ | Endless depths (The Hollow Below, The Drowned Crypt, …) | The three Wardens return, stronger each cycle |
+Each run is three depths, then optional endless depths. At the top of every staircase you choose between **two instances** you haven't visited this cycle. Each instance has its own monsters, Warden, arena, palette and map art.
 
-Each depth is a branching map of eight rows: seven rows of rooms, then a Warden. Every room is reachable. The **Dungeon** tab shows the map; glowing rooms are on your path.
+| Instance | Arena | Monsters | Warden |
+| --- | --- | --- | --- |
+| The Blight Forest | Dead trees, toxic pools, thorns, drifting spores | Gloomfang, Thornback Troll, Sporeling, Rotwing | **The Rootmother**: summons Sporelings, regrows |
+| The Mana Caverns | Glowing crystal clusters and giant crystal spires | Mana Wisp, Crystal Golem, Glimmerfox, Shardscale | **The Prismatic Archon**: mana surge silences the whole squad; shield and Mana Wisps at half health |
+| The Magma Depths | Lava pools, molten-veined basalt, lavafalls, embers | Ember Imp, Magma Hound, Slagbrute, Ash Golem | **Magmaw, the Forge Tyrant**: stunning slams, enrage |
+| The Frostbound Crypt | Ice shards, snow drifts, frozen pillars, snowfall | Rimefang, Frost Wraith, Glacier Yeti, Rime Harpy | **The Frost Matriarch**: blizzard damages and slows everyone; enrage |
+| The Drowned Sanctum | Flooded floor, broken marble columns, coral | Tide Naga, Brine Serpent, Shellback, Siren | **The Drowned Leviathan**: tidal slams, Sirens, regeneration |
+| The Fungal Hollows | Giant glowing mushrooms in three colours | Mycelid, Spore Spider, Capbear, Glowmoth | **The Spore Queen**: hatches Spore Spiders; choking spore clouds |
+| The Ossuary of Kings | Bone piles, horned skulls, candles, falling ash | Bone Gargoyle, Grave Hound, Crypt Knight, Wight | **The Bone King**: raises Bone Gargoyles behind shields; enrages near death |
+| The Storm Spire | Iron lightning pylons, floating rocks, sparks | Storm Harpy, Thunderhawk, Spark Kirin, Galvanic Golem | **The Tempest Roc**: chain lightning stuns the whole squad |
+| The Gilded Tomb | Sandstone obelisks with gold caps, sarcophagi, braziers | Sand Manticore, Tomb Jackal, Mummified Lion, Scarab Golem | **The Sun-Eater Pharaoh**: sunfire slams; golden wards with Tomb Jackals |
+| The Void Rift | Floating void shards, glowing rune halos | Shade Stalker, Void Weaver, Star Wraith, Mind Eater | **The Abyssal Keeper**: shielded phases with Shade Stalkers; slams |
 
-| Room | What happens | Reward |
-| --- | --- | --- |
-| Skirmish | A pack of dungeon monsters | 1 of 3 components |
-| Elite | An alpha monster pack, or a rival guild lost in the dark (+6% strength) | 1 of 3 relics |
-| Outfitter | The guild-run shop: buy, forge, reroll | — |
-| Campfire | **Rest** (restore 1 life) or **Train** (+120 XP for fielded champions) | — |
-| Unknown | One of eight events with a choice | varies |
-| Treasure | A chest | Gold + 1 of 3 finished items |
-| Warden | Boss + two escorts | A finished item, a Warden relic and a medal chest |
+Each depth is a branching map of eight rows: seven rows of rooms, then the Warden. Every room is reachable. Wardens scale with the depth they guard, not with the instance, so any instance is fair at any depth. Each Warden also has a mechanics weight so that, for example, Magmaw's slams and enrage don't make him harder than the Rootmother's summons.
 
-Any reward can be skipped for 25 gold. When a fight earns several rewards, they queue up one after another.
+### Arenas
+
+In a dungeon fight the colosseum is replaced by a cave chamber for that instance:
+
+- the grandstands, pillars, banners, braziers and crowd are hidden;
+- a ring of cave rock and hanging stalactites closes the arena in;
+- the instance adds its own set pieces, coloured lamps, fog, floor colour and drifting particles (embers, snow, spores, sparks, dust, motes).
+
+Props stay outside the hex field and are kept low on the camera side, so they never hide fighters. Everything is built from primitives and the game's rock shader, so it works in the Compatibility renderer and needs no new models. Leaving the dungeon (the guild run, exhibition) restores the colosseum exactly.
+
+### The Dungeon screen
+
+The Dungeon tab is a single screen with no scrolling:
+
+- **Map (left):** framed by the instance's painting, with the instance name, depth, room and tagline.
+- **Sidebar (right):**
+  - **Next:** the fight in front of you (Scout, Formation, Fight), or a pointer to the map, plus the Warden of this depth.
+  - **Relics.**
+  - **Run traits:** your squad's synergies.
+  - **Tools:** Traits, Scores, Vault and Guide.
+- **Overlays** across the whole screen, for decisions that block the map:
+  - **Choose your path:** two instance cards with art, Warden and monster list.
+  - **The dungeon is conquered:** bank your score or go endless.
+  - **Run complete / Out of lives:** score, rank and the route you took.
 
 ## Lives
 
@@ -65,24 +86,20 @@ Every run rolls **8 of 13 traits**: Wildheart, Bloodfang, Stormcaller, Ironhide,
 - **Where they show:** trait chips appear on every draft-board card and on the headliner signing screen. The Dungeon tab shows your squad's active traits, and **Run traits** lists all eight with their tiers and which species carry them.
 - **Scope:** run traits apply only to the player's squad, and only in dungeon mode. The guild run is unchanged.
 
-## Monsters and Wardens
+## Monsters and Wardens (details)
 
-Skirmishes and alpha packs are made of dungeon monsters: 15 mobs, five per depth. Each has its own name, skin colour, size, stat profile, and sometimes an item behaviour. Some examples:
+There are 40 dungeon monsters, four per instance, and 10 Wardens. Each monster has its own name, skin colour, size and stat profile; some also borrow an item behaviour, like the Thornback Troll's stunning thorns, the Ash Golem's crack-shield or the Galvanic Golem's lightning rod. Skirmishes and alpha packs draw from the current instance's four monsters, and Wardens bring two of them as escorts.
 
-- **Gloomfang:** a fast violet wolf.
-- **Thornback Troll:** its hide stuns attackers.
-- **Ember Imp:** a small, fragile fire caster.
-- **Ash Golem:** shields itself when cracked.
-- **Shade Stalker:** dodges and crits.
-- **Mind Eater:** a petrifying basilisk.
+Warden mechanics are built from six parts:
 
-Wardens are oversized bosses with fight mechanics:
+- **Summons:** adds on a timer.
+- **Slam:** stuns everyone close by.
+- **Enrage:** at low health.
+- **Phases:** a shield plus adds at health thresholds.
+- **Pulse:** damage and a status (slow, silence or stun) on the whole squad.
+- **Regeneration.**
 
-- **The Rootmother:** summons two Sporelings every 13 s and slowly regrows.
-- **Magmaw, the Forge Tyrant:** a ground slam every 11 s stuns everyone nearby; enrages below 40% health.
-- **The Abyssal Keeper:** at ⅔ and ⅓ health it shields itself and calls two Shade Stalkers; it also slams.
-
-**Art note:** monsters reuse the existing 32 creature models, with a recolouring skin shader, size changes and a glowing rim on bosses. Truly new creature models and portraits would need new art assets. Their draft-style portraits still show the base creature.
+**Art note:** monsters reuse the existing 32 creature models, with a recolouring skin shader, size changes and a glowing rim on Wardens. Truly new creature models and portraits would need new art assets (for example from Meshy, imported as `.glb` like the existing creatures). Their draft-style portraits still show the base creature.
 
 Monster stats ignore the run's random draft tiers, so a Warden is equally strong whichever tier its model rolled.
 
@@ -100,22 +117,25 @@ After the third Warden you choose between two options:
 - **Bank score:** the run ends as *Conquered*.
 - **Into the endless depths:** the run continues through new depths. Enemy strength compounds by +20% per endless depth, and Wardens return with +35% health and damage per depth number. Each depth still opens with a recruit board, one restored life and training. Use **Retire** in the Dungeon tab at any time to bank the score; otherwise the run ends when your lives run out.
 
-## Balance (auto-player probe)
+## Balance
 
-`tools/dungeon_balance_probe.gd` plays full runs with real fights. Its auto-player drafts normally, picks rooms at random, equips everything it gets and buys gear. It has no formation or tactics planning, so real players should do better.
+Two probes, both headless:
 
-Standard, 16 runs:
+- **`tools/dungeon_balance_probe.gd`** plays full runs with real fights. Its auto-player drafts normally, picks instances and rooms at random, equips everything it gets and buys gear. It has no formation or tactics planning, so real players should do better.
+- **`tools/warden_probe.gd`** fights every Warden against the same reference squads at each depth and finds the stat weight that hits a target win rate. Each Warden has one weight per depth. Summoners need more at depth 2–3, where their adds fall behind your squad. The weights are scaled against the Wardens tuned in real runs (the Rootmother at depth 1, Magmaw at depth 2, the Keeper at depth 3).
+
+Standard, 24 full runs, with random instances:
 
 | Room | Depth 1 | Depth 2 | Depth 3 |
 | --- | --- | --- | --- |
-| Skirmish | 78% | 83% | 97% |
-| Elite | 90% | 63% | 80% |
-| Warden (per attempt) | 67% | 47% | 58% |
+| Skirmish | 76% | 89% | 78% |
+| Elite | 93% | 83% | 89% |
+| Warden (per attempt) | 74% | 47% | 74% |
 
-- **Full clears:** 7 of 16 runs cleared all three depths.
-- **Endless (8 runs):** the runs that cleared depth 3 ended between endless depths 2 and 3, at scores around 15,000–22,000. Every run ends somewhere.
+- **Full clears:** 14 of 24 runs cleared all three depths.
+- **Endless:** earlier probes had runs end between endless depths 2 and 3 (enemy strength compounds +20% per endless depth).
 
-These are first-pass numbers, and Magmaw is the hardest Warden. Treat them as a starting point for playtesting.
+Each Warden appears only a handful of times in 24 runs, so per-Warden numbers are noisy. Magmaw has consistently been the hardest and the Frost Matriarch the easiest, and both have since been nudged toward the middle. Treat all of this as a starting point for playtesting.
 
 ## Files
 
@@ -123,9 +143,12 @@ These are first-pass numbers, and Magmaw is the hardest Warden. Treat them as a 
 - `godot/scripts/dungeon_ui.gd`: the map screen, relic and trait panels, spoils and relic pickers, event/campfire dialogs, the endless choice, high scores and the guide.
 - `godot/scripts/relics.gd`: the relic catalogue and the shared combat-modifier code (also used by traits and monsters).
 - `godot/scripts/run_traits.gd`: the trait pool, per-run rolls, counting and synergy bonuses.
-- `godot/scripts/bestiary.gd`: monsters, Wardens and their fight mechanics, and the monster skins.
+- `godot/scripts/dungeon_instances.gd`: the ten instances (palette, arena kit, art, monsters, Warden) and the two-choice offers.
+- `godot/scripts/dungeon_arena.gd`: turns the colosseum into each instance's cave chamber, and restores it afterwards.
+- `godot/scripts/bestiary.gd`: monsters, Wardens and their fight mechanics, Warden strength by depth, and the monster skins.
 - `godot/shaders/vfx/monster_skin.gdshader`: the monster recolour and rim-glow pass.
 - `godot/tools/dungeon_smoke.gd`: a headless routing test (map shape, traits, relics in battle, all room types, endless, scores, save migration, running out of lives).
+- `godot/tools/warden_probe.gd`: Warden calibration; sweeps each Warden's weight against the same reference squads (`PROBE_DEPTH`, `PROBE_SQUADS`, `PROBE_TARGET`, `PROBE_BOSS`).
 - `godot/tools/dungeon_balance_probe.gd`: the auto-player balance probe (`PROBE_RUNS`, `PROBE_DIFFICULTY`, `PROBE_ENDLESS=1`). It restores your high-score file when it finishes.
 
 ```
@@ -136,6 +159,7 @@ PROBE_RUNS=16 godot --headless --path godot -s tools/dungeon_balance_probe.gd
 QA captures:
 
 - `--qa=dungeon_menu`, `dungeon_trail`, `dungeon_fight`, `dungeon_loot`, `dungeon_event`, `dungeon_intro`, `dungeon_result`
-- `dungeon_market`, `dungeon_endless`, `dungeon_scores`, `dungeon_boss`
+- `dungeon_market`, `dungeon_endless`, `dungeon_scores`, `dungeon_boss`, `dungeon_paths`, `dungeon_stage`
+- Add `QA_INSTANCE=<id>` to pick the instance, for example `QA_INSTANCE=storm_spire … --qa=dungeon_stage`.
 
 Saves from the first dungeon build (which used "flames") load as lives automatically.

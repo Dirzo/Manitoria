@@ -1,7 +1,7 @@
 class_name DungeonUI
 extends RefCounted
-## The dungeon's map screen: the depth's branching rooms, the path you took, the rooms you can
-## step into next, and the choices waiting in them (spoils, events and campfires).
+## The dungeon's map screen: the instance's branching rooms, the path you took, the rooms you can
+## step into next, and the choices waiting in them (instances, spoils, events and campfires).
 
 class DungeonMap extends Control:
  var game: Node
@@ -16,53 +16,184 @@ class DungeonMap extends Control:
      var walked = r + 1 < trail.size() and int(trail[r]) == i and int(trail[r + 1]) == j
      draw_dashed_line(a, b, Color("ffd36e") if walked else Color(1, 1, 1, 0.22), 4.0 if walked else 2.0, 10.0 if not walked else 1.0, true, true)
 
+## One screen, no scrolling: the instance's map on the left (framed by its painting), and a
+## sidebar on the right with what to do next, relics, run traits and the run's tools.
+## Choices that block the map (which instance to enter, bank or go endless, the end of the run)
+## appear as an overlay across the whole screen.
+const W := 1548.0
+const H := 600.0
+const MAP_W := 1068.0
+const SIDE_X := 1084.0
+const PANEL := Color(0.035, 0.045, 0.06, 0.94)
+
 static func overview(desk: ManagementDesk) -> void:
- var game = desk.game; var c: Campaign = desk.campaign; var d = c.state.dungeon; var dep = Dungeon.depth(c)
- var top = desk.horizontal(desk.body)
- desk.text(top, dep.name, 34).size_flags_horizontal = Control.SIZE_EXPAND_FILL
- var depth_text = "ENDLESS DEPTH %d" % (int(d.act) - Dungeon.ACTS) if int(d.act) > Dungeon.ACTS else "DEPTH %d OF %d" % [int(d.act), Dungeon.ACTS]
- desk.text(top, "%s · %s · %d POINTS" % [depth_text, Dungeon.stage_label(c).to_upper(), int(d.score)], 19, desk.GOLD)
- desk.text(desk.body, dep.text, 15, desk.MUTED)
- var nav = desk.horizontal(desk.body)
- desk.action(nav, "Champion's vault · %d chests" % TrophyVault.unopened(c).size(), func(): TournamentRewardsUI.open_screen(game, "vault"), true)
- desk.action(nav, "Run traits", func(): traits_modal(game))
- desk.action(nav, "High scores", func(): high_scores(game))
- desk.action(nav, "How the dungeon works", func(): guide(game))
- if not c.state.report.is_empty(): desk.action(nav, "Last fight", func(): desk.report_dialog(c.state.report))
- if d.endless and not c.state.tour.get("complete", false) and not c.state.get("run_over", false) and not d.fight:
-  desk.action(nav, "Retire · bank %d points" % Dungeon.final_score(c), func(): confirm_retire(game))
- if c.state.tour.get("complete", false):
-  var done = desk.card(desk.body); desk.text(done, "RUN COMPLETE · %d POINTS" % int(d.get("final_score", 0)), 40, desk.GOLD)
-  if not c.headliner().is_empty(): HeadlinerUI.portrait(done, c.headliner(), 200)
-  var place = Dungeon.rank_of(c)
-  desk.text(done, "%s · %d Warden%s defeated · %d fights · %d won · %d relics · %d li%s left%s" % [str(d.get("outcome", "Conquered")), int(d.wardens), "" if int(d.wardens) == 1 else "s", int(d.fights), int(d.wins), d.relics.size(), int(d.lives), "fe" if int(d.lives) == 1 else "ves", ("  ·  #%d on your high scores" % place) if place > 0 else ""], 22)
-  return
- if d.awaiting_endless:
-  var gate = desk.card(desk.body)
-  desk.text(gate, "THE DUNGEON IS CONQUERED", 34, desk.GOLD)
-  desk.text(gate, "All three Wardens have fallen. Bank your score now, or descend into the endless depths: every depth is harder and worth more points, but if you run out of lives there, the run ends where you fall.", 17, desk.MUTED)
-  var row = desk.horizontal(gate)
-  desk.action(row, "Bank score · %d points" % Dungeon.final_score(c), func():
-   if Dungeon.retire(c): game.render(); FlowUI.banner(game, "%d POINTS" % int(d.final_score), Color("ffd36e"), "Score banked")
-   else: game.toast(c.last_error), true).name = "DungeonBankScore"
-  FlowUI.cta(game, row, "Into the endless depths  ▶", func():
-   if Dungeon.go_endless(c): game.render(); FlowUI.banner(game, "ENDLESS", Color("b9a2ff"), str(Dungeon.depth(c).name))
-   else: game.toast(c.last_error), false, 420).name = "DungeonGoEndless"
- if c.state.tour.get("intermission", false):
-  var stairs = desk.card(desk.body)
-  desk.text(stairs, "THE STAIRS TO %s" % str(dep.name).to_upper(), 26, desk.GOLD)
-  desk.text(stairs, "Fresh recruits wait on the landing. Visit the Market, set your formation and tactics, then descend.", 17, desk.MUTED)
-  desk.action(stairs, "Descend  ▶", func():
-   if WorldTour.end_intermission(c): game.render(); FlowUI.banner(game, str(dep.name).to_upper(), Color(Dungeon.region(c).color), depth_text)
-   else: game.toast(c.last_error), true)
- map_view(game, desk.body, c)
- var extras = desk.horizontal(desk.body)
- relic_bar(desk, extras, c)
- traits_panel(desk, extras, c)
- status(desk, c)
+ var game = desk.game; var c: Campaign = desk.campaign; var d = c.state.dungeon
+ var stage = Control.new(); stage.custom_minimum_size = Vector2(W, H); stage.mouse_filter = Control.MOUSE_FILTER_IGNORE; desk.body.add_child(stage)
+ map_panel(game, stage, c)
+ sidebar(desk, stage, c)
+ if not d.get("instance_choices", []).is_empty(): path_overlay(game, stage, c)
+ elif c.state.tour.get("complete", false) or c.state.get("run_over", false): end_overlay(game, stage, c)
+ elif d.awaiting_endless: endless_overlay(game, stage, c)
  # Anything waiting in the current room opens straight away.
- if not d.loot.is_empty(): game.get_tree().process_frame.connect(func(): loot_modal(game), CONNECT_ONE_SHOT)
+ elif not d.loot.is_empty(): game.get_tree().process_frame.connect(func(): loot_modal(game), CONNECT_ONE_SHOT)
  elif not d.event.is_empty(): game.get_tree().process_frame.connect(func(): event_modal(game), CONNECT_ONE_SHOT)
+
+static func box_at(game: Node, parent: Control, rect: Rect2, border: Color, fill := PANEL) -> Control:
+ var p = Panel.new(); parent.add_child(p); p.position = rect.position; p.size = rect.size
+ p.add_theme_stylebox_override("panel", game.style(fill, border, 10, 0, 2))
+ return p
+
+static func text_at(game: Node, parent: Control, value: String, pos: Vector2, size_px: int, color: Color, width := 0.0, title := false) -> Label:
+ var l = game.label(parent, value, size_px, color, width > 0.0); l.position = pos
+ if width > 0.0: l.size.x = width; l.custom_minimum_size.x = width
+ if title:
+  l.add_theme_font_override("font", load(game.TITLE_FONT))
+  l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85)); l.add_theme_constant_override("outline_size", 7)
+ return l
+
+static func painted(parent: Control, id: String, rect: Rect2, dim := 0.42) -> TextureRect:
+ var art = TextureRect.new(); parent.add_child(art); art.position = rect.position; art.size = rect.size
+ art.texture = DungeonInstances.art(id); art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+ art.mouse_filter = Control.MOUSE_FILTER_IGNORE; art.clip_contents = true
+ var accent = Color(DungeonInstances.info(id).accent)
+ art.modulate = Color(dim, dim, dim).lerp(accent * dim, 0.35)
+ return art
+
+# ------------------------------------------------------------------ Map
+static func map_panel(game: Node, stage: Control, c: Campaign) -> void:
+ var d = c.state.dungeon; var info = Dungeon.depth(c); var accent = Color(info.accent)
+ var frame = box_at(game, stage, Rect2(0, 0, MAP_W, H), accent.darkened(0.3), Color(0.02, 0.02, 0.03, 1.0))
+ frame.clip_contents = true
+ painted(frame, Dungeon.instance_id(c), Rect2(0, 0, MAP_W, H), 0.38)
+ var shade = ColorRect.new(); frame.add_child(shade); shade.size = Vector2(MAP_W, 120); shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ shade.color = Color(0, 0, 0, 0.45)
+ text_at(game, frame, "%s  ·  %s" % [str(info.depth_label).to_upper(), Dungeon.stage_label(c).to_upper()], Vector2(26, 16), 14, accent.lightened(0.3))
+ text_at(game, frame, str(info.name), Vector2(24, 34), 36, Color("ffe9b8"), 0.0, true)
+ text_at(game, frame, str(info.tagline), Vector2(26, 84), 15, Color(1, 1, 1, 0.75))
+ if not d.map.is_empty(): map_view(game, frame, c, Rect2(0, 128, MAP_W, 420))
+ var key = Control.new(); frame.add_child(key); key.position = Vector2(0, H - 44); key.size = Vector2(MAP_W, 34); key.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ legend(game, key)
+
+static func map_view(game: Node, parent: Control, c: Campaign, rect: Rect2) -> void:
+ var d = c.state.dungeon
+ var view = DungeonMap.new(); view.game = game; view.map = d.map; view.trail = d.get("trail", []); parent.add_child(view)
+ view.position = rect.position; view.size = rect.size; view.mouse_filter = Control.MOUSE_FILTER_PASS
+ var w = rect.size.x; var h = rect.size.y
+ for r in range(d.map.size()):
+  for i in range(d.map[r].size()):
+   view.points[Vector2i(r, i)] = Vector2(70 + r * (w - 140) / (Dungeon.ROWS - 1), 26 + (i + 0.5) / d.map[r].size() * (h - 52))
+ var options = Dungeon.reachable(c)
+ for r in range(d.map.size()):
+  for i in range(d.map[r].size()):
+   var n = d.map[r][i]; var info = Dungeon.ROOMS[str(n.type)]
+   var here = r == int(d.row) and i == int(d.col)
+   var open = r == int(d.row) + 1 and i in options
+   var walked = r < view.trail.size() and int(view.trail[r]) == i
+   var px = 74 if str(n.type) == "boss" else 56
+   var b = Button.new(); view.add_child(b); b.size = Vector2(px, px); b.position = view.points[Vector2i(r, i)] - b.size * 0.5
+   b.focus_mode = Control.FOCUS_NONE
+   var tint = Color(info.color)
+   var fill = Color(.06, .05, .09, .92) if not (walked or here) else Color(tint.darkened(.6), .96)
+   var border = Color("fff3cf") if here else (tint if open else (tint.darkened(.3) if walked else Color(1, 1, 1, .2)))
+   for st in ["normal", "hover", "pressed", "disabled"]:
+    b.add_theme_stylebox_override(st, game.style(fill.lightened(.14) if st == "hover" and open else fill, border, px / 2, 0, 4 if open or here else 2))
+   var holder = CenterContainer.new(); holder.mouse_filter = Control.MOUSE_FILTER_IGNORE; b.add_child(holder); holder.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+   var g = FlowUI.glyph(holder, str(info.glyph), px * 0.55, true)
+   if not (open or here): g.modulate = Color(1, 1, 1, .4 if n.done or r <= int(d.row) else .62)
+   var tip = "%s · Room %d\n%s" % [info.name, r + 1, info.text]
+   if str(n.type) == "boss": tip += "\n\n%s\n%s" % [Dungeon.warden(c).name, Dungeon.warden(c).text]
+   b.tooltip_text = tip
+   b.disabled = not open
+   if open:
+    b.name = "DungeonRoom_%d_%d" % [r, i]
+    var pulse = b.create_tween().set_loops(); pulse.set_trans(Tween.TRANS_SINE)
+    pulse.tween_property(b, "modulate", Color(1.3, 1.25, 1.1), 0.8); pulse.tween_property(b, "modulate", Color.WHITE, 0.8)
+    var col = i
+    b.pressed.connect(func(): step(game, col))
+ view.queue_redraw()
+
+static func legend(game: Node, parent: Node) -> void:
+ var row = HBoxContainer.new(); row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); row.alignment = BoxContainer.ALIGNMENT_CENTER; row.add_theme_constant_override("separation", 20); parent.add_child(row)
+ for key in ["battle", "elite", "event", "shop", "rest", "treasure", "boss"]:
+  var info = Dungeon.ROOMS[key]; var item = HBoxContainer.new(); item.add_theme_constant_override("separation", 6); row.add_child(item)
+  item.mouse_filter = Control.MOUSE_FILTER_STOP; item.tooltip_text = info.text
+  FlowUI.glyph(item, str(info.glyph), 20)
+  game.label(item, info.name, 14, Color(info.color), false).mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+# ------------------------------------------------------------------ Sidebar
+static func sidebar(desk: ManagementDesk, stage: Control, c: Campaign) -> void:
+ var game = desk.game; var d = c.state.dungeon; var accent = Color(Dungeon.depth(c).accent)
+ var sw = W - SIDE_X
+ # Next step
+ var next = box_at(game, stage, Rect2(SIDE_X, 0, sw, 196), accent.darkened(0.2))
+ next_card(desk, next, c, sw)
+ # Relics
+ var relics = box_at(game, stage, Rect2(SIDE_X, 206, sw, 150), Color("aa8c60"))
+ text_at(game, relics, "RELICS  ·  %d" % Relics.owned(c).size(), Vector2(16, 10), 14, game.GOLD)
+ if Relics.owned(c).is_empty():
+  text_at(game, relics, "Elites, treasure, some events and every Warden offer relics. They last the whole run.", Vector2(16, 36), 14, game.MUTED, sw - 32)
+ else:
+  var grid = GridContainer.new(); grid.columns = 8; grid.add_theme_constant_override("h_separation", 6); grid.add_theme_constant_override("v_separation", 6); relics.add_child(grid); grid.position = Vector2(14, 36)
+  for id in Relics.owned(c).slice(0, 16):
+   var r = Relics.info(id)
+   var slot = PanelContainer.new(); grid.add_child(slot); slot.custom_minimum_size = Vector2(46, 46)
+   slot.add_theme_stylebox_override("panel", game.style(Color(.08, .06, .12, .95), rarity_color(r.rarity), 6, 2, 2))
+   slot.tooltip_text = "%s · %s relic\n%s" % [r.name, r.rarity, r.text]; slot.mouse_filter = Control.MOUSE_FILTER_STOP
+   AbilityArt.icon(slot, str(r.art), 40).mouse_filter = Control.MOUSE_FILTER_IGNORE
+ # Run traits
+ var traits = box_at(game, stage, Rect2(SIDE_X, 366, sw, 172), Color("6a8aa8"))
+ text_at(game, traits, "RUN TRAITS  ·  YOUR SQUAD", Vector2(16, 10), 14, game.GOLD)
+ var list = GridContainer.new(); list.columns = 2; list.add_theme_constant_override("h_separation", 24); list.add_theme_constant_override("v_separation", 2); traits.add_child(list); list.position = Vector2(16, 34)
+ var shown = 0
+ for row in RunTraits.summary(c, c.lineup()):
+  if int(row.count) == 0 or shown >= 8: continue
+  shown += 1
+  var t = RunTraits.info(row.id); var lit = int(row.tier) >= 0
+  var l = game.label(list, "%s%s  %d/%d" % ["● " if lit else "○ ", t.name, int(row.count), RunTraits.THRESHOLDS[mini(int(row.tier) + 1, RunTraits.THRESHOLDS.size() - 1)]], 15, Color(t.color) if lit else game.MUTED, false)
+  l.mouse_filter = Control.MOUSE_FILTER_STOP; l.tooltip_text = trait_tooltip(row.id)
+ if shown == 0: text_at(game, traits, "Draft champions that share a trait to unlock it.", Vector2(16, 36), 14, game.MUTED, sw - 32)
+ # Tools
+ var tools = HBoxContainer.new(); stage.add_child(tools); tools.position = Vector2(SIDE_X, 548); tools.size = Vector2(sw, 46); tools.add_theme_constant_override("separation", 6)
+ for entry in [["Traits", func(): traits_modal(game)], ["Scores", func(): high_scores(game)], ["Vault (%d)" % TrophyVault.unopened(c).size(), func(): TournamentRewardsUI.open_screen(game, "vault")], ["Guide", func(): guide(game)]]:
+  var b = desk.action(tools, entry[0], entry[1]); b.size_flags_horizontal = Control.SIZE_EXPAND_FILL; b.custom_minimum_size.y = 46
+
+static func next_card(desk: ManagementDesk, card: Control, c: Campaign, sw: float) -> void:
+ var game = desk.game; var d = c.state.dungeon
+ var col = VBoxContainer.new(); card.add_child(col); col.position = Vector2(16, 12); col.size = Vector2(sw - 32, 200); col.add_theme_constant_override("separation", 6)
+ if d.fight:
+  var kind = str(Dungeon.node(c).type); var rival = c.opponent(); var info = Dungeon.ROOMS[kind]
+  var head = HBoxContainer.new(); head.add_theme_constant_override("separation", 10); col.add_child(head)
+  FlowUI.glyph(head, str(info.glyph), 30)
+  game.label(head, str(info.name).to_upper(), 22, Color(info.color), false)
+  var name_label = game.label(col, str(rival.name), 18, game.WHITE); name_label.custom_minimum_size.x = sw - 32
+  var ours = League.team_power(c.lineup()); var theirs = League.team_power(rival.roster)
+  game.label(col, "Power %d vs %d  ·  %s" % [ours, theirs, "lose a life and face it again" if kind == "boss" else "losing costs a life"], 14, game.MUTED)
+  if kind == "boss":
+   var mech = game.label(col, str(Bestiary.BOSSES[rival.boss].text), 13, Color("ffb3a8")); mech.custom_minimum_size.x = sw - 32
+  var actions = HBoxContainer.new(); actions.add_theme_constant_override("separation", 6); col.add_child(actions)
+  desk.action(actions, "Scout", func(): ScoutUI.open(game, rival))
+  desk.action(actions, "Formation", func(): game.phase = "prep"; game.render())
+  var go = FlowUI.cta(game, actions, "Fight  ▶", game.introduce_match, not c.lineup_ready() or not c.pending_heroes().is_empty(), 190)
+  go.custom_minimum_size.y = 48; go.add_theme_font_size_override("font_size", 22)
+  return
+ game.label(col, "NEXT", 13, game.GOLD)
+ if not Dungeon.reachable(c).is_empty():
+  game.label(col, "Choose a glowing room on the map.", 20, game.WHITE)
+  var preview = Dungeon.opponent(c)
+  game.label(col, "Nearest fight ahead: %s · power %d" % [preview.name, League.team_power(preview.roster)], 14, game.MUTED)
+ elif not d.loot.is_empty() or not d.event.is_empty():
+  game.label(col, "Something waits in this room.", 20, game.WHITE)
+  desk.action(col, "Open it", func(): game.render(), true)
+ else:
+  game.label(col, Dungeon.stage_label(c), 20, game.WHITE)
+ var w = Dungeon.warden(c)
+ var warden = game.label(col, "Warden of this depth: %s" % w.name, 14, Color("ffb3a8")); warden.custom_minimum_size.x = sw - 32
+ warden.mouse_filter = Control.MOUSE_FILTER_STOP; warden.tooltip_text = str(w.text)
+ if d.endless and not c.state.tour.get("complete", false) and not c.state.get("run_over", false):
+  desk.action(col, "Retire · bank %d points" % Dungeon.final_score(c), func(): confirm_retire(game))
+
+static func rarity_color(rarity: String) -> Color:
+ return Color({"Common": "9fd4c6", "Rare": "8fb8ff", "Boss": "ffb35c"}.get(rarity, "ffffff"))
 
 static func confirm_retire(game: Node) -> void:
  var c: Campaign = game.campaign
@@ -73,33 +204,74 @@ static func confirm_retire(game: Node) -> void:
   else: game.toast(c.last_error))
  dialog.popup_centered(Vector2i(460, 160))
 
-static func relic_bar(desk: ManagementDesk, parent: Node, c: Campaign) -> void:
- var game = desk.game; var box = desk.card(parent)
- box.get_parent().custom_minimum_size.x = 740
- desk.text(box, "RELICS · %d" % Relics.owned(c).size(), 16, desk.GOLD)
- if Relics.owned(c).is_empty():
-  desk.text(box, "None yet. Elites, treasure, some events and every Warden offer relics.", 14, desk.MUTED); return
- var grid = GridContainer.new(); grid.columns = 9; grid.add_theme_constant_override("h_separation", 8); grid.add_theme_constant_override("v_separation", 8); box.add_child(grid)
- for id in Relics.owned(c):
-  var r = Relics.info(id)
-  var frame = PanelContainer.new(); grid.add_child(frame); frame.custom_minimum_size = Vector2(66, 66)
-  frame.add_theme_stylebox_override("panel", game.style(Color(.08, .06, .12, .95), rarity_color(r.rarity), 8, 3, 2))
-  frame.tooltip_text = "%s · %s relic\n%s" % [r.name, r.rarity, r.text]; frame.mouse_filter = Control.MOUSE_FILTER_STOP
-  var art = AbilityArt.icon(frame, str(r.art), 58); art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+# ------------------------------------------------------------------ Overlays
+static func overlay(game: Node, stage: Control) -> Control:
+ var dim = ColorRect.new(); stage.add_child(dim); dim.size = Vector2(W, H); dim.color = Color(0.01, 0.01, 0.02, 0.78); dim.mouse_filter = Control.MOUSE_FILTER_STOP
+ return dim
 
-static func rarity_color(rarity: String) -> Color:
- return Color({"Common": "9fd4c6", "Rare": "8fb8ff", "Boss": "ffb35c"}.get(rarity, "ffffff"))
+## The top of the stairs: two instances to choose from for the next depth.
+static func path_overlay(game: Node, stage: Control, c: Campaign) -> void:
+ var d = c.state.dungeon; var dim = overlay(game, stage)
+ var act = int(d.act)
+ var kicker = ("ENDLESS DEPTH %d" % (act - Dungeon.ACTS)) if act > Dungeon.ACTS else "DEPTH %d OF %d" % [act, Dungeon.ACTS]
+ var title = text_at(game, dim, "CHOOSE YOUR PATH", Vector2(0, 6), 40, Color("ffe9b8"), W, true); title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+ var sub = text_at(game, dim, kicker + ("  ·  New recruits wait in the Market before you go" if c.state.tour.get("intermission", false) else "  ·  Each instance has its own monsters, Warden and arena"), Vector2(0, 58), 15, game.MUTED, W)
+ sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+ var choices: Array = d.instance_choices
+ for i in range(choices.size()):
+  var id = str(choices[i]); var info = DungeonInstances.info(id); var accent = Color(info.accent)
+  var x = 64 + i * 724
+  var card = box_at(game, dim, Rect2(x, 92, 696, 500), accent, Color(0.03, 0.03, 0.05, 0.98)); card.clip_contents = true
+  painted(card, id, Rect2(0, 0, 696, 220), 0.75)
+  var band = ColorRect.new(); card.add_child(band); band.position = Vector2(0, 150); band.size = Vector2(696, 70); band.color = Color(0, 0, 0, 0.55); band.mouse_filter = Control.MOUSE_FILTER_IGNORE
+  text_at(game, card, str(info.name), Vector2(22, 158), 34, Color("ffe9b8"), 0.0, true)
+  text_at(game, card, str(info.tagline), Vector2(22, 232), 16, Color(1, 1, 1, 0.85), 652)
+  var boss = Bestiary.BOSSES[str(info.boss)]
+  text_at(game, card, "WARDEN  ·  " + str(boss.name).to_upper(), Vector2(22, 286), 15, Color("ffb3a8"))
+  text_at(game, card, str(boss.text), Vector2(22, 310), 14, game.MUTED, 652)
+  text_at(game, card, "MONSTERS", Vector2(22, 372), 14, game.GOLD)
+  var mobs = HBoxContainer.new(); card.add_child(mobs); mobs.position = Vector2(22, 396); mobs.add_theme_constant_override("separation", 8)
+  for key in info.mobs:
+   var m = Bestiary.MOBS[key]
+   var chip = PanelContainer.new(); mobs.add_child(chip); chip.mouse_filter = Control.MOUSE_FILTER_STOP; chip.tooltip_text = str(m.text)
+   chip.add_theme_stylebox_override("panel", game.style(Color(m.tint).darkened(0.65), Color(m.tint).lightened(0.2), 6, 6, 1))
+   game.label(chip, str(m.name), 13, Color(m.tint).lightened(0.45), false)
+  var go = FlowUI.cta(game, card, "Enter  ▶", func():
+   if Dungeon.choose_instance(c, id):
+    game.render(); FlowUI.banner(game, str(info.name).to_upper(), accent, kicker)
+   else: game.toast(c.last_error), false, 300)
+  go.position = Vector2(374, 432); go.name = "DungeonEnter_%d" % i
 
-static func traits_panel(desk: ManagementDesk, parent: Node, c: Campaign) -> void:
- var game = desk.game; var box = desk.card(parent)
- desk.text(box, "RUN TRAITS · YOUR SQUAD", 16, desk.GOLD)
- var grid = GridContainer.new(); grid.columns = 2; grid.add_theme_constant_override("h_separation", 22); grid.add_theme_constant_override("v_separation", 4); box.add_child(grid)
- for row in RunTraits.summary(c, c.lineup()):
-  if int(row.count) == 0: continue
-  var t = RunTraits.info(row.id); var lit = int(row.tier) >= 0
-  var l = game.label(grid, "%s  %d / %d" % [t.name, int(row.count), RunTraits.THRESHOLDS[mini(int(row.tier) + 1, RunTraits.THRESHOLDS.size() - 1)]], 16, Color(t.color) if lit else desk.MUTED, false)
-  l.mouse_filter = Control.MOUSE_FILTER_STOP; l.tooltip_text = trait_tooltip(row.id)
- desk.text(box, "Each species carries two traits this run. Field 2 or 4 different champions that share a trait to unlock it.", 13, desk.MUTED)
+static func endless_overlay(game: Node, stage: Control, c: Campaign) -> void:
+ var d = c.state.dungeon; var dim = overlay(game, stage)
+ var card = box_at(game, dim, Rect2(274, 110, 1000, 380), Color("ffd36e"), Color(0.03, 0.03, 0.05, 0.98))
+ var t = text_at(game, card, "THE DUNGEON IS CONQUERED", Vector2(0, 36), 44, Color("ffe9b8"), 1000, true); t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+ var s = text_at(game, card, "All three Wardens have fallen. Bank your score now, or go into the endless depths, where every depth is harder and worth more points. If you run out of lives there, the run ends where you fall.", Vector2(80, 120), 17, game.MUTED, 840)
+ s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+ var row = HBoxContainer.new(); card.add_child(row); row.position = Vector2(140, 250); row.size = Vector2(720, 70); row.alignment = BoxContainer.ALIGNMENT_CENTER; row.add_theme_constant_override("separation", 20)
+ var bank = game.button(row, "Bank score · %d points" % Dungeon.final_score(c), func():
+  if Dungeon.retire(c): game.render(); FlowUI.banner(game, "%d POINTS" % int(c.state.dungeon.final_score), Color("ffd36e"), "Score banked")
+  else: game.toast(c.last_error), false)
+ bank.custom_minimum_size = Vector2(300, 58); bank.name = "DungeonBankScore"
+ FlowUI.cta(game, row, "Into the endless depths  ▶", func():
+  if Dungeon.go_endless(c): game.render()
+  else: game.toast(c.last_error), false, 380).name = "DungeonGoEndless"
+
+static func end_overlay(game: Node, stage: Control, c: Campaign) -> void:
+ var d = c.state.dungeon; var dim = overlay(game, stage)
+ var fallen = c.state.get("run_over", false)
+ var card = box_at(game, dim, Rect2(274, 90, 1000, 420), Color("ff8a7a") if fallen else Color("ffd36e"), Color(0.03, 0.03, 0.05, 0.98))
+ var t = text_at(game, card, ("OUT OF LIVES" if fallen else "RUN COMPLETE"), Vector2(0, 30), 46, Color("ffcfb8") if fallen else Color("ffe9b8"), 1000, true)
+ t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+ var score = text_at(game, card, "%d POINTS" % int(d.get("final_score", Dungeon.final_score(c))), Vector2(0, 100), 40, Color("9fd8ff"), 1000, true); score.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+ var place = Dungeon.rank_of(c)
+ var line = text_at(game, card, "%s  ·  reached %s  ·  %d Warden%s  ·  %d fights won  ·  %d relics%s" % [str(d.get("outcome", "Fallen" if fallen else "Conquered")), Dungeon.depth(c).name, int(d.wardens), "" if int(d.wardens) == 1 else "s", int(d.wins), d.relics.size(), ("  ·  #%d on your high scores" % place) if place > 0 else ""], Vector2(60, 170), 17, game.WHITE, 880)
+ line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+ var route = text_at(game, card, "Route: " + "  →  ".join(d.get("visited", []).map(func(id): return DungeonInstances.info(id).name)), Vector2(60, 230), 14, game.MUTED, 880)
+ route.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+ var row = HBoxContainer.new(); card.add_child(row); row.position = Vector2(200, 320); row.size = Vector2(600, 60); row.alignment = BoxContainer.ALIGNMENT_CENTER; row.add_theme_constant_override("separation", 16)
+ game.button(row, "High scores", func(): high_scores(game)).custom_minimum_size = Vector2(220, 54)
+ FlowUI.cta(game, row, "New dungeon run  ▶", func(): game.new_crest = {}; game.new_mode = "dungeon"; game.phase = "new"; game.render(), false, 320)
 
 static func trait_tooltip(id: String) -> String:
  var t = RunTraits.info(id)
@@ -139,76 +311,6 @@ static func high_scores(game: Node) -> void:
   game.label(grid, str(int(e.get("wardens", 0))), 16, game.WHITE, false)
   game.label(grid, str(e.get("difficulty", "")) + (" · A%d" % int(e.challenge) if int(e.get("challenge", 0)) > 0 else ""), 16, game.MUTED, false)
   game.label(grid, "%s · %s" % [str(e.get("outcome", "")), str(e.get("date", ""))], 15, game.MUTED, false)
-
-static func map_view(game: Node, parent: Node, c: Campaign) -> void:
- var d = c.state.dungeon
- var frame = FantasyFrame.new(); frame.custom_minimum_size = Vector2(1500, 440); parent.add_child(frame)
- frame.add_theme_stylebox_override("panel", game.style(Color(.03, .035, .06, .96), Color(Dungeon.region(c).color).darkened(.35), 8, 0, 2))
- var view = DungeonMap.new(); view.game = game; view.map = d.map; view.trail = d.get("trail", []); frame.add_child(view)
- view.custom_minimum_size = Vector2(1500, 440); view.mouse_filter = Control.MOUSE_FILTER_PASS
- var w = 1500.0; var h = 392.0
- for r in range(d.map.size()):
-  for i in range(d.map[r].size()):
-   view.points[Vector2i(r, i)] = Vector2(80 + r * (w - 160) / (Dungeon.ROWS - 1), 30 + (i + 0.5) / d.map[r].size() * (h - 60))
- var options = Dungeon.reachable(c)
- for r in range(d.map.size()):
-  for i in range(d.map[r].size()):
-   var n = d.map[r][i]; var info = Dungeon.ROOMS[str(n.type)]
-   var here = r == int(d.row) and i == int(d.col)
-   var open = r == int(d.row) + 1 and i in options
-   var walked = r < view.trail.size() and int(view.trail[r]) == i
-   var px = 76 if str(n.type) == "boss" else 60
-   var b = Button.new(); view.add_child(b); b.size = Vector2(px, px); b.position = view.points[Vector2i(r, i)] - b.size * 0.5
-   b.focus_mode = Control.FOCUS_NONE
-   var tint = Color(info.color)
-   var fill = Color(.10, .08, .14, .96) if not (walked or here) else Color(tint.darkened(.55), .98)
-   var border = Color("fff3cf") if here else (tint if open else (tint.darkened(.25) if walked else Color(1, 1, 1, .18)))
-   for st in ["normal", "hover", "pressed", "disabled"]:
-    var sb = game.style(fill.lightened(.12) if st == "hover" and open else fill, border, px / 2, 0, 4 if open or here else 2)
-    b.add_theme_stylebox_override(st, sb)
-   var holder = CenterContainer.new(); holder.mouse_filter = Control.MOUSE_FILTER_IGNORE; b.add_child(holder); holder.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-   var g = FlowUI.glyph(holder, str(info.glyph), px * 0.55, open or here or walked or r > int(d.row))
-   if not (open or here) and r > int(d.row): g.modulate = Color(1, 1, 1, .55)
-   if n.done and not here: g.modulate = Color(1, 1, 1, .4)
-   b.tooltip_text = "%s · Room %d\n%s" % [info.name, r + 1, info.text]
-   b.disabled = not open
-   if open:
-    b.name = "DungeonRoom_%d_%d" % [r, i]
-    var pulse = b.create_tween().set_loops(); pulse.set_trans(Tween.TRANS_SINE)
-    pulse.tween_property(b, "modulate", Color(1.25, 1.2, 1.05), 0.8); pulse.tween_property(b, "modulate", Color.WHITE, 0.8)
-    var col = i
-    b.pressed.connect(func(): step(game, col))
- var key = Control.new(); view.add_child(key); key.position = Vector2(0, 400); key.size = Vector2(w, 34); key.mouse_filter = Control.MOUSE_FILTER_IGNORE
- legend(game, key)
- view.queue_redraw()
-
-static func legend(game: Node, parent: Node) -> void:
- var row = HBoxContainer.new(); row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); row.alignment = BoxContainer.ALIGNMENT_CENTER; row.add_theme_constant_override("separation", 22); parent.add_child(row)
- for key in ["battle", "elite", "event", "shop", "rest", "treasure", "boss"]:
-  var info = Dungeon.ROOMS[key]; var item = HBoxContainer.new(); item.add_theme_constant_override("separation", 6); row.add_child(item)
-  item.mouse_filter = Control.MOUSE_FILTER_STOP; item.tooltip_text = info.text
-  FlowUI.glyph(item, str(info.glyph), 22)
-  game.label(item, info.name, 15, Color(info.color), false).mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-static func status(desk: ManagementDesk, c: Campaign) -> void:
- var game = desk.game; var d = c.state.dungeon
- var box = desk.card(desk.body)
- if d.fight:
-  var kind = str(Dungeon.node(c).type); var rival = c.opponent()
-  desk.text(box, "%s · %s" % [Dungeon.ROOMS[kind].name.to_upper(), rival.name], 26, Color(Dungeon.ROOMS[kind].color))
-  var ours = League.team_power(c.lineup()); var theirs = League.team_power(rival.roster)
-  desk.text(box, "Your power %d  ·  their power %d%s" % [ours, theirs, "  ·  Losing a Warden fight costs a life and you must face it again." if kind == "boss" else "  ·  Losing costs a life; the guild still pushes past."], 16, desk.MUTED)
-  if kind == "boss": desk.text(box, str(Bestiary.BOSSES[rival.boss].text), 15, Color("ffb3a8"))
-  var actions = desk.horizontal(box)
-  desk.action(actions, "Scout", func(): ScoutUI.open(game, rival))
-  desk.action(actions, "Formation", func(): game.phase = "prep"; game.render())
-  FlowUI.cta(game, actions, "Fight  ▶", game.introduce_match, not c.lineup_ready() or not c.pending_heroes().is_empty(), 260)
- elif c.state.get("run_over", false):
-  desk.text(box, "OUT OF LIVES · FINAL SCORE %d" % int(d.get("final_score", 0)), 26, Color("ff8a7a"))
- elif not Dungeon.reachable(c).is_empty():
-  desk.text(box, "Choose your next room on the map. Glowing rooms are on your path.", 18)
-  var preview = Dungeon.opponent(c)
-  desk.text(box, "Nearest fight ahead: %s · power %d" % [preview.name, League.team_power(preview.roster)], 15, desk.MUTED)
 
 static func step(game: Node, col: int) -> void:
  var c: Campaign = game.campaign
@@ -295,10 +397,10 @@ static func event_modal(game: Node) -> void:
   game.label(line, str(ch.detail), 15, game.MUTED if ch.get("disabled", false) else Color("c8dcb1")).size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 static func guide(game: Node) -> void:
- var dialog = GearUI.modal(game, "The Dungeon", Vector2(1000, 640))
+ var dialog = GearUI.modal(game, "The Dungeon", Vector2(1000, 660))
  for line in [
-  "Three depths, each ending at a Warden boss. Pick one room at a time along the glowing paths.",
-  "Lives: losing a fight costs one; lose them all and the run ends. Campfires, healing springs and defeated Wardens restore them.",
+  "Three depths, each one an instance you choose at the top of the stairs: ten in all, from the Blight Forest to the Void Rift. Each has its own monsters, Warden boss and arena.",
+  "Pick one room at a time along the glowing paths. Lives: losing a fight costs one; lose them all and the run ends. Campfires, healing springs and defeated Wardens restore them.",
   "Skirmishes reward one of three components. Treasure gives gold and one of three finished items. Elites give one of three relics.",
   "Wardens give a finished item, a powerful Warden relic and a medal chest.",
   "Relics are passive bonuses for the whole run. Some boost the whole team, some a line or your headliner, a few change the rules.",
