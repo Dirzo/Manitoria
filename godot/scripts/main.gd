@@ -39,6 +39,7 @@ var presentation_tween: Tween
 var showcase_index = 0
 var new_slot = 1
 var new_difficulty = "Keeper"
+var new_challenge_rank = 0
 var new_name: LineEdit
 var new_club_draft = "Ravenmoor Menagerie"
 var new_crest: Dictionary = {}
@@ -351,6 +352,7 @@ func render() -> void:
   campaign.state.erase("goto_roster"); tab = "roster"
   get_tree().process_frame.connect(func(): FlowUI.banner(self, "SQUAD READY", Color("ffd36e"), "Set formation, tactics and XP focus"), CONNECT_ONE_SHOT)
  build_header()
+ if phase!="battle":AtlasUI.launchers(self)
  if phase == "menu": build_menu()
  elif phase == "new": build_new()
  elif phase == "runover": build_runover()
@@ -429,7 +431,11 @@ func build_new() -> void:
  label(box, "DIFFICULTY", 15, GOLD)
  var diff = HBoxContainer.new(); diff.add_theme_constant_override("separation", 8); box.add_child(diff)
  for d in [["Keeper", "Relaxed · finish top 5 to survive a cup"], ["Standard", "Fair fights · finish top 4"], ["Champion", "Brutal rivals · finish top 3"]]:
-  var db = button(diff, d[0], func(): new_difficulty = d[0]; render(), new_difficulty == d[0]); db.tooltip_text = d[1]; db.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+  var db = button(diff, d[0], func(): new_difficulty = d[0]; new_challenge_rank=0; render(), new_difficulty == d[0]); db.tooltip_text = d[1]; db.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ var challenge=OptionButton.new();box.add_child(challenge);challenge.add_item("Standard difficulty rules · no challenge modifier")
+ for rank in range(1,RunDatabase.unlocked_rank()+1):challenge.add_item("Ascension %d · Champion rules · +%d%% rival combat strength"%[rank,rank*2])
+ challenge.selected=new_challenge_rank
+ challenge.item_selected.connect(func(i):new_challenge_rank=i;new_difficulty="Champion" if i>0 else new_difficulty;render())
  label(box, "SAVE SLOT", 15, GOLD)
  var slots = HBoxContainer.new(); slots.add_theme_constant_override("separation", 8); box.add_child(slots)
  for slot in range(1, 4):
@@ -513,6 +519,8 @@ func found_club() -> void:
 func start_club(name_value: String, slot: int) -> void:
  exhibition = false
  campaign.new_run(name_value, slot, 0, new_difficulty)
+ campaign.state.challenge_rank=clampi(new_challenge_rank,0,RunDatabase.unlocked_rank())
+ RunDatabase.ensure_id(campaign)
  campaign.state.crest = new_crest.duplicate() if not new_crest.is_empty() else Crest.default_for(name_value)
  campaign.state.motto = new_motto.strip_edges().left(48)
  desk_state.compare = []; desk_state.role = "All"

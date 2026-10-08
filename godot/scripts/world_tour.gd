@@ -72,6 +72,7 @@ static func stock(c: Campaign) -> Array:
 static func resolve(c: Campaign, sim: BattleSim) -> bool:
  if c.state.tour.complete or c.state.tour.shop or not sim.finished or sim.battle_seed!=c.match_seed(): return false
  var before=c.state.duplicate(true);var t=c.state.tour;var r=region(c)
+ RunDatabase.capture(c,sim,"player","player_%d"%int(t.serial))
  var rng=RandomNumberGenerator.new();rng.seed=c.match_seed()+801
  var reward=TourBalance.match_gold(int(t.level),str(c.state.get("difficulty","Standard")),sim.winner==0)
  var rival=opponent(c);var m=current_match(c)
@@ -245,6 +246,7 @@ static func step(c: Campaign) -> void:
   var sim=BattleSim.new();sim.silent=true
   sim.setup(team_roster(c,m.team_a),team_roster(c,m.team_b),int(c.state.seed)+int(c.state.tour.level)*900+i*31+int(c.state.tour.attempt)*7)
   sim.run_to_end()
+  RunDatabase.capture(c,sim,"cpu","cpu_%d_%d_%d"%[int(c.state.tour.level),int(c.state.tour.attempt),i])
   var won_a=sim.winner!=1
   m.winner=m.team_a if won_a else m.team_b;m.loser=m.team_b if won_a else m.team_a
   for side in [0,1]:

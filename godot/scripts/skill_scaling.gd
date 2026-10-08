@@ -79,6 +79,8 @@ static func build_weights(hero: Dictionary) -> Dictionary:
   if str(on_hit[0]) in ["burn","venom"]:out[primary]+=0.15
  if float(Evolutions.perk(hero,"lifesteal",0.0))>0.0:
   out.ad+=0.15;out["as"]+=0.15
+ var goal={"Attack damage":"ad","Ability power":"ap","Attack speed":"as","Armor":"armor","Cooldowns":"cd"}.get(str(hero.get("build_goal","Adaptive")),"")
+ if not goal.is_empty():out[goal]*=1.5
  out.ap*=Evolutions.mod(hero,"potency")
  out.ad*=Evolutions.mod(hero,"attack")
  out["as"]*=Evolutions.mod(hero,"haste")

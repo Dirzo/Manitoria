@@ -25,6 +25,7 @@ static func build(game: Node) -> void:
  game.label(right,ChampionStars.evolution_label(hero),13,HeroData.evolution_color(hero) if not str(hero.get("evolution","")).is_empty() else game.MUTED)
  var name_label=game.label(right,hero.name+" · "+HeroData.species[hero.sp].n,24);name_label.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
  var stats=HeroData.stats(hero);game.label(right,"Lv %d · %s · %d HP · %d ATK"%[hero.level,HeroData.species[hero.sp].role,stats.hp,stats.attack],15,game.GOLD,false)
+ if hero.get("build_goal","Adaptive")!="Adaptive":game.label(right,"RUN PLAN · %s item priority"%hero.build_goal,13,Color("8effac"))
  game.label(right,"%d AP · %.2f attacks/s · %d%% shorter skill cooldowns"%[stats.ability_power,1.0/stats.interval,roundi((1.0-HeroData.cooldown_factor(hero))*100)],12,Color("bba2ff"))
  game.label(right,"Attack range: %d hexes · Move one hex at a time"%ArenaGrid.attack_hexes(stats.range),13,game.MUTED)
  var copy_box=VBoxContainer.new();right.add_child(copy_box)

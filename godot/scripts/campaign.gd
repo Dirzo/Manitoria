@@ -190,7 +190,7 @@ func choose(id: String, index: int) -> bool:
 
 func quality() -> float:
  if state.has("tour"):
-  return TourBalance.quality(int(state.tour.level),int(state.tour.bout),str(state.difficulty))
+  return TourBalance.quality(int(state.tour.level),int(state.tour.bout),str(state.difficulty))*(1.0+0.02*clampi(int(state.get("challenge_rank",0)),0,10))
  if state.difficulty == "Keeper": return minf(0.96, 0.90 + state.round * 0.004)
  if state.difficulty == "Champion": return 1.08
  return 1.0
@@ -335,6 +335,7 @@ func record_club(club: Dictionary, outcome: int) -> void:
 func resolve(sim: BattleSim) -> bool:
  if state.has("tour"): return WorldTour.resolve(self,sim)
  if not sim.finished or sim.battle_seed != match_seed() or int(state.get("resolved_seed", -1)) == match_seed(): return false
+ RunDatabase.capture(self,sim,"player","season_%d_round_%d"%[int(state.season),int(state.round)])
  state.resolved_seed = match_seed()
  var rng = RandomNumberGenerator.new(); rng.seed = match_seed() + 801
  var reward = 110 if sim.winner == 0 else 80 if sim.winner == -1 else 70
@@ -360,6 +361,7 @@ func resolve(sim: BattleSim) -> bool:
    background.silent = true
    background.setup(ca.roster, cb.roster, match_seed() + int(pair[0]))
    while not background.finished: background.step(0.1)
+   RunDatabase.capture(self,background,"cpu","season_%d_round_%d_pair_%d"%[int(state.season),int(state.round),int(pair[0])])
    record_team(ca.roster, background, 0, false, rng); record_team(cb.roster, background, 1, false, rng)
    record_club(ca, background.winner); record_club(cb, 1 - background.winner if background.winner >= 0 else -1)
  state.round += 1
@@ -436,6 +438,7 @@ func save() -> bool:
   if err != OK: last_error = "Could not create the save backup."; return false
  var error = DirAccess.rename_absolute(path + ".tmp", path)
  last_error = "" if error == OK else "Could not finish saving the campaign."
+ if error == OK and not RunDatabase.flush(self):last_error="Campaign saved; Atlas write is pending and will retry on the next save."
  return error == OK
 
 static func valid(data: Variant) -> bool:

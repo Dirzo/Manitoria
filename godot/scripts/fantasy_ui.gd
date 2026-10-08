@@ -14,7 +14,7 @@ static func menu(game: Node) -> void:
   var button=game.button(box,entry[0],entry[3],true,i==0 and latest==0);button.custom_minimum_size.y=62;button.add_theme_font_size_override("font_size",23)
   frame.mouse_entered.connect(func():frame.modulate=Color(1.13,1.13,1.13));frame.mouse_exited.connect(func():frame.modulate=Color.WHITE)
  var saves=game.button(game.ui,"Saved campaigns",func():save_picker(game));saves.position=Vector2(620,767);saves.size=Vector2(360,46)
- var version=game.label(game.ui,"Windows edition 0.69 · Playtest & Rival Economy",14,Color("eee3cf"),false);version.position=Vector2(30,861)
+ var version=game.label(game.ui,"Windows edition 0.71 · Run Atlas & Decision Matrix",14,Color("eee3cf"),false);version.position=Vector2(30,861)
 
 static func save_picker(game: Node) -> void:
  var dialog=GearUI.modal(game,"Your campaigns")
@@ -80,6 +80,7 @@ void fragment(){
  title.add_theme_color_override("font_outline_color",Color("1a0f14"));title.add_theme_constant_override("outline_size",8)
  title.add_theme_color_override("font_shadow_color",Color(accent,.55));title.add_theme_constant_override("shadow_offset_y",3)
  var st=game.label(mid,stage,16,game.WHITE,false);st.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+ if int(c.state.get("challenge_rank",0))>0:st.text+=" · ASCENSION %d"%int(c.state.challenge_rank)
  st.add_theme_color_override("font_outline_color",Color(0,0,0,.85));st.add_theme_constant_override("outline_size",4)
  # Right: the road and controls
  if touring and game.phase!="starter":

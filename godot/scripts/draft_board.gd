@@ -68,6 +68,9 @@ static func card(game: Node, parent: Node, h: Dictionary, o: Dictionary, width :
 	var fi = TraitUI.fit_info(h)
 	var fit = game.label(box, "%s FIT · %s" % [fi[0], TraitUI.fit_reason(h, true)], 12, fi[1], false); fit.clip_text = true
 	fit.mouse_filter = Control.MOUSE_FILTER_STOP; fit.tooltip_text = TraitUI.fit_reason(h) + "\n%d/%d total stat points" % [HeroData.roll_total(h), HeroData.ROLL_MAX * 6]
+	var evidence=RunDatabase.aggregate({"side":"player"}).champions.get(h.sp,{})
+	var note="Your Atlas: %d appearances · %.1f%% team wins"%[int(evidence.get("n",0)),100.0*float(evidence.get("wins",0))/maxf(1,float(evidence.get("n",0)))] if not evidence.is_empty() else "Your Atlas: no personal data yet"
+	game.label(box,note,12,game.MUTED).tooltip_text="Press Atlas to compare recorded player and CPU builds. Team association, not isolated champion strength."
 	# Actions
 	if o.has("on_draft") or o.has("on_scout"):
 		var actions = HBoxContainer.new(); actions.add_theme_constant_override("separation", 6); box.add_child(actions)
