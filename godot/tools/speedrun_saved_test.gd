@@ -14,7 +14,11 @@ static func equivalent(a: Variant,b: Variant) -> bool:
  return a==b
 func _initialize() -> void:
  var reference=JSON.parse_string(FileAccess.get_file_as_string("user://speedrun_reference_5.json"))
- var records=JSON.parse_string(FileAccess.get_file_as_string(SpeedrunLab.RESULTS_PATH));var actual=records[0];var failures=0
+ var records=JSON.parse_string(FileAccess.get_file_as_string(SpeedrunLab.RESULTS_PATH))
+ if not reference is Dictionary or not records is Array or records.is_empty():
+  push_error("Needs user://speedrun_reference_5.json and a saved benchmark: run a five-cup benchmark in the same user-data folder first")
+  print("SPEEDRUN SAVED EQUIVALENCE: skipped, no reference data");quit(1);return
+ var actual=records[0];var failures=0
  for key in ["matches","purchases","decisions","gold_left","final_roster"]:
   if not equivalent(actual[key],reference[key]):failures+=1;push_error("Full-run equivalence: "+key)
  print("SPEEDRUN SAVED EQUIVALENCE: 5 checks; %d failures"%failures);quit(1 if failures else 0)

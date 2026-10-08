@@ -30,4 +30,4 @@ Progress saves automatically in your browser's local storage. The Club office me
 
 The full Godot 4 project lives in [`godot/`](godot/). Open `godot/project.godot` with **Godot 4.7.2** (Compatibility renderer) to play from the editor or export your own build.
 
-A ready-to-play Windows build of version 0.59 is in [`builds/v0.59/`](builds/v0.59/): download the folder, run `JOIN-ME.bat`, then `Manitoria.exe`.
+A ready-to-play Windows build of version 0.73 is in [`builds/v0.73/`](builds/v0.73/): download the folder, run `JOIN-ME.bat`, then `Manitoria.exe`.

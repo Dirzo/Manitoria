@@ -13,7 +13,9 @@ func run() -> void:
  buttons=game.ui.find_children("*","Button",true,false)
  check(buttons.any(func(b):return b.text=="Naga"),"Research champion table renders")
  AtlasUI.items(game,{"side":"research"});await process_frame
- check(game.ui.find_children("*","Label",true,false).any(func(l):return l.text.contains("appearances") and l.text.contains("team wins")),"Item Atlas renders measured associations")
+ # Since 0.72 the research item view is the Playtest Atlas item screen (controlled item experiments).
+ await create_timer(.3).timeout
+ check(game.ui.find_children("*","Label",true,false).any(func(l):return l.text.begins_with("ITEM SCREEN")),"Item Atlas renders the measured item screen")
  # Remove the item overlay, leaving the underlying champion table.
  var shades=game.ui.get_children().filter(func(n):return n is ColorRect and n.size.x>1000)
  if shades.size()>1:shades[-1].queue_free()

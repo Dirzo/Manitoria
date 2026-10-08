@@ -144,7 +144,7 @@ func _ready() -> void:
    for h in campaign.state.roster: h.level = 3; h.learned = {"0": 1}
    phase = "prep"; begin_battle()
   elif qa in ["tour_shop","role_catalog","tour_world","tour_legendary","tour_arena"]:
-   campaign.state.tour.level=6;campaign.state.gold=1800
+   campaign.state.tour.level=5;campaign.state.gold=1800
    for h in campaign.state.roster:h.level=10;h.learned={"0":2,"1":2,"2":2};h.skill_rarity={"0":"Legendary","1":"Rare","2":"Rare","signature":"Legendary"}
    if qa in ["tour_shop","role_catalog"]:
     campaign.state.inventory=["fang","ember","coin","moon","archmage","phoenixember","seed"]
@@ -183,7 +183,7 @@ func _ready() -> void:
    get_tree().create_timer(1.3).timeout.connect(func(): desk_state.view = "Table"; render())
    get_tree().create_timer(2.4).timeout.connect(func(): desk_state.sort = "Power"; render())
   elif qa == "builds_demo":
-   campaign.state.tour.level=6;campaign.state.gold=1800
+   campaign.state.tour.level=5;campaign.state.gold=1800
    campaign.state.inventory=["fang","ember","coin","moon","archmage","phoenixember","seed"]
    campaign.state.roster[0].equipment={"0":"bastion","1":"fang"}
    campaign.state.tour.shop=true;campaign.state.tour.stock=WorldTour.stock(campaign);phase="shop";render()

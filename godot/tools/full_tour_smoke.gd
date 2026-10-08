@@ -18,7 +18,8 @@ func run() -> void:
   if c.state.tour.get("intermission",false):check(WorldTour.end_intermission(c),"Start the next cup")
   if c.state.tour.shop:
    var h=c.state.roster[2]
-   if ChampionStars.copies(h)<6 and c.state.gold>=League.cost(h.sp):check(c.buy_champion_copy(h.id),"Earned gold buys a copy during the shop")
+   # 0.73 retired champion copies: buying one must be refused without charging gold.
+   var before_gold=int(c.state.gold);check(not c.buy_champion_copy(h.id) and int(c.state.gold)==before_gold,"Copy purchases stay retired during the shop")
    check(WorldTour.leave_shop(c),"Leave shop and retain team")
   var opponent=WorldTour.opponent(c);var sim=BattleSim.new();sim.silent=true;sim.setup(c.lineup(),opponent.roster,c.match_seed(),c.quality())
   # Forced wins isolate full tournament/save routing; this is not a balance win-rate sample.
@@ -32,7 +33,7 @@ func run() -> void:
   await process_frame
  check(c.state.tour.complete and fights==20,"Twenty winning matches complete all five cups")
  check(c.state.tour.history.size()==5,"All five cup histories are retained")
- check(ChampionStars.tier(c.state.roster[2])==3,"Actual shop income reaches the six-copy upgrade")
+ check(c.state.roster.all(func(h):return ChampionStars.tier(h)==ChampionStars.tier({})),"No champion gains a copy/star tier after retirement")
  check(c.state.roster.all(func(h):return not str(h.evolution).is_empty()),"Earned rewards include named evolutions")
  print("Full five-cup save flow: ",checks," checks, ",failures," failures")
  quit(1 if failures else 0)
