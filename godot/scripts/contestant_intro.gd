@@ -48,7 +48,7 @@ func build() -> void:
  var odds=game.label(self,"EVENLY MATCHED" if delta==0 else ("YOUR TEAM" if delta>0 else "RIVALS")+" LEAD BY %d POWER"%abs(delta),18,game.GOLD,false);odds.position=Vector2(350,770);odds.size.x=900;odds.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
  var back=game.button(self,"Change formation",func():game.phase="prep";game.render());back.position=Vector2(36,816);back.size=Vector2(240,60)
  back.tooltip_text="Rearrange your champions against this enemy formation (their positions are shown on the arena floor)."
- if c.state.has("tour"):
+ if c.state.has("tour") and not Dungeon.active(c):
   var br=game.button(self,"Bracket",func():TournamentRewardsUI.open_screen(game,"bracket"));br.position=Vector2(290,816);br.size=Vector2(180,60)
  var sc=game.button(self,"Scout rival",func():ScoutUI.open(game,rival));sc.position=Vector2(484,816);sc.size=Vector2(210,60)
  sc.tooltip_text="Every rival champion's stats, items and skills."
@@ -59,6 +59,9 @@ func build() -> void:
 ## "Winners Semifinal · win → Winners Final · lose → Losers Round 2"
 func stakes(c: Campaign) -> String:
  if not c.state.has("tour"):return "MEET THE CONTESTANTS"
+ if Dungeon.active(c):
+  var kind=str(Dungeon.node(c).get("type","battle"))
+  return "%s   ·   %s   ·   LOSE → %s"%[Dungeon.stage_label(c).to_upper(),"%d FLAME%s BURNING"%[int(c.state.dungeon.flames),"" if int(c.state.dungeon.flames)==1 else "S"],"THE LAST FLAME GOES OUT" if int(c.state.dungeon.flames)<=1 else ("LOSE A FLAME, FACE IT AGAIN" if kind=="boss" else "LOSE A FLAME")]
  var b=c.state.tour.get("bracket",{});var m=WorldTour.current_match(c)
  if b.is_empty():return str(m.get("label","")).to_upper()
  var idx=b.matches.find(m);var win="";var lose=""

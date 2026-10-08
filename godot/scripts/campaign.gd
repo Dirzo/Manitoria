@@ -168,6 +168,7 @@ func choose(id: String, index: int) -> bool:
  hero.clear(); hero.merge(before, true); return false
 
 func quality() -> float:
+ if Dungeon.active(self): return Dungeon.quality(self)
  if state.has("tour"):
   return TourBalance.quality(int(state.tour.level),int(state.tour.bout),str(state.difficulty))*(1.0+0.02*clampi(int(state.get("challenge_rank",0)),0,10))
  if state.difficulty == "Keeper": return minf(0.96, 0.90 + state.round * 0.004)

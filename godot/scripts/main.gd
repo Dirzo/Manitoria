@@ -40,6 +40,7 @@ var presentation_tween: Tween
 var showcase_index = 0
 var new_slot = 1
 var new_difficulty = "Keeper"
+var new_mode = "guild" # "guild" (World Tour) or "dungeon"
 var new_challenge_rank = 0
 var new_name: LineEdit
 var new_club_draft = "Ravenmoor Menagerie"
@@ -97,6 +98,30 @@ func _ready() -> void:
     if records is Array and records.any(func(r):return r.complete):speedrun_lab.result=records.filter(func(r):return r.complete)[0]
    phase="speedrun";render()
    print("PACKED SPEEDRUN: ready=",campaign.lineup_ready()," priorities=",speedrun_lab.plan.items.size()," simulate_button=",ui.find_child("SpeedrunSimulate",true,false)!=null," copy_button_removed=",ui.find_child("ShopChampionCopy",true,false)==null)
+  elif qa.begins_with("dungeon"):
+   Dungeon.start(campaign); campaign.state.gold = 420
+   var dg = campaign.state.dungeon
+   if qa in ["dungeon_trail", "dungeon_fight", "dungeon_loot", "dungeon_event", "dungeon_menu"]:
+    for i in range(3 if qa == "dungeon_trail" else 1):
+     Dungeon.enter(campaign, Dungeon.reachable(campaign)[0])
+     dg.fight = false; dg.loot = []; dg.event = {}; Dungeon.node(campaign).done = true; campaign.state.tour.shop = false
+    if qa == "dungeon_fight":
+     dg.row = int(dg.row) - 1; dg.col = 0; dg.trail.pop_back()
+     Dungeon.enter(campaign, Dungeon.reachable(campaign)[0])
+    if qa == "dungeon_loot": Dungeon.offer_loot(campaign, "item", 3)
+    if qa == "dungeon_event": dg.event = Dungeon.EVENTS[1].duplicate(true)
+   if qa in ["dungeon_intro", "dungeon_result"]:
+    for h in campaign.state.roster: h.pending = []; h.rewards = []
+    Dungeon.enter(campaign, Dungeon.reachable(campaign)[0])
+   if qa == "dungeon_result":
+    var test_sim = BattleSim.new(); test_sim.silent = true
+    test_sim.setup(campaign.lineup(), campaign.opponent().roster, campaign.match_seed(), campaign.quality()); test_sim.run_to_end(); campaign.resolve(test_sim)
+    sim = test_sim
+   if qa == "dungeon_menu": phase = "menu"
+   elif qa == "dungeon_intro": phase = "intro"
+   elif qa == "dungeon_result": phase = "result"
+   else: phase = "hub"; tab = "overview"
+   render()
   elif qa == "starter":
    campaign.new_run("Ravenmoor Menagerie",97,731);phase="starter";render()
   elif qa in ["skill_preview","heal_preview"]:
@@ -359,7 +384,7 @@ func render() -> void:
  var tour_state = campaign.state.get("tour", {}) if not campaign.state.is_empty() else {}
  if phase == "hub" and tour_state.get("intermission", false) and not tour_state.get("intermission_seen", false):
   tour_state.intermission_seen = true; tab = "market"
-  get_tree().process_frame.connect(func(): FlowUI.banner(self, "NEW RECRUITS", Color("ffd36e"), "Recruit, set your roster and tactics, then start the next cup"), CONNECT_ONE_SHOT)
+  get_tree().process_frame.connect(func(): FlowUI.banner(self, "NEW RECRUITS", Color("ffd36e"), "Recruit, set your roster and tactics, then descend" if Dungeon.active(campaign) else "Recruit, set your roster and tactics, then start the next cup"), CONNECT_ONE_SHOT)
  if phase == "hub" and campaign.state.get("goto_roster", false):
   campaign.state.erase("goto_roster"); tab = "roster"
   get_tree().process_frame.connect(func(): FlowUI.banner(self, "SQUAD READY", Color("ffd36e"), "Set formation, tactics and XP focus"), CONNECT_ONE_SHOT)
@@ -419,7 +444,7 @@ func build_new() -> void:
  if new_crest.is_empty(): new_crest = Crest.default_for(new_club_draft)
  # The great title.
  var title = Title3D.new(); ui.add_child(title); title.position = Vector2(150, 8); title.size = Vector2(1300, 180)
- var sub = label(ui, "FOUND YOUR GUILD", 26, Color("fff2d0"), false)
+ var sub = label(ui, "FOUND YOUR GUILD" if new_mode != "dungeon" else "FOUND A GUILD · DESCEND INTO THE DUNGEON", 26, Color("fff2d0"), false)
  sub.position = Vector2(0, 190); sub.size = Vector2(1600, 40); sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
  sub.add_theme_font_override("font", load(MENU_FONT)); sub.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85)); sub.add_theme_constant_override("outline_size", 6)
  # Charter (left): name, motto, difficulty, slot. One big button carries you on.
@@ -443,7 +468,9 @@ func build_new() -> void:
  motto.text_changed.connect(func(v): new_motto = v)
  label(box, "DIFFICULTY", 15, GOLD)
  var diff = HBoxContainer.new(); diff.add_theme_constant_override("separation", 8); box.add_child(diff)
- for d in [["Keeper", "Relaxed · finish top 5 to survive a cup"], ["Standard", "Fair fights · finish top 4"], ["Champion", "Brutal rivals · finish top 3"]]:
+ var diff_tips = [["Keeper", "Relaxed · finish top 5 to survive a cup"], ["Standard", "Fair fights · finish top 4"], ["Champion", "Brutal rivals · finish top 3"]]
+ if new_mode == "dungeon": diff_tips = [["Keeper", "Relaxed · carry 4 flames"], ["Standard", "Fair fights · carry 3 flames"], ["Champion", "Brutal rivals · carry 2 flames"]]
+ for d in diff_tips:
   var db = button(diff, d[0], func(): new_difficulty = d[0]; new_challenge_rank=0; render(), new_difficulty == d[0]); db.tooltip_text = d[1]; db.size_flags_horizontal = Control.SIZE_EXPAND_FILL
  var challenge=OptionButton.new();box.add_child(challenge);challenge.add_item("Standard difficulty rules · no challenge modifier")
  for rank in range(1,RunDatabase.unlocked_rank()+1):challenge.add_item("Ascension %d · Champion rules · +%d%% rival combat strength"%[rank,rank*2])
@@ -458,7 +485,7 @@ func build_new() -> void:
  # Footer: back on the left, the obvious way forward on the right.
  var back = button(ui, "◀  Menu", func(): phase = "menu"; render()); back.position = Vector2(150, 804); back.custom_minimum_size = Vector2(160, 58)
  var fwd = HBoxContainer.new(); ui.add_child(fwd); fwd.position = Vector2(1000, 800); fwd.size = Vector2(450, 64); fwd.alignment = BoxContainer.ALIGNMENT_END
- FlowUI.cta(self, fwd, "Found guild  ▶", found_club, false, 450).tooltip_text = "Next: sign your Legendary headliner (you start with 1,200 gold)"
+ FlowUI.cta(self, fwd, "Enter the dungeon  ▶" if new_mode == "dungeon" else "Found guild  ▶", found_club, false, 450).tooltip_text = "Next: sign your Legendary headliner (you start with 1,200 gold)"
  # Crest forge (right).
  var right = panel(Rect2(740, 252, 710, 520))
  label(right, "CREST", 15, GOLD)
@@ -512,13 +539,18 @@ func build_runover() -> void:
  var hist: Array = t.get("history", [])
  var best = 9
  for h in hist: best = mini(best, int(h.get("place", 9)))
- label(col, "%s difficulty · %d cups contested · %d cup%s won" % [st.difficulty, hist.size(), int(st.get("trophies", 0)), "" if int(st.get("trophies", 0)) == 1 else "s"], 18)
- label(col, "Best finish: %s · Reached %s" % [TournamentRewardsUI._place_text(best) if best < 9 else "—", WorldTour.region(campaign).place if not t.is_empty() else "—"], 18)
+ if Dungeon.active(campaign):
+  var dg = st.dungeon
+  label(col, "%s difficulty · Dungeon · reached %s, room %d" % [st.difficulty, Dungeon.depth(campaign).name, int(dg.row) + 1], 18)
+  label(col, "%d fights · %d won · %d elites · %d Warden%s defeated" % [int(dg.fights), int(dg.wins), int(dg.elites), dg.history.size(), "" if dg.history.size() == 1 else "s"], 18)
+ else:
+  label(col, "%s difficulty · %d cups contested · %d cup%s won" % [st.difficulty, hist.size(), int(st.get("trophies", 0)), "" if int(st.get("trophies", 0)) == 1 else "s"], 18)
+  label(col, "Best finish: %s · Reached %s" % [TournamentRewardsUI._place_text(best) if best < 9 else "—", WorldTour.region(campaign).place if not t.is_empty() else "—"], 18)
  var face = campaign.headliner()
  if not face.is_empty(): label(col, "Headliner: %s the %s · Level %d" % [face.name, HeroData.species[face.sp].n, int(face.level)], 16, GOLD)
  label(box, "Your legacy boosts and unlocked evolutions carry over to your next guild.", 15, MUTED)
  var actions = HBoxContainer.new(); box.add_child(actions)
- button(actions, "Found a new guild", func(): new_crest = {}; phase = "new"; render(), true).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ button(actions, "Found a new guild", func(): new_crest = {}; new_mode = "dungeon" if Dungeon.active(campaign) else "guild"; phase = "new"; render(), true).size_flags_horizontal = Control.SIZE_EXPAND_FILL
  button(actions, "Main menu", func(): phase = "menu"; render()).size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 func found_club() -> void:
@@ -553,6 +585,7 @@ func resume_speedrun() -> void:
 func start_club(name_value: String, slot: int) -> void:
  exhibition = false
  campaign.new_run(name_value, slot, 0, new_difficulty)
+ if new_mode == "dungeon": Dungeon.start(campaign)
  campaign.state.challenge_rank=clampi(new_challenge_rank,0,RunDatabase.unlocked_rank())
  RunDatabase.ensure_id(campaign)
  campaign.state.crest = new_crest.duplicate() if not new_crest.is_empty() else Crest.default_for(name_value)
@@ -669,6 +702,11 @@ func demo_stage() -> void:
 func introduce_match() -> void:
  if campaign.state.get("speedrun_lab",false):prepare_match();return
  if not campaign.lineup_ready() or not campaign.pending_heroes().is_empty():return
+ if Dungeon.active(campaign):
+  # The dungeon has no bracket board: only a room with a pending fight leads to the arena.
+  if campaign.state.tour.get("intermission",false): WorldTour.end_intermission(campaign)
+  if not campaign.state.dungeon.fight or campaign.state.tour.get("shop",false): phase = "hub"; tab = "overview"; render(); return
+  phase = "intro"; render(); return
  if campaign.state.has("tour"): WorldTour.end_intermission(campaign)
  if campaign.state.get("tour",{}).get("shop",false) or campaign.state.get("tour",{}).get("complete",false):return
  # Every tour fight walks up to the tournament board first, then the matchup, then the arena.
@@ -820,6 +858,9 @@ func build_result() -> void:
   FlowUI.chip(self, chips, "coin", "+%d" % report.gold, "Gold earned", Color("ffdf7e"))
   FlowUI.chip(self, chips, "heart", "%d/5 alive" % (5 - fallen), "Survivors · everyone recovers before the next fight", Color("ff9aa5"))
   var xp = label(chips, "+%d XP" % (80 if won else 65), 21, Color("9fd8ff"), false); xp.tooltip_text = "XP for every fielded hero"; xp.mouse_filter = Control.MOUSE_FILTER_STOP
+ if not exhibition and report.get("dungeon", false):
+  var flame_text = "A FLAME GUTTERS · %d LEFT" % int(report.get("flames", 0)) if report.get("flame_lost", false) else ("THE LAST FLAME ENDURES · DUNGEON CONQUERED" if report.get("dungeon_cleared", false) else ("WARDEN DEFEATED · THE WAY DOWN IS OPEN" if report.get("warden_down", false) else "ROOM CLEARED · CHOOSE YOUR SPOILS ON THE MAP"))
+  var fl = label(box, flame_text, 26, Color("ff8a7a") if report.get("flame_lost", false) else GOLD); fl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
  if not exhibition and report.has("tour_level"):
   if report.has("tournament_won"):
    var cup = label(box, ("CUP WON · GOLD CHEST" if report.tournament_won else "CUP OVER · %s%s" % [TournamentRewardsUI._place_text(int(report.get("place",0))).to_upper(), " · %s CHEST" % str(report.medal).to_upper() if report.has("medal") else ""]), 26, GOLD)
@@ -846,6 +887,12 @@ func build_result() -> void:
  # The graphs open straight away; the button hides them.
  toggle.pressed.emit()
  var pending = campaign.pending_heroes().size()
+ if campaign.state.get("run_over", false) and not exhibition and report.get("dungeon", false):
+  label(box, "YOUR LAST FLAME HAS GONE OUT · THE RUN IS OVER", 30, Color("ff8a7a"))
+  label(box, "%s fell in %s after %d fights." % [campaign.state.name, Dungeon.depth(campaign).name, int(campaign.state.dungeon.fights)], 17, MUTED)
+  var dend = panel(Rect2(400,792,800,85))
+  button(dend, "See the guild's final record  →", func(): phase = "runover"; render(), true)
+  return
  if campaign.state.get("run_over", false) and not exhibition:
   var over = label(box, "KNOCKED OUT · THE RUN IS OVER", 30, Color("ff8a7a"))
   label(box, "%s runs must finish %s or better. Your guild finished %s." % [campaign.state.difficulty, TournamentRewardsUI._place_text(int(report.get("cutoff", 4))), TournamentRewardsUI._place_text(int(report.get("place", 0)))], 17, MUTED)
@@ -853,7 +900,7 @@ func build_result() -> void:
   button(end, "See the guild's final record  →", func(): phase = "runover"; render(), true)
   return
  var footer = HBoxContainer.new(); ui.add_child(footer); footer.position = Vector2(560, 800); footer.size = Vector2(480, 62); footer.alignment = BoxContainer.ALIGNMENT_CENTER
- FlowUI.cta(self, footer, "Menu  ▶" if exhibition else "Bracket  ▶" if campaign.state.has("tour") else ("Level ups (%d)  ▶" % pending) if pending else "Continue  ▶", func():
+ FlowUI.cta(self, footer, "Menu  ▶" if exhibition else "Map  ▶" if Dungeon.active(campaign) else "Bracket  ▶" if campaign.state.has("tour") else ("Level ups (%d)  ▶" % pending) if pending else "Continue  ▶", func():
   if exhibition: quit_to_menu()
   elif campaign.state.has("tour"): show_bracket_then_shop()
   else:
@@ -861,6 +908,11 @@ func build_result() -> void:
 
 ## After a tour match: replay the bracket, then (if the cup just ended) the progress screen, then shop.
 func show_bracket_then_shop() -> void:
+ if Dungeon.active(campaign):
+  if campaign.state.get("run_over", false): phase = "runover"; render(); return
+  phase = "upgrade" if not campaign.pending_heroes().is_empty() else "hub"; tab = "overview"; render()
+  if campaign.state.tour.get("intermission", false) and phase == "hub": FlowUI.banner(self, "WARDEN DEFEATED", Color("ffd36e"), "Recruit on the stairs, then descend")
+  return
  var to_shop = func():
   if campaign.state.get("run_over", false): phase = "runover"; render(); return
   if not campaign.pending_heroes().is_empty(): phase = "upgrade"; render(); return

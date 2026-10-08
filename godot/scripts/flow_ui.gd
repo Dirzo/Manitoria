@@ -45,6 +45,24 @@ class Glyph extends Control:
 					pts.append(c + Vector2(cos(a), sin(a)) * r)
 				draw_colored_polygon(pts, Color("ffd36e"))
 				var ring = pts.duplicate(); ring.append(pts[0]); draw_polyline(ring, Color("8a5a12"), maxf(1.0, s * 0.05), true)
+			"flame":
+				var outer = PackedVector2Array(); var inner = PackedVector2Array()
+				for i in range(32):
+					var t = TAU * i / 32.0
+					# A teardrop: round at the base, drawn up to a point.
+					var p = Vector2(sin(t) * (0.5 + 0.5 * cos(t)), -cos(t))
+					outer.append(c + Vector2(p.x * s * 0.40, p.y * s * 0.44 + s * 0.06))
+					inner.append(c + Vector2(p.x * s * 0.22, p.y * s * 0.24 + s * 0.20))
+				draw_colored_polygon(outer, Color("ff8a2a") if on else Color(1, 1, 1, 0.14))
+				if on: draw_colored_polygon(inner, Color("ffe27a"))
+				var edge = outer.duplicate(); edge.append(outer[0])
+				draw_polyline(edge, Color("5a1e08") if on else Color(1, 1, 1, 0.35), maxf(1.0, s * 0.05), true)
+			"skull":
+				var bone = Color("efe6d2")
+				draw_circle(c + Vector2(0, -s * 0.08), s * 0.34, bone)
+				draw_rect(Rect2(c.x - s * 0.20, c.y + s * 0.08, s * 0.40, s * 0.26), bone)
+				for d in [-1.0, 1.0]: draw_circle(c + Vector2(d * s * 0.13, -s * 0.06), s * 0.09, Color("2a0c12"))
+				for i in range(3): draw_line(c + Vector2((i - 1) * s * 0.11, s * 0.16), c + Vector2((i - 1) * s * 0.11, s * 0.34), Color("2a0c12"), maxf(1.0, s * 0.04))
 			"roll":
 				draw_arc(c, s * 0.32, 0.4, TAU - 0.4, 24, Color("c8ff9d"), maxf(2.0, s * 0.11), true)
 				var tip = c + Vector2(cos(0.4), sin(0.4)) * s * 0.32
@@ -68,13 +86,19 @@ static func run_bar(game: Node, parent: Node) -> void:
 	var c: Campaign = game.campaign
 	var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 16); parent.add_child(row)
 	chip(game, row, "coin", str(int(c.state.gold)), "Gold", Color("ffdf7e"))
-	if c.state.has("tour") and not c.state.roster.is_empty():
+	if Dungeon.active(c):
+		var d = c.state.dungeon
+		var flames = HBoxContainer.new(); flames.add_theme_constant_override("separation", 1); row.add_child(flames)
+		flames.mouse_filter = Control.MOUSE_FILTER_STOP
+		flames.tooltip_text = "Flames: every lost fight snuffs one out. Campfires and Wardens rekindle them.\n%d / %d burning" % [int(d.flames), int(d.max_flames)]
+		for i in range(int(d.max_flames)): glyph(flames, "flame", 24, i < int(d.flames))
+	elif c.state.has("tour") and not c.state.roster.is_empty():
 		var lost = WorldTour.losses(c, 0)
 		var hearts = HBoxContainer.new(); hearts.add_theme_constant_override("separation", 2); row.add_child(hearts)
 		hearts.mouse_filter = Control.MOUSE_FILTER_STOP
 		hearts.tooltip_text = "Lives this cup: lose twice and you're out of the bracket.\nRecord %d W · %d L" % [int(c.state.tour.get("wins", 0)), lost]
 		for i in range(2): glyph(hearts, "heart", 24, i >= lost)
-	chip(game, row, "trophy", str(int(c.state.get("trophies", 0))), "Cups won", Color("ffd36e"))
+	if not Dungeon.active(c): chip(game, row, "trophy", str(int(c.state.get("trophies", 0))), "Cups won", Color("ffd36e"))
 
 ## The one obvious next step. Big, green, gently pulsing.
 static func cta(game: Node, parent: Node, text: String, callback: Callable, disabled := false, width := 360.0) -> Button:

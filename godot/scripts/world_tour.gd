@@ -32,9 +32,11 @@ static func shown_level(c: Campaign) -> int:
  return int(t.level)
 
 static func display_region(c: Campaign) -> Dictionary:
+ if Dungeon.active(c):return Dungeon.region(c)
  return REGIONS[(shown_level(c)-1)%REGIONS.size()]
 
 static func region(c: Campaign) -> Dictionary:
+ if Dungeon.active(c):return Dungeon.region(c)
  return REGIONS[(int(c.state.tour.level)-1)%REGIONS.size()]
 
 static func seeded_team(c: Campaign, entrant: int) -> Dictionary:
@@ -73,6 +75,7 @@ static func stock(c: Campaign) -> Array:
  return result
 
 static func resolve(c: Campaign, sim: BattleSim) -> bool:
+ if Dungeon.active(c):return Dungeon.resolve(c,sim)
  if c.state.tour.complete or c.state.tour.shop or not sim.finished or sim.battle_seed!=c.match_seed(): return false
  var before=c.state.duplicate(true);var t=c.state.tour;var r=region(c)
  if not c.state.get("speedrun_lab",false):RunDatabase.capture(c,sim,"player","player_%d"%int(t.serial))
@@ -210,6 +213,7 @@ static func outfit_clubs(c: Campaign) -> void:
   RivalEconomy.develop(c,cl)
 
 static func ensure_bracket(c: Campaign) -> void:
+ if Dungeon.active(c):return
  var t=c.state.tour
  if t.has("bracket") and t.bracket.get("format","")=="double":return
  if c.state.clubs.size()<7:c.draft_rivals()
@@ -264,6 +268,7 @@ static func step(c: Campaign) -> void:
  b.champion=int(last.winner)
 
 static func current_match(c: Campaign) -> Dictionary:
+ if Dungeon.active(c):return {"label":Dungeon.stage_label(c)}
  ensure_bracket(c)
  var b=c.state.tour.bracket
  for i in ORDER:
@@ -286,6 +291,7 @@ static func record_player(c: Campaign, won: bool) -> void:
  c.state.tour.last_anim={"matches":fresh,"player":idx,"won":won,"level":int(c.state.tour.level)}
 
 static func losses(c: Campaign, team: int) -> int:
+ if Dungeon.active(c):return 0
  var n=0
  if not c.state.tour.has("bracket") or not c.state.tour.bracket.has("matches"):return 0
  for m in c.state.tour.bracket.matches:
@@ -302,15 +308,18 @@ static func placement(c: Campaign, team: int) -> int:
  return 0
 
 static func opponent(c: Campaign) -> Dictionary:
+ if Dungeon.active(c):return Dungeon.opponent(c)
  var m=current_match(c)
  var other=int(m.team_b) if int(m.team_a)==0 else int(m.team_a)
  if other<0:other=1
  return {"name":team_name(c,other),"roster":team_roster(c,other),"practice":false,"club":other}
 
 static func stage_label(c: Campaign) -> String:
+ if Dungeon.active(c):return Dungeon.stage_label(c)
  return str(current_match(c).get("label","Grand Final"))
 
 static func next_opponent(c: Campaign) -> Dictionary:
+ if Dungeon.active(c):return Dungeon.opponent(c)
  if c.state.tour.get("bracket",{}).get("finished",false) and not c.state.tour.complete:
   var preview=Campaign.new();preview.state=c.state.duplicate(true);preview.state.tour.erase("bracket")
   return opponent(preview)

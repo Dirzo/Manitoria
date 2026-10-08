@@ -6,12 +6,13 @@ static func menu(game: Node) -> void:
  var latest=0;var modified=0
  for slot in range(1,4):
   if FileAccess.file_exists(Campaign.save_path(slot)) and FileAccess.get_modified_time(Campaign.save_path(slot))>modified:latest=slot;modified=FileAccess.get_modified_time(Campaign.save_path(slot))
- var entries=[["Continue","victory",Color("69dba8"),func():game.load_campaign(latest)],["New club","summons",Color("cdb0ff"),func():game.sound.announce("found_guild",true);game.phase="new";game.render()],["Exhibition","gore",Color("ffbd77"),game.start_exhibition]]
- for i in range(3):
-  var entry=entries[i];var frame=FantasyFrame.new();game.ui.add_child(frame);frame.position=Vector2(358+i*302,405);frame.size=Vector2(280,332);frame.accent=entry[2]
+ var entries=[["Continue","victory",Color("69dba8"),func():game.load_campaign(latest)],["New club","summons",Color("cdb0ff"),func():game.sound.announce("found_guild",true);game.new_mode="guild";game.phase="new";game.render()],["Dungeon","flamewave",Color("ff9a5c"),func():game.sound.announce("found_guild",true);game.new_mode="dungeon";game.phase="new";game.render()],["Exhibition","gore",Color("ffbd77"),game.start_exhibition]]
+ for i in range(entries.size()):
+  var entry=entries[i];var frame=FantasyFrame.new();game.ui.add_child(frame);frame.position=Vector2(207+i*302,405);frame.size=Vector2(280,332);frame.accent=entry[2]
   frame.add_theme_stylebox_override("panel",game.style(Color(.055,.10,.12,.9),entry[2],12,16,0))
   var box=VBoxContainer.new();frame.add_child(box);AbilityArt.icon(box,entry[1],196)
   var button=game.button(box,entry[0],entry[3],true,i==0 and latest==0);button.custom_minimum_size.y=62;button.add_theme_font_size_override("font_size",23)
+  if entry[0]=="Dungeon":frame.tooltip_text="A branching descent in the spirit of The Last Flame: choose rooms, guard your flames, defeat three Wardens.";button.name="DungeonMenuButton"
   frame.mouse_entered.connect(func():frame.modulate=Color(1.13,1.13,1.13));frame.mouse_exited.connect(func():frame.modulate=Color.WHITE)
  var lab=game.button(game.ui,"Speedrun stat check",game.start_speedrun,true);lab.position=Vector2(1040,767);lab.size=Vector2(380,46);lab.name="SpeedrunMenuButton"
  var saves=game.button(game.ui,"Saved campaigns",func():save_picker(game));saves.position=Vector2(620,767);saves.size=Vector2(360,46)
@@ -23,7 +24,7 @@ static func save_picker(game: Node) -> void:
  var dialog=GearUI.modal(game,"Your campaigns")
  for slot in range(1,4):
   var saved=Campaign.new()
-  if saved.load_slot(slot):game.button(dialog.box,"%d · %s · Cup %d%s"%[slot,saved.state.name,saved.state.get("tour",{}).get("level",1)," · Fallen" if saved.state.get("run_over",false) else ""],func():game.load_campaign(slot),true)
+  if saved.load_slot(slot):game.button(dialog.box,"%d · %s · %s%s"%[slot,saved.state.name,"Dungeon depth %d"%int(saved.state.dungeon.act) if Dungeon.active(saved) else "Cup %d"%int(saved.state.get("tour",{}).get("level",1))," · Fallen" if saved.state.get("run_over",false) else ""],func():game.load_campaign(slot),true)
   else:game.label(dialog.box,"Slot %d · Empty"%slot,19,game.MUTED)
 
 static func header(game: Node) -> void:
@@ -69,6 +70,10 @@ void fragment(){
  if game.phase=="new":kicker="THE FOUNDING CHARTER";place="Manitoria";stage="Name your club and claim a headliner"
  elif game.phase=="starter":kicker="";place="Draft your headliner champion";stage="Your headliner leads the guild. Next you draft the rest of your squad."
  elif game.exhibition:kicker="EXHIBITION";place="The Living Arena";stage="Champion showcase"
+ elif touring and Dungeon.active(c):
+  kicker="THE DUNGEON  ·  DEPTH %d OF %d"%[int(c.state.dungeon.act),Dungeon.ACTS]
+  place=str(Dungeon.depth(c).name)
+  stage=Dungeon.stage_label(c)
  elif touring:
   var t=c.state.tour
   kicker="%s  ·  CUP %d OF %d"%[str(r.name).to_upper(),WorldTour.shown_level(c),WorldTour.cup_limit(c)]
@@ -86,7 +91,7 @@ void fragment(){
  if int(c.state.get("challenge_rank",0))>0:st.text+=" · ASCENSION %d"%int(c.state.challenge_rank)
  st.add_theme_color_override("font_outline_color",Color(0,0,0,.85));st.add_theme_constant_override("outline_size",4)
  # Right: the road and controls
- if touring and game.phase!="starter":
+ if touring and game.phase!="starter" and not Dungeon.active(c):
   var road=TourPath.new();road.level=WorldTour.shown_level(c);game.ui.add_child(road);road.position=Vector2(1112,40);road.size=Vector2(312,62)
   var cap=game.label(game.ui,"WORLD TOUR",11,Color(1,1,1,.6),false);cap.position=Vector2(1112,12);cap.size=Vector2(290,18);cap.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
  var tools=VBoxContainer.new();game.ui.add_child(tools);tools.position=Vector2(1446,14);tools.add_theme_constant_override("separation",6)
