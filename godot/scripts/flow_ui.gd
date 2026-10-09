@@ -156,7 +156,7 @@ static func detail_toggle(game: Node, parent: Node) -> CheckBox:
 static func settings(game: Node) -> void:
 	var dialog = GearUI.modal(game, "Settings", Vector2(660, 450))
 	dialog.box.add_theme_constant_override("separation", 14)
-	for row_def in [["music", "Music"], ["effects", "Sound effects"], ["voice", "Announcer"]]:
+	for row_def in [["music", "Music"], ["effects", "Sound effects"]]:
 		var key: String = row_def[0]
 		var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 16); dialog.box.add_child(row)
 		var l = game.label(row, row_def[1], 20, game.WHITE, false); l.custom_minimum_size.x = 170

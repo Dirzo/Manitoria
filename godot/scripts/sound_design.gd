@@ -208,7 +208,8 @@ func setup_announcer() -> void:
   AudioServer.set_bus_name(vb, "Voice"); AudioServer.set_bus_send(vb, "Master")
  announcer = AudioStreamPlayer.new(); announcer.bus = "Voice"; announcer.volume_db = 1.0; add_child(announcer)
  var dir = "res://assets/audio/announcer/"
- # Menu line, new-guild line, the battle countdown and the kill-streak calls. (No champion-name lines.)
+ # The recorded announcer lines were retired in 0.75.1. Any line dropped into this folder
+ # (guild, found_guild, count_3/2/1, fight, call_1..4) is picked up again; missing lines stay silent.
  for key in ["guild", "found_guild", "count_3", "count_2", "count_1", "fight", "call_1", "call_2", "call_3", "call_4"]:
   if ResourceLoader.exists(dir + key + ".ogg"): announcer_lines[key] = load(dir + key + ".ogg")
 
