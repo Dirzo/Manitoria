@@ -105,7 +105,7 @@ static func depth(c: Campaign) -> Dictionary:
  return info
 
 static func warden(c: Campaign) -> Dictionary:
- return Bestiary.BOSSES[str(DungeonInstances.info(instance_id(c)).boss)]
+ return Bestiary.info(str(DungeonInstances.info(instance_id(c)).boss))
 
 ## The arena and banners use this like a World Tour region; "dungeon" tells the arena to dress the stage.
 static func region(c: Campaign) -> Dictionary:

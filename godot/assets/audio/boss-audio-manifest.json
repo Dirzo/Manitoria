@@ -1,0 +1,356 @@
+{
+  "original": true,
+  "rate": 44100,
+  "cues": [
+    {
+      "file": "fx/boss_rootmother_entrance.ogg",
+      "seconds": 2.1,
+      "sha256": "a1917aad89888e4c81439a185857b82cbd14465bf564d2baaffeaede7e0e58cf"
+    },
+    {
+      "file": "fx/boss_rootmother_warning.ogg",
+      "seconds": 1.25,
+      "sha256": "22b79b4900b545bf6a5f66690c24f6c9c149ce6645085ac945c4f2513a335083"
+    },
+    {
+      "file": "fx/boss_rootmother_attack.ogg",
+      "seconds": 0.95,
+      "sha256": "6dda5a31b58cc38ed2069738a37b001562aa3a07b460f584c177fc5e795353e8"
+    },
+    {
+      "file": "fx/boss_rootmother_summon.ogg",
+      "seconds": 1.15,
+      "sha256": "9ef3b83a13cea56689707e368937db816871c18c3fee1b1084c6cc87a9f9a007"
+    },
+    {
+      "file": "fx/boss_rootmother_phase.ogg",
+      "seconds": 1.35,
+      "sha256": "6a3e7a418f32fb613e1fdb800557db1a5de3aa1980cb7843e02ceea014280adf"
+    },
+    {
+      "file": "fx/boss_rootmother_enrage.ogg",
+      "seconds": 1.4,
+      "sha256": "fca8f2c95c5e572a8a36d927a71722f3cbeda563b847ea5b738f83678695bce2"
+    },
+    {
+      "file": "fx/boss_rootmother_death.ogg",
+      "seconds": 2.6,
+      "sha256": "f6e33f9891a81d3739d2f7d17eb9690911ab51c75c4c1ad076f418feec95b51e"
+    },
+    {
+      "file": "fx/boss_prismatic_archon_entrance.ogg",
+      "seconds": 2.1,
+      "sha256": "732ab73484c3868e2c599f4bd1b91546707a2544b4e57f0614dba60921a74a62"
+    },
+    {
+      "file": "fx/boss_prismatic_archon_warning.ogg",
+      "seconds": 1.25,
+      "sha256": "6a62193c175fd55a990f958b258b10b78507945ceb64b317c94855f6122d4125"
+    },
+    {
+      "file": "fx/boss_prismatic_archon_attack.ogg",
+      "seconds": 0.95,
+      "sha256": "f9671cc94de92abc8626f57b99270c1a7e558ad19426895f838485d492e8d732"
+    },
+    {
+      "file": "fx/boss_prismatic_archon_summon.ogg",
+      "seconds": 1.15,
+      "sha256": "090b35371b3fd70d2bc5ebf084c17802d16346883551fbc4127c1f2ef3bb2a44"
+    },
+    {
+      "file": "fx/boss_prismatic_archon_phase.ogg",
+      "seconds": 1.35,
+      "sha256": "f920278d9eea1f6de0625db8d4b4efb1dea6401a6138b86f203c3b0c5431e77c"
+    },
+    {
+      "file": "fx/boss_prismatic_archon_enrage.ogg",
+      "seconds": 1.4,
+      "sha256": "76199d16fb6d69fdb8e9d9222aebcdcfcf2f076198834d07a5f71b48d9e0c29b"
+    },
+    {
+      "file": "fx/boss_prismatic_archon_death.ogg",
+      "seconds": 2.6,
+      "sha256": "1fefca26e27bc772b97711cdf7f22767b4049da3938469656a40201846c7a60f"
+    },
+    {
+      "file": "fx/boss_forge_tyrant_entrance.ogg",
+      "seconds": 2.1,
+      "sha256": "0497e1b82e2d1f04211a4734ef0efd1083e795cae85446fce78f4150dcc730ec"
+    },
+    {
+      "file": "fx/boss_forge_tyrant_warning.ogg",
+      "seconds": 1.25,
+      "sha256": "53cf7da7f4ab8b95c94f0bba65a3e1839c48463820f48015f69173d019091240"
+    },
+    {
+      "file": "fx/boss_forge_tyrant_attack.ogg",
+      "seconds": 0.95,
+      "sha256": "d5d2bc860f3ae9b27fc60c6f33b374b2c51a042bc94da223b34fa5f20ec09dc2"
+    },
+    {
+      "file": "fx/boss_forge_tyrant_summon.ogg",
+      "seconds": 1.15,
+      "sha256": "38fd30215ab9f991579351a190fdb9e8c2ae0033cc081e290957c4963f1a886f"
+    },
+    {
+      "file": "fx/boss_forge_tyrant_phase.ogg",
+      "seconds": 1.35,
+      "sha256": "44db87cef7bc69656017eb8f82ff4c9257ad8b7bcb7347b6608f151cad905b2e"
+    },
+    {
+      "file": "fx/boss_forge_tyrant_enrage.ogg",
+      "seconds": 1.4,
+      "sha256": "d3913b22649b56bc24edb0454574f5cfcfdb761e365ad09b0ab18df4bc1e01e8"
+    },
+    {
+      "file": "fx/boss_forge_tyrant_death.ogg",
+      "seconds": 2.6,
+      "sha256": "0f566d8f5242426b03e1b7880059f1c986ec90c87757352194992fb2316e2580"
+    },
+    {
+      "file": "fx/boss_frost_matriarch_entrance.ogg",
+      "seconds": 2.1,
+      "sha256": "fd6f9c03762793a98be986013f51f5e594c5a7530be6b97d0a93373fbc6552ee"
+    },
+    {
+      "file": "fx/boss_frost_matriarch_warning.ogg",
+      "seconds": 1.25,
+      "sha256": "e9e83f7fa4dcec49b7fa7ab5a23215d06847a27600beca092218db30eb931be1"
+    },
+    {
+      "file": "fx/boss_frost_matriarch_attack.ogg",
+      "seconds": 0.95,
+      "sha256": "79a99be2d2d3f22591c8e182431c7b1ec5f524dc63d0930c6ee9376df34201ba"
+    },
+    {
+      "file": "fx/boss_frost_matriarch_summon.ogg",
+      "seconds": 1.15,
+      "sha256": "d8c416b9c954ec7337cd4f8e70b2027f95a860557aac2528c18a9d7703f769d8"
+    },
+    {
+      "file": "fx/boss_frost_matriarch_phase.ogg",
+      "seconds": 1.35,
+      "sha256": "6b2ad0279c47ff95b004770bd6517bdcee97d685eaf7eeb7e9a32e0e6e421c99"
+    },
+    {
+      "file": "fx/boss_frost_matriarch_enrage.ogg",
+      "seconds": 1.4,
+      "sha256": "cb359a33f2e054ce2a63caefa27bac25a3802b59dda935d58166ed20e8bab6cb"
+    },
+    {
+      "file": "fx/boss_frost_matriarch_death.ogg",
+      "seconds": 2.6,
+      "sha256": "e6376cd311fbe476258016e186aa8d9d240a37cb16d257df4b5ef035f9592460"
+    },
+    {
+      "file": "fx/boss_leviathan_entrance.ogg",
+      "seconds": 2.1,
+      "sha256": "47238b372788a5ae54974d6e6bff28ad091eff36074c7af768a23b840224b8c0"
+    },
+    {
+      "file": "fx/boss_leviathan_warning.ogg",
+      "seconds": 1.25,
+      "sha256": "4b4590026d3d0265a572dc08aacfddc7e24f677cef7b830f287c780b26077db7"
+    },
+    {
+      "file": "fx/boss_leviathan_attack.ogg",
+      "seconds": 0.95,
+      "sha256": "7657c2438d5e2443fd7d24b8395598f824f75b34a58c5180fabb7a44edc93d71"
+    },
+    {
+      "file": "fx/boss_leviathan_summon.ogg",
+      "seconds": 1.15,
+      "sha256": "b9ff092611bcb9aed147fc0c03ad93ff4636037d9e33d4c6db2c6f0cfe554404"
+    },
+    {
+      "file": "fx/boss_leviathan_phase.ogg",
+      "seconds": 1.35,
+      "sha256": "498f55ff617616df5007c2be3fbd627d1973c1b199fe1a2b6f32f981655461b4"
+    },
+    {
+      "file": "fx/boss_leviathan_enrage.ogg",
+      "seconds": 1.4,
+      "sha256": "9123eaab4a47774ea80e3405c45b9503c115a5490e984c020070a918098eb0b0"
+    },
+    {
+      "file": "fx/boss_leviathan_death.ogg",
+      "seconds": 2.6,
+      "sha256": "0bd025c16ef795375e54e3b224a978b037293d8562e99067fa80aca34cbb1501"
+    },
+    {
+      "file": "fx/boss_spore_queen_entrance.ogg",
+      "seconds": 2.1,
+      "sha256": "ebc58bd8aba9a8402dc64b4647839e36218fb1fa346a348701fe295c81889cd6"
+    },
+    {
+      "file": "fx/boss_spore_queen_warning.ogg",
+      "seconds": 1.25,
+      "sha256": "7e85e0e50993b0da2f8e484193f9c9c41e27f107d00ccf0054c07cb32441d40d"
+    },
+    {
+      "file": "fx/boss_spore_queen_attack.ogg",
+      "seconds": 0.95,
+      "sha256": "316cfe697ca8e52d501295ffcc38b06b4fa1b3683a9268192d26ffeb32aca08e"
+    },
+    {
+      "file": "fx/boss_spore_queen_summon.ogg",
+      "seconds": 1.15,
+      "sha256": "3770abd07ad17e81c572ce57ac671f62fed3d332b787b86b464dcd7134ba2653"
+    },
+    {
+      "file": "fx/boss_spore_queen_phase.ogg",
+      "seconds": 1.35,
+      "sha256": "fa00d03fb0b59df60e4cba5c23c484caa1d3854c1c25f97789b0476da4abb45f"
+    },
+    {
+      "file": "fx/boss_spore_queen_enrage.ogg",
+      "seconds": 1.4,
+      "sha256": "e77037027d3f869de6752c5597183b9ac6f63ca503a0320fc10ca45d0f10da4d"
+    },
+    {
+      "file": "fx/boss_spore_queen_death.ogg",
+      "seconds": 2.6,
+      "sha256": "78b798b5cd2105811bcc45e2bb9fdc790c818594371f8057fdbd31f4d5385e12"
+    },
+    {
+      "file": "fx/boss_bone_king_entrance.ogg",
+      "seconds": 2.1,
+      "sha256": "f66f288177a842e7ac99f5703da9c0691840dca0d0d616c778a829151137efe8"
+    },
+    {
+      "file": "fx/boss_bone_king_warning.ogg",
+      "seconds": 1.25,
+      "sha256": "d606e51ff61de75ab2aa8f7aef6a1216e90ccf11731a7950f0f7ee983564fbd5"
+    },
+    {
+      "file": "fx/boss_bone_king_attack.ogg",
+      "seconds": 0.95,
+      "sha256": "47bf554a88fef7b5ac35dd562f9931d5ec35823f8ab1ea4f714ec06529b422c9"
+    },
+    {
+      "file": "fx/boss_bone_king_summon.ogg",
+      "seconds": 1.15,
+      "sha256": "61e2bea521de5d560fd58cb8d3ca17dce37632195a757570d9b6e065f017932e"
+    },
+    {
+      "file": "fx/boss_bone_king_phase.ogg",
+      "seconds": 1.35,
+      "sha256": "b686ceb5d722eefc966f887a86c8295606f40266fb5dd97416ea84d44237a69e"
+    },
+    {
+      "file": "fx/boss_bone_king_enrage.ogg",
+      "seconds": 1.4,
+      "sha256": "bef24892ba2b3e03fb824c8457e2ec89b00a38999208d00d5e3f25771e536b17"
+    },
+    {
+      "file": "fx/boss_bone_king_death.ogg",
+      "seconds": 2.6,
+      "sha256": "04ed5b97fa413840e65ca712f335dae7e689543335093a8d294f4a5fb706326c"
+    },
+    {
+      "file": "fx/boss_tempest_roc_entrance.ogg",
+      "seconds": 2.1,
+      "sha256": "76f156b6fcbf4b6829c5738ddd8a88b7037c75216e4992cf4bc43dcd71c808fb"
+    },
+    {
+      "file": "fx/boss_tempest_roc_warning.ogg",
+      "seconds": 1.25,
+      "sha256": "a90df578f63db10904b5c222126cc618876c4e4da5412e1bfdcc25db96542136"
+    },
+    {
+      "file": "fx/boss_tempest_roc_attack.ogg",
+      "seconds": 0.95,
+      "sha256": "5154a789be0892b80dde671c4808dbddf672fa7bc54aef3a853ac16699a0da81"
+    },
+    {
+      "file": "fx/boss_tempest_roc_summon.ogg",
+      "seconds": 1.15,
+      "sha256": "62abc89dfea0b825cdbe15c0df2a328caa3a9d0ea34418b5ab0e651e83c61fdb"
+    },
+    {
+      "file": "fx/boss_tempest_roc_phase.ogg",
+      "seconds": 1.35,
+      "sha256": "a84d4254baa6a9c169c9382b6e55c1983b42cca2648da50dc5b4949c6dc5a9c2"
+    },
+    {
+      "file": "fx/boss_tempest_roc_enrage.ogg",
+      "seconds": 1.4,
+      "sha256": "8201aa44bbda08a2b2ee1dcc2988be56627ec6b57a4b7e261bde806049714e18"
+    },
+    {
+      "file": "fx/boss_tempest_roc_death.ogg",
+      "seconds": 2.6,
+      "sha256": "b56bad59cb3520485d16e09622636f3c46c1add498bb5b48e7e6ed2c60364902"
+    },
+    {
+      "file": "fx/boss_sun_pharaoh_entrance.ogg",
+      "seconds": 2.1,
+      "sha256": "31a1ef97c89355afcc4439c178cc683aa4c567dc9e9123966cbf57717096d4a9"
+    },
+    {
+      "file": "fx/boss_sun_pharaoh_warning.ogg",
+      "seconds": 1.25,
+      "sha256": "76b3ce118ddb3fd736672e3a828c7f8afd4933a3ee8de63df861aebc2d7c9eb6"
+    },
+    {
+      "file": "fx/boss_sun_pharaoh_attack.ogg",
+      "seconds": 0.95,
+      "sha256": "a5ddef25e74c71c0faaa8eaaa63aac0112a9550391d29d256c11ec82234bf03a"
+    },
+    {
+      "file": "fx/boss_sun_pharaoh_summon.ogg",
+      "seconds": 1.15,
+      "sha256": "4915e7a8c39ebdea74a62569507164595a433bfdba10b1117fc67061586a0264"
+    },
+    {
+      "file": "fx/boss_sun_pharaoh_phase.ogg",
+      "seconds": 1.35,
+      "sha256": "c551196bdc1bd73b1a3896791e3f106070976986c053ff77d83d621e512a050b"
+    },
+    {
+      "file": "fx/boss_sun_pharaoh_enrage.ogg",
+      "seconds": 1.4,
+      "sha256": "534c8a0c7c945c9f9bb10eefb5148441ce020c23634c41022bf560b7b1257e6b"
+    },
+    {
+      "file": "fx/boss_sun_pharaoh_death.ogg",
+      "seconds": 2.6,
+      "sha256": "8bb291dcb15c13a229da7d3c5d1c8b08f368c4d1b71c39b7272408dc4ffa58ea"
+    },
+    {
+      "file": "fx/boss_abyssal_keeper_entrance.ogg",
+      "seconds": 2.1,
+      "sha256": "aba9aef87db17e04463be83ebdfb3a98c19289fba56f3e692cf6be66044dda60"
+    },
+    {
+      "file": "fx/boss_abyssal_keeper_warning.ogg",
+      "seconds": 1.25,
+      "sha256": "ee6983b86cacb4f3fb5cc3fa750d887d0672d75b06ff6729571fb8c73f65e059"
+    },
+    {
+      "file": "fx/boss_abyssal_keeper_attack.ogg",
+      "seconds": 0.95,
+      "sha256": "2aea3533570839d86e736d719ab3f73a543a0790bc7fc748d6c9a71dc47bf4ec"
+    },
+    {
+      "file": "fx/boss_abyssal_keeper_summon.ogg",
+      "seconds": 1.15,
+      "sha256": "92ceac0ff616a07e06702e3452882cae6305dcad8621d9b16a88c2250dc834b7"
+    },
+    {
+      "file": "fx/boss_abyssal_keeper_phase.ogg",
+      "seconds": 1.35,
+      "sha256": "49eb32eaae35c54159611ba92eb67ce6cf0d0948f55acf4860aac11dbacba676"
+    },
+    {
+      "file": "fx/boss_abyssal_keeper_enrage.ogg",
+      "seconds": 1.4,
+      "sha256": "65f71ada171420db9b4b179f10d66fcb0f8f8ba53beb92bc4ca4749155d0d0a3"
+    },
+    {
+      "file": "fx/boss_abyssal_keeper_death.ogg",
+      "seconds": 2.6,
+      "sha256": "b76dcf5cc5b6aaa4c99648b3eb0c14fa52d633539182b0e03616702d7b6a74ec"
+    }
+  ]
+}

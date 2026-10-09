@@ -110,7 +110,12 @@ const BOSSES := {
 }
 
 static func info(key: String) -> Dictionary:
- return MOBS.get(key, BOSSES.get(key, {}))
+ if BOSSES.has(key):
+  var result = BOSSES[key].duplicate(true)
+  var kit = WardenMechanics.KITS[key]
+  result.text += "\n%s: %s" % [kit.name, kit.counter]
+  return result
+ return MOBS.get(key, {})
 
 ## How strong a Warden's stats are at a depth, given its mechanics. A list holds one value per depth
 ## (summoners need more at depth 2-3, where their adds fall behind the squad), a number all depths.
@@ -159,44 +164,23 @@ static func apply(sim: BattleSim, u: Dictionary) -> void:
  Relics.apply(sim, u, [mod])
  u.radius *= minf(1.35, float(m.get("scale", 1.0)))
  if BOSSES.has(key):
-  u.boss = {"key": key, "summon_t": float(m.get("summon", {}).get("every", 0.0)), "slam_t": float(m.get("slam", {}).get("every", 0.0)) * 0.7, "pulse_t": float(m.get("pulse", {}).get("every", 0.0)), "phase": 0, "enraged": false}
+  u.boss = {"key": key, "summon_t": float(m.get("summon", {}).get("every", 0.0)), "slam_t": float(m.get("slam", {}).get("every", 0.0)) * 0.7, "pulse_t": float(m.get("pulse", {}).get("every", 0.0)), "phase": 0, "enraged": false, "special_t": 6.0}
   u.fx.tenacity = maxf(float(u.fx.get("tenacity", 0.0)), 0.5)
 
 static func tick(sim: BattleSim, u: Dictionary, dt: float) -> void:
  var b = u.boss; var m = BOSSES[b.key]
  if m.has("regen"): sim.heal(u, u, u.max_hp * float(m.regen) * dt, "regeneration")
- if m.has("summon"):
-  b.summon_t -= dt
-  if b.summon_t <= 0.0:
-   b.summon_t = float(m.summon.every); call_adds(sim, u, str(m.summon.mob), int(m.summon.count))
- if m.has("slam"):
-  b.slam_t -= dt
-  var close = sim.near_foes(u, u.pos, float(m.slam.radius))
-  if b.slam_t <= 0.0 and not close.is_empty():
-   b.slam_t = float(m.slam.every)
-   sim.emit({"type": "cast", "uid": u.uid, "effect": "quake", "name": "Seismic Slam", "pos": u.pos, "target": u.pos})
-   sim.cc_source = u
-   for e in close:
-    sim.hurt(u, e, u.attack * float(m.slam.damage), false, "signature"); sim.status(e, "stun", float(m.slam.stun))
- if m.has("pulse"):
-  b.pulse_t -= dt
-  if b.pulse_t <= 0.0:
-   b.pulse_t = float(m.pulse.every)
-   var effect = {"silence": "radiance", "slow": "frost", "stun": "storm"}.get(str(m.pulse.status), "shriek")
-   sim.emit({"type": "cast", "uid": u.uid, "effect": effect, "name": "Warden's Pulse", "pos": u.pos, "target": u.pos})
-   sim.cc_source = u
-   for e in sim.foes(u):
-    if not e.alive: continue
-    sim.hurt(u, e, u.attack * float(m.pulse.damage), true, "signature"); sim.status(e, str(m.pulse.status), float(m.pulse.seconds))
+ WardenMechanics.tick(sim, u, dt)
+ if not u.alive or sim.active(u, "stun") or sim.active(u, "silence") or u.has("boss_pending"): return
  if m.has("enrage") and not b.enraged and u.hp / u.max_hp < float(m.enrage.below):
   b.enraged = true
   u.interval /= 1.0 + float(m.enrage.haste); u.fx.base_interval = u.interval
   u.attack *= 1.0 + float(m.enrage.attack); u.attack_basic = u.get("attack_basic", u.attack) * (1.0 + float(m.enrage.attack))
-  sim.emit({"type": "cast", "uid": u.uid, "effect": "prideroar", "name": "Enrage", "pos": u.pos, "target": u.pos})
+  WardenMechanics.event(sim, u, "enrage", "prideroar", "Enrage", u.pos)
  if m.has("phases") and int(b.phase) < m.phases.at.size() and u.hp / u.max_hp < float(m.phases.at[int(b.phase)]):
   b.phase = int(b.phase) + 1
   sim.shield(u, u.max_hp * float(m.phases.shield)); u.shield_time = 8.0
-  sim.emit({"type": "cast", "uid": u.uid, "effect": "vanish", "name": "Warden's Ward", "pos": u.pos, "target": u.pos})
+  WardenMechanics.event(sim, u, "phase", "vanish", "Warden's Ward", u.pos)
   call_adds(sim, u, str(m.phases.mob), int(m.phases.count))
 
 static func call_adds(sim: BattleSim, u: Dictionary, mob: String, count: int) -> void:
@@ -207,7 +191,7 @@ static func call_adds(sim: BattleSim, u: Dictionary, mob: String, count: int) ->
   var a = TAU * (float(i) / maxf(1, count)) + sim.time
   var add = sim.add_unit(h, u.team, u.pos + Vector2(cos(a), sin(a)) * 1.6, 1.0, u.uid)
   add.ttl = 14.0; add.max_hp *= 1.6; add.hp = add.max_hp
- sim.emit({"type": "summon", "uid": u.uid, "pos": u.pos})
+ WardenMechanics.event(sim, u, "summon", "brood", "Reinforcements", u.pos, "summon")
 
 # ------------------------------------------------------------------ Looks
 ## Recolour the creature's skin, resize it and give Wardens a glowing rim.

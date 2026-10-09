@@ -450,10 +450,13 @@ static func path_overlay(game: Node, stage: Control, c: Campaign) -> void:
   vignette(card, Rect2(3, 3, 700, 214), Color(0, 0, 0), 0.8)
   heading(game, card, str(info.name), Vector2(24, 160), 34, PARCH)
   text(game, card, str(info.tagline), Vector2(24, 226), 16, Color(PARCH, 0.85), 520)
-  var boss = Bestiary.BOSSES[str(info.boss)]
+  var boss = Bestiary.info(str(info.boss))
   portrait(card, str(boss.sp), Rect2(586, 150, 96, 96), Color(boss.glow), Color(boss.tint).lerp(Color.WHITE, 0.45))
   caption(game, card, "Warden  ·  " + str(boss.name), Vector2(24, 276), Color("ffb3a8"))
-  text(game, card, str(boss.text), Vector2(24, 296), 14, MUTE, 640)
+  var threat = text(game, card, str(Bestiary.BOSSES[str(info.boss)].text), Vector2(24, 296), 14, MUTE, 640)
+  threat.tooltip_text = str(boss.text)
+  var technique = caption(game, card, WardenMechanics.KITS[str(info.boss)].name + "  ·  hover for counterplay", Vector2(24, 338), Color("ffb3a8"), 640)
+  technique.tooltip_text = str(WardenMechanics.KITS[str(info.boss)].counter)
   caption(game, card, "Monsters", Vector2(24, 356), GOLDEN)
   for k in range(info.mobs.size()):
    var m = Bestiary.MOBS[info.mobs[k]]

@@ -1,5 +1,7 @@
 # Manitoria
 
+**Warden audio and counterplay (native source).** Ten themed boss techniques, interruptible warnings, and 70 original boss cues. See [audio audit and validation](BOSS-AUDIO-AUDIT.md). The bundled Windows build remains 0.75.4 until a new export.
+
 **0.75 — Visual overhaul, part 1.** Dungeon mode is the headline feature on a new title screen. The dungeon is immersive, with no tournament menus. Every menu has a cleaner look, buttons that respond to hover and press, and floating tooltip cards. Each zone now has five mobs and a Warden. See [UI-OVERHAUL-0.75.md](UI-OVERHAUL-0.75.md), and the [dungeon art brief](DUNGEON-ART-BRIEF.md) for the 70 image prompts and the Meshy steps.
 
 **New: Dungeon mode.** A branching descent in the spirit of *The Last Flame* and *Guildrun*. Choose your path through ten themed instances, from the Blight Forest and Mana Caverns to the Magma Depths and the Void Rift. Each has its own monsters, Warden boss and cave arena. Start with your headliner and a partner, then draft more champions from picks of five at checkpoints, on the stairs and at outfitters, up to six. Read each fight's threat on the map. Chase Flawless wins, reroll offers for gold, and trade relics or champions at the Ember Altar and the Pale Ferryman. Collect relics, build run-trait synergies, climb eight Ascension ranks, and chase a high score in the endless depths. Each zone has its own song, and the title screen has its own theme. Choose **Dungeon** on the main menu, next to **New club**. See [Dungeon mode](DUNGEON-MODE.md).

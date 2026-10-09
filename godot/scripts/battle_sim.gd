@@ -486,6 +486,7 @@ func step(dt: float) -> void:
   u.recovery = maxf(0, u.recovery - dt)
   u.attack_timer = maxf(0, u.attack_timer - dt * (1.22 if active(u, "rally") else 1.0))
   for key in u.ability_cds: u.ability_cds[key] = maxf(0, u.ability_cds[key] - dt)
+  if u.has("boss_pending"): continue
   if active(u, "stun"):
    u.windup = 0.0; u.erase("pending_cast"); continue
   if u.has("next_cell"):
