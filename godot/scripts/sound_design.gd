@@ -73,7 +73,7 @@ func _ready() -> void:
  for family in families:
   for prefix in ["", "attack_", "charge_", "death_"]: keys.append(prefix + family)
  for species in SPECIES_FAMILY: keys.append("hero_" + species)
- keys.append_array(["contest_reveal", "contest_lock", "contest_versus", "victory", "honor", "upgrade", "multikill", "arena_gate", "interrupt", "impact_flesh", "impact_stone", "impact_metal", "impact_arcane"])
+ keys.append_array(["contest_reveal", "contest_lock", "contest_versus", "victory", "honor", "upgrade", "multikill", "arena_gate", "interrupt", "impact_flesh", "impact_stone", "impact_metal", "impact_arcane", "ui_hover", "ui_click", "ui_open", "ui_close"])
  # Enumerate logical resource paths: exported WAVs have .import sidecars,
  # unlike their loose source files. ResourceLoader resolves either form.
  for key in keys:

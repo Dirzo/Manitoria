@@ -94,7 +94,7 @@ func run() -> void:
  check(DungeonInstances.ORDER.size() == 10, "Ten dungeon instances")
  for id in DungeonInstances.ORDER:
   var info = DungeonInstances.info(id)
-  check(info.mobs.size() == 4 and info.mobs.all(func(k): return Bestiary.MOBS.has(k)), "%s monsters exist" % id)
+  check(info.mobs.size() == 5 and info.mobs.all(func(k): return Bestiary.MOBS.has(k)), "%s monsters exist" % id)
   check(Bestiary.BOSSES.has(info.boss), "%s Warden exists" % id)
   for k in info.mobs: check(HeroData.species.has(Bestiary.MOBS[k].sp), "%s uses a real creature model" % k)
  var visited = []

@@ -8,7 +8,7 @@ func run() -> void:
  await create_timer(1.0).timeout
  game.qa="";game.phase="shop";game.render();await process_frame
  var buttons=game.ui.find_children("*","Button",true,false)
- check(buttons.any(func(b):return b.text=="Atlas"),"Atlas is reachable in shop")
+ check(game.ui.find_child("AtlasMedallion",true,false)!=null,"Atlas is reachable in shop")
  AtlasUI.open(game,{"side":"research"});await create_timer(.4).timeout
  buttons=game.ui.find_children("*","Button",true,false)
  check(buttons.any(func(b):return b.text=="Naga"),"Research champion table renders")

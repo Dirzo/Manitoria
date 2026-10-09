@@ -311,6 +311,10 @@ func spawn(u: Dictionary) -> void:
  if models.has(u.uid): return
  var holder = Node3D.new(); holder.name = "Hero" + str(u.uid); fighters.add_child(holder)
  var path = "res://assets/beasts/" + u.hero.sp + ".glb"
+ # Dungeon monsters with their own model (assets/models/dungeon/<monster id>.glb) use it instead of
+ # the recoloured stand-in creature. See DUNGEON-ART-BRIEF.md.
+ var own = Bestiary.model_path(u.hero)
+ if not own.is_empty(): path = own
  if not resources.has(path): resources[path] = load(path)
  var motion = Node3D.new(); motion.name = "CombatMotion"; holder.add_child(motion)
  var model = resources[path].instantiate(); motion.add_child(model)

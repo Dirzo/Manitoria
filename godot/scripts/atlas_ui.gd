@@ -1,6 +1,14 @@
 class_name AtlasUI
 extends RefCounted
 
+## Atlas and run-plan medallions for a header row (replaces the old floating text buttons).
+static func medallions(game: Node, row: Node, px := 46.0) -> void:
+ var a=HudKit.medallion(row,game,"atlas","","Atlas: champion, item and matchup statistics",func():open(game),false,px);a.name="AtlasMedallion"
+ var c=game.campaign
+ if c and not c.state.is_empty() and not c.state.get("roster",[]).is_empty() and not Dungeon.active(c):
+  var lab=c.state.get("speedrun_lab",false)
+  var p=HudKit.medallion(row,game,"plan","","Speedrun plan" if lab else "Run plan: your decision matrix",game.prepare_match if lab else func():matrix(game),false,px);p.name="RunPlanMedallion"
+
 static func launchers(game: Node) -> void:
  var row=HBoxContainer.new();game.ui.add_child(row);row.position=Vector2(1190,102) if game.phase in ["menu","new"] else Vector2(96,764)
  var b=game.button(row,"Atlas",func():open(game));b.custom_minimum_size=Vector2(110,32);b.add_theme_font_size_override("font_size",14)

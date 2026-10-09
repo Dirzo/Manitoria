@@ -6,11 +6,11 @@ extends RefCounted
 ## appear as overlays; rewards, events and reference pages open as framed dialogs.
 
 const W := 1548.0
-const H := 600.0
+const H := 768.0
 const TOP_H := 78.0
 const MAP_Y := 86.0
-const MAP_H := 382.0
-const SQUAD_Y := 476.0
+const MAP_H := 550.0
+const SQUAD_Y := 644.0
 const BRONZE := Color("8a6a3a")
 const GOLDEN := Color("e3c589")
 const PARCH := Color("f1e6cc")
@@ -58,7 +58,7 @@ static func button(game: Node, parent: Node, label_text: String, callback: Calla
  b.add_theme_stylebox_override("hover", skin(PARCH if primary else GOLDEN, base.lightened(0.18), 6, true))
  b.add_theme_stylebox_override("pressed", skin(GOLDEN, base.darkened(0.25), 6, false))
  b.add_theme_stylebox_override("disabled", skin(Color(BRONZE, 0.4), Color(0.08, 0.07, 0.1, 0.8), 6, false))
- b.add_theme_font_override("font", load(game.TITLE_FONT)); b.add_theme_font_size_override("font_size", 22 if primary else 17)
+ b.add_theme_font_override("font", load(game.TITLE_FONT) if primary else game.button_font()); b.add_theme_font_size_override("font_size", 22 if primary else 17)
  b.add_theme_color_override("font_color", PARCH); b.add_theme_color_override("font_hover_color", Color.WHITE); b.add_theme_color_override("font_disabled_color", Color(MUTE, 0.6))
  b.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8)); b.add_theme_constant_override("outline_size", 4)
  b.pressed.connect(callback)
@@ -100,7 +100,7 @@ static func dialog(game: Node, title: String, size: Vector2, accent := GOLDEN, c
  if closable:
   var close = HudKit.medallion(p, game, "close", "", "Close", func(): shade.queue_free(), false, 44); close.position = Vector2(size.x - 64, 12)
  var box = VBoxContainer.new(); p.add_child(box); box.position = Vector2(28, 80); box.size = Vector2(size.x - 56, size.y - 100); box.add_theme_constant_override("separation", 12)
- shade.modulate.a = 0.0; shade.create_tween().tween_property(shade, "modulate:a", 1.0, 0.16)
+ UIFeel.float_in(game, shade, p)
  return {"root": shade, "box": box, "panel": p}
 
 ## Give an existing button (management tabs, the dock) the dungeon look.
@@ -255,9 +255,16 @@ static func top_band(game: Node, stage: Control, c: Campaign) -> void:
   var icon = AbilityArt.icon(slot, str(r.art), 40); icon.position = Vector2.ZERO; icon.size = Vector2(40, 40); icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
  if relics.size() > 11: text(game, band, "+%d" % (relics.size() - 11), Vector2(rx + 11 * 44 + 4, 34), 16, GOLDEN)
  # Tools.
- var tools = HBoxContainer.new(); band.add_child(tools); tools.position = Vector2(W - 290, 17); tools.add_theme_constant_override("separation", 6)
- for entry in [["Traits", func(): traits_modal(game)], ["Scores", func(): high_scores(game)], ["Guide", func(): guide(game)]]:
-  button(game, tools, entry[0], entry[1], false, Vector2(88, 44))
+ # Tools: medallions instead of tabs. Squad and Journal open the side pages; the rest are dialogs.
+ var tools = HBoxContainer.new(); band.add_child(tools); tools.add_theme_constant_override("separation", 8)
+ var entries = [["squad", "Your squad: formation, items, tactics and XP", func(): game.tab = "roster"; game.render()],
+  ["journal", "Journal: every room and fight so far", func(): game.tab = "matches"; game.render()],
+  ["traits", "Run traits and synergies", func(): traits_modal(game)],
+  ["scores", "Dungeon high scores", func(): high_scores(game)],
+  ["guide", "How the dungeon works", func(): guide(game)]]
+ for e in entries:
+  var m = HudKit.medallion(tools, game, e[0], "", e[1], e[2], false, 50); m.name = "DungeonTool_" + e[0]
+ tools.position = Vector2(W - entries.size() * 58 - 10, 14)
 
 static func map_panel(game: Node, stage: Control, c: Campaign) -> void:
  var d = c.state.dungeon; var info = Dungeon.depth(c); var accent = Color(info.accent)
@@ -329,7 +336,8 @@ static func synergy_column(game: Node, frame: Control, c: Campaign) -> void:
  caption(game, col, "Synergies", Vector2(14, 10), GOLDEN)
  if rows.is_empty(): text(game, col, "Field champions that share a trait.", Vector2(14, 32), 13, MUTE, 168)
  var font = load(game.TITLE_FONT)
- for i in range(mini(rows.size(), 6)):
+ var fit = int((MAP_H - 96.0) / 44.0)
+ for i in range(mini(rows.size(), fit)):
   var row = rows[i]; var t = RunTraits.info(row.id); var lit = int(row.tier) >= 0
   var y = 32 + i * 44
   var badge = TraitBadge.new(); col.add_child(badge); badge.position = Vector2(10, y); badge.size = Vector2(38, 38)
@@ -338,7 +346,7 @@ static func synergy_column(game: Node, frame: Control, c: Campaign) -> void:
   var th = RunTraits.thresholds(row.id)
   text(game, col, "%s  ·  %s" % [" / ".join(th.map(func(x): return str(x))), t.flavour], Vector2(54, y + 19), 11, PARCH if lit else Color(MUTE, 0.8))
   var hit = Control.new(); col.add_child(hit); hit.position = Vector2(6, y); hit.size = Vector2(184, 40); hit.tooltip_text = RunTraits.tooltip(row.id); hit.mouse_filter = Control.MOUSE_FILTER_STOP
- if rows.size() > 6: text(game, col, "+%d more  ·  see Traits" % (rows.size() - 6), Vector2(14, MAP_H - 76), 12, MUTE)
+ if rows.size() > fit: text(game, col, "+%d more  ·  see Traits" % (rows.size() - fit), Vector2(14, MAP_H - 76), 12, MUTE)
 
 ## The Warden of this depth, waiting at the far end of the map.
 static func warden_card(game: Node, frame: Control, c: Campaign) -> void:
@@ -386,6 +394,16 @@ static func next_card(game: Node, band: Control, c: Campaign) -> void:
   button(game, card, "Fight  ▶", game.introduce_match, true, Vector2(150, 82), not c.lineup_ready() or not c.pending_heroes().is_empty()).position = Vector2(w - 162, 11)
   return
  caption(game, card, "Next", Vector2(16, 10), GOLDEN)
+ if not c.pending_heroes().is_empty():
+  heading(game, card, "Your champions grew stronger", Vector2(16, 28), 20, PARCH)
+  text(game, card, "Choose their new skills before the next room.", Vector2(16, 62), 13, MUTE, w - 220)
+  button(game, card, "Level ups  ▶", game.prepare_match, true, Vector2(190, 70)).position = Vector2(w - 202, 17)
+  return
+ if c.state.tour.get("shop", false):
+  heading(game, card, "The outfitter is open", Vector2(16, 28), 20, PARCH)
+  text(game, card, "Buy components, forge items and hire a champion.", Vector2(16, 62), 13, MUTE, w - 220)
+  button(game, card, "Outfitter  ▶", game.prepare_match, true, Vector2(190, 70)).position = Vector2(w - 202, 17)
+  return
  if not Dungeon.reachable(c).is_empty():
   heading(game, card, "Choose a glowing room", Vector2(16, 28), 20, PARCH)
   var preview = Dungeon.opponent(c)
@@ -421,13 +439,13 @@ static func path_overlay(game: Node, stage: Control, c: Campaign) -> void:
  var d = c.state.dungeon; var dim = overlay(stage)
  var act = int(d.act)
  var kicker = ("Endless depth %d" % (act - Dungeon.ACTS)) if act > Dungeon.ACTS else "Depth %d of %d" % [act, Dungeon.ACTS]
- heading(game, dim, "Choose your path", Vector2(0, 2), 40, PARCH, W, HORIZONTAL_ALIGNMENT_CENTER)
- caption(game, dim, kicker + ("  ·  new recruits wait in the Market before you go" if c.state.tour.get("intermission", false) else "  ·  each instance has its own monsters, Warden and arena"), Vector2(0, 54), GOLDEN, W, HORIZONTAL_ALIGNMENT_CENTER)
+ heading(game, dim, "Choose your path", Vector2(0, 86), 40, PARCH, W, HORIZONTAL_ALIGNMENT_CENTER)
+ caption(game, dim, kicker + ("  ·  new recruits wait in the Market before you go" if c.state.tour.get("intermission", false) else "  ·  each instance has its own monsters, Warden and arena"), Vector2(0, 138), GOLDEN, W, HORIZONTAL_ALIGNMENT_CENTER)
  var choices: Array = d.instance_choices
  for i in range(choices.size()):
   var id = str(choices[i]); var info = DungeonInstances.info(id); var accent = Color(info.accent)
   var x = 54 + i * 734
-  var card = plate(dim, Rect2(x, 80, 706, 516), accent, Color(0.04, 0.035, 0.055, 0.99)); card.clip_contents = true
+  var card = plate(dim, Rect2(x, 164, 706, 516), accent, Color(0.04, 0.035, 0.055, 0.99)); card.clip_contents = true
   painted(card, id, Rect2(3, 3, 700, 214), 0.8)
   vignette(card, Rect2(3, 3, 700, 214), Color(0, 0, 0), 0.8)
   heading(game, card, str(info.name), Vector2(24, 160), 34, PARCH)
@@ -458,7 +476,7 @@ static func ascension_note(game: Node, card: Control, c: Campaign, pos: Vector2)
 
 static func endless_overlay(game: Node, stage: Control, c: Campaign) -> void:
  var dim = overlay(stage)
- var card = plate(dim, Rect2(274, 110, 1000, 380), GOLDEN, Color(0.04, 0.035, 0.055, 0.99))
+ var card = plate(dim, Rect2(274, 194, 1000, 380), GOLDEN, Color(0.04, 0.035, 0.055, 0.99))
  heading(game, card, "The dungeon is conquered", Vector2(0, 40), 44, PARCH, 1000, HORIZONTAL_ALIGNMENT_CENTER)
  text(game, card, "All three Wardens have fallen. Bank your score now, or go into the endless depths, where every depth is harder and worth more points. If you run out of lives there, the run ends where you fall.", Vector2(90, 124), 17, MUTE, 820, HORIZONTAL_ALIGNMENT_CENTER)
  var bank = button(game, card, "Bank · %d points" % Dungeon.final_score(c), func():
@@ -474,7 +492,7 @@ static func endless_overlay(game: Node, stage: Control, c: Campaign) -> void:
 static func end_overlay(game: Node, stage: Control, c: Campaign) -> void:
  var d = c.state.dungeon; var dim = overlay(stage)
  var fallen = c.state.get("run_over", false)
- var card = plate(dim, Rect2(274, 80, 1000, 440), Color("ff8a7a") if fallen else GOLDEN, Color(0.04, 0.035, 0.055, 0.99))
+ var card = plate(dim, Rect2(274, 164, 1000, 440), Color("ff8a7a") if fallen else GOLDEN, Color(0.04, 0.035, 0.055, 0.99))
  heading(game, card, "Out of lives" if fallen else "Run complete", Vector2(0, 30), 46, Color("ffcfb8") if fallen else PARCH, 1000, HORIZONTAL_ALIGNMENT_CENTER)
  heading(game, card, "%d points" % int(d.get("final_score", Dungeon.final_score(c))), Vector2(0, 100), 40, Color("9fd8ff"), 1000, HORIZONTAL_ALIGNMENT_CENTER)
  var place = Dungeon.rank_of(c)

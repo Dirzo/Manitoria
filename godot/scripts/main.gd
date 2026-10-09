@@ -66,6 +66,7 @@ func _ready() -> void:
  arena.legendary_moment.connect(func(d): legend_left = d; legend_total = d)
  arena.hitstop.connect(func(d): freeze_left = maxf(freeze_left, d))
  sound = SoundDesign.new(); add_child(sound)
+ UIFeel.attach(self)
  layer = CanvasLayer.new(); add_child(layer)
  ui = Control.new(); layer.add_child(ui); ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
  ui.mouse_filter = Control.MOUSE_FILTER_IGNORE; ui.theme = make_theme()
@@ -73,6 +74,8 @@ func _ready() -> void:
   if arg=="--disable-card-particles":CardParticles.enabled=false
   if arg.begins_with("--qa="): qa = arg.trim_prefix("--qa=")
   if arg.begins_with("--capture="): qa_capture = arg.trim_prefix("--capture=")
+  if arg.begins_with("--qa_tab="): set_meta("qa_tab", arg.trim_prefix("--qa_tab="))
+  if arg.begins_with("--qa_mouse="): set_meta("qa_mouse", Vector2(float(arg.trim_prefix("--qa_mouse=").get_slice(",", 0)), float(arg.trim_prefix("--qa_mouse=").get_slice(",", 1))))
   if arg.begins_with("--qa_level="): qa_level = int(arg.trim_prefix("--qa_level="))
   if arg.begins_with("--qa_view="): desk_state.view = arg.trim_prefix("--qa_view=")
   if arg.begins_with("--qa_scroll="): set_meta("qa_scroll", int(arg.trim_prefix("--qa_scroll=")))
@@ -315,11 +318,18 @@ func _ready() -> void:
 const TITLE_FONT = "res://assets/fonts/uncialantiqua.ttf"
 const MENU_FONT = "res://assets/fonts/uncialantiqua.ttf"
 
+## Buttons use the book serif in a firm weight with a little tracking: clean and legible, like the
+## menus of Baldur's Gate 3. The uncial display face is kept for titles.
+func button_font() -> Font:
+ if not ResourceLoader.exists("res://assets/fonts/ebgaramond.ttf"): return load(MENU_FONT)
+ var f = FontVariation.new(); f.base_font = load("res://assets/fonts/ebgaramond.ttf"); f.variation_opentype = {"wght": 680}; f.spacing_glyph = 1
+ return f
+
 func make_theme() -> Theme:
  var theme = Theme.new(); theme.default_font_size = 18
  if ResourceLoader.exists("res://assets/fonts/ebgaramond.ttf"):
   var body_font=FontVariation.new();body_font.base_font=load("res://assets/fonts/ebgaramond.ttf");body_font.variation_opentype={"wght":550};theme.default_font=body_font
- theme.set_font("font","Button",load(MENU_FONT))
+ theme.set_font("font","Button",button_font())
  theme.set_font_size("font_size","Button",18)
  theme.set_color("font_color", "Label", WHITE)
  theme.set_color("font_outline_color", "Label", Color(0.01, 0.02, 0.03, 0.85))
@@ -374,7 +384,7 @@ func make_theme() -> Theme:
 ## (health teal, rarity colours, team tints) are left alone.
 static func warm(c: Color) -> Color:
  if c.a <= 0.0 or c.s > 0.8 or c.v > 0.55: return c
- if c.h < 0.38 or c.h > 0.72: return c
+ if c.h < 0.38 or c.h > 0.88: return c   # cool blues and purples join the bronze-and-umber palette
  return Color.from_hsv(0.08 + 0.02 * c.v, c.s * 0.55, c.v * 0.9, c.a)
 
 func style(fill: Color, border: Color, radius: int, margin: int, width: int = 1) -> StyleBoxFlat:
@@ -461,7 +471,13 @@ func render() -> void:
  arena.visible = phase not in ["hub", "menu", "new", "shop", "starter", "intro", "runover", "speedrun"]
  if phase in ["hub", "menu", "new", "shop", "starter", "intro", "runover", "speedrun"]:
   sim = null
-  var backdrop=ClubBackdrop.new();backdrop.theme_name=ClubBackdrop.theme_for(self);backdrop.shade=.08 if phase=="menu" else .30;ui.add_child(backdrop)
+  var backdrop=ClubBackdrop.new();backdrop.theme_name=ClubBackdrop.theme_for(self);backdrop.shade=.22 if phase=="menu" else .30;ui.add_child(backdrop)
+  if phase in ["hub","shop","intro"] and not campaign.state.is_empty() and Dungeon.active(campaign) and not exhibition:
+   # Inside the dungeon the colosseum disappears: the zone's own painting, deep in shadow.
+   var zone=Dungeon.instance_id(campaign);var info=DungeonInstances.info(zone)
+   var under=ColorRect.new();ui.add_child(under);under.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT);under.color=Color(0.012,0.01,0.018);under.mouse_filter=Control.MOUSE_FILTER_IGNORE
+   DungeonUI.painted(ui,zone,Rect2(0,0,1600,900),0.34)
+   DungeonUI.vignette(ui,Rect2(0,0,1600,900),Color(info.fog).darkened(0.75),0.95)
  # Between cups: land on the recruit board with the new champions (once per break).
  var tour_state = campaign.state.get("tour", {}) if not campaign.state.is_empty() else {}
  if phase == "hub" and tour_state.get("intermission", false) and not tour_state.get("intermission_seen", false):
@@ -471,7 +487,6 @@ func render() -> void:
   campaign.state.erase("goto_roster"); tab = "roster"
   get_tree().process_frame.connect(func(): FlowUI.banner(self, "SQUAD READY", Color("ffd36e"), "Set formation, tactics and XP focus"), CONNECT_ONE_SHOT)
  build_header()
- if phase!="battle":AtlasUI.launchers(self)
  if phase == "menu": build_menu()
  elif phase == "new": build_new()
  elif phase == "runover": build_runover()
@@ -1184,6 +1199,11 @@ func _process(dt: float) -> void:
  elif sim and phase in ["menu", "new", "hub", "prep"]: arena.sync(sim, dt)
  if not qa.is_empty() and not qa_taken:
   qa_elapsed += dt
+  if has_meta("qa_tab") and qa_elapsed > 0.5 and not has_meta("qa_tab_done"):
+   set_meta("qa_tab_done", true); tab = str(get_meta("qa_tab")); render()
+  if has_meta("qa_mouse") and qa_elapsed > 1.0 and not has_meta("qa_mouse_done"):
+   set_meta("qa_mouse_done", true)
+   var mm = InputEventMouseMotion.new(); mm.position = get_viewport().get_final_transform() * get_meta("qa_mouse"); mm.global_position = mm.position; get_viewport().push_input(mm)
   if qa_elapsed > (12 if qa in ["arena", "evolved_arena", "exhibition", "tour_arena", "dungeon_boss"] else 7 if qa in ["intro","chest"] else 4 if qa in ["guild_demo","draft_demo","builds_demo","tree_demo","evolution","levelup","tour_intro"] else 1.65 if qa in ["attacks_slam","attacks_weapon"] else 1.43 if qa.begins_with("attacks_") else 2 if qa.begins_with("particles_") else 3):
    qa_taken = true
    await RenderingServer.frame_post_draw

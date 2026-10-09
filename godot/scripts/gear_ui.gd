@@ -192,6 +192,7 @@ static func modal(game: Node,title: String,size: Vector2=Vector2(920,520)) -> Di
  var box=VBoxContainer.new();frame.add_child(box);var row=HBoxContainer.new();box.add_child(row)
  var label=game.label(row,title,28);label.size_flags_horizontal=Control.SIZE_EXPAND_FILL
  HudKit.medallion(row,game,"close","","Close",func():shade.queue_free(),false,42)
+ UIFeel.float_in(game,shade,frame)
  return {"root":shade,"box":box}
 
 static func picker(game: Node,hero: Dictionary,key: String) -> void:

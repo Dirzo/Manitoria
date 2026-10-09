@@ -64,6 +64,42 @@ class Medallion extends Button:
     draw_line(c + Vector2(-s * 0.8, -s * 0.8), c + Vector2(s * 0.8, s * 0.8), ink, 3.0, true); draw_line(c + Vector2(s * 0.8, -s * 0.8), c + Vector2(-s * 0.8, s * 0.8), ink, 3.0, true)
    "menu":
     for y in [-s * 0.7, 0.0, s * 0.7]: draw_line(c + Vector2(-s, y), c + Vector2(s, y), ink, 3.0, true)
+   "squad":
+    draw_circle(c + Vector2(-s * 0.45, -s * 0.35), s * 0.36, ink); draw_circle(c + Vector2(s * 0.5, -s * 0.45), s * 0.32, ink)
+    draw_arc(c + Vector2(-s * 0.45, s * 0.75), s * 0.7, PI, TAU, 16, ink, 3.0, true); draw_arc(c + Vector2(s * 0.55, s * 0.6), s * 0.6, PI * 1.05, TAU, 14, ink, 2.5, true)
+   "journal":
+    draw_rect(Rect2(c + Vector2(-s * 0.85, -s), Vector2(s * 1.7, s * 2.0)), ink, false, 2.5)
+    draw_line(c + Vector2(-s * 0.55, -s), c + Vector2(-s * 0.55, s), ink, 2.0, true)
+    for y in [-s * 0.4, 0.0, s * 0.4]: draw_line(c + Vector2(-s * 0.25, y), c + Vector2(s * 0.6, y), ink, 1.6, true)
+   "traits":
+    var hexp = PackedVector2Array()
+    for i in range(7):
+     var a = TAU * i / 6.0 + PI / 6.0
+     hexp.append(c + Vector2(cos(a), sin(a)) * s * 1.05)
+    draw_polyline(hexp, ink, 2.5, true); draw_circle(c, s * 0.3, ink)
+   "scores":
+    draw_colored_polygon(PackedVector2Array([c + Vector2(-s, -s * 0.6), c + Vector2(-s * 0.5, 0), c + Vector2(0, -s * 0.9), c + Vector2(s * 0.5, 0), c + Vector2(s, -s * 0.6), c + Vector2(s * 0.8, s * 0.55), c + Vector2(-s * 0.8, s * 0.55)]), ink)
+    draw_rect(Rect2(c + Vector2(-s * 0.8, s * 0.7), Vector2(s * 1.6, s * 0.3)), ink)
+   "guide":
+    draw_arc(c + Vector2(0, -s * 0.35), s * 0.55, PI, TAU + PI * 0.35, 16, ink, 3.0, true)
+    draw_line(c + Vector2(s * 0.1, s * 0.05), c + Vector2(0, s * 0.4), ink, 3.0, true); draw_circle(c + Vector2(0, s * 0.85), s * 0.17, ink)
+   "atlas":
+    draw_arc(c, s, 0, TAU, 28, ink, 2.5, true); draw_line(c + Vector2(-s, 0), c + Vector2(s, 0), ink, 1.6, true)
+    for k in [-1.0, 1.0]:
+     var pts = PackedVector2Array()
+     for i in range(13):
+      var t = -PI / 2 + PI * i / 12.0
+      pts.append(c + Vector2(cos(t) * s * 0.45 * k, sin(t) * s))
+     draw_polyline(pts, ink, 1.6, true)
+   "plan":
+    draw_rect(Rect2(c + Vector2(-s * 0.8, -s), Vector2(s * 1.6, s * 2.0)), ink, false, 2.5)
+    for i in range(3):
+     var y = -s * 0.5 + i * s * 0.5
+     draw_line(c + Vector2(-s * 0.5, y), c + Vector2(-s * 0.3, y + s * 0.18), ink, 2.0, true); draw_line(c + Vector2(-s * 0.3, y + s * 0.18), c + Vector2(-s * 0.05, y - s * 0.2), ink, 2.0, true)
+     draw_line(c + Vector2(s * 0.1, y), c + Vector2(s * 0.55, y), ink, 1.6, true)
+   "map":
+    draw_polyline(PackedVector2Array([c + Vector2(-s, -s * 0.7), c + Vector2(-s * 0.33, -s), c + Vector2(s * 0.33, -s * 0.7), c + Vector2(s, -s), c + Vector2(s, s * 0.7), c + Vector2(s * 0.33, s), c + Vector2(-s * 0.33, s * 0.7), c + Vector2(-s, s), c + Vector2(-s, -s * 0.7)]), ink, 2.2, true)
+    draw_line(c + Vector2(-s * 0.33, -s), c + Vector2(-s * 0.33, s * 0.7), ink, 1.5, true); draw_line(c + Vector2(s * 0.33, -s * 0.7), c + Vector2(s * 0.33, s), ink, 1.5, true)
    _:
     if font: draw_string(font, c + Vector2(-r, s * 0.7), caption, HORIZONTAL_ALIGNMENT_CENTER, r * 2, int(r * 0.78), ink)
 
@@ -94,3 +130,44 @@ static func edge_fade(parent: Node, rect: Rect2, from_left: bool, strength := 0.
  sh.code = "shader_type canvas_item; uniform float strength=0.7; uniform bool left=true; void fragment(){ float x = left ? UV.x : 1.0-UV.x; float y = smoothstep(0.0,0.12,UV.y)*smoothstep(1.0,0.82,UV.y); COLOR=vec4(0.01,0.01,0.02,(1.0-smoothstep(0.0,1.0,x))*strength*y); }"
  var m = ShaderMaterial.new(); m.shader = sh; m.set_shader_parameter("strength", strength); m.set_shader_parameter("left", from_left); v.material = m
  return v
+
+## A clean text tab (no box): small-caps book serif with tracking, muted until hovered, gold when
+## active, with a gilded rule that grows from the centre — the Baldur's Gate 3 menu treatment.
+class NavTab extends Button:
+ var label := ""
+ var active := false
+ var glow := 0.0
+ var font: Font
+ func _ready() -> void:
+  flat = true; focus_mode = Control.FOCUS_NONE; mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+  for st in ["normal", "hover", "pressed", "disabled", "focus"]: add_theme_stylebox_override(st, StyleBoxEmpty.new())
+  set_meta("feel_amp", 0.0)
+  mouse_entered.connect(func(): _glow(1.0))
+  mouse_exited.connect(func(): _glow(0.0))
+ func _glow(v: float) -> void:
+  var tw = create_tween(); tw.tween_method(func(x): glow = x; queue_redraw(), glow, v, 0.16)
+ func _draw() -> void:
+  var w = size.x; var h = size.y
+  var ink = GOLDEN if active else PARCH.lerp(Color.WHITE, glow) * Color(1, 1, 1, 0.82 + 0.18 * glow)
+  var fs = 17
+  var txt = label.to_upper()
+  if font:
+   var tw = font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+   var pos = Vector2((w - tw) * 0.5, h * 0.5 + fs * 0.32)
+   draw_string(font, pos + Vector2(0, 2), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(0, 0, 0, 0.7))
+   draw_string(font, pos, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, ink)
+  var reach = (0.36 if active else 0.0) + glow * 0.12
+  if reach > 0.0:
+   var y = h - 5.0; var mid = w * 0.5
+   draw_line(Vector2(mid - w * reach, y), Vector2(mid + w * reach, y), Color(GOLDEN, 0.85 if active else 0.5), 1.5, true)
+   if active:
+    draw_colored_polygon(PackedVector2Array([Vector2(mid, y - 4), Vector2(mid + 4, y), Vector2(mid, y + 4), Vector2(mid - 4, y)]), GOLDEN)
+
+static func nav_tab(parent: Node, game: Node, text: String, callback: Callable, active := false) -> NavTab:
+ var t = NavTab.new(); t.label = text; t.active = active; t.font = game.button_font()
+ # Keep the real button text (for search and tests) but draw it ourselves.
+ t.text = text
+ for k in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color", "font_disabled_color", "font_outline_color"]: t.add_theme_color_override(k, Color(0, 0, 0, 0))
+ t.custom_minimum_size = Vector2(0, 44); t.tooltip_text = ""
+ parent.add_child(t); t.pressed.connect(callback)
+ return t

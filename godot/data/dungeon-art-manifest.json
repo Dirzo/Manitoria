@@ -1,0 +1,1782 @@
+[
+ {
+  "id": "gloomfang",
+  "zone": "blight_forest",
+  "zone_name": "The Blight Forest",
+  "kind": "mob",
+  "name": "Gloomfang",
+  "role": "Fast pack hunter",
+  "stand_in_model": "direwolf",
+  "new": false,
+  "prompt": "A gaunt, mange-ridden wolf with bark-like scabs, glowing lime eyes, moss and fungus growing along its spine, long yellowed fangs, ragged ears. Creature of The Blight Forest; colour palette: sickly lime green, rotten brown and bone white. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/blight_forest/gloomfang.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/gloomfang.glb"
+  }
+ },
+ {
+  "id": "thornback",
+  "zone": "blight_forest",
+  "zone_name": "The Blight Forest",
+  "kind": "mob",
+  "name": "Thornback Troll",
+  "role": "Tank; thorns stun attackers",
+  "stand_in_model": "troll",
+  "new": false,
+  "prompt": "A hulking hunched troll whose back is a forest of black thorns and bramble, mossy green-grey skin, a gnarled root club, small angry eyes under a heavy brow. Creature of The Blight Forest; colour palette: sickly lime green, rotten brown and bone white. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/blight_forest/thornback.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "biped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/thornback.glb"
+  }
+ },
+ {
+  "id": "sporeling",
+  "zone": "blight_forest",
+  "zone_name": "The Blight Forest",
+  "kind": "mob",
+  "name": "Sporeling",
+  "role": "Small healer that spreads spores",
+  "stand_in_model": "treant",
+  "new": false,
+  "prompt": "A knee-high walking sapling-mushroom creature, a puffball cap that leaks glowing green spores, twig limbs, a sleepy hollow face, roots for feet. Creature of The Blight Forest; colour palette: sickly lime green, rotten brown and bone white. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/blight_forest/sporeling.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "biped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/sporeling.glb"
+  }
+ },
+ {
+  "id": "rotwing",
+  "zone": "blight_forest",
+  "zone_name": "The Blight Forest",
+  "kind": "mob",
+  "name": "Rotwing",
+  "role": "Ranged; blighted venom",
+  "stand_in_model": "wyvern",
+  "new": false,
+  "prompt": "A lean two-legged wyvern with torn, leaf-veined wings, rotting olive scales, a dripping acid-green throat sac, a barbed tail. Creature of The Blight Forest; colour palette: sickly lime green, rotten brown and bone white. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/blight_forest/rotwing.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/rotwing.glb"
+  }
+ },
+ {
+  "id": "blightmaw_toad",
+  "zone": "blight_forest",
+  "zone_name": "The Blight Forest",
+  "kind": "mob",
+  "name": "Blightmaw Toad",
+  "role": "NEW · ranged acid artillery",
+  "stand_in_model": "basilisk",
+  "new": true,
+  "prompt": "A bloated giant toad covered in pustules and lichen, a wide maw dripping glowing acid, warty mottled green-black skin, stubby powerful legs, little bone charms tangled on its back. Creature of The Blight Forest; colour palette: sickly lime green, rotten brown and bone white. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/blight_forest/blightmaw_toad.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/blightmaw_toad.glb"
+  }
+ },
+ {
+  "id": "rootmother",
+  "zone": "blight_forest",
+  "zone_name": "The Blight Forest",
+  "kind": "boss",
+  "name": "The Rootmother",
+  "role": "Summons Sporelings, regrows",
+  "stand_in_model": "treant",
+  "new": false,
+  "prompt": "A towering ancient tree-matriarch, a hollow mother's face carved into a cracked trunk, a crown of dead branches hung with glowing spore pods, root-tendril arms, a cradle of sporelings nestled in her chest, toxic green inner light. Creature of The Blight Forest; colour palette: sickly lime green, rotten brown and bone white. Rich hand-painted dark-fantasy concept art of a dungeon boss, heroic scale, imposing silhouette, ornate signature details, full body in a menacing neutral stance, three-quarter front view, whole figure in frame with margin, plain flat dark-grey background, dramatic but even key light with a coloured rim light, no cast shadow, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/blight_forest/rootmother.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 30000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "biped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/rootmother.glb"
+  }
+ },
+ {
+  "id": "blight_forest_backdrop",
+  "zone": "blight_forest",
+  "zone_name": "The Blight Forest",
+  "kind": "backdrop",
+  "name": "The Blight Forest map backdrop",
+  "role": "Map-screen painting",
+  "prompt": "The Blight Forest: dead black trees, toxic green pools, thorn thickets, drifting spores, a rotted cathedral of roots. Colour palette: sickly lime green, rotten brown and bone white. Wide 16:9 painted dark-fantasy environment matte painting for a game map screen, atmospheric depth, strong value structure with a darker centre band where UI will sit, no characters, no text, no UI, no watermark.",
+  "image_file": "godot/assets/ui/dungeon/blight_forest.jpg"
+ },
+ {
+  "id": "mana_wisp",
+  "zone": "mana_caverns",
+  "zone_name": "The Mana Caverns",
+  "kind": "mob",
+  "name": "Mana Wisp",
+  "role": "Fragile arcane caster",
+  "stand_in_model": "kirin",
+  "new": false,
+  "prompt": "A small floating spirit-deer made of flowing cyan light, a crystal shard core in its chest, wisp tail, translucent body with sparkles, gentle glowing eyes. Creature of The Mana Caverns; colour palette: electric cyan, deep sapphire and white light. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/mana_caverns/mana_wisp.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/mana_wisp.glb"
+  }
+ },
+ {
+  "id": "crystal_golem",
+  "zone": "mana_caverns",
+  "zone_name": "The Mana Caverns",
+  "kind": "mob",
+  "name": "Crystal Golem",
+  "role": "Slow, armoured",
+  "stand_in_model": "golem",
+  "new": false,
+  "prompt": "A blocky stone golem studded with huge cyan crystal growths on shoulders and back, glowing seams, heavy fists, a faceted gem for a face. Creature of The Mana Caverns; colour palette: electric cyan, deep sapphire and white light. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/mana_caverns/crystal_golem.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "biped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/crystal_golem.glb"
+  }
+ },
+ {
+  "id": "glimmerfox",
+  "zone": "mana_caverns",
+  "zone_name": "The Mana Caverns",
+  "kind": "mob",
+  "name": "Glimmerfox",
+  "role": "Dodgy skirmisher",
+  "stand_in_model": "kitsune",
+  "new": false,
+  "prompt": "A sleek fox with prismatic crystalline fur tips, three tails that end in glowing shards, mirrored eyes, light refracting off its coat. Creature of The Mana Caverns; colour palette: electric cyan, deep sapphire and white light. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/mana_caverns/glimmerfox.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/glimmerfox.glb"
+  }
+ },
+ {
+  "id": "shardscale",
+  "zone": "mana_caverns",
+  "zone_name": "The Mana Caverns",
+  "kind": "mob",
+  "name": "Shardscale",
+  "role": "Crystallising gaze",
+  "stand_in_model": "basilisk",
+  "new": false,
+  "prompt": "A low six-legged lizard covered in overlapping crystal scales, a frilled crest of shards, a glowing cyan gaze. Creature of The Mana Caverns; colour palette: electric cyan, deep sapphire and white light. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/mana_caverns/shardscale.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/shardscale.glb"
+  }
+ },
+ {
+  "id": "geode_mimic",
+  "zone": "mana_caverns",
+  "zone_name": "The Mana Caverns",
+  "kind": "mob",
+  "name": "Geode Mimic",
+  "role": "NEW · ambusher tank",
+  "stand_in_model": "zaratan",
+  "new": true,
+  "prompt": "A large cracked geode boulder that splits open into a toothy maw lined with amethyst crystals, stubby stone legs, a long crystal tongue, curious glinting eyes inside the shell. Creature of The Mana Caverns; colour palette: electric cyan, deep sapphire and white light. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/mana_caverns/geode_mimic.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/geode_mimic.glb"
+  }
+ },
+ {
+  "id": "prismatic_archon",
+  "zone": "mana_caverns",
+  "zone_name": "The Mana Caverns",
+  "kind": "boss",
+  "name": "The Prismatic Archon",
+  "role": "Mana surge silences the squad; shields at half health",
+  "stand_in_model": "sphinx",
+  "new": false,
+  "prompt": "A majestic crystal sphinx-angel, a lion's body of faceted glass, six prism wings fanned like a halo, a serene masked face, a floating ring of rotating crystal shards, cyan and violet light bleeding from its cracks. Creature of The Mana Caverns; colour palette: electric cyan, deep sapphire and white light. Rich hand-painted dark-fantasy concept art of a dungeon boss, heroic scale, imposing silhouette, ornate signature details, full body in a menacing neutral stance, three-quarter front view, whole figure in frame with margin, plain flat dark-grey background, dramatic but even key light with a coloured rim light, no cast shadow, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/mana_caverns/prismatic_archon.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 30000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/prismatic_archon.glb"
+  }
+ },
+ {
+  "id": "mana_caverns_backdrop",
+  "zone": "mana_caverns",
+  "zone_name": "The Mana Caverns",
+  "kind": "backdrop",
+  "name": "The Mana Caverns map backdrop",
+  "role": "Map-screen painting",
+  "prompt": "The Mana Caverns: giant glowing crystal clusters, crystal spires, mirror-still underground lakes, veins of raw mana in the rock. Colour palette: electric cyan, deep sapphire and white light. Wide 16:9 painted dark-fantasy environment matte painting for a game map screen, atmospheric depth, strong value structure with a darker centre band where UI will sit, no characters, no text, no UI, no watermark.",
+  "image_file": "godot/assets/ui/dungeon/mana_caverns.jpg"
+ },
+ {
+  "id": "ember_imp",
+  "zone": "magma_depths",
+  "zone_name": "The Magma Depths",
+  "kind": "mob",
+  "name": "Ember Imp",
+  "role": "Explosive caster",
+  "stand_in_model": "salamander",
+  "new": false,
+  "prompt": "A small impish fire salamander with a mischievous grin, cracked charcoal skin over glowing magma, flame tongue, tiny horns, a burning tail. Creature of The Magma Depths; colour palette: molten orange, ember red and basalt black. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/magma_depths/ember_imp.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "biped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/ember_imp.glb"
+  }
+ },
+ {
+  "id": "magma_hound",
+  "zone": "magma_depths",
+  "zone_name": "The Magma Depths",
+  "kind": "mob",
+  "name": "Magma Hound",
+  "role": "Molten jaws",
+  "stand_in_model": "cerberus",
+  "new": false,
+  "prompt": "A muscular hound of cooled black lava with molten orange cracks, a mane of flame, glowing jaws dripping magma, obsidian claws. Creature of The Magma Depths; colour palette: molten orange, ember red and basalt black. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/magma_depths/magma_hound.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/magma_hound.glb"
+  }
+ },
+ {
+  "id": "slagbrute",
+  "zone": "magma_depths",
+  "zone_name": "The Magma Depths",
+  "kind": "mob",
+  "name": "Slagbrute",
+  "role": "Hulking forge guard",
+  "stand_in_model": "minotaur",
+  "new": false,
+  "prompt": "A massive bull-headed forge guardian in slag-encrusted iron armour, a cooling ingot hammer, soot-black hide, glowing furnace chest vents. Creature of The Magma Depths; colour palette: molten orange, ember red and basalt black. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/magma_depths/slagbrute.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "biped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/slagbrute.glb"
+  }
+ },
+ {
+  "id": "ash_golem",
+  "zone": "magma_depths",
+  "zone_name": "The Magma Depths",
+  "kind": "mob",
+  "name": "Ash Golem",
+  "role": "Shields itself when cracked",
+  "stand_in_model": "golem",
+  "new": false,
+  "prompt": "A golem of grey compacted ash and cinder with embers glowing in its cracks, smoke rising from its shoulders, crumbling heavy fists. Creature of The Magma Depths; colour palette: molten orange, ember red and basalt black. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/magma_depths/ash_golem.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "biped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/ash_golem.glb"
+  }
+ },
+ {
+  "id": "cinder_wyrmling",
+  "zone": "magma_depths",
+  "zone_name": "The Magma Depths",
+  "kind": "mob",
+  "name": "Cinder Wyrmling",
+  "role": "NEW · ranged fire breather",
+  "stand_in_model": "wyvern",
+  "new": true,
+  "prompt": "A young lava drake with small ember wings, obsidian horn nubs, a glowing belly, a smoking snout and a tail ending in a coal-like club. Creature of The Magma Depths; colour palette: molten orange, ember red and basalt black. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/magma_depths/cinder_wyrmling.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/cinder_wyrmling.glb"
+  }
+ },
+ {
+  "id": "forge_tyrant",
+  "zone": "magma_depths",
+  "zone_name": "The Magma Depths",
+  "kind": "boss",
+  "name": "Magmaw, the Forge Tyrant",
+  "role": "Stunning slams; enrages",
+  "stand_in_model": "minotaur",
+  "new": false,
+  "prompt": "A colossal molten minotaur king, horns of black iron, a crown of chains fused to his skull, a furnace for a chest with roaring flame inside, a gigantic anvil-headed warhammer, lava dripping from his armour plates. Creature of The Magma Depths; colour palette: molten orange, ember red and basalt black. Rich hand-painted dark-fantasy concept art of a dungeon boss, heroic scale, imposing silhouette, ornate signature details, full body in a menacing neutral stance, three-quarter front view, whole figure in frame with margin, plain flat dark-grey background, dramatic but even key light with a coloured rim light, no cast shadow, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/magma_depths/forge_tyrant.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 30000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "biped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/forge_tyrant.glb"
+  }
+ },
+ {
+  "id": "magma_depths_backdrop",
+  "zone": "magma_depths",
+  "zone_name": "The Magma Depths",
+  "kind": "backdrop",
+  "name": "The Magma Depths map backdrop",
+  "role": "Map-screen painting",
+  "prompt": "The Magma Depths: lava rivers, molten-veined basalt, lavafalls, ruined dwarven forges, chains and anvils. Colour palette: molten orange, ember red and basalt black. Wide 16:9 painted dark-fantasy environment matte painting for a game map screen, atmospheric depth, strong value structure with a darker centre band where UI will sit, no characters, no text, no UI, no watermark.",
+  "image_file": "godot/assets/ui/dungeon/magma_depths.jpg"
+ },
+ {
+  "id": "rimefang",
+  "zone": "frostbound_crypt",
+  "zone_name": "The Frostbound Crypt",
+  "kind": "mob",
+  "name": "Rimefang",
+  "role": "Numbing bite",
+  "stand_in_model": "direwolf",
+  "new": false,
+  "prompt": "A white wolf with icicles forming along its ruff and spine, frosted pale blue eyes, a breath of cold mist, crystallised claws. Creature of The Frostbound Crypt; colour palette: ice blue, pale silver and grave white. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/frostbound_crypt/rimefang.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/rimefang.glb"
+  }
+ },
+ {
+  "id": "frost_wraith",
+  "zone": "frostbound_crypt",
+  "zone_name": "The Frostbound Crypt",
+  "kind": "mob",
+  "name": "Frost Wraith",
+  "role": "Fast, hungry",
+  "stand_in_model": "wendigo",
+  "new": false,
+  "prompt": "A tall emaciated ice spirit with antlers of frost, a skull-like face, tattered robes of frozen mist, long clawed hands, a cold blue inner glow. Creature of The Frostbound Crypt; colour palette: ice blue, pale silver and grave white. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/frostbound_crypt/frost_wraith.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "biped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/frost_wraith.glb"
+  }
+ },
+ {
+  "id": "glacier_yeti",
+  "zone": "frostbound_crypt",
+  "zone_name": "The Frostbound Crypt",
+  "kind": "mob",
+  "name": "Glacier Yeti",
+  "role": "Tanky snowdrift",
+  "stand_in_model": "yeti",
+  "new": false,
+  "prompt": "A huge shaggy yeti with blue-white fur, glacier ice plates grown over its shoulders and forearms, a broad flat face, enormous hands. Creature of The Frostbound Crypt; colour palette: ice blue, pale silver and grave white. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/frostbound_crypt/glacier_yeti.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "biped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/glacier_yeti.glb"
+  }
+ },
+ {
+  "id": "rime_harpy",
+  "zone": "frostbound_crypt",
+  "zone_name": "The Frostbound Crypt",
+  "kind": "mob",
+  "name": "Rime Harpy",
+  "role": "Diving striker",
+  "stand_in_model": "harpy",
+  "new": false,
+  "prompt": "A harpy with frost-white feathers tipped in ice crystals, a pale blue face mask of frost, talons of ice, a frozen tattered shawl. Creature of The Frostbound Crypt; colour palette: ice blue, pale silver and grave white. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/frostbound_crypt/rime_harpy.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "biped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/rime_harpy.glb"
+  }
+ },
+ {
+  "id": "icebound_revenant",
+  "zone": "frostbound_crypt",
+  "zone_name": "The Frostbound Crypt",
+  "kind": "mob",
+  "name": "Icebound Revenant",
+  "role": "NEW · armoured melee",
+  "stand_in_model": "minotaur",
+  "new": true,
+  "prompt": "An undead knight partly encased in a block of clear ice, an old crypt helm and rusted plate armour, a frost-covered greatsword, cold blue eyes glowing through the visor. Creature of The Frostbound Crypt; colour palette: ice blue, pale silver and grave white. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/frostbound_crypt/icebound_revenant.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "biped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/icebound_revenant.glb"
+  }
+ },
+ {
+  "id": "frost_matriarch",
+  "zone": "frostbound_crypt",
+  "zone_name": "The Frostbound Crypt",
+  "kind": "boss",
+  "name": "The Frost Matriarch",
+  "role": "Blizzard slows everyone; enrages",
+  "stand_in_model": "yeti",
+  "new": false,
+  "prompt": "An ancient queen of the crypt, a towering frost giantess with a crown of icicles, a long cloak of snow and frozen fur, a staff topped with a frozen heart, a swirling blizzard around her hem, glowing pale eyes. Creature of The Frostbound Crypt; colour palette: ice blue, pale silver and grave white. Rich hand-painted dark-fantasy concept art of a dungeon boss, heroic scale, imposing silhouette, ornate signature details, full body in a menacing neutral stance, three-quarter front view, whole figure in frame with margin, plain flat dark-grey background, dramatic but even key light with a coloured rim light, no cast shadow, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/frostbound_crypt/frost_matriarch.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 30000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "biped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/frost_matriarch.glb"
+  }
+ },
+ {
+  "id": "frostbound_crypt_backdrop",
+  "zone": "frostbound_crypt",
+  "zone_name": "The Frostbound Crypt",
+  "kind": "backdrop",
+  "name": "The Frostbound Crypt map backdrop",
+  "role": "Map-screen painting",
+  "prompt": "The Frostbound Crypt: ice shards, frozen sarcophagi, snow drifts, frozen pillars, falling snow in a tomb. Colour palette: ice blue, pale silver and grave white. Wide 16:9 painted dark-fantasy environment matte painting for a game map screen, atmospheric depth, strong value structure with a darker centre band where UI will sit, no characters, no text, no UI, no watermark.",
+  "image_file": "godot/assets/ui/dungeon/frostbound_crypt.jpg"
+ },
+ {
+  "id": "tide_naga",
+  "zone": "drowned_sanctum",
+  "zone_name": "The Drowned Sanctum",
+  "kind": "mob",
+  "name": "Tide Naga",
+  "role": "Caster that sings the sea",
+  "stand_in_model": "naga",
+  "new": false,
+  "prompt": "A serpent-tailed sea priestess with teal scales, a fin crest, pearl jewellery, a coral trident, flowing kelp hair. Creature of The Drowned Sanctum; colour palette: deep teal, sea-glass green and pearl. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/drowned_sanctum/tide_naga.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "biped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/tide_naga.glb"
+  }
+ },
+ {
+  "id": "brine_serpent",
+  "zone": "drowned_sanctum",
+  "zone_name": "The Drowned Sanctum",
+  "kind": "mob",
+  "name": "Brine Serpent",
+  "role": "Coiling bruiser",
+  "stand_in_model": "basilisk",
+  "new": false,
+  "prompt": "A thick sea serpent with barnacled dark-blue scales, a frilled head, rows of needle teeth, kelp hanging from its coils. Creature of The Drowned Sanctum; colour palette: deep teal, sea-glass green and pearl. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/drowned_sanctum/brine_serpent.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/brine_serpent.glb"
+  }
+ },
+ {
+  "id": "shellback",
+  "zone": "drowned_sanctum",
+  "zone_name": "The Drowned Sanctum",
+  "kind": "mob",
+  "name": "Shellback",
+  "role": "Small fortress",
+  "stand_in_model": "zaratan",
+  "new": false,
+  "prompt": "A squat turtle-crab with a coral-encrusted shell, oversized armoured claws, barnacles and small anemones on its back. Creature of The Drowned Sanctum; colour palette: deep teal, sea-glass green and pearl. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/drowned_sanctum/shellback.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/shellback.glb"
+  }
+ },
+ {
+  "id": "siren",
+  "zone": "drowned_sanctum",
+  "zone_name": "The Drowned Sanctum",
+  "kind": "mob",
+  "name": "Siren",
+  "role": "Charming caster",
+  "stand_in_model": "harpy",
+  "new": false,
+  "prompt": "A beautiful but eerie bird-woman with sea-green feathers, a pearl-white face, webbed talons, a shell ornament on her brow. Creature of The Drowned Sanctum; colour palette: deep teal, sea-glass green and pearl. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/drowned_sanctum/siren.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "biped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/siren.glb"
+  }
+ },
+ {
+  "id": "drowned_priest",
+  "zone": "drowned_sanctum",
+  "zone_name": "The Drowned Sanctum",
+  "kind": "mob",
+  "name": "Drowned Priest",
+  "role": "NEW · healer",
+  "stand_in_model": "naga",
+  "new": true,
+  "prompt": "A fish-headed cleric in waterlogged temple robes, barnacles on the shoulders, a censer that leaks glowing sea mist, webbed hands, sad pale eyes. Creature of The Drowned Sanctum; colour palette: deep teal, sea-glass green and pearl. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/drowned_sanctum/drowned_priest.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "biped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/drowned_priest.glb"
+  }
+ },
+ {
+  "id": "leviathan",
+  "zone": "drowned_sanctum",
+  "zone_name": "The Drowned Sanctum",
+  "kind": "boss",
+  "name": "The Drowned Leviathan",
+  "role": "Tidal slams, Sirens, regeneration",
+  "stand_in_model": "basilisk",
+  "new": false,
+  "prompt": "An enormous ancient sea-wyrm rising from the flood, a temple bell and broken columns tangled in its coils, coral armour plates, a vast mouth of jagged teeth, bioluminescent teal spots, kelp streaming from its fins. Creature of The Drowned Sanctum; colour palette: deep teal, sea-glass green and pearl. Rich hand-painted dark-fantasy concept art of a dungeon boss, heroic scale, imposing silhouette, ornate signature details, full body in a menacing neutral stance, three-quarter front view, whole figure in frame with margin, plain flat dark-grey background, dramatic but even key light with a coloured rim light, no cast shadow, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/drowned_sanctum/leviathan.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 30000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/leviathan.glb"
+  }
+ },
+ {
+  "id": "drowned_sanctum_backdrop",
+  "zone": "drowned_sanctum",
+  "zone_name": "The Drowned Sanctum",
+  "kind": "backdrop",
+  "name": "The Drowned Sanctum map backdrop",
+  "role": "Map-screen painting",
+  "prompt": "The Drowned Sanctum: a flooded temple, broken marble columns, coral and barnacles, shafts of light through water, kelp. Colour palette: deep teal, sea-glass green and pearl. Wide 16:9 painted dark-fantasy environment matte painting for a game map screen, atmospheric depth, strong value structure with a darker centre band where UI will sit, no characters, no text, no UI, no watermark.",
+  "image_file": "godot/assets/ui/dungeon/drowned_sanctum.jpg"
+ },
+ {
+  "id": "mycelid",
+  "zone": "fungal_hollows",
+  "zone_name": "The Fungal Hollows",
+  "kind": "mob",
+  "name": "Mycelid",
+  "role": "Walking grove",
+  "stand_in_model": "treant",
+  "new": false,
+  "prompt": "A humanoid made of stacked mushroom caps and mycelium threads, a frilly cap head with glowing gills, fibrous limbs, a peaceful empty face. Creature of The Fungal Hollows; colour palette: violet, magenta and bioluminescent cyan. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/fungal_hollows/mycelid.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "biped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/mycelid.glb"
+  }
+ },
+ {
+  "id": "spore_spider",
+  "zone": "fungal_hollows",
+  "zone_name": "The Fungal Hollows",
+  "kind": "mob",
+  "name": "Spore Spider",
+  "role": "Leaves spores behind",
+  "stand_in_model": "arachne",
+  "new": false,
+  "prompt": "A spider with a bulbous glowing mushroom on its abdomen, fuzzy violet legs, many tiny glowing eyes, spore dust drifting from its body. Creature of The Fungal Hollows; colour palette: violet, magenta and bioluminescent cyan. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/fungal_hollows/spore_spider.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/spore_spider.glb"
+  }
+ },
+ {
+  "id": "capbear",
+  "zone": "fungal_hollows",
+  "zone_name": "The Fungal Hollows",
+  "kind": "mob",
+  "name": "Capbear",
+  "role": "Plated bruiser",
+  "stand_in_model": "owlbear",
+  "new": false,
+  "prompt": "A big bear covered in shelf-fungus plates like armour, a mushroom-cap hood over its head, glowing magenta spots, strong claws. Creature of The Fungal Hollows; colour palette: violet, magenta and bioluminescent cyan. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/fungal_hollows/capbear.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/capbear.glb"
+  }
+ },
+ {
+  "id": "glowmoth",
+  "zone": "fungal_hollows",
+  "zone_name": "The Fungal Hollows",
+  "kind": "mob",
+  "name": "Glowmoth",
+  "role": "Healing dust",
+  "stand_in_model": "pegasus",
+  "new": false,
+  "prompt": "A large moth with luminous lilac wings patterned like eyes, a fuzzy body, feathered antennae, glowing dust falling from its wings. Creature of The Fungal Hollows; colour palette: violet, magenta and bioluminescent cyan. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/fungal_hollows/glowmoth.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/glowmoth.glb"
+  }
+ },
+ {
+  "id": "puffcap_bomber",
+  "zone": "fungal_hollows",
+  "zone_name": "The Fungal Hollows",
+  "kind": "mob",
+  "name": "Puffcap Bomber",
+  "role": "NEW · explodes on death",
+  "stand_in_model": "jackalope",
+  "new": true,
+  "prompt": "A round waddling puffball mushroom creature with a big grin, swollen cap ready to burst, tiny legs, bright warning-orange spots, a lit fuse-like stem. Creature of The Fungal Hollows; colour palette: violet, magenta and bioluminescent cyan. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/fungal_hollows/puffcap_bomber.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/puffcap_bomber.glb"
+  }
+ },
+ {
+  "id": "spore_queen",
+  "zone": "fungal_hollows",
+  "zone_name": "The Fungal Hollows",
+  "kind": "boss",
+  "name": "The Spore Queen",
+  "role": "Hatches Spore Spiders; choking clouds",
+  "stand_in_model": "arachne",
+  "new": false,
+  "prompt": "A regal spider-queen with a huge glowing mushroom crown, a towering bloated abdomen full of spore sacs, elegant long legs, a veil of mycelium threads, magenta and cyan bioluminescence. Creature of The Fungal Hollows; colour palette: violet, magenta and bioluminescent cyan. Rich hand-painted dark-fantasy concept art of a dungeon boss, heroic scale, imposing silhouette, ornate signature details, full body in a menacing neutral stance, three-quarter front view, whole figure in frame with margin, plain flat dark-grey background, dramatic but even key light with a coloured rim light, no cast shadow, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/fungal_hollows/spore_queen.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 30000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/spore_queen.glb"
+  }
+ },
+ {
+  "id": "fungal_hollows_backdrop",
+  "zone": "fungal_hollows",
+  "zone_name": "The Fungal Hollows",
+  "kind": "backdrop",
+  "name": "The Fungal Hollows map backdrop",
+  "role": "Map-screen painting",
+  "prompt": "The Fungal Hollows: giant glowing mushrooms in three colours, spore clouds, mycelium threads, damp caves. Colour palette: violet, magenta and bioluminescent cyan. Wide 16:9 painted dark-fantasy environment matte painting for a game map screen, atmospheric depth, strong value structure with a darker centre band where UI will sit, no characters, no text, no UI, no watermark.",
+  "image_file": "godot/assets/ui/dungeon/fungal_hollows.jpg"
+ },
+ {
+  "id": "bone_gargoyle",
+  "zone": "ossuary_of_kings",
+  "zone_name": "The Ossuary of Kings",
+  "kind": "mob",
+  "name": "Bone Gargoyle",
+  "role": "Armoured striker",
+  "stand_in_model": "gargoyle",
+  "new": false,
+  "prompt": "A gargoyle built from fused ribs and skulls, bone wings with no membrane, a horned skull face, glowing ember eyes. Creature of The Ossuary of Kings; colour palette: bone ivory, candle gold and black. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/ossuary_of_kings/bone_gargoyle.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "biped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/bone_gargoyle.glb"
+  }
+ },
+ {
+  "id": "grave_hound",
+  "zone": "ossuary_of_kings",
+  "zone_name": "The Ossuary of Kings",
+  "kind": "mob",
+  "name": "Grave Hound",
+  "role": "Three-headed skeletal hound",
+  "stand_in_model": "cerberus",
+  "new": false,
+  "prompt": "A three-headed skeletal hound with a spiked collar, ghostly green flame in its ribcage, cracked yellowed bones. Creature of The Ossuary of Kings; colour palette: bone ivory, candle gold and black. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/ossuary_of_kings/grave_hound.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/grave_hound.glb"
+  }
+ },
+ {
+  "id": "crypt_knight",
+  "zone": "ossuary_of_kings",
+  "zone_name": "The Ossuary of Kings",
+  "kind": "mob",
+  "name": "Crypt Knight",
+  "role": "Armoured guard",
+  "stand_in_model": "minotaur",
+  "new": false,
+  "prompt": "A horned skeletal knight in ancient royal plate armour with a tattered tabard, a great axe, a faded crown sigil on its shield. Creature of The Ossuary of Kings; colour palette: bone ivory, candle gold and black. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/ossuary_of_kings/crypt_knight.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "biped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/crypt_knight.glb"
+  }
+ },
+ {
+  "id": "wight",
+  "zone": "ossuary_of_kings",
+  "zone_name": "The Ossuary of Kings",
+  "kind": "mob",
+  "name": "Wight",
+  "role": "Quick killer",
+  "stand_in_model": "nekomata",
+  "new": false,
+  "prompt": "A pale undead cat-like stalker, stretched grey skin over bone, two tails, long dagger claws, burning white pupils. Creature of The Ossuary of Kings; colour palette: bone ivory, candle gold and black. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/ossuary_of_kings/wight.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/wight.glb"
+  }
+ },
+ {
+  "id": "ossuary_priest",
+  "zone": "ossuary_of_kings",
+  "zone_name": "The Ossuary of Kings",
+  "kind": "mob",
+  "name": "Ossuary Priest",
+  "role": "NEW · necromancer caster",
+  "stand_in_model": "sphinx",
+  "new": true,
+  "prompt": "A hunched skeletal priest in black and gold funeral robes, a mitre made of finger bones, a censer of grave smoke, candles melted onto its shoulders. Creature of The Ossuary of Kings; colour palette: bone ivory, candle gold and black. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/ossuary_of_kings/ossuary_priest.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/ossuary_priest.glb"
+  }
+ },
+ {
+  "id": "bone_king",
+  "zone": "ossuary_of_kings",
+  "zone_name": "The Ossuary of Kings",
+  "kind": "boss",
+  "name": "The Bone King",
+  "role": "Raises Bone Gargoyles behind shields; enrages",
+  "stand_in_model": "minotaur",
+  "new": false,
+  "prompt": "A gigantic skeletal king on a pile of crowns, a great horned crown fused to his skull, a cloak of royal velvet rotted to rags, a sceptre topped with a screaming skull, ghostly gold fire in his eye sockets. Creature of The Ossuary of Kings; colour palette: bone ivory, candle gold and black. Rich hand-painted dark-fantasy concept art of a dungeon boss, heroic scale, imposing silhouette, ornate signature details, full body in a menacing neutral stance, three-quarter front view, whole figure in frame with margin, plain flat dark-grey background, dramatic but even key light with a coloured rim light, no cast shadow, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/ossuary_of_kings/bone_king.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 30000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "biped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/bone_king.glb"
+  }
+ },
+ {
+  "id": "ossuary_of_kings_backdrop",
+  "zone": "ossuary_of_kings",
+  "zone_name": "The Ossuary of Kings",
+  "kind": "backdrop",
+  "name": "The Ossuary of Kings map backdrop",
+  "role": "Map-screen painting",
+  "prompt": "The Ossuary of Kings: bone piles, stacked skulls, horned skulls, guttering candles, falling ash, crumbling royal tombs. Colour palette: bone ivory, candle gold and black. Wide 16:9 painted dark-fantasy environment matte painting for a game map screen, atmospheric depth, strong value structure with a darker centre band where UI will sit, no characters, no text, no UI, no watermark.",
+  "image_file": "godot/assets/ui/dungeon/ossuary_of_kings.jpg"
+ },
+ {
+  "id": "storm_harpy",
+  "zone": "storm_spire",
+  "zone_name": "The Storm Spire",
+  "kind": "mob",
+  "name": "Storm Harpy",
+  "role": "Fast striker",
+  "stand_in_model": "harpy",
+  "new": false,
+  "prompt": "A harpy with slate-grey feathers crackling with yellow lightning, a copper face guard, wind-swept crest. Creature of The Storm Spire; colour palette: electric yellow, slate grey and storm violet. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/storm_spire/storm_harpy.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "biped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/storm_harpy.glb"
+  }
+ },
+ {
+  "id": "thunderhawk",
+  "zone": "storm_spire",
+  "zone_name": "The Storm Spire",
+  "kind": "mob",
+  "name": "Thunderhawk",
+  "role": "Burst striker",
+  "stand_in_model": "griffin",
+  "new": false,
+  "prompt": "A griffin with storm-cloud grey plumage, golden lightning streaks along its wings, a beak of polished brass. Creature of The Storm Spire; colour palette: electric yellow, slate grey and storm violet. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/storm_spire/thunderhawk.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/thunderhawk.glb"
+  }
+ },
+ {
+  "id": "spark_kirin",
+  "zone": "storm_spire",
+  "zone_name": "The Storm Spire",
+  "kind": "mob",
+  "name": "Spark Kirin",
+  "role": "Chain caster",
+  "stand_in_model": "kirin",
+  "new": false,
+  "prompt": "A slender kirin with a mane of crackling electric arcs, yellow-white scales, a single lightning-rod horn. Creature of The Storm Spire; colour palette: electric yellow, slate grey and storm violet. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/storm_spire/spark_kirin.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/spark_kirin.glb"
+  }
+ },
+ {
+  "id": "galvanic_golem",
+  "zone": "storm_spire",
+  "zone_name": "The Storm Spire",
+  "kind": "mob",
+  "name": "Galvanic Golem",
+  "role": "Answers spells with lightning",
+  "stand_in_model": "golem",
+  "new": false,
+  "prompt": "An iron and copper construct with coils on its shoulders, a glass capacitor chest glowing with trapped lightning, riveted plates. Creature of The Storm Spire; colour palette: electric yellow, slate grey and storm violet. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/storm_spire/galvanic_golem.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "biped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/galvanic_golem.glb"
+  }
+ },
+ {
+  "id": "tempest_elemental",
+  "zone": "storm_spire",
+  "zone_name": "The Storm Spire",
+  "kind": "mob",
+  "name": "Tempest Elemental",
+  "role": "NEW · flying caster",
+  "stand_in_model": "phoenix",
+  "new": true,
+  "prompt": "A living storm cloud shaped like a winged figure, swirling dark vapour, a bright lightning core, rain trailing from its lower body. Creature of The Storm Spire; colour palette: electric yellow, slate grey and storm violet. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/storm_spire/tempest_elemental.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "biped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/tempest_elemental.glb"
+  }
+ },
+ {
+  "id": "tempest_roc",
+  "zone": "storm_spire",
+  "zone_name": "The Storm Spire",
+  "kind": "boss",
+  "name": "The Tempest Roc",
+  "role": "Chain lightning stuns the squad",
+  "stand_in_model": "griffin",
+  "new": false,
+  "prompt": "A colossal storm bird with a wingspan full of thunderclouds, feathers like iron blades, lightning crackling between its talons, a crown of floating rocks orbiting its head. Creature of The Storm Spire; colour palette: electric yellow, slate grey and storm violet. Rich hand-painted dark-fantasy concept art of a dungeon boss, heroic scale, imposing silhouette, ornate signature details, full body in a menacing neutral stance, three-quarter front view, whole figure in frame with margin, plain flat dark-grey background, dramatic but even key light with a coloured rim light, no cast shadow, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/storm_spire/tempest_roc.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 30000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/tempest_roc.glb"
+  }
+ },
+ {
+  "id": "storm_spire_backdrop",
+  "zone": "storm_spire",
+  "zone_name": "The Storm Spire",
+  "kind": "backdrop",
+  "name": "The Storm Spire map backdrop",
+  "role": "Map-screen painting",
+  "prompt": "The Storm Spire: iron lightning pylons, floating rocks, a tower in the clouds, sparks and rain. Colour palette: electric yellow, slate grey and storm violet. Wide 16:9 painted dark-fantasy environment matte painting for a game map screen, atmospheric depth, strong value structure with a darker centre band where UI will sit, no characters, no text, no UI, no watermark.",
+  "image_file": "godot/assets/ui/dungeon/storm_spire.jpg"
+ },
+ {
+  "id": "sand_manticore",
+  "zone": "gilded_tomb",
+  "zone_name": "The Gilded Tomb",
+  "kind": "mob",
+  "name": "Sand Manticore",
+  "role": "Critical striker",
+  "stand_in_model": "manticore",
+  "new": false,
+  "prompt": "A manticore with a sand-coloured lion body, a scorpion tail of gold-plated segments, a lapis-blue mane braided with gold rings. Creature of The Gilded Tomb; colour palette: burnished gold, lapis blue and sandstone. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/gilded_tomb/sand_manticore.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/sand_manticore.glb"
+  }
+ },
+ {
+  "id": "tomb_jackal",
+  "zone": "gilded_tomb",
+  "zone_name": "The Gilded Tomb",
+  "kind": "mob",
+  "name": "Tomb Jackal",
+  "role": "Fast guardian",
+  "stand_in_model": "jackalope",
+  "new": false,
+  "prompt": "A gilded jackal guardian with long ears, a golden collar and headdress, black fur and gold markings, glowing amber eyes. Creature of The Gilded Tomb; colour palette: burnished gold, lapis blue and sandstone. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/gilded_tomb/tomb_jackal.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/tomb_jackal.glb"
+  }
+ },
+ {
+  "id": "mummified_lion",
+  "zone": "gilded_tomb",
+  "zone_name": "The Gilded Tomb",
+  "kind": "mob",
+  "name": "Mummified Lion",
+  "role": "Tank",
+  "stand_in_model": "nemean",
+  "new": false,
+  "prompt": "A lion wrapped in ancient linen bandages, a golden funerary mask, a mane of dried papyrus, gaps showing dark dried flesh. Creature of The Gilded Tomb; colour palette: burnished gold, lapis blue and sandstone. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/gilded_tomb/mummified_lion.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/mummified_lion.glb"
+  }
+ },
+ {
+  "id": "scarab_golem",
+  "zone": "gilded_tomb",
+  "zone_name": "The Gilded Tomb",
+  "kind": "mob",
+  "name": "Scarab Golem",
+  "role": "Armoured",
+  "stand_in_model": "golem",
+  "new": false,
+  "prompt": "A golem shaped like a giant upright scarab beetle, emerald and gold shell plates, a sun disc on its brow, stone limbs. Creature of The Gilded Tomb; colour palette: burnished gold, lapis blue and sandstone. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/gilded_tomb/scarab_golem.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "biped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/scarab_golem.glb"
+  }
+ },
+ {
+  "id": "gilded_asp",
+  "zone": "gilded_tomb",
+  "zone_name": "The Gilded Tomb",
+  "kind": "mob",
+  "name": "Gilded Asp",
+  "role": "NEW · venom ranged",
+  "stand_in_model": "basilisk",
+  "new": true,
+  "prompt": "A huge cobra with gold-and-lapis banded scales, a hood painted like a sun disc, ruby eyes, a jewelled crown on its head. Creature of The Gilded Tomb; colour palette: burnished gold, lapis blue and sandstone. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/gilded_tomb/gilded_asp.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/gilded_asp.glb"
+  }
+ },
+ {
+  "id": "sun_pharaoh",
+  "zone": "gilded_tomb",
+  "zone_name": "The Gilded Tomb",
+  "kind": "boss",
+  "name": "The Sun-Eater Pharaoh",
+  "role": "Sunfire slams; golden wards with Tomb Jackals",
+  "stand_in_model": "sphinx",
+  "new": false,
+  "prompt": "A towering undead pharaoh in golden armour and a tall double crown, a radiant sun disc held behind him like a halo, bandaged limbs, a crook and flail, burning gold eyes in a dark mummified face. Creature of The Gilded Tomb; colour palette: burnished gold, lapis blue and sandstone. Rich hand-painted dark-fantasy concept art of a dungeon boss, heroic scale, imposing silhouette, ornate signature details, full body in a menacing neutral stance, three-quarter front view, whole figure in frame with margin, plain flat dark-grey background, dramatic but even key light with a coloured rim light, no cast shadow, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/gilded_tomb/sun_pharaoh.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 30000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/sun_pharaoh.glb"
+  }
+ },
+ {
+  "id": "gilded_tomb_backdrop",
+  "zone": "gilded_tomb",
+  "zone_name": "The Gilded Tomb",
+  "kind": "backdrop",
+  "name": "The Gilded Tomb map backdrop",
+  "role": "Map-screen painting",
+  "prompt": "The Gilded Tomb: sandstone obelisks with gold caps, painted sarcophagi, braziers, hieroglyph walls, drifting sand. Colour palette: burnished gold, lapis blue and sandstone. Wide 16:9 painted dark-fantasy environment matte painting for a game map screen, atmospheric depth, strong value structure with a darker centre band where UI will sit, no characters, no text, no UI, no watermark.",
+  "image_file": "godot/assets/ui/dungeon/gilded_tomb.jpg"
+ },
+ {
+  "id": "shade_stalker",
+  "zone": "void_rift",
+  "zone_name": "The Void Rift",
+  "kind": "mob",
+  "name": "Shade Stalker",
+  "role": "Ambush assassin",
+  "stand_in_model": "nekomata",
+  "new": false,
+  "prompt": "A shadowy panther made of living darkness, its outline flickering, white star-like eyes, wisps of smoke instead of fur. Creature of The Void Rift; colour palette: deep violet, black and starlight white. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/void_rift/shade_stalker.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/shade_stalker.glb"
+  }
+ },
+ {
+  "id": "void_weaver",
+  "zone": "void_rift",
+  "zone_name": "The Void Rift",
+  "kind": "mob",
+  "name": "Void Weaver",
+  "role": "Web caster",
+  "stand_in_model": "arachne",
+  "new": false,
+  "prompt": "A spider of black chitin with constellations glowing on its abdomen, legs that fade into nothing, spinning violet threads. Creature of The Void Rift; colour palette: deep violet, black and starlight white. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/void_rift/void_weaver.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/void_weaver.glb"
+  }
+ },
+ {
+  "id": "star_wraith",
+  "zone": "void_rift",
+  "zone_name": "The Void Rift",
+  "kind": "mob",
+  "name": "Star Wraith",
+  "role": "Fast and hungry",
+  "stand_in_model": "wendigo",
+  "new": false,
+  "prompt": "A tall gaunt wraith made of night sky, stars visible through its body, antlers of black crystal, long reaching claws. Creature of The Void Rift; colour palette: deep violet, black and starlight white. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/void_rift/star_wraith.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "biped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/star_wraith.glb"
+  }
+ },
+ {
+  "id": "mind_eater",
+  "zone": "void_rift",
+  "zone_name": "The Void Rift",
+  "kind": "mob",
+  "name": "Mind Eater",
+  "role": "Petrifying caster",
+  "stand_in_model": "basilisk",
+  "new": false,
+  "prompt": "A tentacle-faced serpent with a huge glowing third eye, violet skin, a crown of floating runes. Creature of The Void Rift; colour palette: deep violet, black and starlight white. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/void_rift/mind_eater.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/mind_eater.glb"
+  }
+ },
+ {
+  "id": "rift_horror",
+  "zone": "void_rift",
+  "zone_name": "The Void Rift",
+  "kind": "mob",
+  "name": "Rift Horror",
+  "role": "NEW · multi-headed bruiser",
+  "stand_in_model": "hydra",
+  "new": true,
+  "prompt": "A writhing mass of black tentacles and three eyeless heads with glowing mouths, violet runes carved into its hide, small void shards orbiting it. Creature of The Void Rift; colour palette: deep violet, black and starlight white. Rich hand-painted fantasy concept art in the style of a premium dark-fantasy auto-battler, chunky readable stylised proportions, crisp sculptural forms, clear material separation (hide, bone, metal, crystal, cloth). Full body, standing in a neutral ready pose, three-quarter front view, whole creature in frame with a little margin, plain flat light-grey background, soft even studio lighting, no cast shadow, no motion blur, no particles hiding the body, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/void_rift/rift_horror.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 18000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/rift_horror.glb"
+  }
+ },
+ {
+  "id": "abyssal_keeper",
+  "zone": "void_rift",
+  "zone_name": "The Void Rift",
+  "kind": "boss",
+  "name": "The Abyssal Keeper",
+  "role": "Shielded phases with Shade Stalkers; slams",
+  "stand_in_model": "sphinx",
+  "new": false,
+  "prompt": "A colossal void guardian, a faceless armoured titan whose head is a hole into the starfield, rune halos orbiting its shoulders, a cloak of darkness, great hands of black crystal. Creature of The Void Rift; colour palette: deep violet, black and starlight white. Rich hand-painted dark-fantasy concept art of a dungeon boss, heroic scale, imposing silhouette, ornate signature details, full body in a menacing neutral stance, three-quarter front view, whole figure in frame with margin, plain flat dark-grey background, dramatic but even key light with a coloured rim light, no cast shadow, no text, no UI, no watermark. One creature only. Designed so it can be turned into a 3D model.",
+  "image_file": "godot/assets/art/dungeon/void_rift/abyssal_keeper.png",
+  "meshy": {
+   "mode": "image-to-3d",
+   "target_polycount": 30000,
+   "topology": "quad",
+   "texture": "PBR",
+   "rig": "quadruped",
+   "animations": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+   ],
+   "model_file": "godot/assets/models/dungeon/abyssal_keeper.glb"
+  }
+ },
+ {
+  "id": "void_rift_backdrop",
+  "zone": "void_rift",
+  "zone_name": "The Void Rift",
+  "kind": "backdrop",
+  "name": "The Void Rift map backdrop",
+  "role": "Map-screen painting",
+  "prompt": "The Void Rift: floating void shards, glowing rune halos, broken reality, a starfield bleeding through the walls. Colour palette: deep violet, black and starlight white. Wide 16:9 painted dark-fantasy environment matte painting for a game map screen, atmospheric depth, strong value structure with a darker centre band where UI will sit, no characters, no text, no UI, no watermark.",
+  "image_file": "godot/assets/ui/dungeon/void_rift.jpg"
+ }
+]

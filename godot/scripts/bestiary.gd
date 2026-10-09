@@ -57,6 +57,17 @@ const MOBS := {
  "void_weaver":   {"name": "Void Weaver", "sp": "arachne", "tint": "4a2a7a", "scale": 1.0, "stats": {"power": 0.12, "hp": 0.05}, "text": "Spins webs of nothing."},
  "star_wraith":   {"name": "Star Wraith", "sp": "wendigo", "tint": "8a7aff", "scale": 1.05, "stats": {"attack": 0.10, "speed": 0.10, "hp": -0.05}, "text": "Cold and hungry."},
  "mind_eater":    {"name": "Mind Eater", "sp": "basilisk", "tint": "8a3a9a", "scale": 1.05, "stats": {"power": 0.15}, "text": "Its stare turns thought to stone."},
+ # Fifth mobs (0.75): new designs, using stand-in models until their own art arrives.
+ "blightmaw_toad": {"name": "Blightmaw Toad", "sp": "basilisk", "tint": "6a8a2a", "scale": 1.08, "stats": {"power": 0.12, "hp": 0.05}, "text": "Spits acid from behind its pack."},
+ "geode_mimic": {"name": "Geode Mimic", "sp": "zaratan", "tint": "9a7aff", "scale": 0.92, "stats": {"armor": 0.06, "attack": 0.06, "speed": -0.08}, "text": "A boulder with teeth."},
+ "cinder_wyrmling": {"name": "Cinder Wyrmling", "sp": "wyvern", "tint": "ff6a2a", "scale": 0.86, "stats": {"power": 0.10, "crit": 0.08}, "text": "A young drake that breathes cinders."},
+ "icebound_revenant": {"name": "Icebound Revenant", "sp": "minotaur", "tint": "b8d8f0", "scale": 1.05, "stats": {"armor": 0.05, "hp": 0.08, "haste": -0.06}, "text": "A knight frozen mid-vigil."},
+ "drowned_priest": {"name": "Drowned Priest", "sp": "naga", "tint": "3a9a8a", "scale": 0.95, "stats": {"power": 0.12, "hp": -0.04}, "text": "Tends the drowned with sea mist."},
+ "puffcap_bomber": {"name": "Puffcap Bomber", "sp": "jackalope", "tint": "ff8a3a", "scale": 0.9, "stats": {"attack": 0.12, "hp": -0.12, "speed": 0.08}, "text": "Rushes in, bursting with spores."},
+ "ossuary_priest": {"name": "Ossuary Priest", "sp": "sphinx", "tint": "d8c8a0", "scale": 0.92, "stats": {"power": 0.14, "hp": -0.06}, "text": "Chants the dead back to their feet."},
+ "tempest_elemental": {"name": "Tempest Elemental", "sp": "phoenix", "tint": "c8c86a", "scale": 0.95, "stats": {"power": 0.12, "speed": 0.06}, "text": "A storm cloud that learned to hate."},
+ "gilded_asp": {"name": "Gilded Asp", "sp": "basilisk", "tint": "e8b84a", "scale": 0.98, "stats": {"crit": 0.10, "power": 0.06}, "text": "A jewelled cobra with a sun-disc hood."},
+ "rift_horror": {"name": "Rift Horror", "sp": "hydra", "tint": "5a2a8a", "scale": 1.05, "stats": {"hp": 0.10, "attack": 0.05}, "text": "Too many heads, none of them right."},
 }
 
 ## Wardens. Their strength comes from the depth they guard (see strength()); "weight" scales that
@@ -200,10 +211,24 @@ static func call_adds(sim: BattleSim, u: Dictionary, mob: String, count: int) ->
 
 # ------------------------------------------------------------------ Looks
 ## Recolour the creature's skin, resize it and give Wardens a glowing rim.
+## A monster's own model, if its art has been made; "" while it still uses a stand-in.
+static func model_path(hero: Dictionary) -> String:
+ var id = str(hero.get("monster", ""))
+ if id.is_empty(): return ""
+ var p = "res://assets/models/dungeon/%s.glb" % id
+ return p if ResourceLoader.exists(p) else ""
+
 static func dress(model: Node3D, flash_mat: ShaderMaterial, hero: Dictionary, summon: bool) -> void:
  var m = info(str(hero.get("monster", "")))
  if m.is_empty(): return
  if not summon: model.scale *= float(m.get("scale", 1.0))
+ if not model_path(hero).is_empty():
+  # Its own art: no recolour, only the Warden rim light.
+  if BOSSES.has(str(hero.monster)):
+   var rim = ShaderMaterial.new(); rim.shader = load("res://shaders/vfx/monster_skin.gdshader")
+   rim.set_shader_parameter("tint", Color(1, 1, 1)); rim.set_shader_parameter("strength", 0.0)
+   rim.set_shader_parameter("rim", Color(m.get("glow", m.tint))); rim.set_shader_parameter("rim_amount", 1.2); flash_mat.next_pass = rim
+  return
  var skin = ShaderMaterial.new(); skin.shader = load("res://shaders/vfx/monster_skin.gdshader")
  skin.set_shader_parameter("tint", Color(m.tint)); skin.set_shader_parameter("strength", 0.6 if BOSSES.has(str(hero.monster)) else 0.5)
  skin.set_shader_parameter("rim", Color(m.get("glow", m.tint))); skin.set_shader_parameter("rim_amount", 1.2 if BOSSES.has(str(hero.monster)) else 0.35)

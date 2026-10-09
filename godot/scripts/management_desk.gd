@@ -16,13 +16,28 @@ func build() -> void:
  set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
  mouse_filter = Control.MOUSE_FILTER_IGNORE
  campaign = game.campaign; state = campaign.state; prefs = game.desk_state
- var nav = HBoxContainer.new(); add_child(nav); nav.position = Vector2(26, 122); nav.size = Vector2(1548, 48)
- for item in [["overview", "Overview"], ["matches", "Matches"], ["roster", "Roster"], ["club", "Club"], ["market", "Market"], ["intel", "Intel"]]:
-  if state.get("speedrun_lab",false) and item[0] not in ["market","roster"]:continue
-  if item[0]=="market" and not campaign.recruitment_open():continue
-  var b = action(nav, (("Dungeon" if Dungeon.active(campaign) else "World Tour") if item[0]=="overview" else "Journal" if item[0]=="matches" else "League" if item[0]=="intel" else item[1]) if state.has("tour") else item[1], func(): navigate(item[0]), game.tab == item[0]); b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-  if Dungeon.active(campaign): DungeonUI.restyle(game, b, false, game.tab == item[0])
- var scroll = ScrollContainer.new(); add_child(scroll); scroll.position = Vector2(26, 184); scroll.size = Vector2(1548, 618)
+ # The dungeon is immersive: no management tabs and no dock. The map fills the screen; the squad,
+ # journal and reference pages open from medallions on its top band, and come back with one click.
+ var dungeon = Dungeon.active(campaign)
+ var scroll = ScrollContainer.new(); add_child(scroll)
+ if dungeon and game.tab in ["overview", ""]:
+  scroll.position = Vector2(26, 112); scroll.size = Vector2(1548, 776)
+ elif dungeon:
+  back_row()
+  scroll.position = Vector2(26, 176); scroll.size = Vector2(1548, 712)
+ else:
+  scroll.position = Vector2(26, 184); scroll.size = Vector2(1548, 618)
+  var shade = ColorRect.new(); add_child(shade); shade.position = Vector2(0, 108); shade.size = Vector2(1600, 66); shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+  var ssh = Shader.new(); ssh.code = "shader_type canvas_item; void fragment(){ float y=1.0-abs(UV.y-0.5)*2.0; COLOR=vec4(0.02,0.015,0.03,smoothstep(0.0,0.5,y)*0.78); }"
+  var sm = ShaderMaterial.new(); sm.shader = ssh; shade.material = sm
+  var rail = ColorRect.new(); add_child(rail); rail.position = Vector2(26, 167); rail.size = Vector2(1548, 1); rail.color = Color(0.89, 0.77, 0.54, 0.22); rail.mouse_filter = Control.MOUSE_FILTER_IGNORE
+  var nav = HBoxContainer.new(); add_child(nav); nav.position = Vector2(26, 122); nav.size = Vector2(1548, 46); nav.add_theme_constant_override("separation", 4)
+  for item in [["overview", "Overview"], ["matches", "Matches"], ["roster", "Roster"], ["club", "Club"], ["market", "Market"], ["intel", "Intel"]]:
+   if state.get("speedrun_lab",false) and item[0] not in ["market","roster"]:continue
+   if item[0]=="market" and not campaign.recruitment_open():continue
+   var name_text = ("World Tour" if item[0]=="overview" else "Journal" if item[0]=="matches" else "League" if item[0]=="intel" else item[1]) if state.has("tour") else item[1]
+   var b = HudKit.nav_tab(nav, game, name_text, func(): navigate(item[0]), game.tab == item[0]); b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+   b.name = "Tab_" + item[0]
  scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
  body = VBoxContainer.new(); body.size_flags_horizontal = Control.SIZE_EXPAND_FILL; body.add_theme_constant_override("separation", 18); scroll.add_child(body)
  match game.tab:
@@ -32,6 +47,7 @@ func build() -> void:
   "club": club_page()
   "intel", "league": intel()
   _: overview()
+ if dungeon: return
  var dock = FantasyFrame.new(); add_child(dock); dock.position = Vector2(26, 827); dock.size = Vector2(1548, 61)
  dock.add_theme_stylebox_override("panel", game.style(Color(.055,.10,.12,.97),Color("aa8c60"),4,8,2))
  var row = horizontal(dock)
@@ -60,6 +76,14 @@ func build() -> void:
   elif state.get("tour",{}).get("shop",false) or not campaign.pending_heroes().is_empty() or not campaign.lineup_ready(): game.prepare_match()
   else: game.introduce_match(), short or state.get("tour",{}).get("complete",false))
  if Dungeon.active(campaign): DungeonUI.restyle(game, dock_cta, true)
+
+## Inside the dungeon, side pages (squad, journal, guild) show a slim way back instead of tabs.
+func back_row() -> void:
+ var row = HBoxContainer.new(); add_child(row); row.position = Vector2(26, 116); row.add_theme_constant_override("separation", 14)
+ HudKit.medallion(row, game, "map", "", "Back to the map", func(): navigate("overview"), false, 46)
+ var t = game.label(row, {"roster": "Your squad", "matches": "Journal", "club": "The guild", "market": "Recruits", "intel": "Records"}.get(game.tab, "Guild"), 28, Color("f1e6cc"), false)
+ t.add_theme_font_override("font", load(game.TITLE_FONT)); t.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+ var rule = ColorRect.new(); add_child(rule); rule.position = Vector2(26, 168); rule.size = Vector2(1548, 1); rule.color = Color(0.89, 0.77, 0.54, 0.25); rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 func navigate(tab: String) -> void:
  game.tab = tab; game.render()
