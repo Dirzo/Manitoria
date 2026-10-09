@@ -24,6 +24,7 @@ var effects_enabled = true:
   effects_enabled = value
   if not value:
    for voice in voices: voice.stop()
+   if ambience_player: ambience_player.stop(); ambience_name = ""
 var music_enabled = true
 var scene_name = ""
 var cache: Dictionary = {}
@@ -73,7 +74,7 @@ func _ready() -> void:
  for family in families:
   for prefix in ["", "attack_", "charge_", "death_"]: keys.append(prefix + family)
  for species in SPECIES_FAMILY: keys.append("hero_" + species)
- keys.append_array(["contest_reveal", "contest_lock", "contest_versus", "victory", "honor", "upgrade", "multikill", "arena_gate", "interrupt", "impact_flesh", "impact_stone", "impact_metal", "impact_arcane", "ui_hover", "ui_click", "ui_open", "ui_close", "gold_clink_1", "gold_clink_2", "gold_clink_3", "gold_clink_4", "gold_payout", "fall_light_1", "fall_light_2", "fall_light_3", "fall_heavy_1", "fall_heavy_2", "fall_heavy_3", "fall_boss"])
+ keys.append_array(["contest_reveal", "contest_lock", "contest_versus", "victory", "honor", "upgrade", "multikill", "arena_gate", "interrupt", "impact_flesh", "impact_stone", "impact_metal", "impact_arcane", "ui_hover", "ui_click", "ui_open", "ui_close", "gold_clink_1", "gold_clink_2", "gold_clink_3", "gold_clink_4", "gold_payout", "fall_light_1", "fall_light_2", "fall_light_3", "fall_heavy_1", "fall_heavy_2", "fall_heavy_3", "fall_boss", "amb_lava_pop", "amb_drip", "amb_creak"])
  # Enumerate logical resource paths: exported WAVs have .import sidecars,
  # unlike their loose source files. ResourceLoader resolves either form.
  for key in keys:
@@ -176,7 +177,44 @@ func stop_all() -> void:
 func _exit_tree() -> void:
  stop_all()
 
+# ---------------------------------------------------------------- zone ambience
+## Each dungeon zone has an environmental bed (assets/audio/ambience/<zone>.ogg) under its song:
+## lava rumbling and crackling, flood water and echoing drips, wind and creaking dead trees.
+## Occasional one-shots ("sweeteners") land on top so the loop never feels like a loop.
+const AMBIENCE_DB := -4.0
+const SWEETENERS := {"magma_depths": "amb_lava_pop", "drowned_sanctum": "amb_drip", "blight_forest": "amb_creak"}
+var ambience_player: AudioStreamPlayer
+var ambience_name := ""
+var ambience_cache := {}
+var sweetener_in := 0.0
+
+static func has_ambience(zone: String) -> bool:
+ return ResourceLoader.exists("res://assets/audio/ambience/%s.ogg" % zone)
+
+func set_ambience(zone: String) -> void:
+ if zone == ambience_name: return
+ if ambience_player == null:
+  ambience_player = AudioStreamPlayer.new(); ambience_player.bus = "Effects"; ambience_player.volume_db = -60; add_child(ambience_player)
+ ambience_name = zone
+ var tw = create_tween()
+ if ambience_player.playing: tw.tween_property(ambience_player, "volume_db", -60.0, 1.2)
+ if zone.is_empty() or not effects_enabled or not has_ambience(zone):
+  tw.tween_callback(ambience_player.stop); return
+ if not ambience_cache.has(zone):
+  var st = load("res://assets/audio/ambience/%s.ogg" % zone); st = st.duplicate(); st.loop = true; ambience_cache[zone] = st
+ tw.tween_callback(func(): ambience_player.stream = ambience_cache[zone]; ambience_player.volume_db = -60.0; ambience_player.play(randf() * 30.0))
+ tw.tween_property(ambience_player, "volume_db", AMBIENCE_DB, 2.0)
+ sweetener_in = randf_range(4.0, 9.0)
+
+func _tick_ambience(dt: float) -> void:
+ if ambience_name.is_empty() or not effects_enabled or not SWEETENERS.has(ambience_name): return
+ sweetener_in -= dt
+ if sweetener_in <= 0.0:
+  sweetener_in = randf_range(6.0, 14.0)
+  play_sample(SWEETENERS[ambience_name], randf_range(-24.0, -18.0), 0, randf_range(-0.8, 0.8), randf_range(0.9, 1.1))
+
 func _process(dt: float) -> void:
+ _tick_ambience(dt)
  if combat_paused:
   for voice in voices:
    if voice.playing: voice.stream_paused = true

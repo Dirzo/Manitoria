@@ -313,6 +313,7 @@ func _ready() -> void:
     for sc in ui.find_children("*","ScrollContainer",true,false): sc.scroll_vertical=int(get_meta("qa_scroll"))
  else: render()
  sound.scene_music(music_now())
+ sound.set_ambience(zone_ambience())
  get_tree().auto_accept_quit = false
 
 const TITLE_FONT = "res://assets/fonts/uncialantiqua.ttf"
@@ -448,6 +449,12 @@ func music_now() -> String:
  if phase == "hub" and not campaign.state.is_empty() and campaign.state.get("tour", {}).get("intermission", false): return "shop"
  return SoundDesign.music_for_phase(phase)
 
+## The environmental bed for the zone you're in (map, formation, fights, results); none in the shop.
+func zone_ambience() -> String:
+ if exhibition or campaign == null or campaign.state.is_empty() or not Dungeon.active(campaign) or phase in ["menu", "new", "shop"]: return ""
+ var id = str(campaign.state.dungeon.get("instance", ""))
+ return id if SoundDesign.has_ambience(id) else ""
+
 func zone_music() -> String:
  if exhibition or campaign == null or campaign.state.is_empty() or not Dungeon.active(campaign): return ""
  var id = str(campaign.state.dungeon.get("instance", ""))
@@ -461,6 +468,7 @@ func render() -> void:
   last_rendered_phase = phase
  sound.set_combat_paused(phase == "battle" and paused)
  sound.scene_music(music_now())
+ sound.set_ambience(zone_ambience())
  if has_meta("retained_shop_carousel"):
   get_meta("retained_shop_carousel").queue_free();remove_meta("retained_shop_carousel")
  for child in ui.get_children():
@@ -722,6 +730,7 @@ func load_campaign(slot: int) -> void:
  if campaign.state.roster.is_empty() and campaign.state.has("tour"):phase="starter"
  if campaign.state.get("run_over", false): phase = "runover"
  tab = "overview"; render(); sound.scene_music(music_now())
+ sound.set_ambience(zone_ambience())
 
 func controls_hint() -> void:
  var l = label(ui, "RIGHT DRAG TO ORBIT    ·    SCROLL TO ZOOM    ·    F11 FULLSCREEN", 13, Color("c1cfcc"))

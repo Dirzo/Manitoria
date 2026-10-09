@@ -2,6 +2,16 @@
 
 Dungeon mode is now the headline feature, the dungeon is immersive (no tournament menus), and every menu outside of combat shares one cleaner look and feel inspired by *Baldur's Gate 3* and *Guildrun*.
 
+## 0.75.3 — zone ambience
+
+The Magma Depths, the Drowned Sanctum and the Blight Forest each have their own environmental sound under the zone song: on the map, the formation screen, in fights and on results (not in the outfitter). It follows the Sound effects volume.
+
+- **Magma Depths:** a deep rumble and sub drone, slow lava blorps, fire crackle and steam hiss; lava pops now and then.
+- **Drowned Sanctum:** muffled flowing water, slow swells and underwater bubbles; drips echo through the stone halls.
+- **Blight Forest:** a darkened forest bed, cold wind gusts and bubbling toxic pools; dead trees creak.
+
+The three loops are 48 seconds long, loop seamlessly and are levelled to the same loudness. One-shots land every 6–14 seconds so the loop never feels like a loop. They are built by `tools/make_zone_ambience.py` from CC0 sources and one CC-BY 3.0 water loop (credited in `godot/assets/audio/CREDITS.md`), and `tools/sound_events_test.gd` now has 16 checks.
+
 ## 0.75.2 — death and gold sounds, no recorded announcer
 
 - **Deaths** are three layers:
