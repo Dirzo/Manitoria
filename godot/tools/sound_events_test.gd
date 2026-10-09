@@ -20,13 +20,13 @@ func run() -> void:
  var boss=HeroData.make_hero("treant","b","Rootmother",8);boss.monster="rootmother"
  s.death_layers({"uid":4,"hero":boss,"boss":true},0.0);await process_frame
  check(s.played_cues>before+2,"A Warden death plays the long fall")
- for zone in ["magma_depths","drowned_sanctum","blight_forest"]:
-  check(SoundDesign.has_ambience(zone),zone+" has an ambience bed")
+ for zone in DungeonInstances.ORDER:
+  check(SoundDesign.has_ambience(zone) and SoundDesign.SWEETENERS.has(zone) and SoundDesign.SWEETENERS[zone].all(func(k):return s.cache.has(k)),zone+" has an ambience bed and sweeteners")
  s.set_ambience("magma_depths");await create_timer(1.6).timeout
  check(s.ambience_name=="magma_depths" and s.ambience_player.playing,"Zone ambience plays")
  s.sweetener_in=0.0;var c=s.played_cues;s._tick_ambience(0.1)
  check(s.played_cues>c,"Zone sweeteners play")
  s.set_ambience("");await create_timer(1.5).timeout
  check(not s.ambience_player.playing,"Ambience stops outside the zone")
- print("SOUND EVENTS: 16 checks, ",failures," failures")
+ print("SOUND EVENTS: 23 checks, ",failures," failures")
  quit(1 if failures else 0)

@@ -2,6 +2,20 @@
 
 Dungeon mode is now the headline feature, the dungeon is immersive (no tournament menus), and every menu outside of combat shares one cleaner look and feel inspired by *Baldur's Gate 3* and *Guildrun*.
 
+## 0.75.4 — ambience for every zone
+
+All ten zones now have their own sound bed and occasional one-shots:
+
+- **Mana Caverns:** a beating crystal hum, glass-like chimes and distant picks mining crystal, echoing in the cave.
+- **Frostbound Crypt:** wind howling through the tomb, ice cracking and settling, a cold low drone.
+- **Fungal Hollows:** damp air, soft spore puffs, wet squelches and a faint insect chitter.
+- **Ossuary of Kings:** a low tomb drone with a ghostly choir hum, rattling bones, creaking coffins and distant chains.
+- **Storm Spire:** rain and gusts on the tower, rolling thunder and electric crackle.
+- **Gilded Tomb:** desert wind and sand hiss over a deep chamber hum, brazier fire and trickling sand.
+- **Void Rift:** a dark detuned drone, rising reversed swells, faint whispers and a slow low pulse.
+
+All ten beds are levelled to the same loudness. `tools/sound_events_test.gd` now has 23 checks.
+
 ## 0.75.3 — zone ambience
 
 The Magma Depths, the Drowned Sanctum and the Blight Forest each have their own environmental sound under the zone song: on the map, the formation screen, in fights and on results (not in the outfitter). It follows the Sound effects volume.

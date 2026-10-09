@@ -16,3 +16,13 @@ rumble, crackle, steam, wind, swells and stone-hall echoes.
 - "Running Water Background Noise" by **HippoDevelopment**, OpenGameArt.org, **CC-BY 3.0**
   (https://opengameart.org/content/running-water-background-noise). Attribution required: keep this line.
 - Creaks from Kenney's RPG Audio, CC0.
+
+## All ten zones (0.75.4)
+
+`ambience/<zone>.ogg` for every dungeon zone plus the sweeteners `fx/amb_crystal`, `amb_pick`, `amb_ice_crack`,
+`amb_spore`, `amb_bones`, `amb_coffin`, `amb_thunder`, `amb_spark`, `amb_sand` and `amb_void`, from
+`tools/make_zone_ambience.py`:
+
+- "Dark Rainy Night (ambience)" by **kindland**, OpenGameArt.org, CC0 (the Storm Spire rain bed).
+- Kenney Impact Sounds (glass, mining, metal, plate, wood) and Casino Audio (dice, as rattling bones), CC0.
+- Everything else (crystal hum, wind, thunder, sparks, spore puffs, insects, the tomb choir, void drone and pulse) is synthesised.

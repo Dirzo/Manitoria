@@ -74,7 +74,7 @@ func _ready() -> void:
  for family in families:
   for prefix in ["", "attack_", "charge_", "death_"]: keys.append(prefix + family)
  for species in SPECIES_FAMILY: keys.append("hero_" + species)
- keys.append_array(["contest_reveal", "contest_lock", "contest_versus", "victory", "honor", "upgrade", "multikill", "arena_gate", "interrupt", "impact_flesh", "impact_stone", "impact_metal", "impact_arcane", "ui_hover", "ui_click", "ui_open", "ui_close", "gold_clink_1", "gold_clink_2", "gold_clink_3", "gold_clink_4", "gold_payout", "fall_light_1", "fall_light_2", "fall_light_3", "fall_heavy_1", "fall_heavy_2", "fall_heavy_3", "fall_boss", "amb_lava_pop", "amb_drip", "amb_creak"])
+ keys.append_array(["contest_reveal", "contest_lock", "contest_versus", "victory", "honor", "upgrade", "multikill", "arena_gate", "interrupt", "impact_flesh", "impact_stone", "impact_metal", "impact_arcane", "ui_hover", "ui_click", "ui_open", "ui_close", "gold_clink_1", "gold_clink_2", "gold_clink_3", "gold_clink_4", "gold_payout", "fall_light_1", "fall_light_2", "fall_light_3", "fall_heavy_1", "fall_heavy_2", "fall_heavy_3", "fall_boss", "amb_lava_pop", "amb_drip", "amb_creak", "amb_crystal", "amb_pick", "amb_ice_crack", "amb_spore", "amb_bones", "amb_coffin", "amb_thunder", "amb_spark", "amb_sand", "amb_void"])
  # Enumerate logical resource paths: exported WAVs have .import sidecars,
  # unlike their loose source files. ResourceLoader resolves either form.
  for key in keys:
@@ -182,7 +182,10 @@ func _exit_tree() -> void:
 ## lava rumbling and crackling, flood water and echoing drips, wind and creaking dead trees.
 ## Occasional one-shots ("sweeteners") land on top so the loop never feels like a loop.
 const AMBIENCE_DB := -4.0
-const SWEETENERS := {"magma_depths": "amb_lava_pop", "drowned_sanctum": "amb_drip", "blight_forest": "amb_creak"}
+const SWEETENERS := {
+ "magma_depths": ["amb_lava_pop"], "drowned_sanctum": ["amb_drip"], "blight_forest": ["amb_creak"],
+ "mana_caverns": ["amb_crystal", "amb_pick"], "frostbound_crypt": ["amb_ice_crack"], "fungal_hollows": ["amb_spore"],
+ "ossuary_of_kings": ["amb_bones", "amb_coffin"], "storm_spire": ["amb_thunder", "amb_spark"], "gilded_tomb": ["amb_sand"], "void_rift": ["amb_void"]}
 var ambience_player: AudioStreamPlayer
 var ambience_name := ""
 var ambience_cache := {}
@@ -211,7 +214,8 @@ func _tick_ambience(dt: float) -> void:
  sweetener_in -= dt
  if sweetener_in <= 0.0:
   sweetener_in = randf_range(6.0, 14.0)
-  play_sample(SWEETENERS[ambience_name], randf_range(-24.0, -18.0), 0, randf_range(-0.8, 0.8), randf_range(0.9, 1.1))
+  var pool: Array = SWEETENERS[ambience_name]
+  play_sample(pool[randi() % pool.size()], randf_range(-24.0, -18.0), 0, randf_range(-0.8, 0.8), randf_range(0.9, 1.1))
 
 func _process(dt: float) -> void:
  _tick_ambience(dt)
