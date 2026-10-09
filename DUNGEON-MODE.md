@@ -89,6 +89,38 @@ Fights scale with the guild:
 - A Warden brings no escorts against two or three champions, one against four, and two against five or more. Its health and damage scale with your party size up to five.
 - While the guild has fewer than five champions, opponents are slightly weaker (−4% per missing champion).
 
+## Decisions and tradeoffs
+
+This pass comes from studying how *The Last Flame* and *Guildrun* create weight between fights. I read reviews, store pages, the Guildrun wiki and player guides, since watching video wasn't possible here. In *The Last Flame*, flame is health and currency at once, positioning mistakes are punished, and the first fights are easy by design. *Guildrun* uses gold rerolls, the choice between ranking up a hero and adding one, and a difficulty ladder unlocked by clearing runs. Our dungeon already had path, draft, relic and event choices. What it lacked was information and stakes, so every choice now shows what it risks and what it pays:
+
+- **Threat on the map:** every fight room ahead carries a coloured arc: green *Easy*, gold *Even*, orange *Hard* or red *Deadly*.
+  - Open rooms also show the word under the medallion.
+  - The tooltip gives the foes' estimated strength as a share of yours, and what a win pays.
+  - The Next card shows the threat of the fight you're in, or of the nearest fight ahead.
+  - The estimate weighs total health against total damage on each side. It counts monster stat bonuses, Warden scaling, room strength, your champions and your relics. Its bands are fitted against the balance probe's real fights.
+- **Flawless victories:** win without losing a fielded champion for +50% room points and +25% gold. Good positioning pays every fight, not only when you'd otherwise lose. The result screen calls it out, and the run summary counts flawless wins.
+- **Rerolls:** any champion draft or reward can be rerolled for gold. A reroll costs 20 gold, and each further reroll in the same room costs 20 more. Gold now competes between rerolls, outfitter gear, shop hires and events.
+- **The Ember Altar (event):** destroy your newest relic to pick one of three of a higher rarity (Common becomes Rare; Rare and Boss become Boss). Max-life relics give back their life change.
+- **The Pale Ferryman (event):** your weakest champion leaves the guild for good. It never takes the headliner, and needs at least three champions. Its items go to your bag, and you get a pick of three Boss relics and 120 gold. Otherwise pay 60 gold for a finished item, or turn back.
+- **A gentle opening:** the first three skirmishes of a run are softer (84%, 89% and 94% strength), so the first decisions are about building, not surviving. Elites stay as hard as before.
+
+## Ascension
+
+Clearing all three Wardens unlocks the next Ascension rank. Progress is saved to `user://dungeon_progress.json`. Pick the rank on the new-run screen. Ranks stack, and each adds +15% to the final score.
+
+| Rank | Name | Modifier |
+| --- | --- | --- |
+| 1 | Hungry Dark | Every fight is 6% harder. |
+| 2 | Lean Purses | Fights pay 20% less gold. |
+| 3 | Alpha Elites | Elites are 10% stronger. |
+| 4 | Thin Blood | Start with one fewer life (never fewer than one). |
+| 5 | Narrow Paths | Champion drafts offer four instead of five. |
+| 6 | Wrathful Wardens | Wardens are 12% stronger. |
+| 7 | No Mercy | Losing to an elite or a Warden costs two lives. |
+| 8 | The Last Light | Campfires and descents no longer restore lives. |
+
+The rank appears in the Dungeon header, the run summary and the high-score table. A clear that unlocks a new rank says so on the endless and run-complete screens.
+
 ## Lives
 
 Keeper starts with 4 lives, Standard with 3 and Champion with 2.
@@ -180,15 +212,18 @@ Two probes, both headless:
 - **`tools/dungeon_balance_probe.gd`** plays full runs with real fights. Its auto-player takes the draft offer that shares the most traits, picks instances and rooms at random, equips everything it gets, buys gear, and hires at outfitters when it can spare the gold. It has no formation or tactics planning, so real players should do better.
 - **`tools/warden_probe.gd`** fights every Warden against the same reference squads at each depth and finds the stat weight that hits a target win rate. Each Warden has one weight per depth. Summoners need more at depth 2–3, where their adds fall behind your squad. The weights are scaled against the Wardens tuned in real runs (the Rootmother at depth 1, Magmaw at depth 2, the Keeper at depth 3).
 
-Standard, 24 full runs, with random instances and the champion-draft flow (headliner and partner first, then drafts up to six):
+Standard, 40 full runs, with random instances, champion drafts, the gentler opening and the softened second Warden:
 
 | Room | Depth 1 | Depth 2 | Depth 3 |
 | --- | --- | --- | --- |
-| Skirmish | 88% | 85% | 92% |
-| Elite | 77% | 55% | 100% |
-| Warden (per attempt) | 96% | 55% | 84% |
+| Skirmish | 86% | 78% | 94% |
+| Elite | 80% | 70% | 76% |
+| Warden (per attempt) | 97% | 49% | 74% |
 
-- **Full clears:** 16 of 24 runs cleared all three depths, the same rate as before drafts replaced the market.
+- **Full clears:** 23 of 40 runs cleared all three depths.
+- **Ascension 8:** 4 of 16 runs cleared.
+- **The second Warden** is still the run's main wall. It's 5% softer than the other Wardens, because it had been winning only 41% of attempts.
+- **Threat read:** fitted on 453 fights from these probes. Within each room type, the highest-threat quarter wins far less often than the lowest (skirmishes 64% vs 97%, Wardens 33% vs 97%).
 - **Endless:** earlier probes had runs end between endless depths 2 and 3 (enemy strength compounds +20% per endless depth).
 
 Each Warden appears only a handful of times in 24 runs, so per-Warden numbers are noisy. Magmaw has consistently been the hardest and the Frost Matriarch the easiest, and both have since been nudged toward the middle. Treat all of this as a starting point for playtesting.
@@ -220,6 +255,7 @@ The whole game now uses the same material: dark lacquer plates, bronze rims and 
 - `godot/scripts/run_traits.gd`: the trait pool, per-run rolls, counting and synergy bonuses.
 - `godot/scripts/dungeon_instances.gd`: the ten instances (palette, arena kit, art, monsters, Warden) and the two-choice offers.
 - `godot/scripts/dungeon_arena.gd`: turns the colosseum into each instance's cave chamber, and restores it afterwards.
+- `godot/scripts/dungeon_ascension.gd`: the Ascension ladder (ranks, modifiers, unlock progress).
 - `godot/scripts/bestiary.gd`: monsters, Wardens and their fight mechanics, Warden strength by depth, and the monster skins.
 - `godot/shaders/vfx/monster_skin.gdshader`: the monster recolour and rim-glow pass.
 - `godot/tools/dungeon_smoke.gd`: a headless routing test (map shape, traits, relics in battle, all room types, endless, scores, save migration, running out of lives).
@@ -229,6 +265,8 @@ The whole game now uses the same material: dark lacquer plates, bronze rims and 
 ```
 godot --headless --path godot -s tools/dungeon_smoke.gd
 PROBE_RUNS=16 godot --headless --path godot -s tools/dungeon_balance_probe.gd
+PROBE_THREAT=1 PROBE_RUNS=40 godot --headless --path godot -s tools/dungeon_balance_probe.gd   # one THREAT line per fight, for calibrating the map's threat read
+PROBE_ASCENSION=8 PROBE_RUNS=16 godot --headless --path godot -s tools/dungeon_balance_probe.gd
 ```
 
 QA captures:

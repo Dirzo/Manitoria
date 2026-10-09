@@ -37,7 +37,9 @@ func settle(c: Campaign, rng: RandomNumberGenerator) -> void:
  if not d.event.is_empty():
   var options = []
   for i in range(d.event.choices.size()):
-   if not d.event.choices[i].get("disabled", false): options.append(i)
+   var ch = d.event.choices[i]
+   # The auto-player doesn't trade champions or relics away; a real player weighs that.
+   if not ch.get("disabled", false) and not ch.get("ferry", false) and not ch.get("sacrifice", false): options.append(i)
   # Prefer restoring lives when hurt, otherwise any sensible option.
   var pick = options[0]
   for i in options:
@@ -61,7 +63,7 @@ func settle(c: Campaign, rng: RandomNumberGenerator) -> void:
 
 func play(seed: int, difficulty: String, endless: bool) -> Dictionary:
  var c = Campaign.new(); c.new_run("Probe %d" % seed, 90, 5000 + seed * 131, difficulty)
- Dungeon.start(c); c.state.speedrun_memory = true    # never touch disk
+ Dungeon.start(c, int(OS.get_environment("PROBE_ASCENSION")) if OS.get_environment("PROBE_ASCENSION") != "" else 0); c.state.speedrun_memory = true    # never touch disk
  var rng = RandomNumberGenerator.new(); rng.seed = seed
  var legends = League.tiers().Legendary
  c.choose_starter(legends[seed % legends.size()])   # opens the partner draft
@@ -76,9 +78,11 @@ func play(seed: int, difficulty: String, endless: bool) -> Dictionary:
   if int(d.act) >= 12: Dungeon.retire(c); break
   if d.fight:
    var kind = str(Dungeon.node(c).type)
+   var ratio = Dungeon.threat(c, int(d.row), int(d.col)); var parts = Dungeon.last_threat.duplicate()
    var sim = BattleSim.new(); sim.silent = true; sim.team_mods = c.battle_mods()
    sim.setup(c.lineup(), c.opponent().roster, c.match_seed(), c.quality()); sim.run_to_end()
    bump("%s · depth %d" % [kind, int(d.act)], sim.winner == 0)
+   if OS.get_environment("PROBE_THREAT") == "1": print("THREAT ", JSON.stringify({"kind": kind, "act": int(d.act), "ratio": ratio, "won": sim.winner == 0, "parts": parts}))
    if kind == "boss": bump("warden · %s" % str(DungeonInstances.info(Dungeon.instance_id(c)).boss), sim.winner == 0)
    c.resolve(sim)
   else:
@@ -99,6 +103,7 @@ func play(seed: int, difficulty: String, endless: bool) -> Dictionary:
 func run() -> void:
  ItemFeedback.enabled = false
  var kept_scores = FileAccess.get_file_as_string(Dungeon.SCORES_PATH) if FileAccess.file_exists(Dungeon.SCORES_PATH) else ""
+ var kept_progress = FileAccess.get_file_as_string(DungeonAscension.PROGRESS_PATH) if FileAccess.file_exists(DungeonAscension.PROGRESS_PATH) else ""
  var runs = int(OS.get_environment("PROBE_RUNS")) if OS.get_environment("PROBE_RUNS") != "" else 12
  var difficulty = OS.get_environment("PROBE_DIFFICULTY") if OS.get_environment("PROBE_DIFFICULTY") != "" else "Standard"
  var endless = OS.get_environment("PROBE_ENDLESS") == "1"
@@ -110,7 +115,10 @@ func run() -> void:
  var cleared = outcomes.filter(func(o): return int(o.wardens) >= 3).size()
  var wardens = outcomes.map(func(o): return int(o.wardens))
  print("%s: %d runs · cleared %d · wardens per run %s · mean score %d" % [difficulty, runs, cleared, str(wardens), outcomes.reduce(func(a, o): return a + int(o.score), 0) / maxi(1, runs)])
- # Leave the player's own high-score table exactly as it was.
+ # Leave the player's own high-score table and Ascension progress exactly as they were.
+ if kept_progress != "":
+  var pf = FileAccess.open(DungeonAscension.PROGRESS_PATH, FileAccess.WRITE); pf.store_string(kept_progress); pf.close()
+ elif FileAccess.file_exists(DungeonAscension.PROGRESS_PATH): DirAccess.remove_absolute(DungeonAscension.PROGRESS_PATH)
  if kept_scores != "":
   var f = FileAccess.open(Dungeon.SCORES_PATH, FileAccess.WRITE); f.store_string(kept_scores); f.close()
  elif FileAccess.file_exists(Dungeon.SCORES_PATH): DirAccess.remove_absolute(Dungeon.SCORES_PATH)

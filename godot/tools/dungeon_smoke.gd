@@ -77,7 +77,8 @@ func walk_depth(c: Campaign, seen: Dictionary, lose_once: bool) -> void:
   await process_frame
 
 func run() -> void:
- for path in [Dungeon.SCORES_PATH]:
+ var kept_progress=FileAccess.get_file_as_string(DungeonAscension.PROGRESS_PATH) if FileAccess.file_exists(DungeonAscension.PROGRESS_PATH) else ""
+ for path in [Dungeon.SCORES_PATH,DungeonAscension.PROGRESS_PATH]:
   if FileAccess.file_exists(path):DirAccess.remove_absolute(path)
  # Map shape: every room reachable, a Warden at the bottom of every depth.
  var probe=Campaign.new();probe.new_run("Map probe",94,1234,"Standard");Dungeon.start(probe)
@@ -212,6 +213,49 @@ func run() -> void:
   guard+=1
  check(f.state.get("run_over",false) and f.state.dungeon.lives==0,"The run ends when the last life is lost")
  check(f.state.dungeon.has("final_score") and Dungeon.scores().size()==2,"A fallen run banks its score")
+ # Tradeoffs: rerolls cost escalating gold, the altar trades a relic up, the ferryman takes a champion.
+ var t=Campaign.new();t.new_run("Tradeoffs",95,4242,"Standard");Dungeon.start(t);squad(t)
+ var td=t.state.dungeon;t.state.gold=200
+ Dungeon.offer_loot(t,"relic");var first=td.loot.duplicate()
+ check(Dungeon.reroll_cost(t)==20 and Dungeon.reroll_loot(t) and t.state.gold==180,"A reroll costs 20 gold")
+ check(Dungeon.reroll_cost(t)==40 and td.loot.size()==3 and td.loot_kind=="relic","Rerolls climb by 20 and keep the reward kind")
+ Dungeon.take_loot(t,0)
+ t.state.gold=10;Dungeon.offer_loot(t,"item");check(not Dungeon.reroll_loot(t),"No reroll without the gold");Dungeon.skip_loot(t)
+ Dungeon.offer_draft(t,"checkpoint",0);t.state.gold=100;var names=td.draft.offers.map(func(h):return h.sp)
+ check(Dungeon.reroll_draft(t) and td.draft.offers.size()==5,"A draft can be rerolled")
+ Dungeon.skip_draft(t)
+ var altar=Dungeon.EVENTS.filter(func(e):return e.id=="altar")[0].duplicate(true)
+ td.event=altar;var relics_before=td.relics.size();var gone=str(td.relics[-1])
+ check(Dungeon.choose_event(t,0)!="" and td.relics.size()==relics_before-1 and gone not in td.relics and td.loot_kind=="relic","The Ember Altar destroys a relic for a better pick")
+ check(td.loot.all(func(r):return Relics.info(str(r)).rarity in ["Rare","Boss"]),"The altar offers a higher rarity")
+ Dungeon.take_loot(t,0)
+ var ferry=Dungeon.EVENTS.filter(func(e):return e.id=="ferryman")[0].duplicate(true)
+ var who=Dungeon.ferry_candidate(t);var size_before=t.state.roster.size();var gold_before=int(t.state.gold)
+ td.event=ferry
+ check(not who.is_empty() and str(who.id)!=str(t.state.headliner),"The ferryman never takes the headliner")
+ check(Dungeon.choose_event(t,0)!="" and t.state.roster.size()==size_before-1 and int(t.state.gold)==gold_before+120 and td.loot_kind=="relic","The ferryman trades a champion for a Boss relic and gold")
+ check(td.loot.all(func(r):return Relics.info(str(r)).rarity=="Boss"),"The ferryman's relics are Boss relics")
+ Dungeon.take_loot(t,0)
+ # Threat reads: every fight room ahead gets a label, Wardens read harder than the first skirmish.
+ var th=Campaign.new();th.new_run("Threat",95,5151,"Standard");Dungeon.start(th);squad(th);Dungeon.choose_instance(th,th.state.dungeon.instance_choices[0])
+ var first_room=Dungeon.threat(th,0,0);var boss_room=Dungeon.threat(th,Dungeon.ROWS-1,0)
+ check(first_room>0.0 and not Dungeon.threat_label(first_room).is_empty(),"Fight rooms carry a threat read (%.2f)"%first_room)
+ check(boss_room>0.0,"The Warden carries a threat read (%.2f)"%boss_room)
+ for h in th.state.roster:h.level=int(h.level)+5
+ check(Dungeon.threat(th,Dungeon.ROWS-1,0)<boss_room,"A stronger guild reads the same Warden as less dangerous")
+ # Ascension: modifiers stack and clears unlock the next rank.
+ var asc_run=Campaign.new();asc_run.new_run("Ascended",95,6161,"Standard");Dungeon.start(asc_run,8)
+ check(asc_run.state.dungeon.lives==2 and DungeonAscension.rank(asc_run)==8,"Ascension 4+ starts with one fewer life")
+ check(Dungeon.draft_size(asc_run)==4,"Ascension 5+ drafts offer four")
+ check(is_equal_approx(Dungeon.multiplier(asc_run),1.0+0.15*8),"Ascension adds 15% score per rank")
+ if FileAccess.file_exists(DungeonAscension.PROGRESS_PATH):DirAccess.remove_absolute(DungeonAscension.PROGRESS_PATH)
+ check(DungeonAscension.unlocked()==0,"A fresh profile has no Ascension")
+ var a0=Campaign.new();a0.new_run("Climber",95,7171,"Standard");Dungeon.start(a0,0)
+ check(DungeonAscension.record_clear(a0)==1 and DungeonAscension.unlocked()==1,"Clearing rank 0 unlocks Ascension 1")
+ check(DungeonAscension.record_clear(a0)==-1,"Clearing a rank twice unlocks nothing new")
+ if kept_progress!="":
+  var pf=FileAccess.open(DungeonAscension.PROGRESS_PATH,FileAccess.WRITE);pf.store_string(kept_progress);pf.close()
+ elif FileAccess.file_exists(DungeonAscension.PROGRESS_PATH):DirAccess.remove_absolute(DungeonAscension.PROGRESS_PATH)
  for slot in [95,96,97]:
   for suffix in ["",".backup",".tmp"]:
    if FileAccess.file_exists(Campaign.save_path(slot)+suffix):DirAccess.remove_absolute(Campaign.save_path(slot)+suffix)

@@ -124,6 +124,7 @@ class RoomNode extends Button:
  var kind := "battle"
  var state := "future"     # open · here · done · future
  var tint := Color.WHITE
+ var threat := Color(0, 0, 0, 0)   # danger colour for fight rooms ahead (alpha 0 = none)
  var t := 0.0
  func _ready() -> void:
   flat = true; focus_mode = Control.FOCUS_NONE
@@ -147,6 +148,9 @@ class RoomNode extends Button:
   draw_circle(c, r - 3.5, fill)
   draw_arc(c, r - 1.5, 0, TAU, 48, rim, 2.0, true)
   draw_arc(c, r - 5.5, PI * 1.1, PI * 1.9, 24, Color(1, 1, 1, 0.10 if state != "future" else 0.04), 2.0, true)
+  if threat.a > 0.0 and state in ["open", "future"]:
+   # A danger arc under the medallion: green easy, gold even, orange hard, red deadly.
+   draw_arc(c, r + 2.5, PI * 0.15, PI * 0.85, 18, Color(threat, 0.95 if state == "open" else 0.55), 4.0, true)
   if state == "here":
    var spin = t * 0.8
    for i in range(4): draw_arc(c, r + 5, spin + i * PI * 0.5, spin + i * PI * 0.5 + 0.9, 10, Color("fff3cf"), 2.5, true)
@@ -228,7 +232,7 @@ static func top_band(game: Node, stage: Control, c: Campaign) -> void:
  seal.add_theme_stylebox_override("panel", skin(accent, accent.darkened(0.7), 30, true, 3)); seal.mouse_filter = Control.MOUSE_FILTER_IGNORE
  heading(game, seal, str(info.name).trim_prefix("The ").left(1), Vector2(0, 8), 32, accent.lightened(0.4), 60, HORIZONTAL_ALIGNMENT_CENTER)
  heading(game, band, str(info.name), Vector2(86, 6), 30, PARCH)
- caption(game, band, "%s  ·  %s" % [info.depth_label, Dungeon.stage_label(c)], Vector2(88, 48), accent.lightened(0.35))
+ caption(game, band, "%s  ·  %s%s" % [info.depth_label, Dungeon.stage_label(c), ("  ·  Ascension %d" % DungeonAscension.rank(c)) if DungeonAscension.rank(c) > 0 else ""], Vector2(88, 48), accent.lightened(0.35))
  # Depth pips: the instances already conquered, the current one, the ones still ahead.
  var visited: Array = d.get("visited", [])
  var px = 470.0
@@ -294,6 +298,14 @@ static func map_view(game: Node, parent: Control, c: Campaign, rect: Rect2) -> v
    g.modulate = Color.WHITE if node.state in ["open", "here"] else Color(1, 1, 1, 0.35 if node.state == "done" else 0.6)
    var tip = "%s · Room %d\n%s" % [info.name, r + 1, info.text]
    if node.kind == "boss": tip += "\n\n%s\n%s" % [Dungeon.warden(c).name, Dungeon.warden(c).text]
+   if node.kind in ["battle", "elite", "boss"] and r > int(d.row):
+    var ratio = Dungeon.threat(c, r, i); var tl = Dungeon.threat_label(ratio)
+    if not tl.is_empty():
+     node.threat = Color(tl.color)
+     tip += "\n\nThreat: %s  (foes %d%% of your strength)\n%s" % [tl.text, roundi(ratio * 100), Dungeon.reward_text(node.kind)]
+     if open:
+      var tag = caption(game, view, tl.text, view.points[Vector2i(r, i)] + Vector2(-40, px * 0.5 + 2), Color(tl.color), 80, HORIZONTAL_ALIGNMENT_CENTER)
+      tag.add_theme_constant_override("outline_size", 5)
    node.tooltip_text = tip
    if open:
     node.name = "DungeonRoom_%d_%d" % [r, i]
@@ -367,7 +379,8 @@ static func next_card(game: Node, band: Control, c: Campaign) -> void:
   var kind = str(Dungeon.node(c).type); var rival = c.opponent(); var info = Dungeon.ROOMS[kind]
   caption(game, card, info.name, Vector2(16, 10), Color(info.color))
   var nm = heading(game, card, str(rival.name), Vector2(16, 26), 19, PARCH, 280); nm.clip_text = true
-  text(game, card, "Power %d vs %d" % [League.team_power(c.lineup()), League.team_power(rival.roster)], Vector2(16, 58), 12, MUTE)
+  var tl = Dungeon.threat_label(Dungeon.threat(c, int(d.row), int(d.col)))
+  if not tl.is_empty(): text(game, card, "Threat: %s  ·  %s" % [tl.text, Dungeon.reward_text(kind)], Vector2(16, 50), 12, Color(tl.color), 300)
   button(game, card, "Scout", func(): ScoutUI.open(game, rival), false, Vector2(84, 34)).position = Vector2(16, 74 - 8)
   button(game, card, "Formation", func(): game.phase = "prep"; game.render(), false, Vector2(110, 34)).position = Vector2(106, 66)
   button(game, card, "Fight  ▶", game.introduce_match, true, Vector2(150, 82), not c.lineup_ready() or not c.pending_heroes().is_empty()).position = Vector2(w - 162, 11)
@@ -376,7 +389,8 @@ static func next_card(game: Node, band: Control, c: Campaign) -> void:
  if not Dungeon.reachable(c).is_empty():
   heading(game, card, "Choose a glowing room", Vector2(16, 28), 20, PARCH)
   var preview = Dungeon.opponent(c)
-  text(game, card, "Nearest fight ahead: %s · power %d" % [preview.name, League.team_power(preview.roster)], Vector2(16, 62), 13, MUTE, w - 32)
+  var pp = Dungeon.preview_position(c); var ptl = Dungeon.threat_label(Dungeon.threat(c, pp.x, pp.y))
+  text(game, card, "Nearest fight ahead: %s%s" % [preview.name, ("  ·  " + ptl.text) if not ptl.is_empty() else ""], Vector2(16, 62), 13, Color(ptl.color) if not ptl.is_empty() else MUTE, w - 32)
  elif not d.loot.is_empty() or not d.event.is_empty():
   heading(game, card, "Something waits here", Vector2(16, 28), 20, PARCH)
   button(game, card, "Open", func(): game.render(), true, Vector2(120, 44)).position = Vector2(w - 136, 30)
@@ -434,6 +448,14 @@ static func path_overlay(game: Node, stage: Control, c: Campaign) -> void:
    else: game.toast(c.last_error), true, Vector2(220, 60))
   go.position = Vector2(462, 438); go.name = "DungeonEnter_%d" % i
 
+## The ladder line under a finished run: the rank played and anything it unlocked.
+static func ascension_note(game: Node, card: Control, c: Campaign, pos: Vector2) -> void:
+ var d = c.state.dungeon; var unlocked = int(d.get("ascension_unlocked", 0))
+ if unlocked <= 0 and DungeonAscension.rank(c) == 0: return
+ var line = ("Ascension %d · %s" % [DungeonAscension.rank(c), DungeonAscension.info(DungeonAscension.rank(c)).name]) if DungeonAscension.rank(c) > 0 else "No Ascension"
+ if unlocked > 0: line += "   ✦ Ascension %d unlocked: %s" % [unlocked, DungeonAscension.info(unlocked).name]
+ text(game, card, line, pos, 15, Color("ffd36e") if unlocked > 0 else MUTE, 880, HORIZONTAL_ALIGNMENT_CENTER)
+
 static func endless_overlay(game: Node, stage: Control, c: Campaign) -> void:
  var dim = overlay(stage)
  var card = plate(dim, Rect2(274, 110, 1000, 380), GOLDEN, Color(0.04, 0.035, 0.055, 0.99))
@@ -447,6 +469,7 @@ static func endless_overlay(game: Node, stage: Control, c: Campaign) -> void:
   if Dungeon.go_endless(c): game.render()
   else: game.toast(c.last_error), true, Vector2(380, 60))
  go.position = Vector2(490, 260); go.name = "DungeonGoEndless"
+ ascension_note(game, card, c, Vector2(60, 200))
 
 static func end_overlay(game: Node, stage: Control, c: Campaign) -> void:
  var d = c.state.dungeon; var dim = overlay(stage)
@@ -455,7 +478,8 @@ static func end_overlay(game: Node, stage: Control, c: Campaign) -> void:
  heading(game, card, "Out of lives" if fallen else "Run complete", Vector2(0, 30), 46, Color("ffcfb8") if fallen else PARCH, 1000, HORIZONTAL_ALIGNMENT_CENTER)
  heading(game, card, "%d points" % int(d.get("final_score", Dungeon.final_score(c))), Vector2(0, 100), 40, Color("9fd8ff"), 1000, HORIZONTAL_ALIGNMENT_CENTER)
  var place = Dungeon.rank_of(c)
- text(game, card, "%s  ·  reached %s  ·  %d Warden%s  ·  %d fights won  ·  %d relics%s" % [str(d.get("outcome", "Fallen" if fallen else "Conquered")), Dungeon.depth(c).name, int(d.wardens), "" if int(d.wardens) == 1 else "s", int(d.wins), d.relics.size(), ("  ·  #%d on your high scores" % place) if place > 0 else ""], Vector2(60, 172), 17, PARCH, 880, HORIZONTAL_ALIGNMENT_CENTER)
+ text(game, card, "%s  ·  reached %s  ·  %d Warden%s  ·  %d fights won (%d flawless)  ·  %d relics%s" % [str(d.get("outcome", "Fallen" if fallen else "Conquered")), Dungeon.depth(c).name, int(d.wardens), "" if int(d.wardens) == 1 else "s", int(d.wins), int(d.get("flawless", 0)), d.relics.size(), ("  ·  #%d on your high scores" % place) if place > 0 else ""], Vector2(60, 172), 17, PARCH, 880, HORIZONTAL_ALIGNMENT_CENTER)
+ ascension_note(game, card, c, Vector2(60, 300))
  var visited: Array = d.get("visited", [])
  var shown = mini(visited.size(), 6)
  for i in range(shown):
@@ -516,6 +540,7 @@ static func loot_modal(game: Node) -> void:
   var tw = card.create_tween().set_parallel(true)
   tw.tween_property(card, "modulate:a", 1.0, 0.25).set_delay(0.08 * i); tw.tween_property(card, "position:y", 0.0, 0.3).set_delay(0.08 * i).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
  var skip_row = HBoxContainer.new(); skip_row.alignment = BoxContainer.ALIGNMENT_CENTER; dlg.box.add_child(skip_row)
+ reroll_button(game, skip_row, func(): return Dungeon.reroll_loot(c), dlg)
  button(game, skip_row, "Skip  ·  +25 gold", func():
   if Dungeon.skip_loot(c): dlg.root.queue_free(); game.render(), false, Vector2(220, 44))
 
@@ -544,8 +569,21 @@ static func draft_dialog(game: Node) -> void:
   col.create_tween().tween_property(col, "modulate:a", 1.0, 0.25).set_delay(0.07 * i)
  if str(draft.kind) != "partner":
   var skip_row = HBoxContainer.new(); skip_row.alignment = BoxContainer.ALIGNMENT_CENTER; dlg.box.add_child(skip_row)
+  reroll_button(game, skip_row, func(): return Dungeon.reroll_draft(c), dlg)
   button(game, skip_row, "Pass" + ("  ·  +25 gold" if cost == 0 else ""), func():
    if Dungeon.skip_draft(c): dlg.root.queue_free(); game.render(), false, Vector2(220, 44))
+
+## Spend gold for a fresh set of offers; the price climbs within a room.
+static func reroll_button(game: Node, row: Control, action: Callable, dlg: Dictionary) -> Button:
+ var c: Campaign = game.campaign; var cost = Dungeon.reroll_cost(c)
+ var b = button(game, row, "Reroll  ·  %d gold" % cost, func():
+  if action.call():
+   dlg.root.queue_free(); game.sound.cue("contest_reveal"); game.render()
+   # Outside the Dungeon tab (at the outfitter) nothing reopens the draft on render.
+   if game.phase == "shop" and not c.state.dungeon.get("draft", {}).is_empty(): draft_dialog(game)
+  else: game.toast(c.last_error), false, Vector2(220, 44), int(c.state.gold) < cost)
+ b.tooltip_text = "New offers for %d gold. Each reroll in this room costs 20 more." % cost; b.name = "DungeonReroll"
+ return b
 
 static func relic_modal(game: Node) -> void:
  loot_modal(game)
@@ -612,17 +650,20 @@ static func high_scores(game: Node) -> void:
   var depth_n = int(e.get("depth", 1))
   game.label(grid, ("Endless %d" % (depth_n - Dungeon.ACTS)) if depth_n > Dungeon.ACTS else "Depth %d · room %d" % [depth_n, int(e.get("room", 1))], 15, PARCH, false)
   game.label(grid, str(int(e.get("wardens", 0))), 15, PARCH, false)
-  game.label(grid, str(e.get("difficulty", "")) + (" · A%d" % int(e.challenge) if int(e.get("challenge", 0)) > 0 else ""), 15, MUTE, false)
+  game.label(grid, str(e.get("difficulty", "")) + (" · A%d" % int(e.get("ascension", e.get("challenge", 0))) if int(e.get("ascension", e.get("challenge", 0))) > 0 else ""), 15, MUTE, false)
   game.label(grid, "%s · %s" % [str(e.get("outcome", "")), str(e.get("date", ""))], 14, MUTE, false)
 
 static func guide(game: Node) -> void:
- var dlg = dialog(game, "The Dungeon", Vector2(1000, 640))
+ var dlg = dialog(game, "The Dungeon", Vector2(1000, 760))
  for line in [
   "Three depths, each one an instance you choose at the top of the stairs: ten in all, from the Blight Forest to the Void Rift. Each has its own monsters, Warden boss and arena.",
   "Pick one room at a time along the glowing paths. Losing a fight costs a life; lose them all and the run ends. Campfires, healing springs and defeated Wardens restore them.",
   "Skirmishes reward one of three components, treasure one of three finished items, elites one of three relics. Wardens give a finished item, a Warden relic and a medal chest.",
   "Run traits: every creature carries up to three of its own traits (kin, element, class). Each run awakens a different set, each with its own flavour. Field different champions that share a trait to unlock it.",
-  "Score: rooms, wins, elites, Wardens and relics earn points, multiplied by the depth. Lives left add a bonus; difficulty and Ascension multiply the total.",
+  "Read the map: the arc under each fight room shows its threat (green easy, gold even, orange hard, red deadly). Elites are the greedy path: harder fights, but they pay relics.",
+  "Win without losing a champion for a Flawless victory: +50% points and +25% gold. Positioning pays.",
+  "Gold buys rerolls of any draft or reward (20, then 40, 60… in the same room). The Ember Altar trades a relic up a rarity; the Pale Ferryman takes a champion for a Boss relic.",
+  "Score: rooms, wins, elites, Wardens and relics earn points, multiplied by the depth. Lives left add a bonus; difficulty and Ascension multiply the total. Clear the dungeon to unlock the next Ascension rank.",
   "After the third Warden, bank your score or go into the endless depths, where each depth is harder and worth more.",
  ]:
   var l = game.label(dlg.box, "◆  " + line, 16, PARCH); l.custom_minimum_size.x = 940

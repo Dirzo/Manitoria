@@ -43,6 +43,7 @@ var new_slot = 1
 var new_difficulty = "Keeper"
 var new_mode = "guild" # "guild" (World Tour) or "dungeon"
 var new_challenge_rank = 0
+var new_ascension = 0 # dungeon ladder rank for the next dungeon run
 var new_name: LineEdit
 var new_club_draft = "Ravenmoor Menagerie"
 var new_crest: Dictionary = {}
@@ -194,7 +195,8 @@ func _ready() -> void:
     if HeroData.learned_ability(h.sp,i).effect==theme[1]:key=i;break
    var a=HeroData.learned_ability(h.sp,key)
    var demo=AbilityPreview.new();demo.game=self;demo.hero=h.duplicate(true);demo.card={"type":"ability","key":str(key),"name":a.name,"description":a.description,"rarity":"Legendary","bonus":1.25};ui.add_child(demo);demo.build()
-  elif qa == "new":
+  elif qa in ["new", "new_dungeon"]:
+   if qa == "new_dungeon": new_mode = "dungeon"; new_ascension = DungeonAscension.unlocked()
    phase = "new"; render()
   elif qa == "runover":
    campaign.state.run_over = true; phase = "runover"; render()
@@ -543,10 +545,22 @@ func build_new() -> void:
  if new_mode == "dungeon": diff_tips = [["Keeper", "Relaxed · 4 lives · score ×0.8"], ["Standard", "Fair fights · 3 lives · score ×1"], ["Champion", "Brutal rivals · 2 lives · score ×1.35"]]
  for d in diff_tips:
   var db = button(diff, d[0], func(): new_difficulty = d[0]; new_challenge_rank=0; render(), new_difficulty == d[0]); db.tooltip_text = d[1]; db.size_flags_horizontal = Control.SIZE_EXPAND_FILL
- var challenge=OptionButton.new();box.add_child(challenge);challenge.add_item("Standard difficulty rules · no challenge modifier")
- for rank in range(1,RunDatabase.unlocked_rank()+1):challenge.add_item("Ascension %d · Champion rules · +%d%% rival combat strength"%[rank,rank*2])
- challenge.selected=new_challenge_rank
- challenge.item_selected.connect(func(i):new_challenge_rank=i;new_difficulty="Champion" if i>0 else new_difficulty;render())
+ if new_mode == "dungeon":
+  # The dungeon ladder: each cleared rank unlocks the next; modifiers stack.
+  var top = DungeonAscension.unlocked(); new_ascension = clampi(new_ascension, 0, top)
+  var asc = OptionButton.new(); box.add_child(asc); asc.name = "DungeonAscensionPick"
+  for rank in range(0, top + 1): asc.add_item("No Ascension · clear the dungeon to unlock rank 1" if rank == 0 else "Ascension %d · %s · score ×%.2f" % [rank, DungeonAscension.info(rank).name, 1.0 + 0.15 * rank])
+  asc.selected = new_ascension
+  asc.tooltip_text = "\n".join(DungeonAscension.lines(new_ascension)) if new_ascension > 0 else "Clear all three Wardens to unlock Ascension 1. Every rank adds a modifier and +15% score."
+  asc.item_selected.connect(func(i): new_ascension = i; render())
+  if new_ascension > 0:
+   var mods = range(1, new_ascension + 1).map(func(i): return DungeonAscension.info(i).text.trim_suffix("."))
+   label(box, "  ·  ".join(mods), 13, Color("e8b07a"))
+ else:
+  var challenge=OptionButton.new();box.add_child(challenge);challenge.add_item("Standard difficulty rules · no challenge modifier")
+  for rank in range(1,RunDatabase.unlocked_rank()+1):challenge.add_item("Ascension %d · Champion rules · +%d%% rival combat strength"%[rank,rank*2])
+  challenge.selected=new_challenge_rank
+  challenge.item_selected.connect(func(i):new_challenge_rank=i;new_difficulty="Champion" if i>0 else new_difficulty;render())
  label(box, "SAVE SLOT", 15, GOLD)
  var slots = HBoxContainer.new(); slots.add_theme_constant_override("separation", 8); box.add_child(slots)
  for slot in range(1, 4):
@@ -658,8 +672,8 @@ func resume_speedrun() -> void:
 func start_club(name_value: String, slot: int) -> void:
  exhibition = false
  campaign.new_run(name_value, slot, 0, new_difficulty)
- if new_mode == "dungeon": Dungeon.start(campaign)
- campaign.state.challenge_rank=clampi(new_challenge_rank,0,RunDatabase.unlocked_rank())
+ if new_mode == "dungeon": Dungeon.start(campaign, clampi(new_ascension, 0, DungeonAscension.unlocked()))
+ campaign.state.challenge_rank=0 if new_mode == "dungeon" else clampi(new_challenge_rank,0,RunDatabase.unlocked_rank())
  RunDatabase.ensure_id(campaign)
  campaign.state.crest = new_crest.duplicate() if not new_crest.is_empty() else Crest.default_for(name_value)
  campaign.state.motto = new_motto.strip_edges().left(48)
@@ -953,7 +967,7 @@ func build_result() -> void:
   var xp = label(chips, "+%d XP" % (80 if won else 65), 21, Color("9fd8ff"), false); xp.tooltip_text = "XP for every fielded hero"; xp.mouse_filter = Control.MOUSE_FILTER_STOP
  if not exhibition and report.get("dungeon", false):
   var lost = report.get("life_lost", false) or report.get("flame_lost", false)
-  var verdict_text = ("LIFE LOST · %d LEFT" % int(report.get("lives", 0))) if lost else ("DUNGEON CONQUERED · BANK YOUR SCORE OR GO ENDLESS" if report.get("dungeon_cleared", false) else ("WARDEN DEFEATED · THE WAY DOWN IS OPEN" if report.get("warden_down", false) else "ROOM CLEARED · CHOOSE YOUR SPOILS ON THE MAP"))
+  var verdict_text = ("%s · %d LEFT" % ["TWO LIVES LOST" if int(report.get("lives_lost", 1)) > 1 else "LIFE LOST", int(report.get("lives", 0))]) if lost else ("FLAWLESS · +50% POINTS · " if report.get("flawless", false) else "") + ("DUNGEON CONQUERED · BANK YOUR SCORE OR GO ENDLESS" if report.get("dungeon_cleared", false) else ("WARDEN DEFEATED · THE WAY DOWN IS OPEN" if report.get("warden_down", false) else "ROOM CLEARED · CHOOSE YOUR SPOILS ON THE MAP"))
   var fl = label(box, verdict_text, 26, Color("ff8a7a") if lost else GOLD); fl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
   if int(report.get("points", 0)) > 0:
    var pts = label(box, "+%d POINTS · %d TOTAL" % [int(report.points), int(campaign.state.dungeon.score)], 18, Color("9fd8ff")); pts.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

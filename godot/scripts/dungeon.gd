@@ -20,6 +20,12 @@ const LIVES := {"Keeper": 4, "Standard": 3, "Champion": 2}
 const XP_SCALE := 2.6           # fewer fights than the five cups, so each one teaches more
 const CAMP_XP := 120
 const SCORES_PATH := "user://dungeon_scores.json"
+# Threat read calibration (fit against the balance probe's real fights).
+# 40 probe runs (453 fights): win rate falls from ~97% to ~33-64% across each kind's threat range.
+const BOSS_HP_WEIGHT := 1.0
+const BOSS_DMG_WEIGHT := 1.0
+const THREAT_SCALE := {"battle": 1.0, "elite": 1.02, "boss": 1.3}
+static var last_threat := {}   # the parts of the last threat read (for calibration tools)
 const ROOMS := {
  "battle":   {"name": "Skirmish", "glyph": "swords", "color": "e8c27a", "text": "A pack of dungeon monsters. Win to pick one of three components."},
  "elite":    {"name": "Elite", "glyph": "star", "color": "ff8a7a", "text": "An alpha pack or a rival guild lost in the dark. Hard fight; win to pick one of three relics."},
@@ -45,6 +51,10 @@ const EVENTS := [
   "choices": [{"label": "Drink deeply", "detail": "Restore 1 life.", "lives": 1}, {"label": "Fill your flasks to sell", "detail": "+70 gold.", "gold": 70}]},
  {"id": "gamble", "title": "The Masked Gambler", "text": "\"Double or nothing on a single toss?\" The coin is already spinning.",
   "choices": [{"label": "Bet 80 gold", "detail": "Even odds: win 160 gold or lose your stake.", "gamble": 80}, {"label": "Walk away", "detail": "Nothing happens."}]},
+ {"id": "altar", "title": "The Ember Altar", "text": "A brazier burns without fuel. Whatever is laid on it comes back changed, and stronger.",
+  "choices": [{"label": "Sacrifice your newest relic", "detail": "", "sacrifice": true}, {"label": "Warm your hands", "detail": "Your fielded champions gain 50 XP.", "xp": 50}]},
+ {"id": "ferryman", "title": "The Pale Ferryman", "text": "A boat waits on a black river. \"One of yours rides with me,\" says the ferryman, \"and you'll have something fine for it.\"",
+  "choices": [{"label": "Send a champion across", "detail": "", "ferry": true}, {"label": "Pay the toll · 60 gold", "detail": "Pick one of three finished items.", "gold": -60, "loot": "item"}, {"label": "Turn back", "detail": "Nothing happens."}]},
  {"id": "reliquary", "title": "The Forgotten Reliquary", "text": "Dusty shelves of trinkets, each humming faintly. A sign says: TAKE ONE. PAY WHAT IS FAIR.",
   "choices": [{"label": "Pay 120 gold", "detail": "Pick one of three relics.", "gold": -120, "loot": "relic"}, {"label": "Steal one and run", "detail": "Pick one of three relics, but lose 1 life.", "lives": -1, "loot": "relic"}, {"label": "Leave", "detail": "Nothing happens."}]},
 ]
@@ -52,10 +62,11 @@ const EVENTS := [
 static func active(c: Campaign) -> bool:
  return not c.state.is_empty() and c.state.get("mode", "") == "dungeon" and c.state.has("dungeon")
 
-static func start(c: Campaign) -> void:
+static func start(c: Campaign, ascension := 0) -> void:
  var lives = int(LIVES.get(str(c.state.get("difficulty", "Standard")), 3))
+ if ascension >= 4: lives = maxi(1, lives - 1)
  c.state.mode = "dungeon"
- c.state.dungeon = {"act": 1, "row": -1, "col": -1, "lives": lives, "max_lives": lives, "fight": false, "loot": [], "loot_kind": "", "loot_queue": [], "event": {}, "fights": 0, "wins": 0, "elites": 0, "wardens": 0, "rooms": 0, "history": [], "map": [], "trail": [], "relics": [], "score": 0, "endless": false, "awaiting_endless": false}
+ c.state.dungeon = {"act": 1, "row": -1, "col": -1, "lives": lives, "max_lives": lives, "fight": false, "loot": [], "loot_kind": "", "loot_queue": [], "event": {}, "fights": 0, "wins": 0, "elites": 0, "wardens": 0, "rooms": 0, "history": [], "map": [], "trail": [], "relics": [], "score": 0, "endless": false, "awaiting_endless": false, "ascension": clampi(ascension, 0, DungeonAscension.MAX), "flawless": 0, "rerolls": 0}
  c.state.dungeon.traits = RunTraits.roll(str(c.state.get("salt", c.state.seed)))
  c.state.dungeon.visited = []; c.state.dungeon.instance = ""
  c.state.dungeon.instance_choices = DungeonInstances.offer([], str(c.state.seed))
@@ -190,7 +201,7 @@ static func enter(c: Campaign, col: int) -> String:
  var before = c.state.duplicate(true)
  d.row = int(d.row) + 1; d.col = col; d.rooms = int(d.rooms) + 1
  if not d.has("trail") or int(d.row) == 0: d.trail = []
- d.trail.append(col)
+ d.trail.append(col); d.room_rerolls = 0
  sync_level(c)
  add_score(c, 10)
  var n = node(c); var kind = str(n.type)
@@ -201,9 +212,9 @@ static func enter(c: Campaign, col: int) -> String:
   "shop":
    n.done = true; c.state.tour.shop = true; c.state.tour.rerolls = 0; c.state.tour.serial = int(c.state.tour.serial) + 1; c.state.tour.stock = WorldTour.stock(c)
   "rest":
-   var no_rest = Relics.owned(c).any(func(r): return Relics.info(r).get("no_rest", false))
+   var no_rest = Relics.owned(c).any(func(r): return Relics.info(r).get("no_rest", false)) or DungeonAscension.has(c, 8)
    d.event = {"id": "rest", "title": "Campfire", "text": "The squad huddles around a small fire. There is time for one thing.",
-    "choices": [{"label": "Rest", "detail": ("Warlord's Horn: no rest for you." if no_rest else "Restore 1 life (%d / %d)." % [int(d.lives), int(d.max_lives)]), "lives": 1, "disabled": no_rest or int(d.lives) >= int(d.max_lives)}, {"label": "Train", "detail": "Fielded champions gain %d XP." % CAMP_XP, "xp": CAMP_XP}]}
+    "choices": [{"label": "Rest", "detail": (("The Last Light: campfires no longer restore lives." if DungeonAscension.has(c, 8) else "Warlord's Horn: no rest for you.") if no_rest else "Restore 1 life (%d / %d)." % [int(d.lives), int(d.max_lives)]), "lives": 1, "disabled": no_rest or int(d.lives) >= int(d.max_lives)}, {"label": "Train", "detail": "Fielded champions gain %d XP." % CAMP_XP, "xp": CAMP_XP}]}
   "event":
    var rng = RandomNumberGenerator.new(); rng.seed = hash(str(c.state.seed) + "|event|%d|%d|%d" % [int(d.act), int(d.row), col])
    var e = EVENTS[rng.randi_range(0, EVENTS.size() - 1)].duplicate(true)
@@ -212,6 +223,15 @@ static func enter(c: Campaign, col: int) -> String:
     if int(ch.get("gold", 0)) < 0 and int(c.state.gold) < -int(ch.gold): ch.disabled = true
     if int(ch.get("gamble", 0)) > int(c.state.gold): ch.disabled = true
     if int(ch.get("lives", 0)) > 0 and int(d.lives) >= int(d.max_lives): ch.disabled = true
+    if ch.get("sacrifice", false):
+     if d.relics.is_empty(): ch.disabled = true; ch.detail = "You carry no relic to offer."
+     else:
+      var r = Relics.info(str(d.relics[-1]))
+      ch.detail = "Destroy %s (%s). Pick one of three %s relics." % [r.name, r.rarity, "Boss" if r.rarity != "Common" else "Rare"]
+    if ch.get("ferry", false):
+     var h = ferry_candidate(c)
+     if h.is_empty(): ch.disabled = true; ch.detail = "You need three champions, and the headliner never crosses."
+     else: ch.detail = "%s leaves the guild for good (items go to your bag). Pick one of three Boss relics and gain 120 gold." % h.name
    d.event = e
   "checkpoint":
    n.done = true
@@ -230,10 +250,10 @@ static func enter(c: Campaign, col: int) -> String:
 ## Rewards wait in a queue: the first is on screen, the rest follow once it is settled.
 static func offer_loot(c: Campaign, kind: String) -> void:
  var d = c.state.dungeon
- var rng = RandomNumberGenerator.new(); rng.seed = hash(str(c.state.seed) + "|loot|%d|%d|%d|%s|%d" % [int(d.act), int(d.row), int(c.state.tour.serial), kind, d.loot_queue.size()])
+ var rng = RandomNumberGenerator.new(); rng.seed = hash(str(c.state.seed) + "|loot|%d|%d|%d|%s|%d|%d" % [int(d.act), int(d.row), int(c.state.tour.serial), kind, d.loot_queue.size(), int(d.get("rolls", 0))])
  var picks = []
- if kind in ["relic", "boss_relic"]:
-  picks = Relics.offer(c, rng, ["Boss"] if kind == "boss_relic" else (["Common", "Rare"] if rng.randf() < 0.6 else ["Rare"]))
+ if kind in ["relic", "boss_relic", "rare_relic"]:
+  picks = Relics.offer(c, rng, ["Boss"] if kind == "boss_relic" else (["Rare"] if kind == "rare_relic" else (["Common", "Rare"] if rng.randf() < 0.6 else ["Rare"])))
   if picks.is_empty(): picks = Relics.offer(c, rng, ["Common", "Rare", "Boss"])
  else:
   var pool = Forge.COMPONENT_ORDER.duplicate() if kind == "component" else Forge.ITEMS.keys()
@@ -241,15 +261,15 @@ static func offer_loot(c: Campaign, kind: String) -> void:
   while picks.size() < 3 and not pool.is_empty():
    var id = pool[rng.randi_range(0, pool.size() - 1)]; pool.erase(id); picks.append(id)
  if picks.is_empty(): return
- var entry = {"kind": "relic" if kind == "boss_relic" else kind, "choices": picks}
- if d.loot.is_empty(): d.loot = entry.choices; d.loot_kind = entry.kind
+ var entry = {"kind": "relic" if kind in ["boss_relic", "rare_relic"] else kind, "choices": picks, "source": kind}
+ if d.loot.is_empty(): d.loot = entry.choices; d.loot_kind = entry.kind; d.loot_source = kind
  else: d.loot_queue.append(entry)
 
 static func next_loot(c: Campaign) -> void:
  var d = c.state.dungeon
  d.loot = []; d.loot_kind = ""
  if not d.loot_queue.is_empty():
-  var entry = d.loot_queue.pop_front(); d.loot = entry.choices; d.loot_kind = entry.kind
+  var entry = d.loot_queue.pop_front(); d.loot = entry.choices; d.loot_kind = entry.kind; d.loot_source = str(entry.get("source", entry.kind))
 
 static func take_loot(c: Campaign, index: int) -> bool:
  var d = c.state.dungeon
@@ -270,6 +290,41 @@ static func take_loot(c: Campaign, index: int) -> bool:
  if c.save(): return true
  c.state = before; return false
 
+# ------------------------------------------------------------------ Rerolls
+## Gold buys a fresh set of offers. Each reroll in the same room costs 20 more.
+static func reroll_cost(c: Campaign) -> int:
+ return 20 + 20 * int(c.state.dungeon.get("room_rerolls", 0))
+
+static func _pay_reroll(c: Campaign) -> bool:
+ var cost = reroll_cost(c)
+ if int(c.state.gold) < cost: c.last_error = "A reroll costs %d gold." % cost; return false
+ var d = c.state.dungeon
+ c.state.gold = int(c.state.gold) - cost
+ d.room_rerolls = int(d.get("room_rerolls", 0)) + 1; d.rolls = int(d.get("rolls", 0)) + 1; d.rerolls = int(d.get("rerolls", 0)) + 1
+ return true
+
+static func reroll_draft(c: Campaign) -> bool:
+ var d = c.state.dungeon
+ if d.get("draft", {}).is_empty(): return false
+ var before = c.state.duplicate(true)
+ if not _pay_reroll(c): return false
+ offer_draft(c, str(d.draft.kind), int(d.draft.cost))
+ if c.save(): return true
+ c.state = before; return false
+
+static func reroll_loot(c: Campaign) -> bool:
+ var d = c.state.dungeon
+ if d.loot.is_empty(): return false
+ var before = c.state.duplicate(true)
+ if not _pay_reroll(c): return false
+ var queue = d.loot_queue; var source = str(d.get("loot_source", d.loot_kind))
+ d.loot = []; d.loot_queue = []
+ offer_loot(c, source)
+ d.loot_queue = queue
+ if d.loot.is_empty(): c.state = before; c.last_error = "Nothing else to offer."; return false
+ if c.save(): return true
+ c.state = before; return false
+
 static func skip_loot(c: Campaign) -> bool:
  var d = c.state.dungeon
  if d.loot.is_empty(): return false
@@ -277,6 +332,14 @@ static func skip_loot(c: Campaign) -> bool:
  next_loot(c); c.state.gold += 25; c.state.earned_gold += 25
  if c.save(): return true
  c.state = before; return false
+
+## The Ferryman takes your weakest fielded champion, never the headliner, and only from three up.
+static func ferry_candidate(c: Campaign) -> Dictionary:
+ if c.state.roster.size() < 3: return {}
+ var pool = c.state.roster.filter(func(h): return str(h.id) != str(c.state.get("headliner", "")))
+ if pool.is_empty(): return {}
+ pool.sort_custom(func(a, b): return HeroData.power(a) < HeroData.power(b))
+ return pool[0]
 
 static func choose_event(c: Campaign, index: int) -> String:
  var d = c.state.dungeon
@@ -304,17 +367,41 @@ static func choose_event(c: Campaign, index: int) -> String:
  if not n.is_empty(): n.done = true
  c.add_news(str(d.event.title), outcome)
  d.event = {}
+ if ch.get("sacrifice", false) and not d.relics.is_empty():
+  var gone = str(d.relics.pop_back()); var r = Relics.info(gone)
+  if r.has("max_lives"):
+   d.max_lives = maxi(1, int(d.max_lives) - int(r.max_lives)); d.lives = clampi(int(d.lives), 1, int(d.max_lives))
+  outcome = "%s crumbles to ash on the altar." % r.name
+  offer_loot(c, "boss_relic" if r.rarity != "Common" else "rare_relic")
+ if ch.get("ferry", false):
+  var h = ferry_candidate(c)
+  if not h.is_empty():
+   for v in h.get("equipment", {}).values(): c.state.inventory.append(str(v))
+   c.state.roster.erase(h)
+   for f in c.state.get("formations", []):
+    if f is Dictionary and f.has("slots"): f.slots.erase(str(h.id))
+   c.state.gold += 120; c.state.earned_gold += 120
+   outcome = "%s steps into the ferry and is gone. The ferryman leaves a gift." % h.name
+   offer_loot(c, "boss_relic")
  if ch.has("loot"): offer_loot(c, str(ch.loot))
  if c.save(): return outcome
  c.state = before; return ""
 
 # ------------------------------------------------------------------ Opponents
 static func quality(c: Campaign) -> float:
+ return quality_at(c, int(c.state.dungeon.row), str(fight_node(c).get("type", "battle")))
+
+## Opponent strength for a fight of `kind` in map row `row` of the current depth.
+static func quality_at(c: Campaign, row: int, kind: String) -> float:
  var d = c.state.dungeon; var t = c.state.tour
- var base = TourBalance.quality(int(t.level), mini(3, maxi(0, int(d.row)) / 2), str(c.state.difficulty)) * (1.0 + 0.02 * clampi(int(c.state.get("challenge_rank", 0)), 0, 10))
- var kind = str(fight_node(c).get("type", "battle"))
+ var base = TourBalance.quality(int(t.level), mini(3, maxi(0, row) / 2), str(c.state.difficulty)) * (1.0 + 0.02 * clampi(int(c.state.get("challenge_rank", 0)), 0, 10))
  var mult = {"battle": 0.97, "elite": 1.02, "boss": 1.0}.get(kind, 1.0)
- if kind == "battle" and int(d.act) == 1 and int(d.row) <= 2: mult = 0.92 if int(d.row) <= 0 else 0.94
+ # The opening rooms of a run teach rather than punish, as in The Last Flame.
+ if kind == "battle" and int(d.act) == 1 and row <= 2: mult = [0.84, 0.89, 0.94][maxi(0, row)]
+ if DungeonAscension.has(c, 1): mult *= 1.06
+ if kind == "elite" and DungeonAscension.has(c, 3): mult *= 1.10
+ if kind == "boss" and DungeonAscension.has(c, 6): mult *= 1.12
+ if kind == "boss" and int(d.act) == 2: mult *= 0.95   # the second Warden was the run's wall (41% per attempt)
  mult *= 1.0 + 0.05 * (mini(int(d.act), ACTS) - 1)   # each classic depth is a little meaner
  # A guild still gathering its champions fights a little softer opposition.
  mult *= minf(1.0, 0.8 + 0.04 * party(c))
@@ -342,6 +429,10 @@ static func preview_position(c: Campaign) -> Vector2i:
 
 static func opponent(c: Campaign) -> Dictionary:
  var p = preview_position(c)
+ return opponent_at(c, p.x, p.y)
+
+static func opponent_at(c: Campaign, row: int, col: int) -> Dictionary:
+ var p = Vector2i(row, col)
  var n = node(c, p.x, p.y)
  var kind = str(n.get("type", "battle"))
  if kind == "boss": return boss_fight(c, p.x)
@@ -407,13 +498,55 @@ static func stage_label(c: Campaign) -> String:
 
 # ------------------------------------------------------------------ Score
 ## Points grow with depth: a skirmish in depth 2 is worth twice one in depth 1.
+# ------------------------------------------------------------------ Threat
+## A rough read of a fight before you take it: foe strength over guild strength, with monster
+## stat bonuses, Warden scaling and room strength folded in. 1.0 is an even fight.
+static func threat(c: Campaign, row: int, col: int) -> float:
+ var n = node(c, row, col); var kind = str(n.get("type", ""))
+ if kind not in ["battle", "elite", "boss"] or c.lineup().is_empty(): return 0.0
+ # Lanchester-style: a side's strength grows with total health times total damage.
+ var foe_hp = 0.0; var foe_dmg = 0.0
+ for h in opponent_at(c, row, col).roster:
+  var base = 20.0 + HeroData.power(h); var hp = 1.0; var dmg = 1.0
+  var key = str(h.get("monster", ""))
+  if Bestiary.BOSSES.has(key):
+   var st = Bestiary.strength(key, int(h.get("depth", 1)))
+   var p = clampi(int(h.get("party", 5)), 1, 5); var boost = 1.0 + float(h.get("empower", 0.0))
+   hp = (1.0 + float(st.hp)) * (0.25 + 0.15 * p) * boost * BOSS_HP_WEIGHT
+   dmg = (1.0 + 0.5 * (float(st.attack) + float(st.power))) * (0.5 + 0.1 * p) * boost * BOSS_DMG_WEIGHT
+  elif key != "":
+   var ms = Bestiary.info(key).get("stats", {})
+   hp = 1.0 + float(ms.get("hp", 0.0)); dmg = 1.0 + 0.5 * (float(ms.get("attack", 0.0)) + float(ms.get("power", 0.0))) + 0.5 * float(ms.get("haste", 0.0))
+  foe_hp += base * hp; foe_dmg += base * dmg
+ var q = quality_at(c, row, kind)
+ var foe = sqrt(foe_hp * foe_dmg) * q
+ last_threat = {"kind": kind, "foe_hp": foe_hp, "foe_dmg": foe_dmg, "q": q}
+ var mine = 0.0
+ for h in c.lineup(): mine += 20.0 + HeroData.power(h)
+ mine *= 1.0 + 0.04 * Relics.owned(c).size()
+ last_threat.mine = mine
+ return foe / maxf(1.0, mine) * THREAT_SCALE.get(kind, 1.0)
+
+## Threat as a word and a colour for the map.
+## Bands from the probe fit: Easy wins ~90%+, Even ~75-90%, Hard ~55-75%, Deadly below that.
+static func threat_label(ratio: float) -> Dictionary:
+ if ratio <= 0.0: return {}
+ if ratio < 0.77: return {"text": "Easy", "color": "8fe0a0"}
+ if ratio < 0.89: return {"text": "Even", "color": "e8d27a"}
+ if ratio < 1.01: return {"text": "Hard", "color": "ffa45c"}
+ return {"text": "Deadly", "color": "ff5a5a"}
+
+## What a fight room pays, for tooltips.
+static func reward_text(kind: String) -> String:
+ return {"battle": "Win: pick a component · +100 pts", "elite": "Win: pick a relic · +250 pts", "boss": "Win: a finished item, a Boss relic and a chest · +800 pts"}.get(kind, "") + "  ·  Flawless: +50% points, +25% gold"
+
 static func add_score(c: Campaign, points: int) -> void:
  var d = c.state.dungeon
  d.score = int(d.score) + points * maxi(1, int(d.act))
 
 static func multiplier(c: Campaign) -> float:
  var diff = {"Keeper": 0.8, "Standard": 1.0, "Champion": 1.35}.get(str(c.state.get("difficulty", "Standard")), 1.0)
- return diff * (1.0 + 0.10 * clampi(int(c.state.get("challenge_rank", 0)), 0, 10))
+ return diff * (1.0 + 0.10 * clampi(int(c.state.get("challenge_rank", 0)), 0, 10)) * DungeonAscension.score_multiplier(c)
 
 static func final_score(c: Campaign) -> int:
  var d = c.state.dungeon
@@ -426,7 +559,7 @@ static func bank_score(c: Campaign, outcome: String) -> int:
  if d.has("final_score"): return int(d.final_score)
  d.final_score = final_score(c); d.outcome = outcome
  var table = scores()
- table.append({"name": c.state.name, "score": int(d.final_score), "depth": int(d.act), "room": maxi(1, int(d.row) + 1), "wardens": int(d.wardens), "difficulty": str(c.state.difficulty), "challenge": int(c.state.get("challenge_rank", 0)), "outcome": outcome, "endless": d.endless, "relics": d.relics.size(), "date": Time.get_date_string_from_system(), "run_id": str(c.state.get("run_id", ""))})
+ table.append({"name": c.state.name, "score": int(d.final_score), "depth": int(d.act), "room": maxi(1, int(d.row) + 1), "wardens": int(d.wardens), "difficulty": str(c.state.difficulty), "challenge": int(c.state.get("challenge_rank", 0)), "ascension": DungeonAscension.rank(c), "outcome": outcome, "endless": d.endless, "relics": d.relics.size(), "date": Time.get_date_string_from_system(), "run_id": str(c.state.get("run_id", ""))})
  table.sort_custom(func(a, b): return int(a.score) > int(b.score))
  table = table.slice(0, 20)
  var f = FileAccess.open(SCORES_PATH, FileAccess.WRITE)
@@ -470,7 +603,7 @@ static func go_endless(c: Campaign) -> bool:
 static func descend(c: Campaign) -> void:
  var d = c.state.dungeon; var t = c.state.tour
  var rng = RandomNumberGenerator.new(); rng.seed = hash(str(c.state.seed) + "|descend|%d" % int(d.act))
- d.lives = mini(int(d.max_lives), int(d.lives) + 1)
+ if not DungeonAscension.has(c, 8): d.lives = mini(int(d.max_lives), int(d.lives) + 1)
  for h in c.lineup(): c.gain_xp(h, TourBalance.TRAINING_XP, true, true, rng)
  d.act = int(d.act) + 1; d.row = -1; d.col = -1; d.trail = []; d.map = []; sync_level(c)
  d.instance = ""; d.instance_choices = DungeonInstances.offer(d.visited, str(c.state.seed))
@@ -492,7 +625,7 @@ static func after_headliner(c: Campaign) -> void:
 ## awakened trait with the guild are likelier to appear, but nothing is guaranteed.
 static func offer_draft(c: Campaign, kind: String, cost: int) -> void:
  var d = c.state.dungeon
- var rng = RandomNumberGenerator.new(); rng.seed = hash(str(c.state.seed) + "|draft|%s|%d|%d|%d" % [kind, int(d.act), int(d.row), c.state.roster.size()])
+ var rng = RandomNumberGenerator.new(); rng.seed = hash(str(c.state.seed) + "|draft|%s|%d|%d|%d|%d" % [kind, int(d.act), int(d.row), c.state.roster.size(), int(d.get("rolls", 0))])
  var owned = c.state.roster.map(func(h): return h.sp)
  var mine = {}
  for h in c.state.roster:
@@ -503,7 +636,7 @@ static func offer_draft(c: Campaign, kind: String, cost: int) -> void:
   pool.append(sp)
  pool.sort()
  var picks = []
- while picks.size() < DRAFT_SIZE and not pool.is_empty():
+ while picks.size() < draft_size(c) and not pool.is_empty():
   var weights = pool.map(func(sp): return 1.0 + 1.6 * RunTraits.of(c, sp).filter(func(t): return mine.has(t)).size())
   var total = 0.0
   for w in weights: total += w
@@ -526,6 +659,9 @@ static func offer_draft(c: Campaign, kind: String, cost: int) -> void:
   h.price = 0
   offers.append(h)
  d.draft = {"kind": kind, "offers": offers, "cost": cost}
+
+static func draft_size(c: Campaign) -> int:
+ return DRAFT_SIZE - (1 if DungeonAscension.has(c, 5) else 0)
 
 ## Traits a draft offer shares with the guild (for the "synergy" mark on its card).
 static func shared_traits(c: Campaign, sp: String) -> Array:
@@ -585,6 +721,11 @@ static func resolve(c: Campaign, sim: BattleSim) -> bool:
  var base_gold = TourBalance.match_gold(mini(int(t.level), 10), str(c.state.difficulty), won)
  var reward = roundi(base_gold * ({"battle": 0.55, "elite": 0.85, "boss": 1.3}.get(kind, 0.6) if won else 0.35))
  if won: reward += int(Relics.total(c, "gold_win"))
+ if DungeonAscension.has(c, 2): reward = roundi(reward * 0.8)
+ # Flawless: every fielded champion still standing. Good positioning pays.
+ var fielded = sim.units.filter(func(u): return u.team == 0 and not u.summon).size()
+ var flawless = won and fielded > 0 and sim.living(0, false).size() == fielded
+ if flawless: reward = roundi(reward * 1.25)
  c.record_team(c.state.roster, sim, 0, true, rng, XP_SCALE * (1.0 + Relics.total(c, "xp"))); c.record_club(c.state, sim.winner)
  if rival.has("club"):
   var cl = WorldTour.club(c, int(rival.club))
@@ -595,7 +736,9 @@ static func resolve(c: Campaign, sim: BattleSim) -> bool:
  var score_before = int(d.score)
  if won:
   d.wins = int(d.wins) + 1; n.done = true; d.fight = false
-  add_score(c, {"battle": 100, "elite": 250, "boss": 800}[kind])
+  var points = {"battle": 100, "elite": 250, "boss": 800}[kind]
+  add_score(c, points + (points / 2 if flawless else 0))
+  if flawless: d.flawless = int(d.get("flawless", 0)) + 1; report.flawless = true
   if kind == "battle": offer_loot(c, "component")
   elif kind == "elite": d.elites = int(d.elites) + 1; offer_loot(c, "relic")
   else:
@@ -609,12 +752,15 @@ static func resolve(c: Campaign, sim: BattleSim) -> bool:
    TrophyVault.award(c, medal); report.chest = true; report.medal = medal
    if int(d.act) == ACTS:
     c.state.trophies = int(c.state.trophies) + 1; report.dungeon_cleared = true; d.awaiting_endless = true
+    var unlocked = DungeonAscension.record_clear(c)
+    if unlocked > 0: report.ascension_unlocked = unlocked; d.ascension_unlocked = unlocked
     c.add_news("The dungeon is conquered", "%s defeated all three Wardens with %d li%s left. Bank the score or descend into the endless depths." % [c.state.name, int(d.lives), "fe" if int(d.lives) == 1 else "ves"])
    else:
     descend(c)
     c.add_news("Warden defeated", "The way down to %s is open. One life restored, the squad trains, and new recruits wait on the stairs." % depth(c).name)
  else:
-  d.lives = maxi(0, int(d.lives) - 1); report.life_lost = true
+  var cost = 2 if kind in ["elite", "boss"] and DungeonAscension.has(c, 7) else 1
+  d.lives = maxi(0, int(d.lives) - cost); report.life_lost = true; report.lives_lost = cost
   if kind != "boss": n.done = true; d.fight = false   # beaten back, the guild pushes past; a Warden must be beaten
   if int(d.lives) <= 0:
    c.state.run_over = true; report.run_over = true; d.fight = false
