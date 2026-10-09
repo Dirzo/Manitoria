@@ -10,7 +10,9 @@ func capture(name: String) -> void:
  root.get_texture().get_image().save_png("user://"+name+".png")
 func run() -> void:
  var game=load("res://scripts/main.gd").new();root.add_child(game);await create_timer(.6).timeout
- check(game.ui.find_child("SpeedrunMenuButton",true,false)!=null,"Menu has speedrun entry")
+ # Since 0.75 the speedrun lab lives under Statistics & achievements.
+ game.ui.find_child("StatsMenuButton",true,false).pressed.emit();await process_frame
+ check(game.ui.find_child("SpeedrunlabButton",true,false)!=null,"Menu has speedrun entry")
  game.start_speedrun();await process_frame
  var c: Campaign=game.campaign;c.choose_starter(League.tiers().Legendary[0]);c.recruit(c.state.market.filter(func(h):return League.tier(h.sp)=="Epic")[0].id)
  for i in range(3):c.recruit(c.state.market.filter(func(h):return League.tier(h.sp)=="Common")[0].id)

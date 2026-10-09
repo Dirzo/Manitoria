@@ -471,7 +471,7 @@ func render() -> void:
  arena.visible = phase not in ["hub", "menu", "new", "shop", "starter", "intro", "runover", "speedrun"]
  if phase in ["hub", "menu", "new", "shop", "starter", "intro", "runover", "speedrun"]:
   sim = null
-  var backdrop=ClubBackdrop.new();backdrop.theme_name=ClubBackdrop.theme_for(self);backdrop.shade=.22 if phase=="menu" else .30;ui.add_child(backdrop)
+  var backdrop=ClubBackdrop.new();backdrop.theme_name=ClubBackdrop.theme_for(self);backdrop.shade=.30 if phase=="menu" else .30;ui.add_child(backdrop)
   if phase in ["hub","shop","intro"] and not campaign.state.is_empty() and Dungeon.active(campaign) and not exhibition:
    # Inside the dungeon the colosseum disappears: the zone's own painting, deep in shadow.
    var zone=Dungeon.instance_id(campaign);var info=DungeonInstances.info(zone)

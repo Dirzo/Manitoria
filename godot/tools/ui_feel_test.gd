@@ -14,8 +14,8 @@ func run() -> void:
  await create_timer(1.2).timeout;game.qa=""
  var feel: UIFeel=game.get_node("UIFeel")
  check(feel!=null,"UI feel is attached")
- var cta: Control=game.ui.find_child("DungeonMenuButton",true,false)
- check(cta!=null,"Title screen features the dungeon")
+ check(game.ui.find_child("DungeonMenuButton",true,false)!=null,"Title screen features the dungeon")
+ var cta: Control=game.ui.find_child("MusicMedallion",true,false)
  hover(game,cta);await process_frame;await process_frame
  await create_timer(0.7).timeout
  check(cta.scale.x>1.005,"Hovered button lifts (scale %.3f)"%cta.scale.x)

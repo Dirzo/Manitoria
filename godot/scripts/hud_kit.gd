@@ -171,3 +171,53 @@ static func nav_tab(parent: Node, game: Node, text: String, callback: Callable, 
  t.custom_minimum_size = Vector2(0, 44); t.tooltip_text = ""
  parent.add_child(t); t.pressed.connect(callback)
  return t
+
+## A borderless landing-menu entry: just the words over a soft dark halo (so they read over any
+## painting), brightening to gold with a thin gilded rule on hover. No box, no rim.
+class MenuItem extends Button:
+ var label := ""
+ var font: Font
+ var px := 28
+ var hero := false
+ var glow := 0.0
+ func _ready() -> void:
+  flat = true; focus_mode = Control.FOCUS_NONE; mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+  for st in ["normal", "hover", "pressed", "disabled", "focus"]: add_theme_stylebox_override(st, StyleBoxEmpty.new())
+  for k in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color", "font_disabled_color", "font_outline_color"]: add_theme_color_override(k, Color(0, 0, 0, 0))
+  set_meta("feel_amp", 0.03 if hero else 0.04)
+  mouse_entered.connect(func(): _glow(1.0))
+  mouse_exited.connect(func(): _glow(0.0))
+ func _glow(v: float) -> void:
+  var tw = create_tween(); tw.tween_method(func(x): glow = x; queue_redraw(), glow, v, 0.18)
+ func _draw() -> void:
+  if font == null: return
+  var w = size.x; var h = size.y
+  var tw = font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+  var c = Vector2(w * 0.5, h * 0.5)
+  # Soft halo: stacked translucent ellipses, darkest in the middle.
+  for i in range(6):
+   var k = 1.0 - i / 6.0
+   var r = Vector2(tw * 0.5 + 40 + i * 16, h * 0.42 + i * 7)
+   var pts = PackedVector2Array()
+   for j in range(32):
+    var a = TAU * j / 32.0
+    pts.append(c + Vector2(cos(a) * r.x, sin(a) * r.y))
+   draw_colored_polygon(pts, Color(0.01, 0.008, 0.015, 0.16 * k + 0.06 * glow * k))
+  var ink = (Color("ffe6a8") if hero else PARCH).lerp(Color("fff4d8") if hero else GOLDEN, glow)
+  if disabled: ink = Color(PARCH, 0.35)
+  var pos = Vector2((w - tw) * 0.5, h * 0.5 + px * 0.34)
+  draw_string(font, pos + Vector2(0, 3), label, HORIZONTAL_ALIGNMENT_LEFT, -1, px, Color(0, 0, 0, 0.75))
+  if hero: draw_string(font, pos, label, HORIZONTAL_ALIGNMENT_LEFT, -1, px, Color(1.0, 0.62, 0.25, 0.25 + 0.35 * glow))
+  draw_string(font, pos, label, HORIZONTAL_ALIGNMENT_LEFT, -1, px, ink)
+  if glow > 0.01:
+   var y = pos.y + px * 0.28; var half = tw * 0.5 * glow
+   draw_line(Vector2(c.x - half, y), Vector2(c.x + half, y), Color(GOLDEN, 0.75 * glow), 1.5, true)
+   for sx in [-1.0, 1.0]:
+    var d = Vector2(c.x + sx * (half + 10), y)
+    draw_colored_polygon(PackedVector2Array([d + Vector2(0, -3), d + Vector2(3, 0), d + Vector2(0, 3), d + Vector2(-3, 0)]), Color(GOLDEN, glow))
+
+static func menu_item(parent: Node, game: Node, text: String, callback: Callable, px := 28, hero := false, use_title := false) -> MenuItem:
+ var m = MenuItem.new(); m.label = text; m.text = text; m.px = px; m.hero = hero
+ m.font = load(game.TITLE_FONT) if use_title else game.button_font()
+ parent.add_child(m); m.pressed.connect(callback)
+ return m

@@ -2,7 +2,14 @@
 
 Dungeon mode is now the headline feature, the dungeon is immersive (no tournament menus), and every menu outside of combat shares one cleaner look and feel inspired by *Baldur's Gate 3* and *Guildrun*.
 
-## Title screen
+## 0.75.1 — a cleaner landing
+
+The landing is now just the title and three borderless entries: **Dungeon** (large, in the display face), **Tournament draft** and **Statistics & achievements**. There are no boxes, rims or descriptions: words over a soft shadow that turn gold with a thin gilded rule on hover.
+
+- **Saves:** each mode's saves sit as small entries right after its button (for example *Depth 2* or *Cup 3*). Hover one to see the run's name and slot.
+- **Statistics & achievements** holds the rest: Atlas, High scores, Achievements (ten, read from your high scores, Ascension and medal chests), Speedrun lab, Exhibition and Saved runs.
+
+## Title screen (0.75)
 
 - **Dungeon first.** One large painted banner: *Into the Dungeon*, a line about the mode, fact chips (10 zones, 10 Wardens, 26 relics, endless depths, your best score) and a single gilded **Enter the dungeon ▶**. The zone's Warden glows on the right.
 - **Continue descent.** If an unfinished dungeon run is saved, the banner becomes *Continue descent ▶* with that run's zone, room, lives and points, plus **New descent**.

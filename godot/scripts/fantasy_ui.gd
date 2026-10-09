@@ -1,84 +1,88 @@
 class_name FantasyUI
 extends RefCounted
+## The landing: the title, three buttons and your saves. Dungeon is the big one.
 static func menu(game: Node) -> void:
- var title=Title3D.new();game.ui.add_child(title);title.position=Vector2(100,64);title.size=Vector2(1400,190)
- var sub=game.label(game.ui,"THE LIVING ARENA",20,Color("fff5d2"),false);sub.position=Vector2(400,232);sub.size=Vector2(800,34);sub.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER;sub.add_theme_color_override("font_outline_color",Color("201a32"));sub.add_theme_constant_override("outline_size",5)
- # Saves: the newest overall, and the newest unfinished dungeon run.
- var latest=0;var modified=0;var dungeon_slot=0;var dungeon_time=0;var dungeon_save: Campaign=null
+ var title=Title3D.new();game.ui.add_child(title);title.position=Vector2(100,70);title.size=Vector2(1400,190)
+ var saves={"dungeon":[],"guild":[]}
  for slot in range(1,4):
-  if not FileAccess.file_exists(Campaign.save_path(slot)):continue
-  var t=FileAccess.get_modified_time(Campaign.save_path(slot))
-  if t>modified:latest=slot;modified=t
   var saved=Campaign.new()
-  if t>dungeon_time and saved.load_slot(slot) and Dungeon.active(saved) and not saved.state.get("run_over",false) and not saved.state.get("tour",{}).get("complete",false):
-   dungeon_slot=slot;dungeon_time=t;dungeon_save=saved
- featured(game,dungeon_slot,dungeon_save)
- # Everything else: a clean row of text links under the feature, no boxes.
- # A dark band so the links read over any painting.
- var band=ColorRect.new();game.ui.add_child(band);band.position=Vector2(0,706);band.size=Vector2(1600,84);band.mouse_filter=Control.MOUSE_FILTER_IGNORE
- var bsh=Shader.new();bsh.code="shader_type canvas_item; void fragment(){ float y=1.0-abs(UV.y-0.5)*2.0; float x=1.0-smoothstep(0.25,0.5,abs(UV.x-0.5)); COLOR=vec4(0.02,0.015,0.03,smoothstep(0.0,0.6,y)*x*0.82); }"
- var bm=ShaderMaterial.new();bm.shader=bsh;band.material=bm
- var links=HBoxContainer.new();game.ui.add_child(links);links.position=Vector2(250,724);links.size=Vector2(1100,48);links.add_theme_constant_override("separation",6)
- var entries=[]
- if latest>0 and latest!=dungeon_slot:entries.append(["Continue guild",func():game.load_campaign(latest),"ContinueMenuButton","Resume your most recent save"])
- entries.append(["Guild tour",func():game.sound.announce("found_guild",true);game.new_mode="guild";game.phase="new";game.render(),"GuildMenuButton","Found a guild and compete across five World Tour cups"])
- entries.append(["Exhibition",game.start_exhibition,"ExhibitionMenuButton","A showcase battle with any champions"])
- entries.append(["Speedrun stat check",game.start_speedrun,"SpeedrunMenuButton","Plan a draft, formation and items, then simulate five or ten cups"])
- entries.append(["Saved runs",func():save_picker(game),"SavesMenuButton","Load one of three saved runs"])
- entries.append(["High scores",func():DungeonUI.high_scores(game),"DungeonScoresButton","Your best banked dungeon runs"])
- for i in range(entries.size()):
-  if i>0:
-   var dot=game.label(links,"·",22,Color(0.89,0.77,0.54,0.45),false);dot.size_flags_vertical=Control.SIZE_SHRINK_CENTER
-  var e=entries[i];var tab=HudKit.nav_tab(links,game,e[0],e[1]);tab.name=e[2];tab.tooltip_text=e[3];tab.size_flags_horizontal=Control.SIZE_EXPAND_FILL
- if FileAccess.file_exists("user://speedrun_draft.json"):
-  var resume=HudKit.nav_tab(game.ui,game,"Resume speedrun draft",game.resume_speedrun);resume.position=Vector2(650,776);resume.size=Vector2(300,40)
- var version=game.label(game.ui,"Windows edition 0.75 · Dungeon",14,Color("eee3cf"),false);version.position=Vector2(30,861)
+  if not saved.load_slot(slot):continue
+  saves["dungeon" if Dungeon.active(saved) else "guild"].append({"slot":slot,"c":saved,"time":FileAccess.get_modified_time(Campaign.save_path(slot))})
+ for k in saves:saves[k].sort_custom(func(a,b):return a.time>b.time)
+ # A soft shadow behind the menu column so the words read over the bright painting.
+ var veil=ColorRect.new();game.ui.add_child(veil);veil.position=Vector2(250,290);veil.size=Vector2(1100,300);veil.mouse_filter=Control.MOUSE_FILTER_IGNORE
+ var vsh=Shader.new();vsh.code="shader_type canvas_item; void fragment(){ vec2 d=(UV-0.5)*vec2(1.0,1.6); COLOR=vec4(0.012,0.01,0.02,(1.0-smoothstep(0.1,0.5,length(d)))*0.62); }"
+ var vm=ShaderMaterial.new();vm.shader=vsh;veil.material=vm
+ var col=VBoxContainer.new();game.ui.add_child(col);col.position=Vector2(300,330);col.size=Vector2(1000,0);col.add_theme_constant_override("separation",6)
+ var start_dungeon=func():game.sound.announce("found_guild",true);game.new_mode="dungeon";game.phase="new";game.render()
+ var start_guild=func():game.sound.announce("found_guild",true);game.new_mode="guild";game.phase="new";game.render()
+ mode_row(game,col,"Dungeon",start_dungeon,saves.dungeon,"DungeonMenuButton",true)
+ mode_row(game,col,"Tournament draft",start_guild,saves.guild,"GuildMenuButton",false)
+ mode_row(game,col,"Statistics & achievements",func():stats_menu(game),[],"StatsMenuButton",false)
+ col.modulate.a=0.0;col.create_tween().tween_property(col,"modulate:a",1.0,0.45)
+ var version=game.label(game.ui,"0.75.1",13,Color(1,1,1,0.45),false);version.position=Vector2(24,866)
 
-## The headline feature: the dungeon, as a painted banner with one gilded call to action.
-static func featured(game: Node, slot: int, saved: Campaign) -> void:
- var rect=Rect2(300,288,1000,404)
- var zone="magma_depths" if saved==null else Dungeon.instance_id(saved)
- var info=DungeonInstances.info(zone);var accent=Color(info.accent)
- var card=DungeonUI.plate(game.ui,rect,Color("e3c589"),Color(0.03,0.025,0.04,0.97));card.clip_contents=true;card.name="DungeonFeature"
- DungeonUI.painted(card,zone,Rect2(3,3,rect.size.x-6,rect.size.y-6),0.62)
- var shade=ColorRect.new();card.add_child(shade);shade.position=Vector2(3,3);shade.size=rect.size-Vector2(6,6);shade.mouse_filter=Control.MOUSE_FILTER_IGNORE
- var sh=Shader.new();sh.code="shader_type canvas_item; void fragment(){ float l=smoothstep(0.95,0.25,UV.x); float b=smoothstep(0.35,1.0,UV.y); COLOR=vec4(0.015,0.012,0.02,clamp(l*0.9+b*0.55,0.0,0.95)); }"
- var m=ShaderMaterial.new();m.shader=sh;shade.material=m
- DungeonUI.vignette(card,Rect2(3,3,rect.size.x-6,rect.size.y-6),Color(info.fog).darkened(0.7),0.6)
- var x=44.0
- DungeonUI.caption(game,card,"Featured  ·  Dungeon mode" if saved==null else "Your descent continues",Vector2(x,34),Color("ffcf8a"))
- var hd=DungeonUI.heading(game,card,"Into the Dungeon" if saved==null else str(saved.state.name),Vector2(x,58),46,Color("fff0d0"),620);FlowUI.fit_label(hd,620,46,24)
- var line="Ten cursed zones, each with its own monsters and a Warden. Draft champions as you go, collect relics, awaken run-trait synergies, and chase a high score in the endless depths."
- if saved!=null:
-  var d=saved.state.dungeon
-  line="%s  ·  %s  ·  %d of %d lives  ·  %d points so far"%[str(Dungeon.depth(saved).name),Dungeon.stage_label(saved),int(d.lives),int(d.max_lives),int(d.score)]
- var body=DungeonUI.text(game,card,line,Vector2(x,126),18,Color("e9dcc2"),560);body.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
- # Small facts, as chips.
- var chips=HBoxContainer.new();card.add_child(chips);chips.position=Vector2(x,226);chips.add_theme_constant_override("separation",8);chips.mouse_filter=Control.MOUSE_FILTER_IGNORE
- var best=Dungeon.scores()
- var facts=["10 zones","10 Wardens","26 relics","Endless depths"]
- if not best.is_empty():facts.append("Best  %d"%int(best[0].score))
- for f in facts:
-  var chip=PanelContainer.new();chips.add_child(chip);chip.mouse_filter=Control.MOUSE_FILTER_IGNORE
-  var sb=DungeonUI.skin(Color(accent,0.7),Color(0.05,0.04,0.06,0.85),12,false,1);sb.content_margin_left=12;sb.content_margin_right=12;sb.content_margin_top=3;sb.content_margin_bottom=4;chip.add_theme_stylebox_override("panel",sb)
-  var l=game.label(chip,f,14,Color("f1e6cc"),false);l.mouse_filter=Control.MOUSE_FILTER_IGNORE
- var row=HBoxContainer.new();card.add_child(row);row.position=Vector2(x,292);row.add_theme_constant_override("separation",16)
- if saved!=null:
-  var go=FlowUI.cta(game,row,"Continue descent  ▶",func():game.load_campaign(slot),false,360);go.name="DungeonMenuButton"
-  var fresh=game.button(row,"New descent",func():game.sound.announce("found_guild",true);game.new_mode="dungeon";game.phase="new";game.render());fresh.custom_minimum_size=Vector2(200,58);fresh.name="NewDungeonButton"
+## One landing button, centred, with its saved runs as small chips just after it.
+static func mode_row(game: Node, col: Control, text: String, action: Callable, saves: Array, node_name: String, hero: bool) -> void:
+ var row=HBoxContainer.new();row.alignment=BoxContainer.ALIGNMENT_CENTER;row.add_theme_constant_override("separation",12);col.add_child(row)
+ var b: Button
+ if hero:
+  b=HudKit.menu_item(row,game,text,action,64,true,true);b.custom_minimum_size=Vector2(520,104)
  else:
-  var go=FlowUI.cta(game,row,"Enter the dungeon  ▶",func():game.sound.announce("found_guild",true);game.new_mode="dungeon";game.phase="new";game.render(),false,380);go.name="DungeonMenuButton"
-  go.tooltip_text="A branching descent in the spirit of The Last Flame and Guildrun\nChoose rooms, collect relics, build run-trait synergies, defeat three Wardens, then chase a high score in the endless depths."
- # Warden portrait on the right, glowing.
- var boss=Bestiary.BOSSES.get(str(info.boss),{})
- if not boss.is_empty():
-  var face=DungeonUI.portrait(card,str(boss.sp),Rect2(rect.size.x-250,60,190,190),Color(boss.glow),Color(boss.tint).lerp(Color.WHITE,0.45))
-  face.tooltip_text="%s\n%s"%[boss.name,boss.text]
-  var cap=DungeonUI.caption(game,card,str(boss.name),Vector2(rect.size.x-300,262),Color("ffb3a8"),290,HORIZONTAL_ALIGNMENT_CENTER)
- # The card breathes gently, so the eye lands on it first.
- card.pivot_offset=rect.size*0.5;card.modulate.a=0.0;card.position.y+=12
- var tw=card.create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
- tw.tween_property(card,"modulate:a",1.0,0.5);tw.tween_property(card,"position:y",rect.position.y,0.6)
+  b=HudKit.menu_item(row,game,text,action,27,false,false);b.custom_minimum_size=Vector2(420,56)
+ b.name=node_name
+ for s in saves.slice(0,3):
+  var c: Campaign=s.c;var slot=int(s.slot)
+  var short=("Depth %d"%int(c.state.dungeon.act)) if Dungeon.active(c) else ("Cup %d"%int(c.state.get("tour",{}).get("level",1)))
+  if c.state.get("run_over",false) or c.state.get("tour",{}).get("complete",false):short="Ended"
+  var chip=HudKit.menu_item(row,game,short,func():game.load_campaign(slot),17);chip.custom_minimum_size=Vector2(104,40)
+  chip.name="Save%d"%slot;chip.tooltip_text="Continue  ·  %s\nSave slot %d"%[str(c.state.name),slot]
+  chip.size_flags_vertical=Control.SIZE_SHRINK_CENTER
+ if not saves.is_empty():
+  # Keep the main button centred: a matching spacer on the left.
+  var pad=Control.new();pad.custom_minimum_size.x=mini(saves.size(),3)*116;row.add_child(pad);row.move_child(pad,0)
+
+## Statistics & achievements: Atlas, high scores, achievements, and the labs.
+static func stats_menu(game: Node) -> void:
+ var dlg=GearUI.modal(game,"Statistics & achievements",Vector2(760,520))
+ var grid=GridContainer.new();grid.columns=2;grid.add_theme_constant_override("h_separation",16);grid.add_theme_constant_override("v_separation",16);dlg.box.add_child(grid)
+ for e in [["Atlas",func():AtlasUI.open(game)],["High scores",func():DungeonUI.high_scores(game)],["Achievements",func():achievements(game)],["Speedrun lab",game.start_speedrun],["Exhibition",game.start_exhibition],["Saved runs",func():save_picker(game)]]:
+  var b=game.button(grid,e[0],e[1]);b.custom_minimum_size=Vector2(340,64);b.add_theme_font_size_override("font_size",20)
+  b.name=e[0].replace(" ","")+"Button"
+ if FileAccess.file_exists("user://speedrun_draft.json"):
+  var r=game.button(dlg.box,"Resume speedrun draft",game.resume_speedrun);r.custom_minimum_size=Vector2(696,48)
+
+## Achievements, read from your high scores, the Ascension ladder and the trophy vault.
+static func achievement_list() -> Array:
+ var scores=Dungeon.scores();var best=0;var wardens=0;var deepest=0;var endless=false;var runs=scores.size()
+ for r in scores:
+  best=maxi(best,int(r.score));wardens=maxi(wardens,int(r.wardens));deepest=maxi(deepest,int(r.depth));endless=endless or bool(r.get("endless",false))
+ var asc=DungeonAscension.unlocked()
+ TrophyVault.read_profile();var trophies=TrophyVault.data.get("claims",{}).size()
+ return [
+  ["First descent","Bank a dungeon run.",runs>=1],
+  ["Warden slayer","Defeat a Warden.",wardens>=1],
+  ["Dungeon conquered","Defeat all three Wardens in one run.",wardens>=3],
+  ["Into the endless","Reach depth 4.",deepest>=4 or endless],
+  ["Abyss walker","Reach depth 6.",deepest>=6],
+  ["Ascendant","Unlock Ascension 1.",asc>=1],
+  ["Hungry for more","Unlock Ascension 4.",asc>=4],
+  ["The Last Light","Unlock Ascension 8.",asc>=8],
+  ["High scorer","Bank a run worth 5,000 points.",best>=5000],
+  ["Trophy hunter","Claim a tournament medal chest.",trophies>=1],
+ ]
+
+static func achievements(game: Node) -> void:
+ var list=achievement_list();var got=list.filter(func(a):return a[2]).size()
+ var dlg=GearUI.modal(game,"Achievements  ·  %d / %d"%[got,list.size()],Vector2(760,640))
+ var scroll=ScrollContainer.new();scroll.custom_minimum_size=Vector2(700,540);scroll.horizontal_scroll_mode=ScrollContainer.SCROLL_MODE_DISABLED;dlg.box.add_child(scroll)
+ var box=VBoxContainer.new();box.size_flags_horizontal=Control.SIZE_EXPAND_FILL;box.add_theme_constant_override("separation",8);scroll.add_child(box)
+ for a in list:
+  var row=HBoxContainer.new();box.add_child(row);row.add_theme_constant_override("separation",14)
+  var mark=game.label(row,"◆" if a[2] else "◇",24,Color("e3c589") if a[2] else Color(1,1,1,0.3),false);mark.custom_minimum_size.x=30
+  var words=VBoxContainer.new();words.add_theme_constant_override("separation",0);row.add_child(words)
+  game.label(words,a[0],19,Color("f1e6cc") if a[2] else Color(1,1,1,0.5),false)
+  game.label(words,a[1],14,Color("a99f8e"),false)
 
 static func save_picker(game: Node) -> void:
  var dialog=GearUI.modal(game,"Your campaigns")
@@ -90,8 +94,7 @@ static func save_picker(game: Node) -> void:
 static func header(game: Node) -> void:
  if game.phase in ["menu","new"]:
   var row=HBoxContainer.new();game.ui.add_child(row);row.add_theme_constant_override("separation",8)
-  AtlasUI.medallions(game,row,48)
-  HudKit.medallion(row,game,"music","","Music on/off",game.toggle_music,false,48).muted=not game.sound.music_enabled
+  var mm=HudKit.medallion(row,game,"music","","Music on/off",game.toggle_music,false,48);mm.muted=not game.sound.music_enabled;mm.name="MusicMedallion"
   HudKit.medallion(row,game,"gear","","Settings: music, effects and announcer volume",func():FlowUI.settings(game),false,48)
   HudKit.medallion(row,game,"close","","Exit the game",game.close_game,false,48)
   row.position=Vector2(1600-row.get_child_count()*56-14,24)
