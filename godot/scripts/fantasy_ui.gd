@@ -19,7 +19,7 @@ static func menu(game: Node) -> void:
  var hs=game.button(game.ui,"Dungeon high scores",func():DungeonUI.high_scores(game));hs.position=Vector2(180,767);hs.size=Vector2(380,46);hs.name="DungeonScoresButton"
  if FileAccess.file_exists("user://speedrun_draft.json"):
   var resume=game.button(game.ui,"Resume speedrun draft",game.resume_speedrun);resume.position=Vector2(1040,823);resume.size=Vector2(380,40)
- var version=game.label(game.ui,"Windows edition 0.73 · Speedrun Stat Check",14,Color("eee3cf"),false);version.position=Vector2(30,861)
+ var version=game.label(game.ui,"Windows edition 0.74 · Dungeon",14,Color("eee3cf"),false);version.position=Vector2(30,861)
 
 static func save_picker(game: Node) -> void:
  var dialog=GearUI.modal(game,"Your campaigns")
