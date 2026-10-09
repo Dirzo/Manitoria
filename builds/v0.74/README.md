@@ -1,4 +1,4 @@
-# Manitoria 0.73 · Speedrun Stat Check (Windows build)
+# Manitoria 0.74 · Dungeon (Windows build)
 
 GitHub limits single files to 100 MB, so the game is split into parts.
 
