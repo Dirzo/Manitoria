@@ -3,7 +3,11 @@ extends Node
 
 const SPECIES_FAMILY = {"minotaur":"beast", "golem":"stone", "troll":"stone", "wendigo":"shadow", "direwolf":"beast", "manticore":"venom", "griffin":"wing", "kitsune":"spirit", "wyvern":"venom", "harpy":"wing", "phoenix":"fire", "kirin":"lightning", "basilisk":"venom", "treant":"nature", "naga":"water", "unicorn":"holy", "cerberus":"beast", "nemean":"beast", "yeti":"ice", "zaratan":"shield", "owlbear":"claw", "hydra":"nature", "chimera":"fire", "gargoyle":"stone", "nekomata":"shadow", "jackalope":"nature", "cyclops":"quake", "thunderbird":"lightning", "sphinx":"spirit", "pegasus":"wing", "arachne":"venom", "salamander":"fire"}
 const EFFECT_FAMILY = {"gore":"beast", "bulwark":"shield", "smash":"stone", "hunger":"shadow", "howl":"beast", "venom":"venom", "skystrike":"wing", "foxfire":"spirit", "acid":"venom", "shriek":"wing", "flamewave":"fire", "chain":"lightning", "gaze":"venom", "rootbloom":"nature", "tidal":"water", "radiance":"holy", "triplebite":"claw", "prideroar":"beast", "frostroar":"ice", "shellup":"shield", "maul":"claw", "regrowth":"nature", "threefold":"fire", "stonedive":"stone", "vanish":"shadow", "antlerrush":"nature", "boulder":"quake", "stormcall":"lightning", "riddle":"spirit", "tailwind":"wing", "brood":"venom", "magma":"fire", "quake":"quake", "ward":"shield", "meteor":"quake", "renew":"heal", "drain":"shadow", "fear":"shadow", "ambush":"claw", "toxic":"venom", "execute":"metal", "gust":"wing", "wisps":"spirit", "barrage":"bow", "silence":"shadow", "beam":"holy", "storm":"lightning", "frost":"ice", "roots":"nature", "fire":"fire", "whirl":"metal", "fissure":"stone", "rally":"holy", "rebirth":"fire"}
-const MUSIC_GAIN = {"club": -2.0, "preparation": -1.0, "arena": -4.0, "battle": -3.0, "shop": -1.0}
+const MUSIC_GAIN = {"club": -2.0, "preparation": -1.0, "arena": -4.0, "battle": -3.0, "shop": -1.0, "intro": -3.5, "zone": -3.0}
+## Title theme and one song per dungeon zone (files normalised to -16 LUFS). A zone's song plays
+## through its map, formation, fights and results; the outfitter keeps the shop playlist.
+const TITLE_TRACK := "intro"
+const ZONE_TRACKS := ["blight_forest", "mana_caverns", "magma_depths", "frostbound_crypt", "drowned_sanctum", "fungal_hollows", "ossuary_of_kings", "storm_spire", "gilded_tomb", "void_rift"]
 ## "Unleash War Spirits": three battle tracks, each an opening that falls into a seamless loop
 ## (seconds into the file where the loop restarts).
 const BATTLE_TRACKS := {"battle_1": 28.55, "battle_2": 35.96, "battle_3": 0.0}
@@ -53,6 +57,10 @@ func _ready() -> void:
   var bp = "res://assets/audio/music/" + track + ".ogg"
   if ResourceLoader.exists(bp):
    var bs = load(bp).duplicate(); bs.loop = true; bs.loop_offset = BATTLE_TRACKS[track]; music_cache[track] = bs
+ for track in [TITLE_TRACK] + ZONE_TRACKS.map(func(z): return "zone_" + z):
+  var zp = "res://assets/audio/music/" + track + ".ogg"
+  if ResourceLoader.exists(zp):
+   var zs = load(zp).duplicate(); zs.loop = true; music_cache[track] = zs
  for track in SHOP_TRACKS:
   var sp = "res://assets/audio/music/" + track + ".ogg"
   if ResourceLoader.exists(sp):
@@ -102,7 +110,7 @@ func resolve_track(which: String) -> String:
  return which
 
 func gain_for(track: String) -> float:
- return MUSIC_GAIN.get("battle" if track.begins_with("battle_") else "shop" if track.begins_with("shop_") else track, 0.0)
+ return MUSIC_GAIN.get("battle" if track.begins_with("battle_") else "shop" if track.begins_with("shop_") else "zone" if track.begins_with("zone_") else track, 0.0)
 
 func scene_music(which: String) -> void:
  which = resolve_track(which)

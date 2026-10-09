@@ -121,6 +121,14 @@ Clearing all three Wardens unlocks the next Ascension rank. Progress is saved to
 
 The rank appears in the Dungeon header, the run summary and the high-score table. A clear that unlocks a new rank says so on the endless and run-complete screens.
 
+## Music
+
+- **Title theme:** "manitoria intro" plays on the main menu and the new-run screen.
+- **Zone songs:** each of the ten zones has its own song. It plays across that zone's map, formation screen, fights and results, so the music carries straight from the map into battle.
+- **Outfitter:** keeps the shopkeeper playlist.
+- **Fallbacks:** the path-choice screen between zones, and all other modes, keep their usual music.
+- **Files:** `godot/assets/audio/music/intro.ogg` and `zone_<zone id>.ogg`, for example `zone_void_rift.ogg`. They were converted from the original MP3s, levelled to −16 LUFS with leading and trailing silence trimmed, and set to loop.
+
 ## Lives
 
 Keeper starts with 4 lives, Standard with 3 and Champion with 2.

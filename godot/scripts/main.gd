@@ -429,10 +429,19 @@ func initials(name_value: String) -> String:
  for w in words.slice(0, 3): text_value += w[0].to_upper()
  return text_value if not text_value.is_empty() else "M"
 
-## Shop music also plays through the break between cups.
+## Shop music also plays through the break between cups. The title screens play the intro theme,
+## and inside a dungeon zone its own song plays everywhere but the outfitter.
 func music_now() -> String:
+ if phase in ["menu", "new"]: return SoundDesign.TITLE_TRACK
+ var zone = zone_music()
+ if zone != "" and phase != "shop": return zone
  if phase == "hub" and not campaign.state.is_empty() and campaign.state.get("tour", {}).get("intermission", false): return "shop"
  return SoundDesign.music_for_phase(phase)
+
+func zone_music() -> String:
+ if exhibition or campaign == null or campaign.state.is_empty() or not Dungeon.active(campaign): return ""
+ var id = str(campaign.state.dungeon.get("instance", ""))
+ return ("zone_" + id) if id != "" and sound.music_cache.has("zone_" + id) else ""
 
 func render() -> void:
  if phase != last_rendered_phase:
@@ -691,7 +700,7 @@ func load_campaign(slot: int) -> void:
  phase = "upgrade" if not campaign.pending_heroes().is_empty() else "shop" if campaign.state.get("tour",{}).get("shop",false) else "hub"
  if campaign.state.roster.is_empty() and campaign.state.has("tour"):phase="starter"
  if campaign.state.get("run_over", false): phase = "runover"
- tab = "overview"; render(); sound.scene_music("club")
+ tab = "overview"; render(); sound.scene_music(music_now())
 
 func controls_hint() -> void:
  var l = label(ui, "RIGHT DRAG TO ORBIT    ·    SCROLL TO ZOOM    ·    F11 FULLSCREEN", 13, Color("c1cfcc"))
@@ -827,7 +836,7 @@ func begin_battle() -> void:
   sim.setup(campaign.lineup(), exhibition_rivals if exhibition else campaign.opponent().roster, campaign.match_seed(), 1.0 if exhibition else campaign.quality())
   sound.announce("battle", true)
   countdown = COUNTDOWN; countdown_shown = -1; arena.target_yaw = 0.55; arena.camera_yaw = 0.55; arena.target_distance += 6.0
-  arena.sync(sim, 1.0); render(); sound.scene_music("arena"); pass # Music supplies the arena entrance; avoid a competing pitched stinger.
+  arena.sync(sim, 1.0); render(); sound.scene_music(zone_music() if zone_music() != "" else "arena"); pass # Music supplies the arena entrance; avoid a competing pitched stinger.
  else: toast(campaign.last_error)
 
 func update_countdown() -> void:
@@ -945,7 +954,7 @@ func poll_resolve(dt: float) -> void:
  show_result()
 
 func show_result() -> void:
- phase = "result"; sound.scene_music("club"); sound.cue("victory" if sim.winner == 0 else "honor", true)
+ phase = "result"; sound.scene_music(music_now()); sound.cue("victory" if sim.winner == 0 else "honor", true)
  render()
  FlowUI.banner(self, "VICTORY" if sim.winner == 0 else "DRAW" if sim.winner == -1 else "DEFEAT", Color("ffd36e") if sim.winner == 0 else Color("ff8a7a"))
 
@@ -1132,7 +1141,7 @@ func quit_to_menu() -> void:
   exhibition = false; campaign = Campaign.new(); phase = "menu"; paused = false; render(); return
  if not campaign.save(): toast(campaign.last_error); return
  var was_battle = phase == "battle"
- phase = "menu"; paused = false; sound.scene_music("club"); render()
+ phase = "menu"; paused = false; sound.scene_music(music_now()); render()
  if was_battle: toast("Campaign saved. The unfinished bout restarts from preparation.")
 
 func toast(text_value: String) -> void:
