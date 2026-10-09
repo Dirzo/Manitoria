@@ -20,7 +20,8 @@ func build() -> void:
  for item in [["overview", "Overview"], ["matches", "Matches"], ["roster", "Roster"], ["club", "Club"], ["market", "Market"], ["intel", "Intel"]]:
   if state.get("speedrun_lab",false) and item[0] not in ["market","roster"]:continue
   if item[0]=="market" and not campaign.recruitment_open():continue
-  var b = action(nav, ("World Tour" if item[0]=="overview" else "Journal" if item[0]=="matches" else "League" if item[0]=="intel" else item[1]) if state.has("tour") else item[1], func(): navigate(item[0]), game.tab == item[0]); b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+  var b = action(nav, (("Dungeon" if Dungeon.active(campaign) else "World Tour") if item[0]=="overview" else "Journal" if item[0]=="matches" else "League" if item[0]=="intel" else item[1]) if state.has("tour") else item[1], func(): navigate(item[0]), game.tab == item[0]); b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+  if Dungeon.active(campaign): DungeonUI.restyle(game, b, false, game.tab == item[0])
  var scroll = ScrollContainer.new(); add_child(scroll); scroll.position = Vector2(26, 184); scroll.size = Vector2(1548, 618)
  scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
  body = VBoxContainer.new(); body.size_flags_horizontal = Control.SIZE_EXPAND_FILL; body.add_theme_constant_override("separation", 18); scroll.add_child(body)
@@ -41,17 +42,24 @@ func build() -> void:
  if state.get("tour",{}).get("shop",false): next = "Shop  ▶"
  if state.get("tour",{}).get("intermission",false): next = "Start next cup  ▶"
  if state.get("tour",{}).get("complete",false): next = "Tour complete"
+ if Dungeon.active(campaign) and not state.tour.get("shop",false):
+  var dg = state.dungeon
+  next = "Fight  ▶" if dg.fight else "Choose a champion  ▶" if not dg.get("draft", {}).is_empty() else "Choose your path  ▶" if not dg.get("instance_choices", []).is_empty() else "Bank or go endless  ▶" if dg.get("awaiting_endless", false) else "Descend  ▶" if state.tour.get("intermission",false) else "Dungeon conquered" if state.tour.get("complete",false) else "Choose a room  ▶"
  if not campaign.pending_heroes().is_empty(): next = "Level ups  ▶"
  elif not state.has("tour") and state.round >= 17: next = "Next season  ▶"
- if state.roster.size() < Campaign.MIN_SQUAD and game.tab != "market":
+ var short = state.roster.size() < Campaign.MIN_SQUAD and not Dungeon.active(campaign)
+ if short and game.tab != "market":
   # Point at the draft board rather than a match the player can't play yet.
   FlowUI.cta(game, row, next, func(): navigate("market"))
   return
- if state.roster.size() < Campaign.MIN_SQUAD: next = "Sign %d more" % (Campaign.MIN_SQUAD - state.roster.size())
- FlowUI.cta(game, row, next, func():
+ if short: next = "Sign %d more" % (Campaign.MIN_SQUAD - state.roster.size())
+ var dock_cta = FlowUI.cta(game, row, next, func():
   if not state.has("tour") and state.round >= 17 and campaign.pending_heroes().is_empty(): campaign.new_season(); game.render()
+  elif Dungeon.active(campaign) and not state.tour.get("shop",false) and campaign.pending_heroes().is_empty() and campaign.lineup_ready() and not state.dungeon.fight:
+   navigate("overview")   # the path overlay ends the break when an instance is chosen
   elif state.get("tour",{}).get("shop",false) or not campaign.pending_heroes().is_empty() or not campaign.lineup_ready(): game.prepare_match()
-  else: game.introduce_match(), state.roster.size() < Campaign.MIN_SQUAD or state.get("tour",{}).get("complete",false))
+  else: game.introduce_match(), short or state.get("tour",{}).get("complete",false))
+ if Dungeon.active(campaign): DungeonUI.restyle(game, dock_cta, true)
 
 func navigate(tab: String) -> void:
  game.tab = tab; game.render()
@@ -576,6 +584,7 @@ func armory() -> void:
  action(intro, "Recipe book", func(): GearUI.recipe_book(game), true)
 
 func tour_overview() -> void:
+ if Dungeon.active(campaign): DungeonUI.overview(self); return
  HeadlinerUI.overview(self)
 
 func tour_history() -> void:

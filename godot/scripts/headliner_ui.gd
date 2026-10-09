@@ -33,6 +33,7 @@ static func starter(game: Node) -> void:
   DraftBoard.grid(game,left,legends,opts,4,200,166)
  var detail=game.panel(Rect2(1016,128,558,652));game.label(detail,hero.name+"  ·  "+HeroData.species[chosen].n,28,game.GOLD)
  game.label(detail,"%s  ·  %s"%[HeroData.species[chosen].role.to_upper(),League.NICHE.get(chosen,"")],15,Color(League.TIER_COLOR.Legendary))
+ if Dungeon.active(game.campaign):game.label(detail,"RUN TRAITS · "+RunTraits.tag_text(game.campaign,chosen).to_upper(),14,Color("9fd8ff")).tooltip_text="\n\n".join(RunTraits.of(game.campaign,chosen).map(func(t):return DungeonUI.trait_tooltip(t)))
  SplashArt.make(detail,chosen,Vector2(0,150),true)
  TraitUI.line(game,detail,hero,true)
  # Stat hexagon beside a short guide: where this champion excels, and what each stat does (hover).
@@ -47,7 +48,9 @@ static func starter(game: Node) -> void:
  ChampionKit.build(game,detail,hero,110)
  var pick=FlowUI.cta(game,game.ui,"Sign  ·  %d gold  ▶"%League.cost(chosen),func():
   if game.campaign.choose_starter(chosen):
-   game.selected_id=game.campaign.state.selected;game.sound.cue("contest_lock");game.phase="hub";game.tab="market";game.render();FlowUI.banner(game,"DRAFT YOUR SQUAD",Color("ffd36e"))
+   game.selected_id=game.campaign.state.selected;game.sound.cue("contest_lock");game.phase="hub"
+   if Dungeon.active(game.campaign):game.tab="overview";game.render();FlowUI.banner(game,"CHOOSE A PARTNER",Color("ffd36e"))
+   else:game.tab="market";game.render();FlowUI.banner(game,"DRAFT YOUR SQUAD",Color("ffd36e"))
   else:game.toast(game.campaign.last_error if not game.campaign.last_error.is_empty() else "Could not sign this champion."))
  pick.position=Vector2(1016,798);pick.size=Vector2(558,66)
 

@@ -6,15 +6,17 @@ static func menu(game: Node) -> void:
  var latest=0;var modified=0
  for slot in range(1,4):
   if FileAccess.file_exists(Campaign.save_path(slot)) and FileAccess.get_modified_time(Campaign.save_path(slot))>modified:latest=slot;modified=FileAccess.get_modified_time(Campaign.save_path(slot))
- var entries=[["Continue","victory",Color("69dba8"),func():game.load_campaign(latest)],["New club","summons",Color("cdb0ff"),func():game.sound.announce("found_guild",true);game.phase="new";game.render()],["Exhibition","gore",Color("ffbd77"),game.start_exhibition]]
- for i in range(3):
-  var entry=entries[i];var frame=FantasyFrame.new();game.ui.add_child(frame);frame.position=Vector2(358+i*302,405);frame.size=Vector2(280,332);frame.accent=entry[2]
+ var entries=[["Continue","victory",Color("69dba8"),func():game.load_campaign(latest)],["New club","summons",Color("cdb0ff"),func():game.sound.announce("found_guild",true);game.new_mode="guild";game.phase="new";game.render()],["Dungeon","flamewave",Color("ff9a5c"),func():game.sound.announce("found_guild",true);game.new_mode="dungeon";game.phase="new";game.render()],["Exhibition","gore",Color("ffbd77"),game.start_exhibition]]
+ for i in range(entries.size()):
+  var entry=entries[i];var frame=FantasyFrame.new();game.ui.add_child(frame);frame.position=Vector2(207+i*302,405);frame.size=Vector2(280,332);frame.accent=entry[2]
   frame.add_theme_stylebox_override("panel",game.style(Color(.055,.10,.12,.9),entry[2],12,16,0))
   var box=VBoxContainer.new();frame.add_child(box);AbilityArt.icon(box,entry[1],196)
   var button=game.button(box,entry[0],entry[3],true,i==0 and latest==0);button.custom_minimum_size.y=62;button.add_theme_font_size_override("font_size",23)
+  if entry[0]=="Dungeon":frame.tooltip_text="A branching descent in the spirit of The Last Flame and Guildrun: choose rooms, collect relics, build run-trait synergies, defeat three Wardens, then chase a high score in the endless depths.";button.name="DungeonMenuButton"
   frame.mouse_entered.connect(func():frame.modulate=Color(1.13,1.13,1.13));frame.mouse_exited.connect(func():frame.modulate=Color.WHITE)
  var lab=game.button(game.ui,"Speedrun stat check",game.start_speedrun,true);lab.position=Vector2(1040,767);lab.size=Vector2(380,46);lab.name="SpeedrunMenuButton"
  var saves=game.button(game.ui,"Saved campaigns",func():save_picker(game));saves.position=Vector2(620,767);saves.size=Vector2(360,46)
+ var hs=game.button(game.ui,"Dungeon high scores",func():DungeonUI.high_scores(game));hs.position=Vector2(180,767);hs.size=Vector2(380,46);hs.name="DungeonScoresButton"
  if FileAccess.file_exists("user://speedrun_draft.json"):
   var resume=game.button(game.ui,"Resume speedrun draft",game.resume_speedrun);resume.position=Vector2(1040,823);resume.size=Vector2(380,40)
  var version=game.label(game.ui,"Windows edition 0.73 · Speedrun Stat Check",14,Color("eee3cf"),false);version.position=Vector2(30,861)
@@ -23,16 +25,15 @@ static func save_picker(game: Node) -> void:
  var dialog=GearUI.modal(game,"Your campaigns")
  for slot in range(1,4):
   var saved=Campaign.new()
-  if saved.load_slot(slot):game.button(dialog.box,"%d · %s · Cup %d%s"%[slot,saved.state.name,saved.state.get("tour",{}).get("level",1)," · Fallen" if saved.state.get("run_over",false) else ""],func():game.load_campaign(slot),true)
+  if saved.load_slot(slot):game.button(dialog.box,"%d · %s · %s%s"%[slot,saved.state.name,"Dungeon depth %d"%int(saved.state.dungeon.act) if Dungeon.active(saved) else "Cup %d"%int(saved.state.get("tour",{}).get("level",1))," · Fallen" if saved.state.get("run_over",false) else ""],func():game.load_campaign(slot),true)
   else:game.label(dialog.box,"Slot %d · Empty"%slot,19,game.MUTED)
 
 static func header(game: Node) -> void:
  if game.phase in ["menu","new"]:
-  var row=HBoxContainer.new();game.ui.add_child(row);row.position=Vector2(1452,28)
-  row.position=Vector2(1390,28)
-  game.button(row,"♪",game.toggle_music).tooltip_text="Music on/off"
-  game.button(row,"⚙",func():FlowUI.settings(game)).tooltip_text="Settings: music, effects and announcer volume"
-  game.button(row,"Exit",game.close_game)
+  var row=HBoxContainer.new();game.ui.add_child(row);row.position=Vector2(1600-3*48-2*8-22,24);row.add_theme_constant_override("separation",8)
+  HudKit.medallion(row,game,"music","","Music on/off",game.toggle_music,false,48).muted=not game.sound.music_enabled
+  HudKit.medallion(row,game,"gear","","Settings: music, effects and announcer volume",func():FlowUI.settings(game),false,48)
+  HudKit.medallion(row,game,"close","","Exit the game",game.close_game,false,48)
   return
  location_banner(game)
 
@@ -69,6 +70,10 @@ void fragment(){
  if game.phase=="new":kicker="THE FOUNDING CHARTER";place="Manitoria";stage="Name your club and claim a headliner"
  elif game.phase=="starter":kicker="";place="Draft your headliner champion";stage="Your headliner leads the guild. Next you draft the rest of your squad."
  elif game.exhibition:kicker="EXHIBITION";place="The Living Arena";stage="Champion showcase"
+ elif touring and Dungeon.active(c):
+  kicker="THE DUNGEON  ·  "+str(Dungeon.depth(c).depth_label).to_upper()
+  place=str(Dungeon.depth(c).name)
+  stage=Dungeon.stage_label(c)
  elif touring:
   var t=c.state.tour
   kicker="%s  ·  CUP %d OF %d"%[str(r.name).to_upper(),WorldTour.shown_level(c),WorldTour.cup_limit(c)]
@@ -86,16 +91,15 @@ void fragment(){
  if int(c.state.get("challenge_rank",0))>0:st.text+=" · ASCENSION %d"%int(c.state.challenge_rank)
  st.add_theme_color_override("font_outline_color",Color(0,0,0,.85));st.add_theme_constant_override("outline_size",4)
  # Right: the road and controls
- if touring and game.phase!="starter":
+ if touring and game.phase!="starter" and not Dungeon.active(c):
   var road=TourPath.new();road.level=WorldTour.shown_level(c);game.ui.add_child(road);road.position=Vector2(1112,40);road.size=Vector2(312,62)
   var cap=game.label(game.ui,"WORLD TOUR",11,Color(1,1,1,.6),false);cap.position=Vector2(1112,12);cap.size=Vector2(290,18);cap.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
- var tools=VBoxContainer.new();game.ui.add_child(tools);tools.position=Vector2(1446,14);tools.add_theme_constant_override("separation",6)
- var row=HBoxContainer.new();row.add_theme_constant_override("separation",6);tools.add_child(row)
- var mb=game.button(row,"♪",game.toggle_music);mb.tooltip_text="Music: "+("on" if game.sound.music_enabled else "off");mb.custom_minimum_size=Vector2(56,40)
- var fb=game.button(row,"FX",game.toggle_effects);fb.tooltip_text="Sound effects: "+("on" if game.sound.effects_enabled else "off");fb.custom_minimum_size=Vector2(56,40)
- var row2=HBoxContainer.new();row2.add_theme_constant_override("separation",6);tools.add_child(row2)
- var sb=game.button(row2,"⚙",func():FlowUI.settings(game));sb.tooltip_text="Settings: music, effects and announcer volume";sb.custom_minimum_size=Vector2(44,40)
- var menu_button=game.button(row2,"Menu",game.quit_to_menu if game.phase!="new" else func():game.phase="menu";game.render());menu_button.custom_minimum_size=Vector2(68,40)
+ # Controls: four small medallions, no boxes.
+ var row=HBoxContainer.new();game.ui.add_child(row);row.position=Vector2(1600-4*46-3*6-18,18);row.add_theme_constant_override("separation",6)
+ HudKit.medallion(row,game,"music","","Music: "+("on" if game.sound.music_enabled else "off"),game.toggle_music,false,46).muted=not game.sound.music_enabled
+ HudKit.medallion(row,game,"sound","","Sound effects: "+("on" if game.sound.effects_enabled else "off"),game.toggle_effects,false,46).muted=not game.sound.effects_enabled
+ HudKit.medallion(row,game,"gear","","Settings: music, effects and announcer volume",func():FlowUI.settings(game),false,46)
+ HudKit.medallion(row,game,"menu","","Main menu",game.quit_to_menu if game.phase!="new" else func():game.phase="menu";game.render(),false,46)
 
 static func _stage_text(c: Campaign) -> String:
  var t=c.state.tour

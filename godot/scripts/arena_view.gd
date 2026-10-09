@@ -231,7 +231,7 @@ func build_hex_floor() -> void:
  # A six-sided cylinder is a flat-top regular hexagon. A narrow gap exposes the
  # darker stone beneath, making the grid readable without bright combat overlays.
  var shape = CylinderMesh.new()
- shape.top_radius = ArenaGrid.HEX_RADIUS * FLOOR_SCALE * 0.975
+ shape.top_radius = ArenaGrid.HEX_RADIUS * FLOOR_SCALE * 0.985
  shape.bottom_radius = shape.top_radius
  shape.height = 0.06; shape.radial_segments = 6
  var pavers = MultiMesh.new(); pavers.transform_format = MultiMesh.TRANSFORM_3D
@@ -240,7 +240,7 @@ func build_hex_floor() -> void:
  var rng = RandomNumberGenerator.new(); rng.seed = 1017
  for i in range(points.size()):
   pavers.set_instance_transform(i, Transform3D(Basis(Vector3.UP, PI / 6.0), world_point(points[i], 0.035)))
-  var shade = rng.randf_range(0.65, 0.93)
+  var shade = rng.randf_range(0.80, 0.88)   # gentle variation: the grid should read, not shout
   pavers.set_instance_color(i, Color(shade * 0.86, shade * 0.97, shade))
  var mat = material(Color("435b60"), 0.12, 0.87); mat.vertex_color_use_as_albedo = true
  var tiles = MultiMeshInstance3D.new(); tiles.name = "HexFloor"; tiles.multimesh = pavers; tiles.material_override = mat
@@ -374,6 +374,7 @@ func spawn(u: Dictionary) -> void:
  # Every mesh shares one overlay so the whole body flashes when struck or casting.
  var flash_mat = ShaderMaterial.new(); flash_mat.shader = HITFLASH
  for mi in model.find_children("*", "MeshInstance3D", true, false): mi.material_overlay = flash_mat
+ if u.hero.has("monster"): Bestiary.dress(model, flash_mat, u.hero, u.summon)
  models[u.uid] = {"root": holder, "motion":motion, "stride":0.0, "recoil":Vector3.ZERO, "aura": aura, "model": model, "player": player, "bar": bar, "bars": bars, "ring": circle, "state": "idle", "lock": 0.0, "dead": false, "hp_label": hp_label, "cast_bar": cast_bar, "bubble": bubble, "shield_bar":shield_bar, "stagger": 0.0, "death_elapsed": 0.0, "arc": {}, "last_target": world_point(u.pos), "ground_speed": 0.0, "walk_hold": 0.0, "turn_rate": 0.0, "name_label": name_label, "tempo": randf_range(0.92, 1.08), "flash": flash_mat, "flash_amt": 0.0, "born": 0.0 if (u.summon or (sim_ref != null and sim_ref.time > 0.5)) else 1.0}
  holder.position = world_point(u.pos)
  model.rotation.y = u.heading
@@ -473,7 +474,9 @@ func play(id: int, clip: String, lock: float = 0.0) -> void:
 func _process(dt: float) -> void:
  elapsed += dt
  if camera: update_camera(dt)
+ var dungeon = has_meta("dungeon_saved")   # dungeon chambers hide the colosseum entirely
  for node in perimeter:
+  if dungeon: node.visible = false; continue
   # Lower camera angles cut away near-side architecture to keep the heroes visible.
   var facing = Vector2(node.position.x, node.position.z).normalized().dot(Vector2(camera.position.x, camera.position.z).normalized())
   node.visible = camera_pitch > 0.69 or facing < 0.30
@@ -857,6 +860,7 @@ func set_region(region: Dictionary) -> void:
  var title=region.get("place","")
  if title==region_name:return
  region_name=title
+ DungeonArena.undress(self)
  if is_instance_valid(world_props):world_props.queue_free()
  world_props=Node3D.new();add_child(world_props)
  world_props.scale=Vector3(FLOOR_SCALE * ArenaGrid.LINEAR_SCALE,1,FLOOR_SCALE * ArenaGrid.LINEAR_SCALE)
@@ -870,6 +874,7 @@ func set_region(region: Dictionary) -> void:
    if not region.is_empty():entry.node.material_override.albedo_color=Color(region.floor)
   for node in world_stage.get_children():
    if node is DirectionalLight3D and node.shadow_enabled:node.light_color=Color(region.get("sky","ffe4c0"))
+ if region.has("dungeon"):DungeonArena.dress(self,region,world_props);return
  if region.is_empty():return
  var tint=Color(region.color);var theme=region.theme
  for side in [-1,1]:

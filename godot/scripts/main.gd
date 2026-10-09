@@ -28,6 +28,7 @@ var countdown_label: Label
 var legend_left = 0.0 # Legendary moment: brief slow-motion while a legendary skill lands
 var legend_total = 1.0
 var tactical = false # Tactical view: 0.75x with footprints, target lines and status tags
+var hud_stats = true # combat HUD: team damage panels shown (toggled by the stats medallion)
 var accumulator = 0.0
 var match_label: Label
 var toast_label: Label
@@ -40,7 +41,9 @@ var presentation_tween: Tween
 var showcase_index = 0
 var new_slot = 1
 var new_difficulty = "Keeper"
+var new_mode = "guild" # "guild" (World Tour) or "dungeon"
 var new_challenge_rank = 0
+var new_ascension = 0 # dungeon ladder rank for the next dungeon run
 var new_name: LineEdit
 var new_club_draft = "Ravenmoor Menagerie"
 var new_crest: Dictionary = {}
@@ -97,6 +100,62 @@ func _ready() -> void:
     if records is Array and records.any(func(r):return r.complete):speedrun_lab.result=records.filter(func(r):return r.complete)[0]
    phase="speedrun";render()
    print("PACKED SPEEDRUN: ready=",campaign.lineup_ready()," priorities=",speedrun_lab.plan.items.size()," simulate_button=",ui.find_child("SpeedrunSimulate",true,false)!=null," copy_button_removed=",ui.find_child("ShopChampionCopy",true,false)==null)
+  elif qa.begins_with("dungeon"):
+   Dungeon.start(campaign); campaign.state.gold = 420
+   var dg = campaign.state.dungeon
+   # QA_INSTANCE=magma_depths picks the instance; "dungeon_paths" stays on the choice screen.
+   if OS.get_environment("QA_INSTANCE") != "":
+    var other = dg.instance_choices[1] if dg.instance_choices[1] != OS.get_environment("QA_INSTANCE") else dg.instance_choices[0]
+    dg.instance_choices = [OS.get_environment("QA_INSTANCE"), other]
+   if qa != "dungeon_paths": Dungeon.choose_instance(campaign, dg.instance_choices[0])
+   if qa in ["dungeon_trail", "dungeon_fight", "dungeon_loot", "dungeon_event", "dungeon_menu"]:
+    for i in range(3 if qa == "dungeon_trail" else 1):
+     Dungeon.enter(campaign, Dungeon.reachable(campaign)[0])
+     dg.fight = false; dg.loot = []; dg.event = {}; Dungeon.node(campaign).done = true; campaign.state.tour.shop = false
+    if qa == "dungeon_fight":
+     dg.row = int(dg.row) - 1; dg.col = 0; dg.trail.pop_back()
+     Dungeon.enter(campaign, Dungeon.reachable(campaign)[0])
+    if qa == "dungeon_loot": Dungeon.offer_loot(campaign, "relic")
+    if qa == "dungeon_event": dg.event = Dungeon.EVENTS[1].duplicate(true)
+   if qa == "dungeon_draft":
+    while campaign.state.roster.size() > 2: campaign.state.roster.pop_back()
+    for h in campaign.state.roster: h.pending = []; h.rewards = []
+    Dungeon.offer_draft(campaign, "checkpoint", 0)
+   if qa in ["dungeon_intro", "dungeon_result"]:
+    for h in campaign.state.roster: h.pending = []; h.rewards = []
+    Dungeon.enter(campaign, Dungeon.reachable(campaign)[0])
+   if qa == "dungeon_result":
+    var test_sim = BattleSim.new(); test_sim.silent = true
+    test_sim.setup(campaign.lineup(), campaign.opponent().roster, campaign.match_seed(), campaign.quality()); test_sim.run_to_end(); campaign.resolve(test_sim)
+    sim = test_sim
+   if qa in ["dungeon_trail", "dungeon_boss", "dungeon_endless", "dungeon_market"]:
+    dg.relics = ["giants_belt", "vampiric_chalice", "headliner_crown", "trait_emblem:" + str(dg.traits.active[0]), "ember_heart"]
+   if qa == "dungeon_endless":
+    dg.awaiting_endless = true; dg.score = 6120; dg.wardens = 3
+   if qa == "dungeon_boss":
+    for h in campaign.state.roster: h.pending = []; h.rewards = []; h.level = 6
+    dg.row = Dungeon.ROWS - 2; dg.col = 0; dg.trail = [0, 0, 0, 0, 0, 0, 0]; dg.event = {}; dg.loot = []
+    Dungeon.enter(campaign, 0)
+   if qa == "dungeon_scores":
+    for i in range(4):
+     campaign.state.dungeon.final_score = null; campaign.state.dungeon.erase("final_score"); campaign.state.name = ["Ravenmoor Menagerie", "Ashfall Lodge", "The Gilded Paw", "Moonlit Wardens"][i]; dg.score = [6120, 4210, 2890, 950][i]; dg.wardens = [3, 2, 1, 0][i]; dg.act = [4, 3, 2, 1][i]
+     Dungeon.bank_score(campaign, ["Retired", "Fallen", "Fallen", "Fallen"][i])
+   if qa == "dungeon_boss":
+    phase = "prep"; render(); begin_battle()
+   elif qa == "dungeon_stage":
+    for h in campaign.state.roster: h.pending = []; h.rewards = []
+    Dungeon.enter(campaign, 0); ArenaView.set_follow(false); phase = "prep"; render(); begin_battle(); paused = true
+    arena.target_distance = 50; arena.camera_distance = 50; arena.target_pitch = 0.72; arena.camera_pitch = 0.72; arena.target_yaw = 0.0; arena.camera_yaw = 0.0
+   elif qa == "dungeon_menu": phase = "menu"
+   elif qa == "dungeon_intro": phase = "intro"
+   elif qa == "dungeon_result": phase = "result"
+   elif qa == "dungeon_market": phase = "hub"; tab = "market"
+   else: phase = "hub"; tab = "overview"
+   if qa not in ["dungeon_boss", "dungeon_stage"]: render()
+   if qa == "dungeon_scores": DungeonUI.high_scores(self)
+   if has_meta("qa_scroll"):
+    await get_tree().process_frame
+    for sc in ui.find_children("*","ScrollContainer",true,false): sc.scroll_vertical=int(get_meta("qa_scroll"))
   elif qa == "starter":
    campaign.new_run("Ravenmoor Menagerie",97,731);phase="starter";render()
   elif qa in ["skill_preview","heal_preview"]:
@@ -136,7 +195,8 @@ func _ready() -> void:
     if HeroData.learned_ability(h.sp,i).effect==theme[1]:key=i;break
    var a=HeroData.learned_ability(h.sp,key)
    var demo=AbilityPreview.new();demo.game=self;demo.hero=h.duplicate(true);demo.card={"type":"ability","key":str(key),"name":a.name,"description":a.description,"rarity":"Legendary","bonus":1.25};ui.add_child(demo);demo.build()
-  elif qa == "new":
+  elif qa in ["new", "new_dungeon"]:
+   if qa == "new_dungeon": new_mode = "dungeon"; new_ascension = DungeonAscension.unlocked()
    phase = "new"; render()
   elif qa == "runover":
    campaign.state.run_over = true; phase = "runover"; render()
@@ -264,23 +324,62 @@ func make_theme() -> Theme:
  theme.set_color("font_color", "Label", WHITE)
  theme.set_color("font_outline_color", "Label", Color(0.01, 0.02, 0.03, 0.85))
  theme.set_constant("outline_size", "Label", 4)
- theme.set_color("font_color", "Button", WHITE)
- theme.set_color("font_hover_color", "Button", GOLD)
- theme.set_color("font_disabled_color", "Button", Color("6c818b"))
- theme.set_stylebox("normal", "Button", style(Color("263b43"), Color("9c895d"), 4, 12, 2))
- theme.set_stylebox("hover", "Button", style(Color("405860"), GOLD, 4, 12, 2))
- theme.set_stylebox("pressed", "Button", style(Color("234843"), GOLD, 4, 12, 2))
- theme.set_stylebox("disabled", "Button", style(Color("272e31"), Color("625b63"), 4, 12))
- theme.set_stylebox("focus", "Button", style(Color(0, 0, 0, 0), GOLD, 10, 0, 2))
- theme.set_stylebox("normal", "LineEdit", style(Color("101e2a"), Color("58747b"), 10, 16))
- theme.set_color("font_color", "LineEdit", WHITE)
+ theme.set_color("font_color", "Button", Color("f1e6cc"))
+ theme.set_color("font_hover_color", "Button", Color.WHITE)
+ theme.set_color("font_pressed_color", "Button", GOLD)
+ theme.set_color("font_disabled_color", "Button", Color("7d7364"))
+ theme.set_color("font_outline_color", "Button", Color(0, 0, 0, 0.8))
+ theme.set_constant("outline_size", "Button", 4)
+ # Carved buttons: dark lacquer, bronze rim, gold when hovered. Nothing flat or form-like.
+ theme.set_stylebox("normal", "Button", DungeonUI.skin(Color("8a6a3a"), Color("1d1820"), 7, true, 2))
+ theme.set_stylebox("hover", "Button", DungeonUI.skin(Color("e3c589"), Color("2c2228"), 7, true, 2))
+ theme.set_stylebox("pressed", "Button", DungeonUI.skin(Color("e3c589"), Color("120e12"), 7, false, 2))
+ theme.set_stylebox("disabled", "Button", DungeonUI.skin(Color(0.54, 0.42, 0.23, 0.35), Color(0.08, 0.07, 0.09, 0.8), 7, false, 1))
+ theme.set_stylebox("focus", "Button", StyleBoxEmpty.new())
+ for kind in ["normal", "hover", "pressed", "disabled"]:
+  for b in [theme.get_stylebox(kind, "Button")]: b.content_margin_left = 14; b.content_margin_right = 14; b.content_margin_top = 6; b.content_margin_bottom = 6
+ for kind in ["normal", "hover", "pressed", "disabled", "focus"]: theme.set_stylebox(kind, "OptionButton", theme.get_stylebox(kind, "Button"))
+ theme.set_stylebox("normal", "LineEdit", DungeonUI.skin(Color("6b5434"), Color(0.04, 0.035, 0.05, 0.95), 6, false, 2))
+ theme.set_stylebox("focus", "LineEdit", DungeonUI.skin(Color("e3c589"), Color(0, 0, 0, 0), 6, false, 2))
+ for kind in ["normal", "focus"]: var e = theme.get_stylebox(kind, "LineEdit"); e.content_margin_left = 14; e.content_margin_right = 14; e.content_margin_top = 8; e.content_margin_bottom = 8
+ theme.set_color("font_color", "LineEdit", Color("f1e6cc"))
+ theme.set_color("caret_color", "LineEdit", GOLD)
  theme.set_constant("separation", "VBoxContainer", 14)
  theme.set_constant("separation", "HBoxContainer", 12)
- theme.set_stylebox("panel", "PanelContainer", style(Color(.045,.095,.115,.96), Color("9b8053"), 5, 20, 2))
+ var plate = DungeonUI.skin(Color("6b5232"), Color(0.055, 0.045, 0.06, 0.95), 8, true, 2); plate.set_content_margin_all(20)
+ theme.set_stylebox("panel", "PanelContainer", plate)
+ # Tooltips and popups: parchment-dark scrolls with a gold rim.
+ var tip = DungeonUI.skin(Color("b08a4a"), Color(0.05, 0.04, 0.05, 0.97), 6, true, 1); tip.set_content_margin_all(10)
+ theme.set_stylebox("panel", "TooltipPanel", tip)
+ theme.set_color("font_color", "TooltipLabel", Color("f1e6cc"))
+ theme.set_font_size("font_size", "TooltipLabel", 15)
+ theme.set_stylebox("panel", "PopupMenu", tip)
+ theme.set_stylebox("hover", "PopupMenu", DungeonUI.skin(Color(0, 0, 0, 0), Color(0.89, 0.77, 0.54, 0.18), 4, false, 0))
+ theme.set_color("font_color", "PopupMenu", Color("f1e6cc")); theme.set_color("font_hover_color", "PopupMenu", Color.WHITE)
+ # Scrollbars: a thin bronze rod, no gutter.
+ for bar in ["VScrollBar", "HScrollBar"]:
+  theme.set_stylebox("scroll", bar, DungeonUI.skin(Color(0, 0, 0, 0), Color(0, 0, 0, 0.25), 4, false, 0))
+  theme.set_stylebox("grabber", bar, DungeonUI.skin(Color(0, 0, 0, 0), Color(0.54, 0.42, 0.23, 0.75), 4, false, 0))
+  theme.set_stylebox("grabber_highlight", bar, DungeonUI.skin(Color(0, 0, 0, 0), Color("e3c589"), 4, false, 0))
+  theme.set_stylebox("grabber_pressed", bar, DungeonUI.skin(Color(0, 0, 0, 0), Color("e3c589"), 4, false, 0))
+ theme.set_stylebox("background", "ProgressBar", DungeonUI.skin(Color("5a4a34"), Color(0.05, 0.04, 0.06, 0.9), 4, false, 1))
+ theme.set_stylebox("fill", "ProgressBar", DungeonUI.skin(Color(0, 0, 0, 0), Color("c9a25a"), 4, false, 0))
+ theme.set_stylebox("slider", "HSlider", DungeonUI.skin(Color(0, 0, 0, 0), Color(0.54, 0.42, 0.23, 0.6), 3, false, 0))
+ theme.set_stylebox("grabber_area", "HSlider", DungeonUI.skin(Color(0, 0, 0, 0), Color("c9a25a"), 3, false, 0))
+ theme.set_stylebox("grabber_area_highlight", "HSlider", DungeonUI.skin(Color(0, 0, 0, 0), Color("e3c589"), 3, false, 0))
  return theme
 
+## Moves the old cold slate/teal surfaces onto the warm lacquer-and-bronze palette, so every
+## screen shares one material instead of reading like stacked form boxes. Bright accents
+## (health teal, rarity colours, team tints) are left alone.
+static func warm(c: Color) -> Color:
+ if c.a <= 0.0 or c.s > 0.8 or c.v > 0.55: return c
+ if c.h < 0.38 or c.h > 0.72: return c
+ return Color.from_hsv(0.08 + 0.02 * c.v, c.s * 0.55, c.v * 0.9, c.a)
+
 func style(fill: Color, border: Color, radius: int, margin: int, width: int = 1) -> StyleBoxFlat:
- var s = StyleBoxFlat.new(); s.bg_color = fill; s.border_color = border
+ fill = warm(fill); border = warm(border) if border.v < 0.55 else border
+ var s = StyleBoxFlat.new(); s.bg_color = fill; s.border_color = border; s.anti_aliasing = true
  if margin>=10 and fill.a>.5:
   s.shadow_color=Color(0.0,0.0,0.0,0.35);s.shadow_size=10;s.shadow_offset=Vector2(0,4)
  # Clean look: no decorative outlines. Only emphasis survives (thick rims, or vivid accents
@@ -307,8 +406,7 @@ static func uncial_text(value: String) -> String:
 func button(parent: Node, text_value: String, callback: Callable, primary: bool = false, disabled: bool = false) -> Button:
  var b = Button.new(); b.text = uncial_text(text_value); b.custom_minimum_size.y = 44; b.disabled = disabled
  if primary:
-  b.add_theme_stylebox_override("normal", style(Color("267450"), Color("f1d79f"), 4, 12, 2))
-  b.add_theme_color_override("font_color", WHITE)
+  DungeonUI.restyle(self, b, true)
  b.pressed.connect(callback); parent.add_child(b); return b
 
 func panel(rect: Rect2) -> VBoxContainer:
@@ -331,10 +429,19 @@ func initials(name_value: String) -> String:
  for w in words.slice(0, 3): text_value += w[0].to_upper()
  return text_value if not text_value.is_empty() else "M"
 
-## Shop music also plays through the break between cups.
+## Shop music also plays through the break between cups. The title screens play the intro theme,
+## and inside a dungeon zone its own song plays everywhere but the outfitter.
 func music_now() -> String:
+ if phase in ["menu", "new"]: return SoundDesign.TITLE_TRACK
+ var zone = zone_music()
+ if zone != "" and phase != "shop": return zone
  if phase == "hub" and not campaign.state.is_empty() and campaign.state.get("tour", {}).get("intermission", false): return "shop"
  return SoundDesign.music_for_phase(phase)
+
+func zone_music() -> String:
+ if exhibition or campaign == null or campaign.state.is_empty() or not Dungeon.active(campaign): return ""
+ var id = str(campaign.state.dungeon.get("instance", ""))
+ return ("zone_" + id) if id != "" and sound.music_cache.has("zone_" + id) else ""
 
 func render() -> void:
  if phase != last_rendered_phase:
@@ -359,7 +466,7 @@ func render() -> void:
  var tour_state = campaign.state.get("tour", {}) if not campaign.state.is_empty() else {}
  if phase == "hub" and tour_state.get("intermission", false) and not tour_state.get("intermission_seen", false):
   tour_state.intermission_seen = true; tab = "market"
-  get_tree().process_frame.connect(func(): FlowUI.banner(self, "NEW RECRUITS", Color("ffd36e"), "Recruit, set your roster and tactics, then start the next cup"), CONNECT_ONE_SHOT)
+  get_tree().process_frame.connect(func(): FlowUI.banner(self, "NEW RECRUITS", Color("ffd36e"), "Recruit, set your roster and tactics, then descend" if Dungeon.active(campaign) else "Recruit, set your roster and tactics, then start the next cup"), CONNECT_ONE_SHOT)
  if phase == "hub" and campaign.state.get("goto_roster", false):
   campaign.state.erase("goto_roster"); tab = "roster"
   get_tree().process_frame.connect(func(): FlowUI.banner(self, "SQUAD READY", Color("ffd36e"), "Set formation, tactics and XP focus"), CONNECT_ONE_SHOT)
@@ -419,7 +526,7 @@ func build_new() -> void:
  if new_crest.is_empty(): new_crest = Crest.default_for(new_club_draft)
  # The great title.
  var title = Title3D.new(); ui.add_child(title); title.position = Vector2(150, 8); title.size = Vector2(1300, 180)
- var sub = label(ui, "FOUND YOUR GUILD", 26, Color("fff2d0"), false)
+ var sub = label(ui, "FOUND YOUR GUILD" if new_mode != "dungeon" else "FOUND A GUILD · DESCEND INTO THE DUNGEON", 26, Color("fff2d0"), false)
  sub.position = Vector2(0, 190); sub.size = Vector2(1600, 40); sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
  sub.add_theme_font_override("font", load(MENU_FONT)); sub.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85)); sub.add_theme_constant_override("outline_size", 6)
  # Charter (left): name, motto, difficulty, slot. One big button carries you on.
@@ -443,12 +550,26 @@ func build_new() -> void:
  motto.text_changed.connect(func(v): new_motto = v)
  label(box, "DIFFICULTY", 15, GOLD)
  var diff = HBoxContainer.new(); diff.add_theme_constant_override("separation", 8); box.add_child(diff)
- for d in [["Keeper", "Relaxed · finish top 5 to survive a cup"], ["Standard", "Fair fights · finish top 4"], ["Champion", "Brutal rivals · finish top 3"]]:
+ var diff_tips = [["Keeper", "Relaxed · finish top 5 to survive a cup"], ["Standard", "Fair fights · finish top 4"], ["Champion", "Brutal rivals · finish top 3"]]
+ if new_mode == "dungeon": diff_tips = [["Keeper", "Relaxed · 4 lives · score ×0.8"], ["Standard", "Fair fights · 3 lives · score ×1"], ["Champion", "Brutal rivals · 2 lives · score ×1.35"]]
+ for d in diff_tips:
   var db = button(diff, d[0], func(): new_difficulty = d[0]; new_challenge_rank=0; render(), new_difficulty == d[0]); db.tooltip_text = d[1]; db.size_flags_horizontal = Control.SIZE_EXPAND_FILL
- var challenge=OptionButton.new();box.add_child(challenge);challenge.add_item("Standard difficulty rules · no challenge modifier")
- for rank in range(1,RunDatabase.unlocked_rank()+1):challenge.add_item("Ascension %d · Champion rules · +%d%% rival combat strength"%[rank,rank*2])
- challenge.selected=new_challenge_rank
- challenge.item_selected.connect(func(i):new_challenge_rank=i;new_difficulty="Champion" if i>0 else new_difficulty;render())
+ if new_mode == "dungeon":
+  # The dungeon ladder: each cleared rank unlocks the next; modifiers stack.
+  var top = DungeonAscension.unlocked(); new_ascension = clampi(new_ascension, 0, top)
+  var asc = OptionButton.new(); box.add_child(asc); asc.name = "DungeonAscensionPick"
+  for rank in range(0, top + 1): asc.add_item("No Ascension · clear the dungeon to unlock rank 1" if rank == 0 else "Ascension %d · %s · score ×%.2f" % [rank, DungeonAscension.info(rank).name, 1.0 + 0.15 * rank])
+  asc.selected = new_ascension
+  asc.tooltip_text = "\n".join(DungeonAscension.lines(new_ascension)) if new_ascension > 0 else "Clear all three Wardens to unlock Ascension 1. Every rank adds a modifier and +15% score."
+  asc.item_selected.connect(func(i): new_ascension = i; render())
+  if new_ascension > 0:
+   var mods = range(1, new_ascension + 1).map(func(i): return DungeonAscension.info(i).text.trim_suffix("."))
+   label(box, "  ·  ".join(mods), 13, Color("e8b07a"))
+ else:
+  var challenge=OptionButton.new();box.add_child(challenge);challenge.add_item("Standard difficulty rules · no challenge modifier")
+  for rank in range(1,RunDatabase.unlocked_rank()+1):challenge.add_item("Ascension %d · Champion rules · +%d%% rival combat strength"%[rank,rank*2])
+  challenge.selected=new_challenge_rank
+  challenge.item_selected.connect(func(i):new_challenge_rank=i;new_difficulty="Champion" if i>0 else new_difficulty;render())
  label(box, "SAVE SLOT", 15, GOLD)
  var slots = HBoxContainer.new(); slots.add_theme_constant_override("separation", 8); box.add_child(slots)
  for slot in range(1, 4):
@@ -458,7 +579,7 @@ func build_new() -> void:
  # Footer: back on the left, the obvious way forward on the right.
  var back = button(ui, "◀  Menu", func(): phase = "menu"; render()); back.position = Vector2(150, 804); back.custom_minimum_size = Vector2(160, 58)
  var fwd = HBoxContainer.new(); ui.add_child(fwd); fwd.position = Vector2(1000, 800); fwd.size = Vector2(450, 64); fwd.alignment = BoxContainer.ALIGNMENT_END
- FlowUI.cta(self, fwd, "Found guild  ▶", found_club, false, 450).tooltip_text = "Next: sign your Legendary headliner (you start with 1,200 gold)"
+ FlowUI.cta(self, fwd, "Enter the dungeon  ▶" if new_mode == "dungeon" else "Found guild  ▶", found_club, false, 450).tooltip_text = "Next: sign your Legendary headliner (you start with 1,200 gold)"
  # Crest forge (right).
  var right = panel(Rect2(740, 252, 710, 520))
  label(right, "CREST", 15, GOLD)
@@ -512,13 +633,20 @@ func build_runover() -> void:
  var hist: Array = t.get("history", [])
  var best = 9
  for h in hist: best = mini(best, int(h.get("place", 9)))
- label(col, "%s difficulty · %d cups contested · %d cup%s won" % [st.difficulty, hist.size(), int(st.get("trophies", 0)), "" if int(st.get("trophies", 0)) == 1 else "s"], 18)
- label(col, "Best finish: %s · Reached %s" % [TournamentRewardsUI._place_text(best) if best < 9 else "—", WorldTour.region(campaign).place if not t.is_empty() else "—"], 18)
+ if Dungeon.active(campaign):
+  var dg = st.dungeon
+  label(col, "%s difficulty · Dungeon · reached %s, room %d" % [st.difficulty, Dungeon.depth(campaign).name, int(dg.row) + 1], 18)
+  label(col, "%d fights · %d won · %d elites · %d Warden%s defeated · %d relics" % [int(dg.fights), int(dg.wins), int(dg.elites), dg.history.size(), "" if dg.history.size() == 1 else "s", dg.get("relics", []).size()], 18)
+  var place = Dungeon.rank_of(campaign)
+  label(col, "FINAL SCORE %d%s" % [int(dg.get("final_score", Dungeon.final_score(campaign))), ("  ·  #%d ON YOUR HIGH SCORES" % place) if place > 0 else ""], 22, GOLD)
+ else:
+  label(col, "%s difficulty · %d cups contested · %d cup%s won" % [st.difficulty, hist.size(), int(st.get("trophies", 0)), "" if int(st.get("trophies", 0)) == 1 else "s"], 18)
+  label(col, "Best finish: %s · Reached %s" % [TournamentRewardsUI._place_text(best) if best < 9 else "—", WorldTour.region(campaign).place if not t.is_empty() else "—"], 18)
  var face = campaign.headliner()
  if not face.is_empty(): label(col, "Headliner: %s the %s · Level %d" % [face.name, HeroData.species[face.sp].n, int(face.level)], 16, GOLD)
  label(box, "Your legacy boosts and unlocked evolutions carry over to your next guild.", 15, MUTED)
  var actions = HBoxContainer.new(); box.add_child(actions)
- button(actions, "Found a new guild", func(): new_crest = {}; phase = "new"; render(), true).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ button(actions, "Found a new guild", func(): new_crest = {}; new_mode = "dungeon" if Dungeon.active(campaign) else "guild"; phase = "new"; render(), true).size_flags_horizontal = Control.SIZE_EXPAND_FILL
  button(actions, "Main menu", func(): phase = "menu"; render()).size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 func found_club() -> void:
@@ -553,7 +681,8 @@ func resume_speedrun() -> void:
 func start_club(name_value: String, slot: int) -> void:
  exhibition = false
  campaign.new_run(name_value, slot, 0, new_difficulty)
- campaign.state.challenge_rank=clampi(new_challenge_rank,0,RunDatabase.unlocked_rank())
+ if new_mode == "dungeon": Dungeon.start(campaign, clampi(new_ascension, 0, DungeonAscension.unlocked()))
+ campaign.state.challenge_rank=0 if new_mode == "dungeon" else clampi(new_challenge_rank,0,RunDatabase.unlocked_rank())
  RunDatabase.ensure_id(campaign)
  campaign.state.crest = new_crest.duplicate() if not new_crest.is_empty() else Crest.default_for(name_value)
  campaign.state.motto = new_motto.strip_edges().left(48)
@@ -571,7 +700,7 @@ func load_campaign(slot: int) -> void:
  phase = "upgrade" if not campaign.pending_heroes().is_empty() else "shop" if campaign.state.get("tour",{}).get("shop",false) else "hub"
  if campaign.state.roster.is_empty() and campaign.state.has("tour"):phase="starter"
  if campaign.state.get("run_over", false): phase = "runover"
- tab = "overview"; render(); sound.scene_music("club")
+ tab = "overview"; render(); sound.scene_music(music_now())
 
 func controls_hint() -> void:
  var l = label(ui, "RIGHT DRAG TO ORBIT    ·    SCROLL TO ZOOM    ·    F11 FULLSCREEN", 13, Color("c1cfcc"))
@@ -584,7 +713,7 @@ func prepare_match() -> void:
  if not campaign.pending_heroes().is_empty(): phase = "upgrade"; render(); return
  if campaign.state.get("tour",{}).get("shop",false): phase="shop"; render(); return
  if campaign.state.get("tour",{}).get("complete",false) or (not campaign.state.has("tour") and campaign.state.round >= 17): tab = "overview"; phase = "hub"; render(); return
- if campaign.state.roster.size() < Campaign.MIN_SQUAD: tab = "market"; phase = "hub"; render(); return
+ if campaign.state.roster.size() < Campaign.MIN_SQUAD and not Dungeon.active(campaign): tab = "market"; phase = "hub"; render(); return
  phase = "prep"; render()
 
 func build_prep() -> void:
@@ -669,6 +798,11 @@ func demo_stage() -> void:
 func introduce_match() -> void:
  if campaign.state.get("speedrun_lab",false):prepare_match();return
  if not campaign.lineup_ready() or not campaign.pending_heroes().is_empty():return
+ if Dungeon.active(campaign):
+  # The dungeon has no bracket board: only a room with a pending fight leads to the arena.
+  if campaign.state.tour.get("intermission",false): WorldTour.end_intermission(campaign)
+  if not campaign.state.dungeon.fight or campaign.state.tour.get("shop",false): phase = "hub"; tab = "overview"; render(); return
+  phase = "intro"; render(); return
  if campaign.state.has("tour"): WorldTour.end_intermission(campaign)
  if campaign.state.get("tour",{}).get("shop",false) or campaign.state.get("tour",{}).get("complete",false):return
  # Every tour fight walks up to the tournament board first, then the matchup, then the arena.
@@ -698,10 +832,11 @@ func begin_battle() -> void:
   arena.clear_fighters(); arena.live = true; arena.camera.h_offset = 0; arena.target_distance = 31 if tactical else 34; arena.target_pitch = 0.95; arena.target_yaw = 0.0
   if arena.clarity: arena.clarity.tactical = tactical
   sim = BattleSim.new(); sim.action.connect(on_battle_event)
+  if not exhibition: sim.team_mods = campaign.battle_mods(); sim.elite_squads = not Dungeon.active(campaign)
   sim.setup(campaign.lineup(), exhibition_rivals if exhibition else campaign.opponent().roster, campaign.match_seed(), 1.0 if exhibition else campaign.quality())
   sound.announce("battle", true)
   countdown = COUNTDOWN; countdown_shown = -1; arena.target_yaw = 0.55; arena.camera_yaw = 0.55; arena.target_distance += 6.0
-  arena.sync(sim, 1.0); render(); sound.scene_music("arena"); pass # Music supplies the arena entrance; avoid a competing pitched stinger.
+  arena.sync(sim, 1.0); render(); sound.scene_music(zone_music() if zone_music() != "" else "arena"); pass # Music supplies the arena entrance; avoid a competing pitched stinger.
  else: toast(campaign.last_error)
 
 func update_countdown() -> void:
@@ -721,6 +856,9 @@ func update_countdown() -> void:
   sound.announce("fight" if step <= 0 else "count_%d" % step, true)
 
 func build_battle_hud() -> void:
+ if not exhibition and Dungeon.active(campaign):
+  # Dungeon chambers close in at the edges of the screen.
+  DungeonUI.vignette(ui, Rect2(0, 0, 1600, 900), Color(DungeonInstances.info(Dungeon.instance_id(campaign)).fog).darkened(0.55), 0.85)
  var dashboard = BattleDashboard.new(); dashboard.game = self; ui.add_child(dashboard)
  if countdown > 0.0:
   countdown_label = Label.new(); ui.add_child(countdown_label)
@@ -730,18 +868,23 @@ func build_battle_hud() -> void:
   countdown_label.add_theme_color_override("font_outline_color", Color(0.05, 0.03, 0.02)); countdown_label.add_theme_constant_override("outline_size", 22)
   countdown_label.add_theme_font_override("font", load(TITLE_FONT))
   countdown_shown = -1
- var top = panel(Rect2(530, 127, 540, 91))
- match_label = label(top, "THE GATES ARE OPEN", 24, GOLD); match_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
- var bottom = panel(Rect2(340, 796, 920, 80))
- var row = HBoxContainer.new(); row.alignment = BoxContainer.ALIGNMENT_CENTER; bottom.add_child(row)
- button(row, "Resume" if paused else "Pause", func(): paused = not paused; render())
- button(row, "Tactical ¾×", func(): set_tactical(true), tactical)
- for value in [1.0, 2.0, 4.0]: button(row, "%dx" % value, func(): set_tactical(false); speed = value; render(), speed == value and not tactical)
- button(row, "Reset camera", func(): arena.target_yaw = 0.0; arena.target_distance = 31 if tactical else 34; arena.target_pitch = 0.95; arena.follow_bias = 0.0)
- var fb = button(row, "◎ Follow action", func(): ArenaView.set_follow(not ArenaView.follow_on); render(), ArenaView.follow_on)
- fb.tooltip_text = "Keep the camera on the fight: pans to where the champions are and zooms to fit them. Scroll still zooms in or out."
- var feed = panel(Rect2(1250, 654, 325, 122))
- event_box = VBoxContainer.new(); event_box.add_theme_constant_override("separation", 5); feed.add_child(event_box)
+ # Scoreboard: a carved banner, not a box.
+ var banner = HudKit.banner(ui, Rect2(540, 124, 520, 62))
+ match_label = label(banner, "THE GATES ARE OPEN", 26, Color("f1e6cc"), false); match_label.position = Vector2(0, 12); match_label.size = Vector2(520, 40)
+ match_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; match_label.add_theme_font_override("font", load(TITLE_FONT))
+ match_label.add_theme_constant_override("outline_size", 6)
+ # Controls: medallions resting on the battlefield, bottom right.
+ var dock = HBoxContainer.new(); ui.add_child(dock); dock.add_theme_constant_override("separation", 10); dock.position = Vector2(1600 - 6 * 64 - 26, 812)
+ HudKit.medallion(dock, self, "play" if paused else "pause", "", "Resume" if paused else "Pause", func(): paused = not paused; render(), paused)
+ var speed_text = "¾" if tactical else ("%d×" % int(speed))
+ HudKit.medallion(dock, self, "", speed_text, "Speed: %s. Click to cycle 1× → 2× → 4× → tactical ¾× (footprints, target lines and status tags)." % speed_text, cycle_speed, speed > 1.0 or tactical)
+ HudKit.medallion(dock, self, "camera", "", "Reset camera", func(): arena.target_yaw = 0.0; arena.target_distance = 31 if tactical else 34; arena.target_pitch = 0.95; arena.follow_bias = 0.0)
+ HudKit.medallion(dock, self, "follow", "", "Follow the action: pan to the fight and zoom to fit it. Scroll still zooms.", func(): ArenaView.set_follow(not ArenaView.follow_on); render(), ArenaView.follow_on)
+ HudKit.medallion(dock, self, "stats", "", ("Hide" if hud_stats else "Show") + " team damage panels", func(): hud_stats = not hud_stats; render(), hud_stats)
+ HudKit.medallion(dock, self, "eye", "", "Tactical view", func(): set_tactical(not tactical), tactical)
+ # Combat log: floating lines over the arena.
+ event_box = VBoxContainer.new(); ui.add_child(event_box); event_box.add_theme_constant_override("separation", 2)
+ event_box.position = Vector2(1210, 700); event_box.size = Vector2(370, 100); event_box.alignment = BoxContainer.ALIGNMENT_END; event_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
  refresh_feed()
 
 func on_battle_event(e: Dictionary) -> void:
@@ -769,7 +912,18 @@ func on_battle_event(e: Dictionary) -> void:
 func refresh_feed() -> void:
  if not is_instance_valid(event_box): return
  for child in event_box.get_children(): child.queue_free(); event_box.remove_child(child)
- for line in event_history.slice(-3): label(event_box, line, 12, MUTED)
+ var lines = event_history.slice(-3)
+ for i in range(lines.size()):
+  var l = label(event_box, lines[i], 14, Color("f1e6cc"), false); l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+  l.add_theme_constant_override("outline_size", 6); l.modulate.a = 0.45 + 0.55 * float(i + 1) / lines.size()
+
+## Speed medallion: 1× → 2× → 4× → tactical ¾× → 1×.
+func cycle_speed() -> void:
+ if tactical: set_tactical(false); speed = 1.0
+ elif speed < 2.0: speed = 2.0
+ elif speed < 4.0: speed = 4.0
+ else: set_tactical(true); return
+ render()
 
 var resolve_thread: Thread
 var resolve_wait := 0.0
@@ -800,7 +954,7 @@ func poll_resolve(dt: float) -> void:
  show_result()
 
 func show_result() -> void:
- phase = "result"; sound.scene_music("club"); sound.cue("victory" if sim.winner == 0 else "honor", true)
+ phase = "result"; sound.scene_music(music_now()); sound.cue("victory" if sim.winner == 0 else "honor", true)
  render()
  FlowUI.banner(self, "VICTORY" if sim.winner == 0 else "DRAW" if sim.winner == -1 else "DEFEAT", Color("ffd36e") if sim.winner == 0 else Color("ff8a7a"))
 
@@ -820,6 +974,12 @@ func build_result() -> void:
   FlowUI.chip(self, chips, "coin", "+%d" % report.gold, "Gold earned", Color("ffdf7e"))
   FlowUI.chip(self, chips, "heart", "%d/5 alive" % (5 - fallen), "Survivors · everyone recovers before the next fight", Color("ff9aa5"))
   var xp = label(chips, "+%d XP" % (80 if won else 65), 21, Color("9fd8ff"), false); xp.tooltip_text = "XP for every fielded hero"; xp.mouse_filter = Control.MOUSE_FILTER_STOP
+ if not exhibition and report.get("dungeon", false):
+  var lost = report.get("life_lost", false) or report.get("flame_lost", false)
+  var verdict_text = ("%s · %d LEFT" % ["TWO LIVES LOST" if int(report.get("lives_lost", 1)) > 1 else "LIFE LOST", int(report.get("lives", 0))]) if lost else ("FLAWLESS · +50% POINTS · " if report.get("flawless", false) else "") + ("DUNGEON CONQUERED · BANK YOUR SCORE OR GO ENDLESS" if report.get("dungeon_cleared", false) else ("WARDEN DEFEATED · THE WAY DOWN IS OPEN" if report.get("warden_down", false) else "ROOM CLEARED · CHOOSE YOUR SPOILS ON THE MAP"))
+  var fl = label(box, verdict_text, 26, Color("ff8a7a") if lost else GOLD); fl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+  if int(report.get("points", 0)) > 0:
+   var pts = label(box, "+%d POINTS · %d TOTAL" % [int(report.points), int(campaign.state.dungeon.score)], 18, Color("9fd8ff")); pts.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
  if not exhibition and report.has("tour_level"):
   if report.has("tournament_won"):
    var cup = label(box, ("CUP WON · GOLD CHEST" if report.tournament_won else "CUP OVER · %s%s" % [TournamentRewardsUI._place_text(int(report.get("place",0))).to_upper(), " · %s CHEST" % str(report.medal).to_upper() if report.has("medal") else ""]), 26, GOLD)
@@ -846,6 +1006,13 @@ func build_result() -> void:
  # The graphs open straight away; the button hides them.
  toggle.pressed.emit()
  var pending = campaign.pending_heroes().size()
+ if campaign.state.get("run_over", false) and not exhibition and report.get("dungeon", false):
+  label(box, "OUT OF LIVES · THE RUN IS OVER", 30, Color("ff8a7a"))
+  var place = Dungeon.rank_of(campaign)
+  label(box, "%s fell in %s after %d fights. Final score: %d%s." % [campaign.state.name, Dungeon.depth(campaign).name, int(campaign.state.dungeon.fights), int(campaign.state.dungeon.get("final_score", 0)), (" · #%d on your high scores" % place) if place > 0 else ""], 17, MUTED)
+  var dend = panel(Rect2(400,792,800,85))
+  button(dend, "See the guild's final record  →", func(): phase = "runover"; render(), true)
+  return
  if campaign.state.get("run_over", false) and not exhibition:
   var over = label(box, "KNOCKED OUT · THE RUN IS OVER", 30, Color("ff8a7a"))
   label(box, "%s runs must finish %s or better. Your guild finished %s." % [campaign.state.difficulty, TournamentRewardsUI._place_text(int(report.get("cutoff", 4))), TournamentRewardsUI._place_text(int(report.get("place", 0)))], 17, MUTED)
@@ -853,7 +1020,7 @@ func build_result() -> void:
   button(end, "See the guild's final record  →", func(): phase = "runover"; render(), true)
   return
  var footer = HBoxContainer.new(); ui.add_child(footer); footer.position = Vector2(560, 800); footer.size = Vector2(480, 62); footer.alignment = BoxContainer.ALIGNMENT_CENTER
- FlowUI.cta(self, footer, "Menu  ▶" if exhibition else "Bracket  ▶" if campaign.state.has("tour") else ("Level ups (%d)  ▶" % pending) if pending else "Continue  ▶", func():
+ FlowUI.cta(self, footer, "Menu  ▶" if exhibition else "Map  ▶" if Dungeon.active(campaign) else "Bracket  ▶" if campaign.state.has("tour") else ("Level ups (%d)  ▶" % pending) if pending else "Continue  ▶", func():
   if exhibition: quit_to_menu()
   elif campaign.state.has("tour"): show_bracket_then_shop()
   else:
@@ -861,6 +1028,11 @@ func build_result() -> void:
 
 ## After a tour match: replay the bracket, then (if the cup just ended) the progress screen, then shop.
 func show_bracket_then_shop() -> void:
+ if Dungeon.active(campaign):
+  if campaign.state.get("run_over", false): phase = "runover"; render(); return
+  phase = "upgrade" if not campaign.pending_heroes().is_empty() else "hub"; tab = "overview"; render()
+  if campaign.state.tour.get("intermission", false) and phase == "hub": FlowUI.banner(self, "WARDEN DEFEATED", Color("ffd36e"), "Recruit on the stairs, then descend")
+  return
  var to_shop = func():
   if campaign.state.get("run_over", false): phase = "runover"; render(); return
   if not campaign.pending_heroes().is_empty(): phase = "upgrade"; render(); return
@@ -969,7 +1141,7 @@ func quit_to_menu() -> void:
   exhibition = false; campaign = Campaign.new(); phase = "menu"; paused = false; render(); return
  if not campaign.save(): toast(campaign.last_error); return
  var was_battle = phase == "battle"
- phase = "menu"; paused = false; sound.scene_music("club"); render()
+ phase = "menu"; paused = false; sound.scene_music(music_now()); render()
  if was_battle: toast("Campaign saved. The unfinished bout restarts from preparation.")
 
 func toast(text_value: String) -> void:
@@ -1012,7 +1184,7 @@ func _process(dt: float) -> void:
  elif sim and phase in ["menu", "new", "hub", "prep"]: arena.sync(sim, dt)
  if not qa.is_empty() and not qa_taken:
   qa_elapsed += dt
-  if qa_elapsed > (12 if qa in ["arena", "evolved_arena", "exhibition", "tour_arena"] else 7 if qa in ["intro","chest"] else 4 if qa in ["guild_demo","draft_demo","builds_demo","tree_demo","evolution","levelup","tour_intro"] else 1.65 if qa in ["attacks_slam","attacks_weapon"] else 1.43 if qa.begins_with("attacks_") else 2 if qa.begins_with("particles_") else 3):
+  if qa_elapsed > (12 if qa in ["arena", "evolved_arena", "exhibition", "tour_arena", "dungeon_boss"] else 7 if qa in ["intro","chest"] else 4 if qa in ["guild_demo","draft_demo","builds_demo","tree_demo","evolution","levelup","tour_intro"] else 1.65 if qa in ["attacks_slam","attacks_weapon"] else 1.43 if qa.begins_with("attacks_") else 2 if qa.begins_with("particles_") else 3):
    qa_taken = true
    await RenderingServer.frame_post_draw
    if not qa_capture.is_empty():

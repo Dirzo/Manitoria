@@ -45,6 +45,28 @@ class Glyph extends Control:
 					pts.append(c + Vector2(cos(a), sin(a)) * r)
 				draw_colored_polygon(pts, Color("ffd36e"))
 				var ring = pts.duplicate(); ring.append(pts[0]); draw_polyline(ring, Color("8a5a12"), maxf(1.0, s * 0.05), true)
+			"flame":
+				var outer = PackedVector2Array(); var inner = PackedVector2Array()
+				for i in range(32):
+					var t = TAU * i / 32.0
+					# A teardrop: round at the base, drawn up to a point.
+					var p = Vector2(sin(t) * (0.5 + 0.5 * cos(t)), -cos(t))
+					outer.append(c + Vector2(p.x * s * 0.40, p.y * s * 0.44 + s * 0.06))
+					inner.append(c + Vector2(p.x * s * 0.22, p.y * s * 0.24 + s * 0.20))
+				draw_colored_polygon(outer, Color("ff8a2a") if on else Color(1, 1, 1, 0.14))
+				if on: draw_colored_polygon(inner, Color("ffe27a"))
+				var edge = outer.duplicate(); edge.append(outer[0])
+				draw_polyline(edge, Color("5a1e08") if on else Color(1, 1, 1, 0.35), maxf(1.0, s * 0.05), true)
+			"banner":
+				var pole = Color("c8a060"); var cloth = Color("8fe0c0") if on else Color(1, 1, 1, 0.2)
+				draw_line(c + Vector2(-s * 0.26, -s * 0.42), c + Vector2(-s * 0.26, s * 0.42), pole, maxf(2.0, s * 0.08), true)
+				draw_colored_polygon(PackedVector2Array([c + Vector2(-s * 0.22, -s * 0.38), c + Vector2(s * 0.34, -s * 0.30), c + Vector2(s * 0.16, -s * 0.12), c + Vector2(s * 0.34, s * 0.06), c + Vector2(-s * 0.22, s * 0.02)]), cloth)
+			"skull":
+				var bone = Color("efe6d2")
+				draw_circle(c + Vector2(0, -s * 0.08), s * 0.34, bone)
+				draw_rect(Rect2(c.x - s * 0.20, c.y + s * 0.08, s * 0.40, s * 0.26), bone)
+				for d in [-1.0, 1.0]: draw_circle(c + Vector2(d * s * 0.13, -s * 0.06), s * 0.09, Color("2a0c12"))
+				for i in range(3): draw_line(c + Vector2((i - 1) * s * 0.11, s * 0.16), c + Vector2((i - 1) * s * 0.11, s * 0.34), Color("2a0c12"), maxf(1.0, s * 0.04))
 			"roll":
 				draw_arc(c, s * 0.32, 0.4, TAU - 0.4, 24, Color("c8ff9d"), maxf(2.0, s * 0.11), true)
 				var tip = c + Vector2(cos(0.4), sin(0.4)) * s * 0.32
@@ -68,21 +90,30 @@ static func run_bar(game: Node, parent: Node) -> void:
 	var c: Campaign = game.campaign
 	var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 16); parent.add_child(row)
 	chip(game, row, "coin", str(int(c.state.gold)), "Gold", Color("ffdf7e"))
-	if c.state.has("tour") and not c.state.roster.is_empty():
+	if Dungeon.active(c):
+		var d = c.state.dungeon
+		var lives = HBoxContainer.new(); lives.add_theme_constant_override("separation", 1); row.add_child(lives)
+		lives.mouse_filter = Control.MOUSE_FILTER_STOP
+		lives.tooltip_text = "Lives: every lost fight costs one. Campfires and Wardens restore them.\n%d / %d left" % [int(d.lives), int(d.max_lives)]
+		for i in range(int(d.max_lives)): glyph(lives, "heart", 22, i < int(d.lives))
+		chip(game, row, "star", str(int(d.score)), "Score so far (before difficulty multiplier and lives bonus)", Color("9fd8ff"))
+	elif c.state.has("tour") and not c.state.roster.is_empty():
 		var lost = WorldTour.losses(c, 0)
 		var hearts = HBoxContainer.new(); hearts.add_theme_constant_override("separation", 2); row.add_child(hearts)
 		hearts.mouse_filter = Control.MOUSE_FILTER_STOP
 		hearts.tooltip_text = "Lives this cup: lose twice and you're out of the bracket.\nRecord %d W · %d L" % [int(c.state.tour.get("wins", 0)), lost]
 		for i in range(2): glyph(hearts, "heart", 24, i >= lost)
-	chip(game, row, "trophy", str(int(c.state.get("trophies", 0))), "Cups won", Color("ffd36e"))
+	if not Dungeon.active(c): chip(game, row, "trophy", str(int(c.state.get("trophies", 0))), "Cups won", Color("ffd36e"))
 
 ## The one obvious next step. Big, green, gently pulsing.
 static func cta(game: Node, parent: Node, text: String, callback: Callable, disabled := false, width := 360.0) -> Button:
 	var b = game.button(parent, text, callback, true, disabled)
 	b.custom_minimum_size = Vector2(width, 58); b.add_theme_font_size_override("font_size", 26)
-	b.add_theme_stylebox_override("normal", game.style(Color("2b8a57"), Color("ffe7a6"), 10, 14, 0))
-	b.add_theme_stylebox_override("hover", game.style(Color("36a86a"), Color("fff3cf"), 10, 14, 0))
-	b.add_theme_stylebox_override("pressed", game.style(Color("1f6b43"), Color("ffe7a6"), 10, 14, 0))
+	# The call to action: a gilded ember plaque, the brightest object on any screen.
+	b.add_theme_stylebox_override("normal", DungeonUI.skin(Color("f1d79f"), Color("7a4515"), 8, true, 2))
+	b.add_theme_stylebox_override("hover", DungeonUI.skin(Color("fff3cf"), Color("955a1d"), 8, true, 3))
+	b.add_theme_stylebox_override("pressed", DungeonUI.skin(Color("f1d79f"), Color("552e0c"), 8, false, 2))
+	b.add_theme_font_override("font", load(game.TITLE_FONT)); b.add_theme_color_override("font_color", Color("fff3dc"))
 	if not disabled:
 		var t = b.create_tween().set_loops(); t.set_trans(Tween.TRANS_SINE)
 		t.tween_property(b, "modulate", Color(1.14, 1.14, 1.06), 0.9); t.tween_property(b, "modulate", Color.WHITE, 0.9)

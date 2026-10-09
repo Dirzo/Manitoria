@@ -59,6 +59,7 @@ func value_price(h: Dictionary) -> int:
  return maxi(60, roundi(League.cost(h.sp) * q * lvl / 5.0) * 5)
 
 func recruitment_open() -> bool:
+ if Dungeon.active(self):return false   # dungeon champions join through drafts at checkpoints, Wardens and outfitters
  if not state.has("tour"):return true
  var t=state.tour
  if state.get("run_over",false) or t.get("complete",false):return false
@@ -103,7 +104,12 @@ func refresh_market() -> bool:
  create_market(rng); return save()
 
 func lineup_ready() -> bool:
+ if Dungeon.active(self): return lineup().size() >= 1 and lineup().size() <= Dungeon.MAX_CHAMPIONS
  return lineup().size() >= MIN_SQUAD and lineup().size() <= MAX_SQUAD
+
+## How many champions may stand in the formation (the dungeon grows to six).
+func max_squad() -> int:
+ return Dungeon.MAX_CHAMPIONS if Dungeon.active(self) else MAX_SQUAD
 
 func lineup() -> Array:
  return state.roster.filter(func(h): return h.slot >= 0)
@@ -142,7 +148,7 @@ func place_hero(id: String, slot: int) -> bool:
  var hero = hero_by_id(id)
  if hero.is_empty() or not hero in state.roster: return false
  var other = lineup().filter(func(h): return h.slot == slot)
- if hero.slot < 0 and lineup().size() >= 5 and other.is_empty(): return false
+ if hero.slot < 0 and lineup().size() >= max_squad() and other.is_empty(): return false
  var old = hero.slot
  if not other.is_empty(): other[0].slot = old
  hero.slot = slot; state.selected = id
@@ -168,6 +174,7 @@ func choose(id: String, index: int) -> bool:
  hero.clear(); hero.merge(before, true); return false
 
 func quality() -> float:
+ if Dungeon.active(self): return Dungeon.quality(self)
  if state.has("tour"):
   return TourBalance.quality(int(state.tour.level),int(state.tour.bout),str(state.difficulty))*(1.0+0.02*clampi(int(state.get("challenge_rank",0)),0,10))
  if state.difficulty == "Keeper": return minf(0.96, 0.90 + state.round * 0.004)
@@ -201,6 +208,10 @@ func opponent() -> Dictionary:
  for pair in state.schedule[index]:
   if pair.has(0): return state.clubs[int(pair[1] if pair[0] == 0 else pair[0]) - 1]
  return state.clubs[0]
+
+## Run-wide combat modifiers per team (dungeon relics and run traits); empty elsewhere.
+func battle_mods() -> Array:
+ return Dungeon.battle_mods(self) if Dungeon.active(self) else [[], []]
 
 func match_seed() -> int:
  if state.has("tour"): return int(state.seed+700000+state.tour.serial*31)
@@ -440,6 +451,7 @@ func load_slot(slot: int) -> bool:
  HeroData.run_salt = str(state.get("salt", state.get("seed", "")))
  League.run_tiers = state.get("tiers", {}) if state.get("tiers") is Dictionary else {}
  ensure_management()
+ Dungeon.migrate(self)
  return true
 
 # New management fields are additive, so existing 0.3 campaign slots still load.
@@ -1540,6 +1552,7 @@ func choose_starter(sp: String) -> bool:
  state.headliner=hero.id;state.selected=hero.id;state.gold-=hero.price
  draft_rivals()
  add_news("Your headliner",hero.name+" leads "+state.name+" into the arena.")
+ if Dungeon.active(self):Dungeon.after_headliner(self)
  if save():return true
  state=before;return false
 

@@ -1,0 +1,125 @@
+extends SceneTree
+## Dungeon balance probe: an auto-player drafts a normal squad (headliner, one Epic, three Commons),
+## walks the map, takes and equips every reward, shops at outfitters, and fights every battle for
+## real. Reports win rates per room type and depth and how far runs get.
+##   PROBE_RUNS (default 12) · PROBE_DIFFICULTY (default Standard) · PROBE_ENDLESS=1 keeps going
+var stats = {}
+var outcomes = []
+
+func _initialize() -> void: call_deferred("run")
+
+func bump(key: String, won: bool) -> void:
+ if not stats.has(key): stats[key] = {"fights": 0, "wins": 0}
+ stats[key].fights += 1; stats[key].wins += int(won)
+
+func equip_all(c: Campaign) -> void:
+ for item in c.state.inventory.duplicate():
+  for h in c.lineup():
+   if c.free_slot(h) != "" and c.equip(h.id, item): break
+
+func settle(c: Campaign, rng: RandomNumberGenerator) -> void:
+ # Drafts: take the offer sharing the most traits with the guild (ties: first offered).
+ var draft = c.state.dungeon.get("draft", {})
+ if not draft.is_empty():
+  var best = 0; var best_n = -1
+  for i in range(draft.offers.size()):
+   var n = Dungeon.shared_traits(c, draft.offers[i].sp).size()
+   if n > best_n: best = i; best_n = n
+  if not Dungeon.take_champion(c, best): Dungeon.skip_draft(c)
+ if not c.state.dungeon.get("instance_choices", []).is_empty():
+  var choices = c.state.dungeon.instance_choices
+  Dungeon.choose_instance(c, choices[rng.randi_range(0, choices.size() - 1)])
+ var guard = 0
+ while not c.pending_heroes().is_empty() and guard < 40:
+  var h = c.pending_heroes()[0]; c.choose(h.id, 0); guard += 1
+ var d = c.state.dungeon
+ while not d.loot.is_empty(): Dungeon.take_loot(c, rng.randi_range(0, d.loot.size() - 1))
+ if not d.event.is_empty():
+  var options = []
+  for i in range(d.event.choices.size()):
+   var ch = d.event.choices[i]
+   # The auto-player doesn't trade champions or relics away; a real player weighs that.
+   if not ch.get("disabled", false) and not ch.get("ferry", false) and not ch.get("sacrifice", false): options.append(i)
+  # Prefer restoring lives when hurt, otherwise any sensible option.
+  var pick = options[0]
+  for i in options:
+   if int(d.event.choices[i].get("lives", 0)) > 0 and int(d.lives) < int(d.max_lives): pick = i
+  Dungeon.choose_event(c, pick)
+  while not d.loot.is_empty(): Dungeon.take_loot(c, 0)
+ if c.state.tour.shop:
+  for i in range(c.state.tour.stock.size()):
+   var id = str(c.state.tour.stock[i])
+   if id != "" and int(c.state.gold) >= int(Forge.info(id).price) + 40: c.buy_item(i)
+  if Dungeon.shop_draft_open(c) and int(c.state.gold) >= Dungeon.shop_draft_cost(c) + 40:
+   Dungeon.buy_shop_draft(c); settle(c, rng)
+  WorldTour.leave_shop(c)
+ if c.state.tour.get("intermission", false):
+  # New recruits: replace the weakest Common if gold allows.
+  WorldTour.end_intermission(c)
+ equip_all(c)
+ guard = 0
+ while not c.pending_heroes().is_empty() and guard < 40:
+  var h = c.pending_heroes()[0]; c.choose(h.id, 0); guard += 1
+
+func play(seed: int, difficulty: String, endless: bool) -> Dictionary:
+ var c = Campaign.new(); c.new_run("Probe %d" % seed, 90, 5000 + seed * 131, difficulty)
+ Dungeon.start(c, int(OS.get_environment("PROBE_ASCENSION")) if OS.get_environment("PROBE_ASCENSION") != "" else 0); c.state.speedrun_memory = true    # never touch disk
+ var rng = RandomNumberGenerator.new(); rng.seed = seed
+ var legends = League.tiers().Legendary
+ c.choose_starter(legends[seed % legends.size()])   # opens the partner draft
+ var steps = 0
+ while steps < 120:
+  settle(c, rng)
+  var d = c.state.dungeon
+  if c.state.get("run_over", false) or c.state.tour.get("complete", false): break
+  if d.awaiting_endless:
+   if endless: Dungeon.go_endless(c); continue
+   Dungeon.retire(c); break
+  if int(d.act) >= 12: Dungeon.retire(c); break
+  if d.fight:
+   var kind = str(Dungeon.node(c).type)
+   var ratio = Dungeon.threat(c, int(d.row), int(d.col)); var parts = Dungeon.last_threat.duplicate()
+   var sim = BattleSim.new(); sim.silent = true; sim.team_mods = c.battle_mods()
+   sim.setup(c.lineup(), c.opponent().roster, c.match_seed(), c.quality()); sim.run_to_end()
+   bump("%s · depth %d" % [kind, int(d.act)], sim.winner == 0)
+   if OS.get_environment("PROBE_THREAT") == "1": print("THREAT ", JSON.stringify({"kind": kind, "act": int(d.act), "ratio": ratio, "won": sim.winner == 0, "parts": parts}))
+   if kind == "boss": bump("warden · %s" % str(DungeonInstances.info(Dungeon.instance_id(c)).boss), sim.winner == 0)
+   c.resolve(sim)
+  else:
+   var options = Dungeon.reachable(c)
+   if options.is_empty(): break
+   # A cautious player: avoid elites when down to one life.
+   var pick = options[rng.randi_range(0, options.size() - 1)]
+   if int(d.lives) <= 1:
+    for o in options:
+     if str(d.map[int(d.row) + 1][o].type) != "elite": pick = o; break
+   Dungeon.enter(c, pick)
+  steps += 1
+ var d = c.state.dungeon
+ var out = {"seed": seed, "depth": int(d.act), "row": int(d.row) + 1, "wardens": int(d.wardens), "lives": int(d.lives), "score": int(d.get("final_score", Dungeon.final_score(c))), "relics": d.relics.size(), "fallen": c.state.get("run_over", false), "level": c.lineup().map(func(h): return int(h.level))}
+ print(out)
+ return out
+
+func run() -> void:
+ ItemFeedback.enabled = false
+ var kept_scores = FileAccess.get_file_as_string(Dungeon.SCORES_PATH) if FileAccess.file_exists(Dungeon.SCORES_PATH) else ""
+ var kept_progress = FileAccess.get_file_as_string(DungeonAscension.PROGRESS_PATH) if FileAccess.file_exists(DungeonAscension.PROGRESS_PATH) else ""
+ var runs = int(OS.get_environment("PROBE_RUNS")) if OS.get_environment("PROBE_RUNS") != "" else 12
+ var difficulty = OS.get_environment("PROBE_DIFFICULTY") if OS.get_environment("PROBE_DIFFICULTY") != "" else "Standard"
+ var endless = OS.get_environment("PROBE_ENDLESS") == "1"
+ for s in range(runs):
+  outcomes.append(play(s, difficulty, endless))
+  await process_frame
+ var keys = stats.keys(); keys.sort()
+ for k in keys: print("%-22s %3d / %3d  %5.1f%%" % [k, stats[k].wins, stats[k].fights, 100.0 * stats[k].wins / maxf(1, stats[k].fights)])
+ var cleared = outcomes.filter(func(o): return int(o.wardens) >= 3).size()
+ var wardens = outcomes.map(func(o): return int(o.wardens))
+ print("%s: %d runs · cleared %d · wardens per run %s · mean score %d" % [difficulty, runs, cleared, str(wardens), outcomes.reduce(func(a, o): return a + int(o.score), 0) / maxi(1, runs)])
+ # Leave the player's own high-score table and Ascension progress exactly as they were.
+ if kept_progress != "":
+  var pf = FileAccess.open(DungeonAscension.PROGRESS_PATH, FileAccess.WRITE); pf.store_string(kept_progress); pf.close()
+ elif FileAccess.file_exists(DungeonAscension.PROGRESS_PATH): DirAccess.remove_absolute(DungeonAscension.PROGRESS_PATH)
+ if kept_scores != "":
+  var f = FileAccess.open(Dungeon.SCORES_PATH, FileAccess.WRITE); f.store_string(kept_scores); f.close()
+ elif FileAccess.file_exists(Dungeon.SCORES_PATH): DirAccess.remove_absolute(Dungeon.SCORES_PATH)
+ quit()

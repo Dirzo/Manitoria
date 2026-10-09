@@ -11,6 +11,12 @@ static func build(game: Node) -> void:
  title.mouse_filter=Control.MOUSE_FILTER_STOP;title.tooltip_text="Drag gear onto a champion. Two components on one champion forge a finished item."
  title.size_flags_horizontal=0;title.custom_minimum_size.x=150
  FlowUI.fight_summary(game,tabs)
+ # Dungeon outfitters also hire out one champion draft per visit.
+ if Dungeon.active(c) and Dungeon.shop_draft_open(c):
+  var hire=game.button(tabs,"Hire a champion · %d"%Dungeon.shop_draft_cost(c),func():
+   if Dungeon.buy_shop_draft(c):DungeonUI.draft_dialog(game)
+   else:game.toast(c.last_error),true,c.state.gold<Dungeon.shop_draft_cost(c))
+  hire.name="ShopHireChampion";DungeonUI.restyle(game,hire,true)
  var has_report=not c.state.get("report",{}).get("rows",[]).is_empty()
  var carousel=game.get_meta("retained_shop_carousel") if game.has_meta("retained_shop_carousel") else null
  if carousel==null:carousel=ChampionCarousel.new()
