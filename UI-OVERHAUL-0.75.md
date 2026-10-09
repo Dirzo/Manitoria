@@ -2,6 +2,17 @@
 
 Dungeon mode is now the headline feature, the dungeon is immersive (no tournament menus), and every menu outside of combat shares one cleaner look and feel inspired by *Baldur's Gate 3* and *Guildrun*.
 
+## 0.75.2 — death and gold sounds, no recorded announcer
+
+- **Deaths** are three layers:
+  - the existing element tail;
+  - a body fall, heavier for front-liners and big monsters, and a long rumble for Wardens;
+  - the creature's own cry, slowed and lowered.
+- **Gold income** plays climbing coin clinks (more clinks for more gold) or, for 150 gold or more, a coin pour with a chime. It triggers on any rise in the purse and is rate-limited.
+- Built from Kenney's CC0 Impact Sounds, RPG Audio and Casino Audio packs; see `godot/assets/audio/CREDITS.md`.
+- The recorded announcer lines and the Announcer slider are gone.
+- New test: `tools/sound_events_test.gd` (10 checks).
+
 ## 0.75.1 — a cleaner landing
 
 The landing is now just the title and three borderless entries: **Dungeon** (large, in the display face), **Tournament draft** and **Statistics & achievements**. There are no boxes, rims or descriptions: words over a soft shadow that turn gold with a thin gilded rule on hover.

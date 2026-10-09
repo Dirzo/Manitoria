@@ -73,7 +73,7 @@ func _ready() -> void:
  for family in families:
   for prefix in ["", "attack_", "charge_", "death_"]: keys.append(prefix + family)
  for species in SPECIES_FAMILY: keys.append("hero_" + species)
- keys.append_array(["contest_reveal", "contest_lock", "contest_versus", "victory", "honor", "upgrade", "multikill", "arena_gate", "interrupt", "impact_flesh", "impact_stone", "impact_metal", "impact_arcane", "ui_hover", "ui_click", "ui_open", "ui_close"])
+ keys.append_array(["contest_reveal", "contest_lock", "contest_versus", "victory", "honor", "upgrade", "multikill", "arena_gate", "interrupt", "impact_flesh", "impact_stone", "impact_metal", "impact_arcane", "ui_hover", "ui_click", "ui_open", "ui_close", "gold_clink_1", "gold_clink_2", "gold_clink_3", "gold_clink_4", "gold_payout", "fall_light_1", "fall_light_2", "fall_light_3", "fall_heavy_1", "fall_heavy_2", "fall_heavy_3", "fall_boss"])
  # Enumerate logical resource paths: exported WAVs have .import sidecars,
  # unlike their loose source files. ResourceLoader resolves either form.
  for key in keys:
@@ -295,6 +295,37 @@ func battle_event(e: Dictionary, unit: Dictionary, pan: float = 0.0) -> void:
  last_event[gate] = now
  var variant = 0.97 + float(int(e.get("uid", 0)) % 5) * 0.015
  play_sample(sound.key, sound.gain, sound.priority, pan, variant)
+ if e.type == "death" and not unit.get("summon", false): death_layers(unit, pan)
+
+## A death is three layers: the element tail above, the body hitting the ground (heavier for
+## front-liners and big monsters, a long rumble for Wardens) and the creature's own cry, slowed
+## and lowered so it reads as its last.
+func death_layers(unit: Dictionary, pan: float) -> void:
+ var hero: Dictionary = unit.get("hero", {})
+ var boss = unit.has("boss") or Bestiary.BOSSES.has(str(hero.get("monster", "")))
+ var big = boss or HeroData.line(str(hero.get("sp", "minotaur"))) == "Front" or float(Bestiary.info(str(hero.get("monster", ""))).get("scale", 1.0)) > 1.05
+ var pick = 1 + int(unit.get("uid", 0)) % 3
+ var fall = "fall_boss" if boss else ("fall_heavy_%d" % pick if big else "fall_light_%d" % pick)
+ play_sample(fall, -6.0 if boss else -10.0, 3, pan, randf_range(0.95, 1.04))
+ var cry = "hero_" + str(hero.get("sp", ""))
+ if cache.has(cry): get_tree().create_timer(0.05).timeout.connect(func(): play_sample(cry, -15.0 if not boss else -9.0, 2, pan, 0.62 if boss else 0.74))
+
+## Gold coming in: small amounts are quick clinks that climb in pitch (more clinks for more gold);
+## big payouts are a coin pour with a chime. Rate-limited so a burst never turns into noise.
+var _gold_busy_until := 0
+func gold(amount: int) -> void:
+ if amount <= 0 or not effects_enabled: return
+ var now = Time.get_ticks_msec()
+ if now < _gold_busy_until: return
+ if amount >= 150:
+  play_sample("gold_payout", -6.0, 2); _gold_busy_until = now + 900; return
+ var clinks = clampi(1 + amount / 30, 1, 5)
+ _gold_busy_until = now + clinks * 70 + 120
+ for i in range(clinks):
+  var k = "gold_clink_%d" % (1 + (i + randi()) % 4)
+  var p = 1.0 + i * 0.06 + randf_range(-0.02, 0.02)
+  if i == 0: play_sample(k, -9.0, 1, 0.0, p)
+  else: get_tree().create_timer(i * 0.07).timeout.connect(func(): play_sample(k, -10.0 - i * 0.5, 1, 0.0, p))
 
 # ---------------------------------------------------------------- volume settings (global, saved)
 const SETTINGS_PATH := "user://settings.cfg"

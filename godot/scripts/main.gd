@@ -468,6 +468,12 @@ func render() -> void:
    ui.remove_child(child);set_meta("retained_shop_carousel",child)
   else:child.queue_free();ui.remove_child(child)
  match_label = null; event_box = null
+ # Gold income: any rise in the purse since the last screen plays the coin sounds.
+ if not campaign.state.is_empty() and campaign.state.has("gold"):
+  var g = int(campaign.state.gold)
+  var owner_key = str(campaign.state.get("seed", "")) + "|" + str(campaign.state.get("name", ""))
+  if str(get_meta("purse_owner", "")) == owner_key and has_meta("purse") and g > int(get_meta("purse")) and phase not in ["menu", "new"]: sound.gold(g - int(get_meta("purse")))
+  set_meta("purse", g); set_meta("purse_owner", owner_key)
  arena.visible = phase not in ["hub", "menu", "new", "shop", "starter", "intro", "runover", "speedrun"]
  if phase in ["hub", "menu", "new", "shop", "starter", "intro", "runover", "speedrun"]:
   sim = null

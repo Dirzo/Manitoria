@@ -20,7 +20,7 @@ static func menu(game: Node) -> void:
  mode_row(game,col,"Tournament draft",start_guild,saves.guild,"GuildMenuButton",false)
  mode_row(game,col,"Statistics & achievements",func():stats_menu(game),[],"StatsMenuButton",false)
  col.modulate.a=0.0;col.create_tween().tween_property(col,"modulate:a",1.0,0.45)
- var version=game.label(game.ui,"0.75.1",13,Color(1,1,1,0.45),false);version.position=Vector2(24,866)
+ var version=game.label(game.ui,"0.75.2",13,Color(1,1,1,0.45),false);version.position=Vector2(24,866)
 
 ## One landing button, centred, with its saved runs as small chips just after it.
 static func mode_row(game: Node, col: Control, text: String, action: Callable, saves: Array, node_name: String, hero: bool) -> void:
