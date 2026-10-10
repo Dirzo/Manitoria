@@ -1,0 +1,177 @@
+{
+  "title": "Manitoria Epic Wardens + Meshy fight kit",
+  "created": "2026-10-09",
+  "source_build": "0.75.4",
+  "source_branch": "codex/boss-audio-challenge",
+  "source_commit": "e14873d67de00cb2d46322d62ca36349ddd2f99c",
+  "status": "concept references; models and custom animation pending",
+  "generation_tool": "OpenAI ImageGen",
+  "clips": [
+    "idle",
+    "walk",
+    "attack",
+    "cast",
+    "hit",
+    "death"
+  ],
+  "impact_normalized_time": 0.46,
+  "targets": {
+    "close_triangles": 30000,
+    "texture_size": 2048,
+    "materials": 2,
+    "deform_bones": 64,
+    "weights_per_vertex": 4
+  },
+  "bosses": [
+    {
+      "id": "rootmother",
+      "name": "The Rootmother",
+      "zone": "Blight Forest",
+      "reference": "references/rootmother.png",
+      "instructions": "meshy-instructions/rootmother.md",
+      "model_path": "godot/assets/models/dungeon/rootmother.glb",
+      "rig_route": "Humanoid; manual trunk rig if auto-rig cannot detect the hips.",
+      "ability": "Bramble Cage",
+      "image_size": [
+        1254,
+        1254
+      ],
+      "image_sha256": "153872f734efc0eb5eb1145ecad2924643d2987ae54b051f647bcb6c14b89036"
+    },
+    {
+      "id": "prismatic_archon",
+      "name": "The Prismatic Archon",
+      "zone": "Mana Caverns",
+      "reference": "references/prismatic_archon.png",
+      "instructions": "meshy-instructions/prismatic_archon.md",
+      "model_path": "godot/assets/models/dungeon/prismatic_archon.glb",
+      "rig_route": "Quadruped body plus manually added wing chains.",
+      "ability": "Mana Fracture",
+      "image_size": [
+        1312,
+        1199
+      ],
+      "image_sha256": "d1eb2068543aca4f4c9185749d747a868cac6c5383b7e45e0db0b93ecce5ecc2"
+    },
+    {
+      "id": "forge_tyrant",
+      "name": "Magmaw, the Forge Tyrant",
+      "zone": "Magma Depths",
+      "reference": "references/forge_tyrant.png",
+      "instructions": "meshy-instructions/forge_tyrant.md",
+      "model_path": "godot/assets/models/dungeon/forge_tyrant.glb",
+      "rig_route": "Humanoid with rigid hand-bound hammer.",
+      "ability": "Crucible Brand",
+      "image_size": [
+        1312,
+        1199
+      ],
+      "image_sha256": "ccd5efb4f717876ace203a078b0d4aa8ac931971333ac2f7645fa0307cc99b83"
+    },
+    {
+      "id": "frost_matriarch",
+      "name": "The Frost Matriarch",
+      "zone": "Frostbound Crypt",
+      "reference": "references/frost_matriarch.png",
+      "instructions": "meshy-instructions/frost_matriarch.md",
+      "model_path": "godot/assets/models/dungeon/frost_matriarch.glb",
+      "rig_route": "Humanoid with staff attachment and simple skinned robe.",
+      "ability": "Icebound Prison",
+      "image_size": [
+        1024,
+        1536
+      ],
+      "image_sha256": "bbbe8f1dbdcf2fb759e3ef9da8b2bbabd22763553a8f7106ec568938493aa7c0"
+    },
+    {
+      "id": "leviathan",
+      "name": "The Drowned Leviathan",
+      "zone": "Drowned Sanctum",
+      "reference": "references/leviathan.png",
+      "instructions": "meshy-instructions/leviathan.md",
+      "model_path": "godot/assets/models/dungeon/leviathan.glb",
+      "rig_route": "Quadruped plus custom jaw, tail and fin chains.",
+      "ability": "Undertow",
+      "image_size": [
+        1536,
+        1024
+      ],
+      "image_sha256": "28260165f8f3ec2ac2440a416f2d327d163f07506eedf8f53f5750cb40c90456"
+    },
+    {
+      "id": "spore_queen",
+      "name": "The Spore Queen",
+      "zone": "Fungal Hollows",
+      "reference": "references/spore_queen.png",
+      "instructions": "meshy-instructions/spore_queen.md",
+      "model_path": "godot/assets/models/dungeon/spore_queen.glb",
+      "rig_route": "Manual eight-leg spider rig; Smart Rig Beta can be tried, with custom animations afterward.",
+      "ability": "Virulent Bloom",
+      "image_size": [
+        1536,
+        1024
+      ],
+      "image_sha256": "0b2ba3a7187dbf24d1f0769db77099fb8fc0fab64990b53a915327b2c6a2c404"
+    },
+    {
+      "id": "bone_king",
+      "name": "The Bone King",
+      "zone": "Ossuary of Kings",
+      "reference": "references/bone_king.png",
+      "instructions": "meshy-instructions/bone_king.md",
+      "model_path": "godot/assets/models/dungeon/bone_king.glb",
+      "rig_route": "Humanoid with rigid bone segments and sceptre attachment.",
+      "ability": "Soul Tithe",
+      "image_size": [
+        1145,
+        1374
+      ],
+      "image_sha256": "5f890e54bf5b79a4ac6c970c577b0f5900568dcef4d0baf36754ee472de4d326"
+    },
+    {
+      "id": "tempest_roc",
+      "name": "The Tempest Roc",
+      "zone": "Storm Spire",
+      "reference": "references/tempest_roc.png",
+      "instructions": "meshy-instructions/tempest_roc.md",
+      "model_path": "godot/assets/models/dungeon/tempest_roc.glb",
+      "rig_route": "Custom bird skeleton: two legs, two wing chains and tail; Smart Rig Beta optional.",
+      "ability": "Storm Conductor",
+      "image_size": [
+        1536,
+        1024
+      ],
+      "image_sha256": "a6924a13fe9661f9b7ef50c3db5d51095c7f7bbd348b4d16954422a3e37512b2"
+    },
+    {
+      "id": "sun_pharaoh",
+      "name": "The Sun-Eater Pharaoh",
+      "zone": "Gilded Tomb",
+      "reference": "references/sun_pharaoh.png",
+      "instructions": "meshy-instructions/sun_pharaoh.md",
+      "model_path": "godot/assets/models/dungeon/sun_pharaoh.glb",
+      "rig_route": "Humanoid: this reference is bipedal.",
+      "ability": "Solar Judgment",
+      "image_size": [
+        1024,
+        1536
+      ],
+      "image_sha256": "253b3ca0b5ab266ce6ce4e73a9120f821f6911eb3f325e08302c6e94e261a871"
+    },
+    {
+      "id": "abyssal_keeper",
+      "name": "The Abyssal Keeper",
+      "zone": "Void Rift",
+      "reference": "references/abyssal_keeper.png",
+      "instructions": "meshy-instructions/abyssal_keeper.md",
+      "model_path": "godot/assets/models/dungeon/abyssal_keeper.glb",
+      "rig_route": "Humanoid: this reference is bipedal, with rigid halo attachments.",
+      "ability": "Rift Collapse",
+      "image_size": [
+        1199,
+        1312
+      ],
+      "image_sha256": "02782d29a1716141296d690ef41a945309b53f042ae638c1b9f4b8c2d0dc6e3d"
+    }
+  ]
+}
