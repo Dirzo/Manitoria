@@ -95,7 +95,7 @@ static func header(game: Node) -> void:
  if game.phase in ["menu","new"]:
   var row=HBoxContainer.new();game.ui.add_child(row);row.add_theme_constant_override("separation",8)
   var mm=HudKit.medallion(row,game,"music","","Music on/off",game.toggle_music,false,48);mm.muted=not game.sound.music_enabled;mm.name="MusicMedallion"
-  HudKit.medallion(row,game,"gear","","Settings: music, effects and announcer volume",func():FlowUI.settings(game),false,48)
+  HudKit.medallion(row,game,"gear","","Settings: music volume and camera",func():FlowUI.settings(game),false,48)
   HudKit.medallion(row,game,"close","","Exit the game",game.close_game,false,48)
   row.position=Vector2(1600-row.get_child_count()*56-14,24)
   return
@@ -161,8 +161,7 @@ void fragment(){
  # Controls: four small medallions, no boxes.
  var row=HBoxContainer.new();game.ui.add_child(row);row.add_theme_constant_override("separation",6)
  HudKit.medallion(row,game,"music","","Music: "+("on" if game.sound.music_enabled else "off"),game.toggle_music,false,46).muted=not game.sound.music_enabled
- HudKit.medallion(row,game,"sound","","Sound effects: "+("on" if game.sound.effects_enabled else "off"),game.toggle_effects,false,46).muted=not game.sound.effects_enabled
- HudKit.medallion(row,game,"gear","","Settings: music, effects and announcer volume",func():FlowUI.settings(game),false,46)
+ HudKit.medallion(row,game,"gear","","Settings: music volume and camera",func():FlowUI.settings(game),false,46)
  HudKit.medallion(row,game,"menu","","Main menu",game.quit_to_menu if game.phase!="new" else func():game.phase="menu";game.render(),false,46)
  row.position=Vector2(1600-row.get_child_count()*52-12,18)
  if game.phase!="battle":

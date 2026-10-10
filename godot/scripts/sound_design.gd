@@ -19,12 +19,16 @@ var shop_index := -1
 var music_player: AudioStreamPlayer
 var music_players: Array = []
 var active_music = 0
-var effects_enabled = true:
+const SFX_ENABLED := false
+var effects_enabled = false:
  set(value):
-  effects_enabled = value
-  if not value:
+  effects_enabled = value and SFX_ENABLED
+  if not effects_enabled:
+   duck_remaining = 0.0
    for voice in voices: voice.stop()
    if ambience_player: ambience_player.stop(); ambience_name = ""
+   if ambience_transition: ambience_transition.kill()
+   if announcer: announcer.stop()
 var music_enabled = true
 var scene_name = ""
 var cache: Dictionary = {}
@@ -39,6 +43,7 @@ var music_mix = -6.0
 var effects_mix = -6.0
 var played_cues = 0
 var last_cue = ""
+var battle_generation := 0
 
 func _ready() -> void:
  for i in range(2):
@@ -75,10 +80,13 @@ func _ready() -> void:
   for prefix in ["", "attack_", "charge_", "death_"]: keys.append(prefix + family)
  for species in SPECIES_FAMILY: keys.append("hero_" + species)
  keys.append_array(["contest_reveal", "contest_lock", "contest_versus", "victory", "honor", "upgrade", "multikill", "arena_gate", "interrupt", "impact_flesh", "impact_stone", "impact_metal", "impact_arcane", "ui_hover", "ui_click", "ui_open", "ui_close", "gold_clink_1", "gold_clink_2", "gold_clink_3", "gold_clink_4", "gold_payout", "fall_light_1", "fall_light_2", "fall_light_3", "fall_heavy_1", "fall_heavy_2", "fall_heavy_3", "fall_boss", "amb_lava_pop", "amb_drip", "amb_creak", "amb_crystal", "amb_pick", "amb_ice_crack", "amb_spore", "amb_bones", "amb_coffin", "amb_thunder", "amb_spark", "amb_sand", "amb_void"])
+ for boss in Bestiary.BOSSES:
+  for action in ["entrance", "warning", "attack", "summon", "phase", "enrage", "death"]:
+   keys.append("boss_%s_%s" % [boss, action])
  # Enumerate logical resource paths: exported WAVs have .import sidecars,
  # unlike their loose source files. ResourceLoader resolves either form.
  for key in keys:
-  var path = "res://assets/audio/fx/" + key + ".wav"
+  var path = "res://assets/audio/fx/" + key + (".ogg" if key.begins_with("boss_") else ".wav")
   if ResourceLoader.exists(path): cache[key] = load(path)
   else: push_error("Missing combat audio: " + path)
  setup_announcer()
@@ -162,12 +170,22 @@ func set_music(enabled: bool) -> void:
 func set_combat_paused(value: bool) -> void:
  combat_paused = value
  for voice in voices: voice.stream_paused = value
+ if ambience_player: ambience_player.stream_paused = value
+ if announcer: announcer.stream_paused = value
 
 func reset_battle() -> void:
+ battle_generation += 1
  for voice in voices: voice.stop(); voice.stream_paused = false
  combat_paused = false; last_event.clear()
+ if ambience_player: ambience_player.stream_paused = false
+ if announcer: announcer.stream_paused = false
 
 func stop_all() -> void:
+ battle_generation += 1
+ if ambience_transition: ambience_transition.kill()
+ if ambience_player: ambience_player.stop(); ambience_player.stream = null
+ if announcer: announcer.stop()
+ ambience_name = ""; ambience_cache.clear()
  if music_transition: music_transition.kill()
  music_transition = null
  for player in music_players: player.stop(); player.stream = null
@@ -189,6 +207,7 @@ const SWEETENERS := {
 var ambience_player: AudioStreamPlayer
 var ambience_name := ""
 var ambience_cache := {}
+var ambience_transition: Tween
 var sweetener_in := 0.0
 
 static func has_ambience(zone: String) -> bool:
@@ -199,7 +218,8 @@ func set_ambience(zone: String) -> void:
  if ambience_player == null:
   ambience_player = AudioStreamPlayer.new(); ambience_player.bus = "Effects"; ambience_player.volume_db = -60; add_child(ambience_player)
  ambience_name = zone
- var tw = create_tween()
+ if ambience_transition: ambience_transition.kill()
+ var tw = create_tween(); ambience_transition = tw
  if ambience_player.playing: tw.tween_property(ambience_player, "volume_db", -60.0, 1.2)
  if zone.is_empty() or not effects_enabled or not has_ambience(zone):
   tw.tween_callback(ambience_player.stop); return
@@ -295,6 +315,20 @@ static func event_sound(e: Dictionary, unit: Dictionary) -> Dictionary:
  var family = SPECIES_FAMILY.get(sp, "beast")
  var effect = EFFECT_FAMILY.get(e.get("effect", ""), family)
  var result = {"key": "", "gain": -9.0, "priority": 1, "gap": 0.1}
+ var boss_key = str(unit.get("boss", {}).get("key", unit.get("hero", {}).get("monster", "")))
+ if Bestiary.BOSSES.has(boss_key):
+  var action = str(e.get("boss_action", ""))
+  if action.is_empty() and e.type == "cast": action = "attack"
+  if e.type == "spawn": action = "entrance"
+  if e.type == "death": action = "death"
+  if action in ["special", "slam", "pulse"]: action = "attack"
+  # The resolved summon already has a cue; do not double it with the add-spawn event.
+  if e.type == "summon": return result
+  if action in ["entrance", "warning", "attack", "summon", "phase", "enrage", "death"]:
+   result.key = "boss_%s_%s" % [boss_key, action]
+   result.gain = -10.0 if action == "warning" else -8.0
+   result.priority = 4 if action in ["warning", "phase", "enrage", "death"] else 3
+   result.gap = 0.12; return result
  match e.type:
   "item_feedback":
    if e.stage=="equip":return result
@@ -333,10 +367,12 @@ func battle_event(e: Dictionary, unit: Dictionary, pan: float = 0.0) -> void:
  var now = Time.get_ticks_msec() / 1000.0
  # Wall-clock limits prevent 4x speed, DoTs and summons becoming an audio flood.
  var gate = ("item_"+str(e.get("stage","")) if e.type=="item_feedback" else e.type) + (str(e.get("uid", -1)) if e.type in ["death", "interrupt"] else "")
+ if sound.key.begins_with("boss_"): gate = sound.key + ":" + str(e.get("uid", -1))
  if now - last_event.get(gate, -100.0) < sound.gap: return
- last_event[gate] = now
  var variant = 0.97 + float(int(e.get("uid", 0)) % 5) * 0.015
- play_sample(sound.key, sound.gain, sound.priority, pan, variant)
+ if not play_sample(sound.key, sound.gain, sound.priority, pan, variant): return
+ last_event[gate] = now
+ if e.get("boss_action", "") == "warning": duck_remaining = maxf(duck_remaining, float(e.get("duration", 1.25)))
  if e.type == "death" and not unit.get("summon", false): death_layers(unit, pan)
 
 ## A death is three layers: the element tail above, the body hitting the ground (heavier for
@@ -350,7 +386,10 @@ func death_layers(unit: Dictionary, pan: float) -> void:
  var fall = "fall_boss" if boss else ("fall_heavy_%d" % pick if big else "fall_light_%d" % pick)
  play_sample(fall, -6.0 if boss else -10.0, 3, pan, randf_range(0.95, 1.04))
  var cry = "hero_" + str(hero.get("sp", ""))
- if cache.has(cry): get_tree().create_timer(0.05).timeout.connect(func(): play_sample(cry, -15.0 if not boss else -9.0, 2, pan, 0.62 if boss else 0.74))
+ var generation = battle_generation
+ # Wardens already have a custom death cry; keep only the shared heavy body fall underneath.
+ if not boss and cache.has(cry): get_tree().create_timer(0.05).timeout.connect(func():
+  if generation == battle_generation: play_sample(cry, -15.0, 2, pan, 0.74))
 
 ## Gold coming in: small amounts are quick clinks that climb in pitch (more clinks for more gold);
 ## big payouts are a coin pour with a chime. Rate-limited so a burst never turns into noise.
@@ -394,6 +433,9 @@ func apply_levels() -> void:
  if vb >= 0: AudioServer.set_bus_volume_db(vb, linear_to_db(maxf(0.0001, levels.voice)))
 
 func set_mix(music_volume: float, effects_volume: float) -> void:
+ AudioServer.set_bus_mute(AudioServer.get_bus_index("Effects"), not SFX_ENABLED)
+ var voice_bus = AudioServer.get_bus_index("Voice")
+ if voice_bus >= 0: AudioServer.set_bus_mute(voice_bus, not SFX_ENABLED)
  music_mix = linear_to_db(maxf(0.0001,clampf(music_volume,0,1)))
  effects_mix = linear_to_db(maxf(0.0001,clampf(effects_volume,0,1)))
  AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Music"),music_mix)

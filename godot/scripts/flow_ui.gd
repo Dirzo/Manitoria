@@ -152,11 +152,11 @@ static func detail_toggle(game: Node, parent: Node) -> CheckBox:
 		game.campaign.state.detailed = on; game.campaign.save(); game.render())
 	parent.add_child(cb); return cb
 
-## Settings: volume sliders for music, sound effects and the announcer (saved for every campaign).
+## Music and camera settings; effects are temporarily retired.
 static func settings(game: Node) -> void:
-	var dialog = GearUI.modal(game, "Settings", Vector2(660, 450))
+	var dialog = GearUI.modal(game, "Settings", Vector2(660, 580))
 	dialog.box.add_theme_constant_override("separation", 14)
-	for row_def in [["music", "Music"], ["effects", "Sound effects"]]:
+	for row_def in [["music", "Music"]]:
 		var key: String = row_def[0]
 		var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 16); dialog.box.add_child(row)
 		var l = game.label(row, row_def[1], 20, game.WHITE, false); l.custom_minimum_size.x = 170
@@ -173,7 +173,16 @@ static func settings(game: Node) -> void:
 	var cam = CheckBox.new(); cam.text = "Camera follows the action in fights"; cam.button_pressed = ArenaView.follow_on
 	cam.add_theme_font_size_override("font_size", 18); dialog.box.add_child(cam)
 	cam.toggled.connect(func(on): ArenaView.set_follow(on))
-	game.label(dialog.box, "Saved for every campaign. The ♪ and FX buttons still mute music and effects.", 14, Color("9fb0b8"), true)
+	game.label(dialog.box, "Saved for every campaign. Sound effects and announcer audio are temporarily disabled.", 14, Color("9fb0b8"), true)
+	game.label(dialog.box, "Play diagnostics are saved locally: battles, controls, game state, errors and feature usage. Nothing is uploaded automatically.", 14, Color("9fb0b8"), true)
+	var export_status = game.label(dialog.box, "Export a ZIP to share here when something bugs.", 14, game.WHITE, true)
+	game.button(dialog.box, "Export play logs", func():
+		var path = game.telemetry.export_bundle()
+		if path.is_empty(): export_status.text = "Could not export diagnostics. Check free disk space."
+		else:
+			export_status.text = "Exported: " + path
+			DisplayServer.clipboard_set(path)
+			OS.shell_open(path.get_base_dir()))
 	var done_row = HBoxContainer.new(); done_row.alignment = BoxContainer.ALIGNMENT_END; dialog.box.add_child(done_row)
 	game.button(done_row, "Done", func(): game.sound.save_settings(); dialog.root.queue_free(), true).custom_minimum_size = Vector2(160, 50)
 

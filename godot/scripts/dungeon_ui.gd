@@ -383,6 +383,20 @@ static func next_card(game: Node, band: Control, c: Campaign) -> void:
  var d = c.state.dungeon
  var x = 1000.0; var w = W - x - 12
  var card = plate(band, Rect2(x, 10, w, 104), Color(Dungeon.depth(c).accent, 0.8), Color(0.07, 0.05, 0.08, 0.98))
+ # Closed decisions remain pending; always expose the action that settles them.
+ if not d.get("draft", {}).is_empty() or not d.loot.is_empty() or not d.event.is_empty():
+  caption(game, card, "Current room", Vector2(16, 10), GOLDEN)
+  var label_text = "Choose champion  ▶" if not d.get("draft", {}).is_empty() else "Claim spoils  ▶" if not d.loot.is_empty() else "Resolve event  ▶"
+  heading(game, card, "A choice is waiting", Vector2(16, 28), 20, PARCH)
+  var resume = button(game, card, label_text, func(): resume_room(game), true, Vector2(220, 60))
+  resume.name = "DungeonRoomContinue"; resume.position = Vector2(w - 232, 28)
+  return
+ if not c.pending_heroes().is_empty():
+  heading(game, card, "Your champions grew stronger", Vector2(16, 28), 20, PARCH)
+  text(game, card, "Choose their new skills before the next room.", Vector2(16, 62), 13, MUTE, w - 220)
+  var level_ups = button(game, card, "Level ups  ▶", game.prepare_match, true, Vector2(190, 70))
+  level_ups.name = "DungeonLevelUps"; level_ups.position = Vector2(w - 202, 17)
+  return
  if d.fight:
   var kind = str(Dungeon.node(c).type); var rival = c.opponent(); var info = Dungeon.ROOMS[kind]
   caption(game, card, info.name, Vector2(16, 10), Color(info.color))
@@ -391,14 +405,10 @@ static func next_card(game: Node, band: Control, c: Campaign) -> void:
   if not tl.is_empty(): text(game, card, "Threat: %s  ·  %s" % [tl.text, Dungeon.reward_text(kind)], Vector2(16, 50), 12, Color(tl.color), 300)
   button(game, card, "Scout", func(): ScoutUI.open(game, rival), false, Vector2(84, 34)).position = Vector2(16, 74 - 8)
   button(game, card, "Formation", func(): game.phase = "prep"; game.render(), false, Vector2(110, 34)).position = Vector2(106, 66)
-  button(game, card, "Fight  ▶", game.introduce_match, true, Vector2(150, 82), not c.lineup_ready() or not c.pending_heroes().is_empty()).position = Vector2(w - 162, 11)
+  var prepare = button(game, card, "Prepare  ▶", game.introduce_match, true, Vector2(150, 82), not c.lineup_ready())
+  prepare.name = "DungeonPrepareFight"; prepare.position = Vector2(w - 162, 11)
   return
  caption(game, card, "Next", Vector2(16, 10), GOLDEN)
- if not c.pending_heroes().is_empty():
-  heading(game, card, "Your champions grew stronger", Vector2(16, 28), 20, PARCH)
-  text(game, card, "Choose their new skills before the next room.", Vector2(16, 62), 13, MUTE, w - 220)
-  button(game, card, "Level ups  ▶", game.prepare_match, true, Vector2(190, 70)).position = Vector2(w - 202, 17)
-  return
  if c.state.tour.get("shop", false):
   heading(game, card, "The outfitter is open", Vector2(16, 28), 20, PARCH)
   text(game, card, "Buy components, forge items and hire a champion.", Vector2(16, 62), 13, MUTE, w - 220)
@@ -409,13 +419,18 @@ static func next_card(game: Node, band: Control, c: Campaign) -> void:
   var preview = Dungeon.opponent(c)
   var pp = Dungeon.preview_position(c); var ptl = Dungeon.threat_label(Dungeon.threat(c, pp.x, pp.y))
   text(game, card, "Nearest fight ahead: %s%s" % [preview.name, ("  ·  " + ptl.text) if not ptl.is_empty() else ""], Vector2(16, 62), 13, Color(ptl.color) if not ptl.is_empty() else MUTE, w - 32)
- elif not d.loot.is_empty() or not d.event.is_empty():
-  heading(game, card, "Something waits here", Vector2(16, 28), 20, PARCH)
-  button(game, card, "Open", func(): game.render(), true, Vector2(120, 44)).position = Vector2(w - 136, 30)
  else:
   heading(game, card, Dungeon.stage_label(c), Vector2(16, 28), 20, PARCH)
  if d.endless and not c.state.tour.get("complete", false) and not c.state.get("run_over", false):
   button(game, card, "Retire · %d pts" % Dungeon.final_score(c), func(): confirm_retire(game), false, Vector2(170, 34)).position = Vector2(w - 186, 62)
+
+## Resume the saved decision without re-entering the room or replacing its offers.
+static func resume_room(game: Node) -> void:
+ var d = game.campaign.state.dungeon
+ if not d.get("draft", {}).is_empty(): draft_dialog(game)
+ elif not d.loot.is_empty(): loot_modal(game)
+ elif not d.event.is_empty(): event_modal(game)
+ else: game.prepare_match()
 
 static func confirm_retire(game: Node) -> void:
  var c: Campaign = game.campaign
@@ -450,10 +465,13 @@ static func path_overlay(game: Node, stage: Control, c: Campaign) -> void:
   vignette(card, Rect2(3, 3, 700, 214), Color(0, 0, 0), 0.8)
   heading(game, card, str(info.name), Vector2(24, 160), 34, PARCH)
   text(game, card, str(info.tagline), Vector2(24, 226), 16, Color(PARCH, 0.85), 520)
-  var boss = Bestiary.BOSSES[str(info.boss)]
+  var boss = Bestiary.info(str(info.boss))
   portrait(card, str(boss.sp), Rect2(586, 150, 96, 96), Color(boss.glow), Color(boss.tint).lerp(Color.WHITE, 0.45))
   caption(game, card, "Warden  ·  " + str(boss.name), Vector2(24, 276), Color("ffb3a8"))
-  text(game, card, str(boss.text), Vector2(24, 296), 14, MUTE, 640)
+  var threat = text(game, card, str(Bestiary.BOSSES[str(info.boss)].text), Vector2(24, 296), 14, MUTE, 640)
+  threat.tooltip_text = str(boss.text)
+  var technique = caption(game, card, WardenMechanics.KITS[str(info.boss)].name + "  ·  hover for counterplay", Vector2(24, 338), Color("ffb3a8"), 640)
+  technique.tooltip_text = str(WardenMechanics.KITS[str(info.boss)].counter)
   caption(game, card, "Monsters", Vector2(24, 356), GOLDEN)
   for k in range(info.mobs.size()):
    var m = Bestiary.MOBS[info.mobs[k]]
@@ -525,7 +543,8 @@ static func loot_modal(game: Node) -> void:
  if d.loot.is_empty(): return
  var relic = d.loot_kind == "relic"
  var title = "Choose a relic" if relic else ("Choose a component" if d.loot_kind == "component" else "Choose a finished item")
- var dlg = dialog(game, title, Vector2(1040, 560))
+ var dlg = dialog(game, title, Vector2(1040, 730))
+ dlg.root.name = "DungeonLootDialog"
  text(game, dlg.box, ("Relics last for the whole run." if relic else "Two components on one champion forge a finished item.") + "  Take one, or skip for 25 gold." + ("  ·  %d more reward%s waiting" % [d.loot_queue.size(), "" if d.loot_queue.size() == 1 else "s"] if not d.loot_queue.is_empty() else ""), Vector2.ZERO, 15, MUTE)
  var row = HBoxContainer.new(); row.alignment = BoxContainer.ALIGNMENT_CENTER; row.add_theme_constant_override("separation", 18); dlg.box.add_child(row)
  for i in range(d.loot.size()):
@@ -538,8 +557,8 @@ static func loot_modal(game: Node) -> void:
    kind_text = ("Wild item" if item.get("wild", false) else "Finished item") if item.kind == "item" else "Component"
    body = (Forge.stat_line(id) + "\n" + str(item.get("text", ""))) if item.kind == "item" else str(item.get("short", ""))
    tint = Color("ff9be0") if item.get("wild", false) else (Color("9fd4c6") if item.kind == "component" else GOLDEN)
-  var holder = Control.new(); holder.custom_minimum_size = Vector2(310, 380); row.add_child(holder)
-  var card = plate(holder, Rect2(0, 0, 310, 380), tint, Color(0.06, 0.045, 0.09, 0.98))
+  var holder = Control.new(); holder.custom_minimum_size = Vector2(310, 530); row.add_child(holder)
+  var card = plate(holder, Rect2(0, 0, 310, 530), tint, Color(0.06, 0.045, 0.09, 0.98))
   var art_frame = Panel.new(); card.add_child(art_frame); art_frame.position = Vector2(105, 18); art_frame.size = Vector2(100, 100)
   art_frame.add_theme_stylebox_override("panel", skin(tint, Color(0.03, 0.02, 0.05), 50, true, 3)); art_frame.clip_children = CanvasItem.CLIP_CHILDREN_AND_DRAW
   if relic:
@@ -549,11 +568,19 @@ static func loot_modal(game: Node) -> void:
   heading(game, card, name_text, Vector2(0, 128), 22, PARCH, 310, HORIZONTAL_ALIGNMENT_CENTER)
   caption(game, card, kind_text, Vector2(0, 160), tint, 310, HORIZONTAL_ALIGNMENT_CENTER)
   var b = text(game, card, body, Vector2(22, 184), 14, Color("d8d2c0"), 266, HORIZONTAL_ALIGNMENT_CENTER); b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+  if not relic and Forge.is_component(id):
+   var recipe_scroll = ScrollContainer.new(); card.add_child(recipe_scroll)
+   recipe_scroll.position = Vector2(16, 238); recipe_scroll.size = Vector2(278, 210)
+   var recipes = game.label(recipe_scroll, "COMBINES INTO\n" + GearUI.component_recipes(id), 13, GOLDEN)
+   recipes.custom_minimum_size.x = 256; recipes.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+   recipes.name = "DungeonRecipes_" + id
+  elif not relic:
+   text(game, card, "Recipe: %s + %s" % [Forge.info(Forge.info(id).recipe[0]).name, Forge.info(Forge.info(id).recipe[1]).name], Vector2(20, 350), 13, GOLDEN, 270)
   var index = i
   var take = button(game, card, "Take", func():
    if Dungeon.take_loot(c, index): dlg.root.queue_free(); game.sound.cue("upgrade"); game.render()
    else: game.toast(c.last_error), true, Vector2(200, 52))
-  take.position = Vector2(55, 312); take.name = "DungeonLoot_%d" % i
+  take.position = Vector2(55, 462); take.name = "DungeonLoot_%d" % i
   card.modulate.a = 0.0; card.position.y = 30
   var tw = card.create_tween().set_parallel(true)
   tw.tween_property(card, "modulate:a", 1.0, 0.25).set_delay(0.08 * i); tw.tween_property(card, "position:y", 0.0, 0.3).set_delay(0.08 * i).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -569,6 +596,7 @@ static func draft_dialog(game: Node) -> void:
  if draft.is_empty(): return
  var titles = {"partner": "Choose your partner", "checkpoint": "A champion waits at the waystone", "warden": "A champion waits on the stairs", "shop": "Champions for hire"}
  var dlg = dialog(game, str(titles.get(str(draft.kind), "Choose a champion")), Vector2(1540, 610), GOLDEN, str(draft.kind) != "partner")
+ dlg.root.name = "DungeonDraftDialog"
  var cost = int(draft.cost)
  text(game, dlg.box, ("Your headliner needs a partner. " if str(draft.kind) == "partner" else "") + "Pick one of five. Their stats are rolled fresh; ✦ marks traits they share with your guild." + ("  ·  Costs %d gold." % cost if cost > 0 else "") + "  ·  Guild %d / %d" % [c.state.roster.size(), Dungeon.MAX_CHAMPIONS], Vector2.ZERO, 15, MUTE)
  var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 10); dlg.box.add_child(row)
@@ -610,7 +638,9 @@ static func event_modal(game: Node) -> void:
  var c: Campaign = game.campaign; var d = c.state.dungeon
  if d.event.is_empty(): return
  var e = d.event; var accent = Color(Dungeon.depth(c).accent)
- var dlg = dialog(game, str(e.title), Vector2(940, 236 + e.choices.size() * 72), accent)
+ var dlg = dialog(game, str(e.title), Vector2(940, 290 + e.choices.size() * 72), accent)
+ dlg.root.name = "DungeonEventDialog"
+ button(game, dlg.box, "Equip squad before choosing", func(): game.tab = "roster"; game.render(), false, Vector2(330, 44)).name = "EncounterEquipment"
  var art = Control.new(); art.custom_minimum_size = Vector2(880, 120); dlg.box.add_child(art); art.clip_contents = true
  painted(art, Dungeon.instance_id(c), Rect2(0, 0, 880, 120), 0.55); vignette(art, Rect2(0, 0, 880, 120), Color(0, 0, 0), 0.7)
  var story = text(game, art, str(e.text), Vector2(30, 40), 18, PARCH, 820); story.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

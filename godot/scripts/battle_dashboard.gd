@@ -12,6 +12,7 @@ func _ready() -> void:
  set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
  mouse_filter = Control.MOUSE_FILTER_IGNORE
  visible = game.hud_stats
+ if visible and game.telemetry: game.telemetry.feature("combat_inspection")
  for team in range(2):
   # No box: the panel fades in from its screen edge.
   HudKit.edge_fade(self, Rect2(0 if team == 0 else 1260, 200, 340, 480), team == 0, 0.78)
@@ -47,17 +48,22 @@ func _ready() -> void:
  detail_panel = panel; panel.visible = false
  var hint = game.label(self,"Click a portrait to inspect",12,Color(1,1,1,0.45),false); hint.position = Vector2(26,560)
 func inspect(id: int) -> void:
+ if game.telemetry:
+  game.telemetry.feature("combat_inspection", true)
+  game.telemetry.record("inspect_unit", {"uid":id})
  if id == selected_uid and detail_panel.visible:
-  detail_panel.visible = false; selected_uid = -1; return
+  detail_panel.visible = false; selected_uid = -1; game.arena.range_hero_id = ""; return
  detail_panel.visible = true
  selected_uid = id; cooldowns.clear()
  for child in detail.get_children(): detail.remove_child(child); child.queue_free()
  var u = game.sim.find_unit(id)
  if u.is_empty(): return
+ game.arena.range_hero_id = str(u.hero.id)
  var branch = u.hero.get("evolution", "")
  var top = HBoxContainer.new(); detail.add_child(top)
  game.label(top,u.hero.name + "  /  " + HeroData.species[u.hero.sp].n + ("  ·  " + HeroData.evolution_info(u.hero).name if not branch.is_empty() else ""),13,game.GOLD,false).size_flags_horizontal = Control.SIZE_EXPAND_FILL
- var close = HudKit.medallion(top,game,"close","","Close",func(): detail_panel.visible = false; selected_uid = -1,false,32)
+ var close = HudKit.medallion(top,game,"close","","Close",func(): detail_panel.visible = false; selected_uid = -1; game.arena.range_hero_id = "",false,32)
+ game.label(detail, CombatRange.basic_label(u.range) + " · cyan floor hexes show attack reach", 14, Color("70d6dd"))
  var row = HBoxContainer.new(); row.add_theme_constant_override("separation",12); detail.add_child(row)
  add_ability(row,HeroData.species[u.hero.sp].ability_name,HeroData.signature_summary(u.hero.sp)+"\n\n"+HeroData.species[u.hero.sp].ability_description,"signature",u.hero.signature_rank)
  for key in u.hero.learned:
@@ -69,6 +75,8 @@ func add_ability(row: HBoxContainer, title: String, description: String, key: St
  var heading=HBoxContainer.new(); stack.add_child(heading)
  var unit=game.sim.find_unit(selected_uid)
  var art_key=HeroData.species[unit.hero.sp].ab if key=="signature" else "discovery:%s:%s" % [unit.hero.sp,key]
+ var reach = CombatRange.signature_world(unit) if key == "signature" else float(HeroData.learned_ability(unit.hero.sp, int(key)).range)
+ description += "\nSkill reach: %d hexes (attack reach shown on the floor)." % ArenaGrid.attack_hexes(reach)
  var art=AbilityArt.icon(heading,art_key,34); art.tooltip_text=description
  RarityStyle.decorate(art,RarityStyle.for_skill(unit.hero,"signature" if key=="signature" else "ability:"+key))
  var title_label = game.label(heading,title,13,RarityStyle.color(RarityStyle.for_skill(unit.hero,"signature" if key=="signature" else "ability:"+key))); title_label.tooltip_text = description; title_label.custom_minimum_size.x = 110; title_label.size_flags_horizontal=Control.SIZE_EXPAND_FILL

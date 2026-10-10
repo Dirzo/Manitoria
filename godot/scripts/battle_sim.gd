@@ -133,7 +133,7 @@ func swap_hexes(a: Dictionary, b: Dictionary) -> void:
   unit.erase("next_cell"); unit.pos = ArenaGrid.point(unit.cell); unit.velocity = Vector2.ZERO; unit.moving = false
 
 func in_attack_range(a: Dictionary, b: Dictionary) -> bool:
- return not a.has("next_cell") and ArenaGrid.distance(a.cell,b.cell) <= a.attack_hexes
+ return CombatRange.contains(a, b, a.attack_hexes)
 
 func begin_hex_step(unit: Dictionary, target: Dictionary, lurking: bool=false, retreat: bool=false) -> void:
  var occupied = occupied_cells(unit.uid)
@@ -412,6 +412,7 @@ func hurt(source: Dictionary, target: Dictionary, amount: float, magical: bool =
   Forge.on_ally_death(self, target)
 
 func attack(u: Dictionary, target: Dictionary) -> void:
+ if not u.alive or not target.alive or not in_attack_range(u, target): return
  cc_source = u
  u.credit = "basic"; track(u,"casts",1)
  emit({"type": "release", "uid": u.uid, "pos": u.pos, "target": target.pos, "ranged": u.range > 2})
@@ -486,6 +487,7 @@ func step(dt: float) -> void:
   u.recovery = maxf(0, u.recovery - dt)
   u.attack_timer = maxf(0, u.attack_timer - dt * (1.22 if active(u, "rally") else 1.0))
   for key in u.ability_cds: u.ability_cds[key] = maxf(0, u.ability_cds[key] - dt)
+  if u.has("boss_pending"): continue
   if active(u, "stun"):
    u.windup = 0.0; u.erase("pending_cast"); continue
   if u.has("next_cell"):
@@ -630,11 +632,9 @@ func cast_signature(u: Dictionary, target: Dictionary) -> bool:
    var backline = candidates.filter(func(e): return e.range > 2 and not e.summon)
    backline.sort_custom(func(a, b): return u.pos.distance_to(a.pos) < u.pos.distance_to(b.pos))
    if not backline.is_empty(): target = backline[0]
- var range_limit = maxf(9.5, u.range + 1.0) if u.range > 2 else 3.2
- if key in ["shriek", "triplebite"]: range_limit = 3.2
- if key in ["gore", "venom", "skystrike", "foxfire", "stonedive", "vanish", "antlerrush", "maul"]: range_limit = 8.5
+ var range_limit = CombatRange.signature_world(u)
  var friendly = key in ["rootbloom", "radiance", "tidal", "tailwind", "regrowth", "shellup", "bulwark", "hunger", "howl", "brood", "prideroar", "frostroar"]
- if not friendly and ArenaGrid.distance(u.cell,target.cell)>ArenaGrid.attack_hexes(range_limit): return false
+ if not friendly and not CombatRange.contains(u, target, ArenaGrid.attack_hexes(range_limit)): return false
  var allies = wounded_allies(u)
  if key in ["rootbloom", "radiance"] and allies[0].hp / allies[0].max_hp > 0.86: return false
  if key == "regrowth" and u.hp / u.max_hp > 0.72: return false
@@ -741,7 +741,7 @@ func cast_learned(u: Dictionary, target: Dictionary, a: Dictionary, rank: int) -
  var effect = a.effect
  var support = effect in ["renew", "ward", "rally", "brood"]
  if effect=="brood" and living(u.team).filter(func(v):return v.summon and v.owner==u.uid).size()>=3:return false
- if not support and ArenaGrid.distance(u.cell,target.cell)>ArenaGrid.attack_hexes(a.range): return false
+ if not support and not CombatRange.contains(u, target, ArenaGrid.attack_hexes(a.range)): return false
  var allies = wounded_allies(u)
  if effect == "renew" and allies[0].hp / allies[0].max_hp > 0.82: return false
  if support and effect!="brood" and u.pos.distance_to(target.pos) > 8: return false

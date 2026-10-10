@@ -69,6 +69,10 @@ static func apply_drop(game: Node,data: Dictionary,hero_id: String,_slot: String
     if Forge.is_component(str(data.id)) and Forge.is_item(str(v)) and str(v) not in before and not swapping:game.toast("Forged %s!"%Forge.ITEMS[str(v)].name);game.sound.cue("upgrade",true);break
   game.render()
  else:game.toast(c.last_error if not c.last_error.is_empty() else "Could not equip this item.")
+ if game.telemetry:
+  game.telemetry.feature("equipment", ok)
+  game.telemetry.record("equipment_change", {"success":ok,"item":data.get("id"),"source":data.get("kind"),"hero":hero_id,"slot":_slot,"to_bag":bag})
+  game.telemetry.snapshot("equipment_change")
  return ok
 
 static func token(game: Node,parent: Node,item: Dictionary,pixels: int=72) -> GearToken:
@@ -155,6 +159,7 @@ static func result_badge(game: Node,parent: Control,made: String,size_px: float,
 static func tip(item: Dictionary) -> String:
  if not item.has("id"):return item.get("name","")
  var t=item.name+"\n"+item.description
+ if item.kind=="component":t+="\n\nRecipes:\n"+component_recipes(item.id)
  if item.kind=="item":t+="\nRecipe: %s + %s"%[Forge.COMPONENTS[item.recipe[0]].name,Forge.COMPONENTS[item.recipe[1]].name]
  return t
 
@@ -365,3 +370,10 @@ static func recommended_row(game: Node,parent: Node,hero: Dictionary,px: int=46)
    var ok=game.label(t,"✓",18,Color("6fe08a"),false);ok.position=Vector2(px-16,-4);ok.mouse_filter=Control.MOUSE_FILTER_IGNORE
   t.tooltip_text=tip(item)+"\n\nRecommended for "+HeroData.species[hero.sp].n
   t.pressed.connect(func():inspect(game,item))
+
+static func component_recipes(id: String) -> String:
+ var lines: Array[String] = []
+ for other in Forge.COMPONENT_ORDER:
+  var made = Forge.combine(id, other)
+  if made != "": lines.append("%s + %s → %s" % [Forge.info(id).name, Forge.info(other).name, Forge.info(made).name])
+ return "\n".join(lines)
