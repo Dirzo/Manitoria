@@ -47,6 +47,9 @@ var world_props: Node3D
 var region_name = ""
 var theme_materials: Array = []
 var vfx: VFX
+var range_hero_id := ""
+var range_mesh: MeshInstance3D
+var range_key := ""
 var sim_ref: BattleSim
 var trail_clock: Dictionary = {}
 ## Follow the action: the camera pans to where the living fighters are and zooms to fit them.
@@ -295,6 +298,9 @@ func zoom(amount: float) -> void:
 func clear_fighters() -> void:
  live = false; follow_bias = 0.0
  physical_casts.clear()
+ range_key = ""
+ if is_instance_valid(range_mesh): range_mesh.queue_free()
+ range_mesh = null
  for child in fighters.get_children(): child.queue_free()
  for child in effects.get_children():
   if child!=card_particles:child.queue_free()
@@ -376,7 +382,7 @@ func spawn(u: Dictionary) -> void:
  var bubble_mat = material(Color(0.35, 0.82, 0.95, 0.16), 0.2, 0.3, true); bubble_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
  var bubble = mesh(holder, bubble_shape, bubble_mat, Vector3(0, 1.1, 0)); bubble.visible = false
 
- var name_label = Label3D.new(); name_label.text = u.hero.name; name_label.position.y = 0.22; name_label.font_size = 29; name_label.pixel_size = 0.010; name_label.modulate = team_color.lightened(0.4); name_label.outline_size = 8; name_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED; bars.add_child(name_label)
+ var name_label = Label3D.new(); name_label.text = u.hero.name + "\nATK %d HEX" % u.attack_hexes; name_label.position.y = 0.55; name_label.font_size = 29; name_label.pixel_size = 0.010; name_label.modulate = team_color.lightened(0.4); name_label.outline_size = 8; name_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED; bars.add_child(name_label)
  if u.summon: bars.visible = false
  # Every mesh shares one overlay so the whole body flashes when struck or casting.
  var flash_mat = ShaderMaterial.new(); flash_mat.shader = HITFLASH
@@ -404,6 +410,7 @@ func sync(sim: BattleSim, dt: float, speed: float = 1.0) -> void:
  sync_zones(sim)
  sync_telegraphs(sim)
  sync_numbers(dt * speed)
+ sync_range(sim)
  for u in sim.units:
   if not models.has(u.uid): spawn(u)
   var visual = models[u.uid]
@@ -424,7 +431,8 @@ func sync(sim: BattleSim, dt: float, speed: float = 1.0) -> void:
   visual.stagger = maxf(0, visual.stagger - dt * speed)
   visual.flash_amt = maxf(0.0, visual.flash_amt - dt * 6.0)
   visual.flash.set_shader_parameter("flash", visual.flash_amt)
-  visual.name_label.visible = not (clarity and clarity.tactical)   # team rings identify sides in Tactical view
+  visual.name_label.visible = u.alive
+  visual.name_label.text = ("ATK %d HEX" % u.attack_hexes) if clarity and clarity.tactical else (u.hero.name + "\nATK %d HEX" % u.attack_hexes)
   animate_weight(u, visual, dt * speed)
   visual.lock = maxf(0, visual.lock - dt * speed)
   if visual.player: visual.player.speed_scale = speed * visual.tempo
@@ -1003,3 +1011,29 @@ func follow(u: Dictionary, visual: Dictionary, dt: float) -> void:
   var diff = angle_difference(visual.model.rotation.y, u.heading)
   var want = diff * (1.0 - exp(-dt * 10.0))
   visual.model.rotation.y += clampf(want, -max_rate * dt, max_rate * dt)
+
+func sync_range(sim: BattleSim) -> void:
+ var unit: Dictionary = {}
+ for u in sim.units:
+  if u.alive and str(u.hero.get("id", "")) == range_hero_id:
+   unit = u; break
+ var key = "%s:%s:%s:%s" % [range_hero_id, unit.get("cell", ""), unit.get("attack_hexes", 0), unit.has("next_cell")]
+ if key == range_key: return
+ range_key = key
+ if is_instance_valid(range_mesh): range_mesh.queue_free()
+ range_mesh = null
+ if unit.is_empty() or unit.has("next_cell"): return
+ var lines = ImmediateMesh.new()
+ var ink = material(Color(0.25, 0.95, 1.0, 0.65))
+ ink.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+ ink.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+ lines.surface_begin(Mesh.PRIMITIVE_LINES, ink)
+ for cell in ArenaGrid.cells():
+  if ArenaGrid.distance(unit.cell, cell) > unit.attack_hexes: continue
+  var center = ArenaGrid.point(cell)
+  for i in range(6):
+   var a = i * TAU / 6.0; var b = (i + 1) * TAU / 6.0
+   lines.surface_add_vertex(world_point(center + Vector2(cos(a), sin(a)) * ArenaGrid.HEX_RADIUS * 0.92, 0.08))
+   lines.surface_add_vertex(world_point(center + Vector2(cos(b), sin(b)) * ArenaGrid.HEX_RADIUS * 0.92, 0.08))
+ lines.surface_end()
+ range_mesh = MeshInstance3D.new(); range_mesh.mesh = lines; fighters.add_child(range_mesh)

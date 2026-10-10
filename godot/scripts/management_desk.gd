@@ -315,7 +315,7 @@ func profile(h: Dictionary, yours: bool) -> void:
  TraitUI.rolls(game, left, h, true)
  GearUI.recommended_row(game, left, h, 40)
  if h.has("ais_history"): text(left, "Arena Impact form: %d  ·  last match %d  ·  %d matches" % [roundi(League.form(h)), int(h.get("ais_last", 0)), int(h.get("ais_games", 0))], 15, GOLD)
- text(left, "%d HP  ·  %d DMG  ·  %d%% armor  ·  %.1fs per attack  ·  %.1f range" % [stats.hp, stats.attack, stats.armor * 100, stats.interval, stats.range], 14)
+ text(left, "%d HP  ·  %d DMG  ·  %d%% armor  ·  %.1fs per attack  ·  %d hex attack range" % [stats.hp, stats.attack, stats.armor * 100, stats.interval, ArenaGrid.attack_hexes(stats.range)], 14)
  text(left, "%d tour pts  ·  %d-%d  ·  %d MVP  ·  %d kills" % [int(h.get("tour_points", 0)), int(h.wins), int(h.get("losses", 0)), int(h.get("mvps", 0)), h.kills], 15, MUTED).tooltip_text = "World tour points: win +3, MVP +2, plus the cup finish for every champion who played (10 / 6 / 4 / 2).\n%d bouts · %.1f career impact per bout" % [h.bouts, h.impact / maxf(1, h.bouts)]
  if yours:
   action(left,"Team headliner" if h.id==state.get("headliner","") else "Make team headliner",func():
@@ -392,7 +392,7 @@ func compare_heroes() -> void:
   var box = card(row); portrait(box, h.sp, 190); text(box, h.name + " · " + HeroData.species[h.sp].n, 26)
   var s = HeroData.stats(h)
   text(box, "Level %d    /    %d power" % [h.level, HeroData.power(h)], 21, TEAL)
-  text(box, "%d health\n%d attack\n%d%% armor\n%.2fs attack interval\n%.1f attack range\n%d learned abilities" % [s.hp, s.attack, s.armor * 100, s.interval, s.range, h.learned.size()], 21)
+  text(box, "%d health\n%d attack\n%d%% armor\n%.2fs attack interval\n%d hex attack range\n%d learned abilities" % [s.hp, s.attack, s.armor * 100, s.interval, ArenaGrid.attack_hexes(s.range), h.learned.size()], 21)
   text(box, HeroData.species[h.sp].ability_name, 22, GOLD)
   text(box, HeroData.species[h.sp].ability_description, 17, MUTED)
 
@@ -548,7 +548,7 @@ func club_page() -> void:
   difficulty.item_selected.connect(func(index): state.difficulty = ["Keeper", "Standard", "Champion"][index]; campaign.save(); game.render())
   text(box, "Keeper offers a gentler start. Standard uses equal base stats. Champion strengthens the opposition. Current rival health and attack: %d%%." % roundi(campaign.quality() * 100), 19, MUTED)
   action(box, "Music: " + ("On" if game.sound.music_enabled else "Off"), game.toggle_music)
-  action(box, "Battle sounds: " + ("On" if game.sound.effects_enabled else "Off"), game.toggle_effects)
+  text(box, "Sound effects temporarily disabled · music only", 17, MUTED)
   action(box, "⚙  Audio settings", func(): FlowUI.settings(game))
   action(box, "Save campaign", func(): game.toast("Campaign saved." if campaign.save() else campaign.last_error))
   action(box, "Save & return to main menu", game.quit_to_menu)

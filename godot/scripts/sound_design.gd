@@ -19,10 +19,12 @@ var shop_index := -1
 var music_player: AudioStreamPlayer
 var music_players: Array = []
 var active_music = 0
-var effects_enabled = true:
+const SFX_ENABLED := false
+var effects_enabled = false:
  set(value):
-  effects_enabled = value
-  if not value:
+  effects_enabled = value and SFX_ENABLED
+  if not effects_enabled:
+   duck_remaining = 0.0
    for voice in voices: voice.stop()
    if ambience_player: ambience_player.stop(); ambience_name = ""
    if ambience_transition: ambience_transition.kill()
@@ -431,6 +433,9 @@ func apply_levels() -> void:
  if vb >= 0: AudioServer.set_bus_volume_db(vb, linear_to_db(maxf(0.0001, levels.voice)))
 
 func set_mix(music_volume: float, effects_volume: float) -> void:
+ AudioServer.set_bus_mute(AudioServer.get_bus_index("Effects"), not SFX_ENABLED)
+ var voice_bus = AudioServer.get_bus_index("Voice")
+ if voice_bus >= 0: AudioServer.set_bus_mute(voice_bus, not SFX_ENABLED)
  music_mix = linear_to_db(maxf(0.0001,clampf(music_volume,0,1)))
  effects_mix = linear_to_db(maxf(0.0001,clampf(effects_volume,0,1)))
  AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Music"),music_mix)

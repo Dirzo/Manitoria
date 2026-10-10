@@ -7,6 +7,7 @@ const MUTED = Color("c2c4d6")
 var campaign = Campaign.new()
 var speedrun_lab: SpeedrunLab
 var arena: ArenaView
+var telemetry: PlayTelemetry
 var sound: SoundDesign
 var ui: Control
 var layer: CanvasLayer
@@ -61,6 +62,7 @@ var resolving = false
 var desk_state = {"role": "All", "sort": "Board", "view": "Grid", "metric": "impact", "per_bout": true, "intel": "Rankings", "club": "Identity", "compare": []}
 
 func _ready() -> void:
+ telemetry = PlayTelemetry.new(); telemetry.game = self; add_child(telemetry)
  HeroData.load_data()
  arena = ArenaView.new(); add_child(arena)
  arena.legendary_moment.connect(func(d): legend_left = d; legend_total = d)
@@ -461,6 +463,7 @@ func zone_music() -> String:
  return ("zone_" + id) if id != "" and sound.music_cache.has("zone_" + id) else ""
 
 func render() -> void:
+ if telemetry: telemetry.screen(phase, tab)
  if phase != last_rendered_phase:
   if presentation_tween: presentation_tween.kill()
   ui.modulate.a = 0.0
@@ -723,7 +726,7 @@ func load_campaign(slot: int) -> void:
  exhibition = false
  if not campaign.load_slot(slot): toast(campaign.last_error); return
  desk_state.compare = []; desk_state.role = "All"
- sound.set_music(campaign.state.get("music", true)); sound.effects_enabled = campaign.state.get("effects", true)
+ sound.set_music(campaign.state.get("music", true)); sound.effects_enabled = false
  sound.apply_levels()
  selected_id = campaign.state.get("selected", "")
  phase = "upgrade" if not campaign.pending_heroes().is_empty() else "shop" if campaign.state.get("tour",{}).get("shop",false) else "hub"
@@ -748,7 +751,9 @@ func prepare_match() -> void:
 
 func build_prep() -> void:
  var box = scroll_panel(Rect2(26, 135, 350, 602))
- label(box, "Formation", 28)
+ label(box, "Formation & equipment", 24)
+ button(box, "Bag & forge", func(): GearUI.open_bag(self)).name = "PrepBag"
+ button(box, "Team equipment", func(): GearUI.manage_team(self)).name = "PrepEquipment"
  var select = OptionButton.new()
  for h in campaign.state.roster:
   select.add_item(h.name + " · " + HeroData.species[h.sp].n)
@@ -791,6 +796,9 @@ func build_prep() -> void:
   var info = VBoxContainer.new(); info.size_flags_horizontal = Control.SIZE_EXPAND_FILL; identity.add_child(info)
   label(info, hero.name, 18)
   label(info, HeroData.species[hero.sp].role, 12, MUTED)
+  label(stack, CombatRange.basic_label(HeroData.stats(hero).range), 15, Color("70d6dd"))
+  var gear = HBoxContainer.new(); stack.add_child(gear)
+  for key in GearUI.slot_keys(hero): GearUI.slot(self, gear, hero, key, 44)
   var tactics = button(identity, "Tactics", func(): selected_id = hero.id; show_tactics(hero.id))
   tactics.name = "StarterTactics_" + hero.id; tactics.add_theme_font_size_override("font_size", 14)
   label(stack, BattleTactics.summary(hero), 13, GOLD)
@@ -798,6 +806,9 @@ func build_prep() -> void:
  controls_hint()
 
 func place_hero(id: String, destination: int) -> void:
+ if telemetry:
+  telemetry.feature("formation", true)
+  telemetry.record("formation_change", {"hero":id,"destination":destination})
  if campaign.place_hero(id, destination): selected_id = id; render()
  else: toast("Swap with a starter, or move a starter to the bench first.")
 
@@ -806,6 +817,7 @@ func preview_formation() -> void:
  arena.clear_fighters(); arena.target_distance = 49.0 * ArenaGrid.LINEAR_SCALE; arena.camera.h_offset = 0; arena.target_pitch = 0.95; arena.target_yaw = 0.0
  sim = BattleSim.new(); sim.silent = true
  sim.setup(campaign.lineup(), campaign.opponent().roster, campaign.match_seed(), campaign.quality())
+ arena.range_hero_id = selected_id
  arena.sync(sim, 1.0, 1.0)
 
 func preview_team() -> void:
@@ -827,12 +839,13 @@ func demo_stage() -> void:
 # The contestant intro screen is retired: matches start straight in the arena with a countdown.
 func introduce_match() -> void:
  if campaign.state.get("speedrun_lab",false):prepare_match();return
- if not campaign.lineup_ready() or not campaign.pending_heroes().is_empty():return
+ if not campaign.pending_heroes().is_empty(): prepare_match(); return
+ if not campaign.lineup_ready():return
  if Dungeon.active(campaign):
   # The dungeon has no bracket board: only a room with a pending fight leads to the arena.
   if campaign.state.tour.get("intermission",false): WorldTour.end_intermission(campaign)
   if not campaign.state.dungeon.fight or campaign.state.tour.get("shop",false): phase = "hub"; tab = "overview"; render(); return
-  phase = "intro"; render(); return
+  phase = "prep"; render(); return
  if campaign.state.has("tour"): WorldTour.end_intermission(campaign)
  if campaign.state.get("tour",{}).get("shop",false) or campaign.state.get("tour",{}).get("complete",false):return
  # Every tour fight walks up to the tournament board first, then the matchup, then the arena.
@@ -846,11 +859,14 @@ func introduce_match() -> void:
  if not t.is_empty() and int(t.get("board_seen", -1)) != int(t.get("serial", 0)):
   t.board_seen = int(t.get("serial", 0))
   phase = "hub"; tab = "overview"; render()
-  TournamentRewardsUI.open_screen(self, "bracket", func(): phase = "intro"; render(), "Matchup  ▶")
+  TournamentRewardsUI.open_screen(self, "bracket", func(): phase = "prep"; render(), "Matchup  ▶")
   return
- phase = "intro"; render()
+ phase = "prep"; render()
 
 func begin_battle() -> void:
+ if not exhibition and qa.is_empty() and phase != "prep":
+  prepare_match(); return
+ if not exhibition and Dungeon.active(campaign) and not campaign.state.dungeon.fight: return
  campaign.state.erase("roster_intro")
  if not campaign.lineup_ready() or not campaign.pending_heroes().is_empty(): return
  if not exhibition and (campaign.state.get("tour",{}).get("shop",false) or campaign.state.get("tour",{}).get("complete",false)): return
@@ -864,6 +880,9 @@ func begin_battle() -> void:
   sim = BattleSim.new(); sim.action.connect(on_battle_event)
   if not exhibition: sim.team_mods = campaign.battle_mods(); sim.elite_squads = not Dungeon.active(campaign)
   sim.setup(campaign.lineup(), exhibition_rivals if exhibition else campaign.opponent().roster, campaign.match_seed(), 1.0 if exhibition else campaign.quality())
+  if telemetry:
+   telemetry.record("battle_start", {"seed":campaign.match_seed(), "quality":campaign.quality(), "team_mods":sim.team_mods})
+   telemetry.snapshot("battle_start")
   sound.announce("battle", true)
   countdown = COUNTDOWN; countdown_shown = -1; arena.target_yaw = 0.55; arena.camera_yaw = 0.55; arena.target_distance += 6.0
   arena.sync(sim, 1.0); render(); sound.scene_music(zone_music() if zone_music() != "" else "arena"); pass # Music supplies the arena entrance; avoid a competing pitched stinger.
@@ -918,6 +937,7 @@ func build_battle_hud() -> void:
  refresh_feed()
 
 func on_battle_event(e: Dictionary) -> void:
+ if telemetry: telemetry.record("combat", e)
  arena.handle_event(e)
  var unit = sim.find_unit(int(e.get("uid", -1)))
  var pan = 0.0
@@ -949,6 +969,7 @@ func refresh_feed() -> void:
 
 ## Speed medallion: 1× → 2× → 4× → tactical ¾× → 1×.
 func cycle_speed() -> void:
+ if telemetry: telemetry.record("speed_cycle", {"previous_speed":speed,"tactical":tactical})
  if tactical: set_tactical(false); speed = 1.0
  elif speed < 2.0: speed = 2.0
  elif speed < 4.0: speed = 4.0
@@ -960,6 +981,9 @@ var resolve_wait := 0.0
 
 func finish_battle() -> void:
  if resolving: return
+ if telemetry:
+  telemetry.record("battle_end", {"winner":sim.winner, "duration":sim.time, "rows":sim.report_rows()})
+  telemetry.snapshot("battle_end"); telemetry.flush()
  resolving = true
  if not qa.is_empty(): return
  if exhibition:
@@ -1161,7 +1185,7 @@ func toggle_music() -> void:
  render()
 
 func toggle_effects() -> void:
- sound.effects_enabled = not sound.effects_enabled
+ sound.effects_enabled = false
  if not exhibition and not campaign.state.is_empty(): campaign.state.effects = sound.effects_enabled; campaign.save()
  render()
 
@@ -1175,6 +1199,7 @@ func quit_to_menu() -> void:
  if was_battle: toast("Campaign saved. The unfinished bout restarts from preparation.")
 
 func toast(text_value: String) -> void:
+ if telemetry: telemetry.record("feedback", {"message":text_value})
  if is_instance_valid(toast_label):
   toast_label.text = text_value; toast_label.modulate.a = 1.0
   var t = create_tween(); t.tween_interval(4.0); t.tween_property(toast_label, "modulate:a", 0.0, 0.6)
@@ -1228,6 +1253,7 @@ func _process(dt: float) -> void:
    close_game()
 
 func close_game() -> void:
+ if telemetry: telemetry.finish()
  sound.stop_all()
  await get_tree().create_timer(0.3).timeout
  get_tree().quit()
@@ -1286,6 +1312,7 @@ func _unhandled_input(event: InputEvent) -> void:
 # Tactical view slows the fight to 0.75x and turns on the clarity overlay: stronger skill
 # footprints, who-is-attacking-whom lines, status tags and fewer small numbers.
 func set_tactical(on: bool) -> void:
+ if telemetry: telemetry.record("tactical_view", {"enabled":on})
  tactical = on
  if arena and arena.clarity: arena.clarity.tactical = on
  if on:

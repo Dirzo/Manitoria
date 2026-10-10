@@ -103,7 +103,7 @@ func run() -> void:
  for i in range(8): sound.play_sample("hero_treant", -20.0, 1)
  var f = fixture("rootmother"); var prior = sound.played_cues
  sound.battle_event({"type":"telegraph", "uid":f.boss.uid, "boss_action":"warning", "duration":1.25}, f.boss)
- check(sound.played_cues == prior + 1 and sound.last_cue == "boss_rootmother_warning", "Warnings preempt ordinary sounds")
+ check(sound.played_cues == prior, "Boss warnings are silent while effects are retired")
  sound.effects_enabled = false; prior = sound.played_cues
  sound.battle_event({"type":"cast", "uid":f.boss.uid, "boss_action":"special"}, f.boss)
  check(sound.played_cues == prior, "Mute blocks boss cues")
@@ -113,8 +113,8 @@ func run() -> void:
  # Rapid zone changes must cancel old transition callbacks; stop_all really stops ambience.
  sound.set_ambience("magma_depths"); sound.set_ambience("void_rift")
  await create_timer(2.1).timeout
- check(sound.ambience_name == "void_rift" and sound.ambience_player.playing, "Rapid ambience changes keep the latest zone")
- sound.set_combat_paused(true); check(sound.ambience_player.stream_paused, "Ambience pauses with combat")
+ check(sound.ambience_name == "void_rift" and not sound.ambience_player.playing, "Rapid zone changes stay silent")
+ sound.set_combat_paused(true); check(not sound.ambience_player.playing, "Muted ambience stays stopped while combat is paused")
  sound.stop_all(); check(not sound.ambience_player.playing and sound.ambience_name.is_empty(), "stop_all stops environmental audio")
  sound.queue_free(); await process_frame
  print("WARDEN AUDIO: %d checks, %d failures" % [checks, failures])

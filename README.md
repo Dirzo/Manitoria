@@ -1,6 +1,8 @@
 # Manitoria
 
-**Warden audio and counterplay (native source).** Ten themed boss techniques, interruptible warnings, and 70 original boss cues. See [audio audit and validation](BOSS-AUDIO-AUDIT.md). The bundled Windows build remains 0.75.4 until a new export.
+**Local play diagnostics:** the native source now records game events, errors, state and feature usage, with **Settings → Export play logs** for sharing a support ZIP. See [play logging](PLAY-LOGGING.md). Requires a new export.
+
+**Combat clarity and pre-fight equipment (native source).** Champions show their actual hex attack reach, and selecting one outlines its firing hexes. Every watched fight pauses at formation/equipment; dungeon components list recipes, and noncombat encounters offer equipment access. Audio is temporarily music-only: all effects, ambience and announcer playback are disabled, including old saves. Ten themed, interruptible boss techniques remain. See [validation and behavior](COMBAT-CLARITY.md). The bundled Windows build remains 0.75.4 until a new export.
 
 **0.75 — Visual overhaul, part 1.** Dungeon mode is the headline feature on a new title screen. The dungeon is immersive, with no tournament menus. Every menu has a cleaner look, buttons that respond to hover and press, and floating tooltip cards. Each zone now has five mobs and a Warden. See [UI-OVERHAUL-0.75.md](UI-OVERHAUL-0.75.md), and the [dungeon art brief](DUNGEON-ART-BRIEF.md) for the 70 image prompts and the Meshy steps.
 
