@@ -4,6 +4,7 @@ extends RefCounted
 ## Your guild crosses three depths. Each depth is a map of rooms (skirmishes, elites, outfitters,
 ## campfires, unknown events and treasure) that ends at a Warden boss. You choose a path one room
 ## at a time. The guild has a few lives: every lost fight costs one, and the run ends at zero.
+## From v0.78 a lost fight also kills the first champion to fall, for good (see DEFAULT_RULES).
 ## Wins offer one of three rewards: components, finished items or relics (run-long passives).
 ## Every species carries two run traits, re-rolled each run, that unlock team synergies.
 ## Clearing the third depth lets you bank your score or keep going into the endless depths.
@@ -17,6 +18,18 @@ const MAX_CHAMPIONS := 6       # the guild grows from headliner + partner to six
 const DRAFT_SIZE := 5           # champions offered at each draft
 const SLOTS := [5, 11, 7, 3, 9, 13]   # formation slots for up to six monsters
 const LIVES := {"Keeper": 4, "Standard": 3, "Champion": 2}
+## v0.78 permadeath. Runs carry their rules in d.rules; saves without them keep the old guild lives.
+##   death  "lives"  every lost fight costs a guild life (pre-0.78)
+##          "fallen" a lost fight claims the first champion to fall, for good
+##          "wounds" a champion who falls is Wounded; falling again while Wounded is death
+##          "hard"   every champion who falls in any fight is gone
+##   guild  how many champions the guild may hold      field  how many may fight (relics add more)
+const LEGACY_RULES := {"death": "lives", "guild": 6, "field": 6}
+## v0.78 default, chosen from the permadeath playtests (PERMADEATH-0.78.md): a lost fight costs a
+## life AND the first champion to fall; the first three rooms only wound; the dead leave a legacy.
+const DEFAULT_RULES := {"death": "fallen", "lives_too": true, "guild": 7, "field": 5, "grace_rows": 3, "legacy_xp": 60, "recruit_offset": -2, "threat": [1.0, 1.15, 1.2]}
+const FIELD_MAX := 6
+static var probe_rules := {}   # balance probes override run rules here
 const XP_SCALE := 2.6           # fewer fights than the five cups, so each one teaches more
 const CAMP_XP := 120
 const SCORES_PATH := "user://dungeon_scores.json"
@@ -55,7 +68,9 @@ const EVENTS := [
  {"id": "altar", "title": "The Ember Altar", "text": "A brazier burns without fuel. Whatever is laid on it comes back changed, and stronger.",
   "choices": [{"label": "Sacrifice your newest relic", "detail": "", "sacrifice": true}, {"label": "Warm your hands", "detail": "Your fielded champions gain 50 XP.", "xp": 50}]},
  {"id": "ferryman", "title": "The Pale Ferryman", "text": "A boat waits on a black river. \"One of yours rides with me,\" says the ferryman, \"and you'll have something fine for it.\"",
-  "choices": [{"label": "Send a champion across", "detail": "", "ferry": true}, {"label": "Pay the toll · 60 gold", "detail": "Pick one of three finished items.", "gold": -60, "loot": "item"}, {"label": "Turn back", "detail": "Nothing happens."}]},
+  "choices": [{"label": "Bring back the fallen · 120 gold", "detail": "", "gold": -120, "revive": true}, {"label": "Send a champion across", "detail": "", "ferry": true}, {"label": "Pay the toll · 60 gold", "detail": "Pick one of three finished items.", "gold": -60, "loot": "item"}, {"label": "Turn back", "detail": "Nothing happens."}]},
+ {"id": "sergeant", "title": "The Recruiting Sergeant", "text": "A scarred veteran plants a tattered banner. \"Six fight better than five,\" he grins. \"For a price.\"",
+  "choices": [{"label": "Buy the Sixth Standard · 200 gold", "detail": "Field a sixth champion for the rest of the run.", "gold": -200, "relic": "sixth_standard"}, {"label": "Hire his drill", "detail": "Your fielded champions gain 70 XP.", "xp": 70}]},
  {"id": "reliquary", "title": "The Forgotten Reliquary", "text": "Dusty shelves of trinkets, each humming faintly. A sign says: TAKE ONE. PAY WHAT IS FAIR.",
   "choices": [{"label": "Pay 120 gold", "detail": "Pick one of three relics.", "gold": -120, "loot": "relic"}, {"label": "Steal one and run", "detail": "Pick one of three relics, but lose 1 life.", "lives": -1, "loot": "relic"}, {"label": "Leave", "detail": "Nothing happens."}]},
 ]
@@ -68,11 +83,15 @@ static func start(c: Campaign, ascension := 0) -> void:
  if ascension >= 4: lives = maxi(1, lives - 1)
  c.state.mode = "dungeon"
  c.state.dungeon = {"act": 1, "row": -1, "col": -1, "lives": lives, "max_lives": lives, "fight": false, "loot": [], "loot_kind": "", "loot_queue": [], "event": {}, "fights": 0, "wins": 0, "elites": 0, "wardens": 0, "rooms": 0, "history": [], "map": [], "trail": [], "relics": [], "score": 0, "endless": false, "awaiting_endless": false, "ascension": clampi(ascension, 0, DungeonAscension.MAX), "flawless": 0, "rerolls": 0}
+ c.state.dungeon.rules = DEFAULT_RULES.duplicate(true)
+ # Champion already has two lives; permadeath on top needs a gentler climb (playtested).
+ if str(c.state.get("difficulty", "Standard")) == "Champion": c.state.dungeon.rules.threat = [1.0, 1.06, 1.1]
+ for k in probe_rules: c.state.dungeon.rules[k] = probe_rules[k]
  c.state.dungeon.traits = RunTraits.roll(str(c.state.get("salt", c.state.seed)))
  c.state.dungeon.visited = []; c.state.dungeon.instance = ""
  c.state.dungeon.instance_choices = DungeonInstances.offer([], str(c.state.seed))
  sync_level(c)
- c.add_news("Into the dungeon", "Three depths, three Wardens: choose which instance to enter at each descent. Your guild has %d li%s: every lost fight costs one." % [lives, "fe" if lives == 1 else "ves"])
+ c.add_news("Into the dungeon", "Three depths, three Wardens: choose which instance to enter at each descent. Your guild has %d li%s: every lost fight costs one%s." % [lives, "fe" if lives == 1 else "ves", ", and the first champion to fall in it dies for good" if permadeath(c) else ""])
 
 ## Older dungeon saves called lives "flames" and had no relics, traits or score.
 static func migrate(c: Campaign) -> void:
@@ -225,15 +244,24 @@ static func enter(c: Campaign, col: int) -> String:
   "rest":
    var no_rest = Relics.owned(c).any(func(r): return Relics.info(r).get("no_rest", false)) or DungeonAscension.has(c, 8)
    d.event = {"id": "rest", "title": "Campfire", "text": "The squad huddles around a small fire. There is time for one thing.",
-    "choices": [{"label": "Rest", "detail": (("The Last Light: campfires no longer restore lives." if DungeonAscension.has(c, 8) else "Warlord's Horn: no rest for you.") if no_rest else "Restore 1 life (%d / %d)." % [int(d.lives), int(d.max_lives)]), "lives": 1, "disabled": no_rest or int(d.lives) >= int(d.max_lives)}, {"label": "Train", "detail": "Fielded champions gain %d XP." % CAMP_XP, "xp": CAMP_XP}]}
+    "choices": [{"label": "Tend the wounded", "detail": "Heal every Wounded champion (%d)." % c.state.roster.filter(func(h): return wounded(h)).size(), "heal": true, "disabled": not c.state.roster.any(func(h): return wounded(h))} if not uses_lives(c) else {"label": "Rest", "detail": (("The Last Light: campfires no longer restore lives." if DungeonAscension.has(c, 8) else "Warlord's Horn: no rest for you.") if no_rest else "Restore 1 life (%d / %d)." % [int(d.lives), int(d.max_lives)]), "lives": 1, "heal": true, "disabled": no_rest or (int(d.lives) >= int(d.max_lives) and not c.state.roster.any(func(h): return wounded(h)))}, {"label": "Train", "detail": "Fielded champions gain %d XP." % CAMP_XP, "xp": CAMP_XP}]}
   "event":
    var rng = RandomNumberGenerator.new(); rng.seed = hash(str(c.state.seed) + "|event|%d|%d|%d" % [int(d.act), int(d.row), col])
    var e = EVENTS[rng.randi_range(0, EVENTS.size() - 1)].duplicate(true)
+   e.choices = e.choices.filter(func(ch): return not ch.get("revive", false) or permadeath(c))
    for ch in e.choices:
-    if int(ch.get("lives", 0)) < 0 and int(d.lives) <= 1: ch.disabled = true; ch.detail += " (you cannot spend your last life)"
+    if ch.get("revive", false):
+     var g = d.get("graveyard", [])
+     if g.is_empty(): ch.disabled = true; ch.detail = "None of yours has crossed the river yet."
+     elif c.state.roster.size() >= guild_cap(c): ch.disabled = true; ch.detail = "Your guild is full."
+     else: ch.detail = "%s (Lv %d) returns from the far bank, without items." % [g[-1].name, int(g[-1].level)]
+    if not uses_lives(c) and ch.has("lives"): permadeath_choice(c, ch)
+    elif permadeath(c) and int(ch.get("lives", 0)) > 0: ch.heal = true; ch.detail = str(ch.detail).trim_suffix(".") + " and mend every Wounded champion."
+    elif int(ch.get("lives", 0)) < 0 and int(d.lives) <= 1: ch.disabled = true; ch.detail += " (you cannot spend your last life)"
     if int(ch.get("gold", 0)) < 0 and int(c.state.gold) < -int(ch.gold): ch.disabled = true
     if int(ch.get("gamble", 0)) > int(c.state.gold): ch.disabled = true
-    if int(ch.get("lives", 0)) > 0 and int(d.lives) >= int(d.max_lives): ch.disabled = true
+    if uses_lives(c) and int(ch.get("lives", 0)) > 0 and int(d.lives) >= int(d.max_lives) and not c.state.roster.any(func(h): return wounded(h)): ch.disabled = true
+    if ch.has("relic") and (Relics.has(c, str(ch.relic)) or field_cap(c) >= FIELD_MAX): ch.disabled = true; ch.detail = "Your formation is already six strong."
     if ch.get("sacrifice", false):
      if d.relics.is_empty(): ch.disabled = true; ch.detail = "You carry no relic to offer."
      else:
@@ -246,7 +274,7 @@ static func enter(c: Campaign, col: int) -> String:
    d.event = e
   "checkpoint":
    n.done = true
-   if c.state.roster.size() < MAX_CHAMPIONS: offer_draft(c, "checkpoint", 0)
+   if c.state.roster.size() < free_draft_cap(c, "checkpoint"): offer_draft(c, "checkpoint", 0)
    else:
     offer_loot(c, "item"); c.add_news("Checkpoint", "Your guild is full: the waystone offers a finished item instead.")
   "anvil":
@@ -297,6 +325,7 @@ static func take_loot(c: Campaign, index: int) -> bool:
   if r.has("max_lives"):
    d.max_lives = maxi(1, int(d.max_lives) + int(r.max_lives))
    d.lives = clampi(int(d.lives) + maxi(0, int(r.max_lives)), 1, int(d.max_lives))
+  if r.has("field"): fill_field(c)
   c.add_news("Relic · " + r.name, r.text)
  else:
   c.state.inventory.append(id); c.state.bag_unread = true
@@ -349,6 +378,16 @@ static func skip_loot(c: Campaign) -> bool:
  c.state = before; return false
 
 ## The Ferryman takes your weakest fielded champion, never the headliner, and only from three up.
+## Under permadeath, life costs become wounds and life gains become healing.
+static func permadeath_choice(c: Campaign, ch: Dictionary) -> void:
+ var n = int(ch.lives); ch.erase("lives")
+ if n < 0:
+  ch.wound = true; ch.detail = str(ch.detail).replace("Lose 1 life. ", "A fielded champion is Wounded. ").replace(", but lose 1 life.", ", but a fielded champion is Wounded.").replace("lose 1 life", "a champion is Wounded")
+  if not c.lineup().any(func(h): return not wounded(h)): ch.disabled = true; ch.detail += " (everyone is already Wounded)"
+ else:
+  ch.heal = true; ch.detail = "Heal every Wounded champion."
+  if not c.state.roster.any(func(h): return wounded(h)): ch.disabled = true
+
 static func ferry_candidate(c: Campaign) -> Dictionary:
  if c.state.roster.size() < 3: return {}
  var pool = c.state.roster.filter(func(h): return str(h.id) != str(c.state.get("headliner", "")))
@@ -367,7 +406,14 @@ static func choose_event(c: Campaign, index: int) -> String:
  if ch.has("gold"):
   c.state.gold = maxi(0, int(c.state.gold) + int(ch.gold))
   if int(ch.gold) > 0: c.state.earned_gold += int(ch.gold)
- if ch.has("lives"): d.lives = clampi(int(d.lives) + int(ch.lives), 0, int(d.max_lives))
+ if ch.has("heal"):
+  var mended = heal_wounds(c)
+  if not ch.has("lives") or mended > 0: outcome = "%d Wounded champion%s mended." % [mended, "" if mended == 1 else "s"]
+ if ch.has("wound"):
+  var pool = c.lineup().filter(func(h): return not wounded(h))
+  if not pool.is_empty():
+   var h = pool[rng.randi_range(0, pool.size() - 1)]; h.wounds = 1; outcome = "%s is Wounded." % h.name
+ if ch.has("lives") and uses_lives(c): d.lives = clampi(int(d.lives) + int(ch.lives), 0, int(d.max_lives))
  if ch.has("gamble"):
   var won = rng.randf() < 0.5
   c.state.gold += int(ch.gamble) if won else -int(ch.gamble)
@@ -398,6 +444,11 @@ static func choose_event(c: Campaign, index: int) -> String:
    c.state.gold += 120; c.state.earned_gold += 120
    outcome = "%s steps into the ferry and is gone. The ferryman leaves a gift." % h.name
    offer_loot(c, "boss_relic")
+ if ch.get("revive", false) and not d.get("graveyard", []).is_empty():
+  var back = d.graveyard.pop_back().hero.duplicate(true)
+  back.slot = -1; c.state.roster.append(back); fill_field(c)
+  outcome = "%s steps off the ferry, pale but whole." % back.name
+ if ch.has("relic") and not Relics.has(c, str(ch.relic)): d.relics.append(str(ch.relic)); fill_field(c)
  if ch.has("loot"): offer_loot(c, str(ch.loot))
  if c.save(): return outcome
  c.state = before; return ""
@@ -421,11 +472,14 @@ static func quality_at(c: Campaign, row: int, kind: String) -> float:
  # A guild still gathering its champions fights a little softer opposition.
  mult *= minf(1.0, 0.8 + 0.04 * party(c))
  if int(d.act) > ACTS: mult *= pow(1.2, int(d.act) - ACTS)   # endless compounds, so every run ends somewhere
+ var tune = rule(c, "threat")
+ if tune is Array and not tune.is_empty(): mult *= float(tune[clampi(int(d.act), 1, tune.size()) - 1])
+ elif tune != null: mult *= float(tune)
  return base * mult
 
 ## Run traits and relics for the player's squad. Rivals fight with their own monster stats.
 static func battle_mods(c: Campaign) -> Array:
- return [Relics.mods(c) + RunTraits.mods(c, c.lineup()), []]
+ return [Relics.mods(c) + RunTraits.mods(c, c.lineup()) + wound_mods(c), []]
 
 static func fight_node(c: Campaign) -> Dictionary:
  var d = c.state.dungeon
@@ -495,7 +549,9 @@ static func boss_fight(c: Campaign, row: int) -> Dictionary:
  if int(d.act) > ACTS: heroes[0].empower = 0.35 * (int(d.act) - 1)
  var pool = DungeonInstances.info(instance_id(c)).mobs
  # Escorts grow with the guild: none against two or three champions, two against five or more.
- for i in range(clampi(party(c) - 3, 0, 2)):
+ # v0.78: at most one escort, so a fifth champion doesn't double the Warden's guard (the old
+ # second escort made five-champion Warden fights far harder than four; see PERMADEATH-0.78.md).
+ for i in range(clampi(party(c) - 3, 0, 1)):
   var id = "boss_%d_escort_%d" % [int(d.act), i]
   heroes.append(Bestiary.make(pool[abs(hash(id + str(c.state.seed))) % pool.size()], id, maxi(1, level - 1), st, diff, SLOTS[i + 3]))
  return {"name": "%s · Warden of %s" % [b.name, str(DungeonInstances.info(instance_id(c)).name).trim_prefix("The ")], "roster": heroes, "practice": false, "boss": key}
@@ -526,7 +582,7 @@ static func threat(c: Campaign, row: int, col: int) -> float:
   var key = str(h.get("monster", ""))
   if Bestiary.BOSSES.has(key):
    var st = Bestiary.strength(key, int(h.get("depth", 1)))
-   var p = clampi(int(h.get("party", 5)), 1, 5); var boost = 1.0 + float(h.get("empower", 0.0))
+   var p = clampi(int(h.get("party", 5)), 1, 6); var boost = 1.0 + float(h.get("empower", 0.0))
    hp = (1.0 + float(st.hp)) * (0.25 + 0.15 * p) * boost * BOSS_HP_WEIGHT
    dmg = (1.0 + 0.5 * (float(st.attack) + float(st.power))) * (0.5 + 0.1 * p) * boost * BOSS_DMG_WEIGHT
   elif key != "":
@@ -619,16 +675,17 @@ static func descend(c: Campaign) -> void:
  var d = c.state.dungeon; var t = c.state.tour
  var rng = RandomNumberGenerator.new(); rng.seed = hash(str(c.state.seed) + "|descend|%d" % int(d.act))
  if not DungeonAscension.has(c, 8): d.lives = mini(int(d.max_lives), int(d.lives) + 1)
+ if not Relics.owned(c).any(func(r): return Relics.info(r).get("no_descend_heal", false)): heal_wounds(c)
  for h in c.lineup(): c.gain_xp(h, TourBalance.TRAINING_XP, true, true, rng)
  d.act = int(d.act) + 1; d.row = -1; d.col = -1; d.trail = []; d.map = []; sync_level(c)
  d.instance = ""; d.instance_choices = DungeonInstances.offer(d.visited, str(c.state.seed))
  # A champion waits on the stairs (until the guild has six).
- if c.state.roster.size() < MAX_CHAMPIONS: offer_draft(c, "warden", 0)
+ if c.state.roster.size() < free_draft_cap(c, "warden"): offer_draft(c, "warden", 0)
 
 # ------------------------------------------------------------------ Champion drafts
 ## How many champions the guild fields; fights are sized to match (at least two foes).
 static func party(c: Campaign) -> int:
- return clampi(c.lineup().size(), 2, MAX_CHAMPIONS)
+ return clampi(c.lineup().size(), 2, FIELD_MAX)
 
 ## After the headliner is signed: the partner draft opens and the founding fund becomes travel money.
 static func after_headliner(c: Campaign) -> void:
@@ -665,6 +722,8 @@ static func offer_draft(c: Campaign, kind: String, cost: int) -> void:
   var sum = 0
   for h in c.lineup(): sum += int(h.level)
   level = clampi(roundi(float(sum) / c.lineup().size()), 1, 18)
+  # Recruits join behind the guild's veterans (v0.78 rule sets), so a death costs experience.
+  if rule(c, "recruit_offset") != null and kind != "partner": level = clampi(level + int(rule(c, "recruit_offset")), 1, 18)
  var offers = []
  for sp in picks:
   var id = "h%d" % int(c.state.next_id); c.state.next_id = int(c.state.next_id) + 1
@@ -687,12 +746,12 @@ static func shared_traits(c: Campaign, sp: String) -> Array:
 static func take_champion(c: Campaign, index: int) -> bool:
  var d = c.state.dungeon; var draft = d.get("draft", {})
  if draft.is_empty() or index < 0 or index >= draft.offers.size(): return false
- if c.state.roster.size() >= MAX_CHAMPIONS: c.last_error = "Your guild already has six champions."; return false
+ if c.state.roster.size() >= guild_cap(c): c.last_error = "Your guild is full."; return false
  if int(c.state.gold) < int(draft.cost): c.last_error = "Not enough gold."; return false
  var before = c.state.duplicate(true)
  var h = draft.offers[index].duplicate(true)
  c.state.gold = int(c.state.gold) - int(draft.cost)
- h.slot = c.standard_slot(h, c.lineup().map(func(o): return o.slot)) if c.lineup().size() < MAX_CHAMPIONS else -1
+ h.slot = c.standard_slot(h, c.lineup().map(func(o): return o.slot)) if c.lineup().size() < field_cap(c) else -1
  c.state.roster.append(h); c.state.selected = h.id
  d.draft = {}
  add_score(c, 25)
@@ -714,7 +773,7 @@ static func shop_draft_cost(c: Campaign) -> int:
  return 110 + 30 * mini(int(c.state.dungeon.act), 6)
 
 static func shop_draft_open(c: Campaign) -> bool:
- return c.state.tour.get("shop", false) and c.state.roster.size() < MAX_CHAMPIONS and int(c.state.dungeon.get("shop_draft_serial", -1)) != int(c.state.tour.serial)
+ return c.state.tour.get("shop", false) and c.state.roster.size() < guild_cap(c) and int(c.state.dungeon.get("shop_draft_serial", -1)) != int(c.state.tour.serial)
 
 static func buy_shop_draft(c: Campaign) -> bool:
  if not shop_draft_open(c): c.last_error = "No champion for hire here."; return false
@@ -722,6 +781,119 @@ static func buy_shop_draft(c: Campaign) -> bool:
  c.state.dungeon.shop_draft_serial = int(c.state.tour.serial)
  offer_draft(c, "shop", shop_draft_cost(c))
  return c.save()
+
+# ------------------------------------------------------------------ Permadeath (v0.78)
+static func rule(c: Campaign, key: String):
+ if probe_rules.has(key): return probe_rules[key]
+ return c.state.get("dungeon", {}).get("rules", LEGACY_RULES).get(key, LEGACY_RULES.get(key))
+
+static func death_rule(c: Campaign) -> String:
+ return str(rule(c, "death"))
+
+static func permadeath(c: Campaign) -> bool:
+ return death_rule(c) != "lives"
+
+## Lives still time the run unless the rule set leaves them out.
+static func uses_lives(c: Campaign) -> bool:
+ return not permadeath(c) or rule(c, "lives_too") == true
+
+static func guild_cap(c: Campaign) -> int:
+ return int(rule(c, "guild"))
+
+## Free recruits (checkpoints, Warden stairs) only fill the formation when "bench_drafts" is off
+## for that kind; the bench is then bought at outfitters.
+static func free_draft_cap(c: Campaign, kind: String) -> int:
+ var off = rule(c, "bench_drafts")
+ if off is Array and kind in off: return mini(guild_cap(c), field_cap(c))
+ return guild_cap(c)
+
+## How many champions may fight: the run's field size plus relic slots, never more than six.
+static func field_cap(c: Campaign) -> int:
+ return clampi(int(rule(c, "field")) + int(Relics.total(c, "field")), 1, FIELD_MAX)
+
+## Benched champions step into any free place in the formation.
+static func fill_field(c: Campaign) -> void:
+ for b in c.state.roster:
+  if c.lineup().size() >= field_cap(c): return
+  if int(b.slot) < 0: b.slot = c.standard_slot(b, c.lineup().map(func(o): return o.slot))
+
+static func wounded(h: Dictionary) -> bool:
+ return int(h.get("wounds", 0)) > 0
+
+static func heal_wounds(c: Campaign) -> int:
+ var n = 0
+ for h in c.state.roster:
+  if wounded(h): h.wounds = 0; n += 1
+ return n
+
+## Wounded champions fight below their best until they rest.
+static func wound_mods(c: Campaign) -> Array:
+ var out = []
+ var w = 0.15 if rule(c, "wound_penalty") == null else float(rule(c, "wound_penalty"))
+ for h in c.lineup():
+  if wounded(h): out.append({"hp": -w, "attack": -w, "power": -w, "filter": {"id": str(h.id)}, "source": "wound"})
+ return out
+
+## A champion leaves the guild for good: its items go to the bag, the bench steps up, and the
+## crown passes on if it was the headliner.
+static func bury(c: Campaign, h: Dictionary, cause: String) -> void:
+ var d = c.state.dungeon
+ for v in h.get("equipment", {}).values(): c.state.inventory.append(str(v)); c.state.bag_unread = true
+ var slot = int(h.get("slot", -1))
+ c.state.roster.erase(h)
+ for f in c.state.get("formations", []):
+  if f is Dictionary and f.has("slots"): f.slots.erase(str(h.id))
+ if not d.has("graveyard"): d.graveyard = []
+ var ghost = h.duplicate(true); ghost.equipment = {}; ghost.slot = -1; ghost.wounds = 0
+ d.graveyard.append({"name": h.name, "sp": h.sp, "level": int(h.level), "act": int(d.act), "row": int(d.row) + 1, "cause": cause, "hero": ghost})
+ # Legacy: the survivors learn from the fallen.
+ var legacy = 0 if rule(c, "legacy_xp") == null else int(rule(c, "legacy_xp"))
+ if legacy > 0:
+  var rng = RandomNumberGenerator.new(); rng.seed = hash(str(h.id) + "|legacy")
+  for o in c.state.roster:
+   if o != h: c.gain_xp(o, legacy, true, true, rng)
+ if str(c.state.get("headliner", "")) == str(h.id) and rule(c, "headliner_fatal") == true: d.flame_out = true
+ if str(c.state.get("headliner", "")) == str(h.id) and not c.state.roster.is_empty():
+  var heir = c.state.roster.duplicate(); heir.sort_custom(func(a, b): return int(a.level) > int(b.level))
+  c.state.headliner = heir[0].id
+ # The bench steps up into the empty place.
+ if slot >= 0: fill_field(c)
+
+## Applies the run's death rule after a fight. Returns [{name, sp, fate}] for the report.
+static func casualties(c: Campaign, sim: BattleSim, won: bool) -> Array:
+ var rule_now = death_rule(c); var out = []
+ if rule_now == "lives": return out
+ var fallen = []
+ for id in sim.fall_order:
+  var h = c.hero_by_id(str(id))
+  if not h.is_empty() and h in c.state.roster and h not in fallen: fallen.append(h)
+ var doomed = []
+ match rule_now:
+  "fallen":
+   if not won and not fallen.is_empty():
+    doomed.append(fallen[0])
+    # Optional: the rest of the fallen limp home Wounded.
+    if rule(c, "wound_others") == true:
+     for h in fallen.slice(1):
+      if not wounded(h): h.wounds = 1; out.append({"name": h.name, "sp": h.sp, "fate": "wounded"})
+  "hard":
+   doomed = fallen
+  "wounds":
+   var on_win = rule(c, "wound_on_win") != false
+   for h in fallen:
+    if won and not on_win: continue
+    if wounded(h): doomed.append(h)
+    else: h.wounds = 1; out.append({"name": h.name, "sp": h.sp, "fate": "wounded"})
+ # The dungeon's mouth is forgiving: the first rooms of a run wound instead of kill.
+ var grace = 0 if rule(c, "grace_rows") == null else int(rule(c, "grace_rows"))
+ if int(c.state.dungeon.act) == 1 and int(c.state.dungeon.row) < grace:
+  for h in doomed:
+   h.wounds = 1; out.append({"name": h.name, "sp": h.sp, "fate": "spared"})
+  doomed = []
+ for h in doomed:
+  out.append({"name": h.name, "sp": h.sp, "fate": "dead"})
+  bury(c, h, "fell in battle")
+ return out
 
 # ------------------------------------------------------------------ Fights
 static func resolve(c: Campaign, sim: BattleSim) -> bool:
@@ -741,6 +913,7 @@ static func resolve(c: Campaign, sim: BattleSim) -> bool:
  var flawless = won and fielded > 0 and sim.living(0, false).size() == fielded
  if flawless: reward = roundi(reward * 1.25)
  c.record_team(c.state.roster, sim, 0, true, rng, XP_SCALE * (1.0 + Relics.total(c, "xp"))); c.record_club(c.state, sim.winner)
+ var fates = casualties(c, sim, won)
  if rival.has("club"):
   var cl = WorldTour.club(c, int(rival.club))
   c.record_team(cl.roster, sim, 1, false, rng); c.record_club(cl, 1 if won else 0 if sim.winner == 1 else -1)
@@ -777,6 +950,16 @@ static func resolve(c: Campaign, sim: BattleSim) -> bool:
    else:
     descend(c)
     c.add_news("Warden defeated", "The way down to %s is open. One life restored, the squad trains, and new recruits wait on the stairs." % depth(c).name)
+ elif permadeath(c):
+  if kind != "boss": n.done = true; d.fight = false
+  if rule(c, "lives_too") == true: d.lives = maxi(0, int(d.lives) - 1); report.life_lost = true; report.lives_lost = 1
+  if c.state.roster.is_empty() or int(d.lives) <= 0 or d.get("flame_out", false):
+   c.state.run_over = true; report.run_over = true; d.fight = false
+   d.loot = []; d.loot_queue = []
+   report.final_score = bank_score(c, "Fallen")
+   c.add_news("The guild has fallen", "%s's last champion fell in %s, room %d, with %d points." % [c.state.name, depth(c).name, int(d.row) + 1, int(report.final_score)])
+  else:
+   c.add_news("Beaten back", "%s lost to %s." % [c.state.name, rival.name])
  else:
   var cost = 2 if kind in ["elite", "boss"] and DungeonAscension.has(c, 7) else 1
   d.lives = maxi(0, int(d.lives) - cost); report.life_lost = true; report.lives_lost = cost
@@ -788,8 +971,14 @@ static func resolve(c: Campaign, sim: BattleSim) -> bool:
    c.add_news("Out of lives", "%s fell in %s, room %d, with %d points." % [c.state.name, depth(c).name, int(d.row) + 1, int(report.final_score)])
   else:
    c.add_news("A life lost", "%s lost to %s. %d li%s left." % [c.state.name, rival.name, int(d.lives), "fe" if int(d.lives) == 1 else "ves"])
+ report.fates = fates
+ if won and permadeath(c) and c.state.roster.is_empty():
+  c.state.run_over = true; report.run_over = true; d.fight = false; d.loot = []; d.loot_queue = []
+  report.final_score = bank_score(c, "Fallen")
  report.lives = int(d.lives); report.points = int(d.score) - score_before
  c.state.gold += reward; c.state.earned_gold += reward
+ var upkeep = int(Relics.total(c, "upkeep"))
+ if upkeep > 0: c.state.gold = maxi(0, int(c.state.gold) - upkeep); report.upkeep = upkeep
  c.state.report = report; c.state.archive.append(report.duplicate(true))
  if c.save(): return true
  c.state = before; return false

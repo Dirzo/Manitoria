@@ -1,6 +1,6 @@
-# Manitoria 0.77 — Item overhaul
+# Manitoria 0.78 — Permadeath
 
-Size and Crit stats, 36 items, Wild items, Mythic Anvil Legendaries and item feedback in combat. See [ITEM-OVERHAUL-0.77.md](../ITEM-OVERHAUL-0.77.md).
+Champions die for good in the dungeon, a guild of seven fields five, and five relics field a sixth. See [PERMADEATH-0.78.md](../PERMADEATH-0.78.md). The 0.77 item overhaul is in [ITEM-OVERHAUL-0.77.md](../ITEM-OVERHAUL-0.77.md).
 
 # Manitoria 0.76 — Combat and leveling rework
 

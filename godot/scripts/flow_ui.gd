@@ -103,8 +103,11 @@ static func run_bar(game: Node, parent: Node) -> void:
 		var d = c.state.dungeon
 		var lives = HBoxContainer.new(); lives.add_theme_constant_override("separation", 1); row.add_child(lives)
 		lives.mouse_filter = Control.MOUSE_FILTER_STOP
-		lives.tooltip_text = "Lives: every lost fight costs one. Campfires and Wardens restore them.\n%d / %d left" % [int(d.lives), int(d.max_lives)]
+		lives.tooltip_text = ("Lives: every lost fight costs one, and the first champion to fall dies for good. Campfires and Wardens restore lives.\n%d / %d left" if Dungeon.permadeath(c) else "Lives: every lost fight costs one. Campfires and Wardens restore them.\n%d / %d left") % [int(d.lives), int(d.max_lives)]
 		for i in range(int(d.max_lives)): glyph(lives, "heart", 22, i < int(d.lives))
+		var grave = d.get("graveyard", [])
+		if not grave.is_empty():
+			chip(game, row, "skull", str(grave.size()), "Fallen for good:\n" + "\n".join(grave.map(func(g): return "%s · Lv %d · depth %d, room %d" % [g.name, int(g.level), int(g.act), int(g.row)])), Color("ff8a9a"))
 		chip(game, row, "star", str(int(d.score)), "Score so far (before difficulty multiplier and lives bonus)", Color("9fd8ff"))
 	elif c.state.has("tour") and not c.state.roster.is_empty():
 		var lost = WorldTour.losses(c, 0)

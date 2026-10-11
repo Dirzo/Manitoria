@@ -148,7 +148,7 @@ static func apply(sim: BattleSim, u: Dictionary) -> void:
  var boost = float(u.hero.get("empower", 0.0))
  # Wardens were tuned against five champions; a smaller guild meets a smaller Warden.
  if BOSSES.has(key) and u.hero.has("party"):
-  var p = clampi(int(u.hero.party), 1, 5)
+  var p = clampi(int(u.hero.party), 1, 6)
   mod.hp = (1.0 + float(mod.get("hp", 0.0))) * (0.25 + 0.15 * p) - 1.0
   mod.attack = (1.0 + float(mod.get("attack", 0.0))) * (0.5 + 0.1 * p) - 1.0
   mod.power = (1.0 + float(mod.get("power", 0.0))) * (0.5 + 0.1 * p) - 1.0

@@ -1,4 +1,4 @@
-# Manitoria 0.77 · Item overhaul (Windows build)
+# Manitoria 0.78 · Permadeath (Windows build)
 
 GitHub limits single files to 100 MB, so the game is split into parts.
 
@@ -6,4 +6,4 @@ GitHub limits single files to 100 MB, so the game is split into parts.
 2. Double-click `JOIN-ME.bat`. It stitches the parts back into `Manitoria.exe` and `Manitoria.pck`.
 3. Run `Manitoria.exe`. Keep the `.exe` and `.pck` side by side.
 
-Old saves load and migrate automatically. See [ITEM-OVERHAUL-0.77.md](../../COMBAT-REWORK-0.76.md).
+Old saves load and migrate automatically. See [PERMADEATH-0.78.md](../../PERMADEATH-0.78.md).

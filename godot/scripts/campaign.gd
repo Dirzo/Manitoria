@@ -103,12 +103,12 @@ func refresh_market() -> bool:
  create_market(rng); return save()
 
 func lineup_ready() -> bool:
- if Dungeon.active(self): return lineup().size() >= 1 and lineup().size() <= Dungeon.MAX_CHAMPIONS
+ if Dungeon.active(self): return lineup().size() >= 1 and lineup().size() <= Dungeon.field_cap(self)
  return lineup().size() >= MIN_SQUAD and lineup().size() <= MAX_SQUAD
 
 ## How many champions may stand in the formation (the dungeon grows to six).
 func max_squad() -> int:
- return Dungeon.MAX_CHAMPIONS if Dungeon.active(self) else MAX_SQUAD
+ return Dungeon.field_cap(self) if Dungeon.active(self) else MAX_SQUAD
 
 func lineup() -> Array:
  return state.roster.filter(func(h): return h.slot >= 0)

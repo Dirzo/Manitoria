@@ -7461,7 +7461,7 @@
   "file": "godot/assets/items/i_giant.png",
   "legendary": false,
   "path": "wild",
-  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a potion bottle labelled only with a tiny giant silhouette, pink fizz. Palette: gold and hot pink, playful and dangerous."
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a fat potion bottle with a tiny giant silhouette swirling inside, pink fizz. Palette: gold and hot pink, playful and dangerous."
  },
  {
   "id": "leg_giant",
@@ -7526,7 +7526,7 @@
   "path": "wild",
   "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a soul charm with two glowing spirits swapping in a spiral. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: gold and hot pink, playful and dangerous with gold."
  }
-] [
+]           [
   {
     "id": "arachne:signature",
     "species": "arachne",
@@ -12200,4 +12200,4 @@
     "key": "3",
     "name": "Serpent Fang",
     "file": "chimera-3.png",
-    "prompt": "Use case: stylized-concept.\nAsset type: ONE square fantasy MOBA ability icon for Manitoria.\nSkill: Chimera \u2014 Serpent Fang. Depict this exact concept, never write its name in the image.\nSubject: one lethal empowered strike with a sharp pointed focal silhouette\nChampion motifs: lion claws, goat horns, serpent venom and dragon flame. Use only motifs relevant to this named skill; avoid piling unrelated motifs together
+    "prompt": "Use case: stylized-concept.\nAsset type: ONE square fantasy MOBA ability icon for Manitoria.\nSkill: Chimera \u2014 Serpent Fang. Depict this exact concept, never write its name in the image.\nSubject: one lethal empowered strike with a sharp pointed focal silhouette\nChampion motifs: lion claws, goat horns, serpent venom and dragon flame. Use only motifs relevant to this named skill; avoid piling unrelated

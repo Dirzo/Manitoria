@@ -1,6 +1,8 @@
 # Manitoria
 
-**0.77 — Item overhaul.** Items make champions huge, blindingly fast or crit for screen-shaking MEGA CRITS. Size and Crit join the stats (an octagon), every item has a Legendary from the new Mythic Anvil, and Wild items come back with real downsides. Play it from [`builds/v0.77`](builds/v0.77). See [ITEM-OVERHAUL-0.77.md](ITEM-OVERHAUL-0.77.md).
+**0.78 — Permadeath.** In the dungeon, a lost fight now costs a life and the first champion to fall, for good. Keep a bench, protect your carry, and find one of five relics that let a sixth champion fight. Play it from [`builds/v0.78`](builds/v0.78). See [PERMADEATH-0.78.md](PERMADEATH-0.78.md).
+
+**0.77 — Item overhaul.** Items make champions huge, blindingly fast or crit for screen-shaking MEGA CRITS. Size and Crit join the stats (an octagon), every item has a Legendary from the new Mythic Anvil, and Wild items come back with real downsides. See [ITEM-OVERHAUL-0.77.md](ITEM-OVERHAUL-0.77.md).
 
 **0.76 — Combat and leveling rework.** Six stats (AD, AS, AP, Mana, HP, Resistance), one signature ability per champion cast when its mana bar fills, and level-ups that deal three stat cards to choose from. Evolutions now only reshape the signature, stats or movement. Old saves migrate automatically. See [COMBAT-REWORK-0.76.md](COMBAT-REWORK-0.76.md).
 

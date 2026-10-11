@@ -1011,12 +1011,18 @@ func build_result() -> void:
  FlowUI.chip(self, chips, "swords", "vs " + str(report.opponent), "%.0f second fight" % report.duration)
  if not exhibition:
   FlowUI.chip(self, chips, "coin", "+%d" % report.gold, "Gold earned", Color("ffdf7e"))
-  FlowUI.chip(self, chips, "heart", "%d/5 alive" % (5 - fallen), "Survivors · everyone recovers before the next fight", Color("ff9aa5"))
+  var fielded = report.rows.filter(func(r): return r.team == 0).size()
+  FlowUI.chip(self, chips, "heart", "%d/%d alive" % [fielded - fallen, fielded], "Survivors · everyone recovers before the next fight" if not report.get("dungeon", false) or not Dungeon.permadeath(campaign) else "Survivors · in the dungeon, losing a fight kills the first champion to fall", Color("ff9aa5"))
   var xp = label(chips, "+%d XP" % (80 if won else 65), 21, Color("9fd8ff"), false); xp.tooltip_text = "XP for every fielded hero"; xp.mouse_filter = Control.MOUSE_FILTER_STOP
  if not exhibition and report.get("dungeon", false):
   var lost = report.get("life_lost", false) or report.get("flame_lost", false)
   var verdict_text = ("%s · %d LEFT" % ["TWO LIVES LOST" if int(report.get("lives_lost", 1)) > 1 else "LIFE LOST", int(report.get("lives", 0))]) if lost else ("FLAWLESS · +50% POINTS · " if report.get("flawless", false) else "") + ("DUNGEON CONQUERED · BANK YOUR SCORE OR GO ENDLESS" if report.get("dungeon_cleared", false) else ("WARDEN DEFEATED · THE WAY DOWN IS OPEN" if report.get("warden_down", false) else "ROOM CLEARED · CHOOSE YOUR SPOILS ON THE MAP"))
   var fl = label(box, verdict_text, 26, Color("ff8a7a") if lost else GOLD); fl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+  # v0.78 permadeath: who fell for good, and who limps on Wounded.
+  for f in report.get("fates", []):
+   var dead = str(f.fate) == "dead"
+   var line = ("%s FELL FOR GOOD · ITEMS RETURN TO THE BAG" if dead else "%s IS WOUNDED · -15%% UNTIL THEY REST") % str(f.name).to_upper()
+   var fate = label(box, line, 22, Color("ff5a6a") if dead else Color("ffb35c")); fate.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
   if int(report.get("points", 0)) > 0:
    var pts = label(box, "+%d POINTS · %d TOTAL" % [int(report.points), int(campaign.state.dungeon.score)], 18, Color("9fd8ff")); pts.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
  if not exhibition and report.has("tour_level"):

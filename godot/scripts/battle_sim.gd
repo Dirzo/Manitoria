@@ -19,6 +19,7 @@ var team_cast := [-10.0, -10.0]
 var true_hit := false
 ## v0.77: the crit multiplier of the hit being resolved (0 = no crit), and of the last landed hit.
 var crit_mult := 0.0
+var fall_order: Array = []   # hero ids of champions in the order they fell (v0.78 permadeath)
 var last_crit := 0.0
 var countering := false
 ## Mana earned per basic attack and the cap from one hit taken (TFT rules).
@@ -417,6 +418,7 @@ func hurt(source: Dictionary, target: Dictionary, amount: float, magical: bool =
   emit({"type": "cast", "uid": target.uid, "effect": "rebirth", "name": "Ashen Rebirth", "pos": target.pos, "target": target.pos})
   return
  target.alive = false; target.moving = false; target.windup = 0.0
+ if not target.summon and target.hero.has("id"): fall_order.append(str(target.hero.id))
  emit({"type": "death", "uid": target.uid, "pos": target.pos})
  SignatureCast.on_death(self, target)
  if not source.summon and source.alive and source.hero.sp == "wendigo":

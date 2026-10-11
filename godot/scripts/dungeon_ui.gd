@@ -360,7 +360,8 @@ static func warden_card(game: Node, frame: Control, c: Campaign) -> void:
 ## Your fielded champions with their run traits, and the next step.
 static func squad_band(game: Node, stage: Control, c: Campaign) -> void:
  var band = plate(stage, Rect2(0, SQUAD_Y, W, H - SQUAD_Y), BRONZE)
- caption(game, band, "Your squad", Vector2(16, 8), GOLDEN)
+ var bench = c.state.roster.size() - c.lineup().size()
+ caption(game, band, "Your squad · %d / %d fielded%s" % [c.lineup().size(), Dungeon.field_cap(c), (" · %d on the bench" % bench) if bench > 0 else ""], Vector2(16, 8), GOLDEN)
  var counts = RunTraits.counts(c, c.lineup())
  var heroes = c.lineup()
  for i in range(heroes.size()):
@@ -368,7 +369,8 @@ static func squad_band(game: Node, stage: Control, c: Campaign) -> void:
   var card = Control.new(); band.add_child(card); card.position = Vector2(x, 26); card.size = Vector2(188, 92); card.mouse_filter = Control.MOUSE_FILTER_STOP
   portrait(card, str(h.sp), Rect2(0, 6, 64, 64), GOLDEN if h.id == c.state.get("headliner", "") else BRONZE)
   text(game, card, str(h.name), Vector2(72, 2), 16, PARCH)
-  text(game, card, "Lv %d  ·  %s" % [int(h.level), HeroData.species[h.sp].n], Vector2(72, 22), 12, MUTE)
+  if Dungeon.wounded(h): text(game, card, "Lv %d  ·  Wounded −15%%" % int(h.level), Vector2(72, 22), 12, Color("ffb35c"))
+  else: text(game, card, "Lv %d  ·  %s" % [int(h.level), HeroData.species[h.sp].n], Vector2(72, 22), 12, MUTE)
   var tags = RunTraits.of(c, h.sp)
   for k in range(tags.size()):
    var t = RunTraits.info(tags[k]); var lit = RunTraits.tier_of(tags[k], int(counts.get(tags[k], 0))) >= 0
@@ -570,7 +572,7 @@ static func draft_dialog(game: Node) -> void:
  var titles = {"partner": "Choose your partner", "checkpoint": "A champion waits at the waystone", "warden": "A champion waits on the stairs", "shop": "Champions for hire"}
  var dlg = dialog(game, str(titles.get(str(draft.kind), "Choose a champion")), Vector2(1540, 610), GOLDEN, str(draft.kind) != "partner")
  var cost = int(draft.cost)
- text(game, dlg.box, ("Your headliner needs a partner. " if str(draft.kind) == "partner" else "") + "Pick one of five. Their stats are rolled fresh; ✦ marks traits they share with your guild." + ("  ·  Costs %d gold." % cost if cost > 0 else "") + "  ·  Guild %d / %d" % [c.state.roster.size(), Dungeon.MAX_CHAMPIONS], Vector2.ZERO, 15, MUTE)
+ text(game, dlg.box, ("Your headliner needs a partner. " if str(draft.kind) == "partner" else "") + "Pick one of five. Their stats are rolled fresh; ✦ marks traits they share with your guild." + ("  ·  Costs %d gold." % cost if cost > 0 else "") + "  ·  Guild %d / %d" % [c.state.roster.size(), Dungeon.guild_cap(c)], Vector2.ZERO, 15, MUTE)
  var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 10); dlg.box.add_child(row)
  for i in range(draft.offers.size()):
   var h = draft.offers[i]; var index = i
@@ -676,6 +678,8 @@ static func guide(game: Node) -> void:
  for line in [
   "Three depths, each one an instance you choose at the top of the stairs: ten in all, from the Blight Forest to the Void Rift. Each has its own monsters, Warden boss and arena.",
   "Pick one room at a time along the glowing paths. Losing a fight costs a life; lose them all and the run ends. Campfires, healing springs and defeated Wardens restore them.",
+  "Champions die for good: when you lose a fight, the first champion to fall is gone (its items return to the bag, and the survivors gain its legacy XP). In the first three rooms of a run they are only Wounded (-15% until a campfire). Keep a bench, protect your carry, and look for the Pale Ferryman, who can bring one back.",
+  "You field five champions. War Council, Crowded Banner, Mercenary Contract, Reaper's Bargain and the Recruiting Sergeant's Sixth Standard each let a sixth fight, each at a different price.",
   "Skirmishes reward one of three components, treasure one of three finished items, elites one of three relics. Wardens give a finished item, a Warden relic and a medal chest.",
   "Run traits: every creature carries up to three of its own traits (kin, element, class). Each run awakens a different set, each with its own flavour. Field different champions that share a trait to unlock it.",
   "Read the map: the arc under each fight room shows its threat (green easy, gold even, orange hard, red deadly). Elites are the greedy path: harder fights, but they pay relics.",

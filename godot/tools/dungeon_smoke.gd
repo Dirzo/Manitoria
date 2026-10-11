@@ -61,7 +61,7 @@ func walk_depth(c: Campaign, seen: Dictionary, lose_once: bool) -> void:
   for o in options:
    if str(c.state.dungeon.map[int(c.state.dungeon.row)+1][o].type)=="elite" and not seen.has("elite"):col=o
   var kind=Dungeon.enter(c,col);check(kind!="","Enter room "+str(col));seen[kind]=true
-  if kind=="boss":check(c.opponent().roster.size()==1+clampi(Dungeon.party(c)-3,0,2) and c.opponent().roster[0].has("monster"),"A Warden brings escorts sized to the guild")
+  if kind=="boss":check(c.opponent().roster.size()==1+clampi(Dungeon.party(c)-3,0,1) and c.opponent().roster[0].has("monster"),"A Warden brings escorts sized to the guild")
   if kind=="battle":check(c.opponent().roster.all(func(h):return h.has("monster")),"Skirmishes are dungeon monsters")
   if kind in ["battle","elite","boss"]:
    if lose_once and not lost and kind=="battle" and c.state.dungeon.lives>1:
@@ -183,10 +183,14 @@ func run() -> void:
   var probe_c=Campaign.new();probe_c.new_run("Bias %d"%s,91,9000+s,"Standard");Dungeon.start(probe_c);probe_c.choose_starter(League.tiers().Legendary[s%8])
   hits+=probe_c.state.dungeon.draft.offers.filter(func(h):return not Dungeon.shared_traits(probe_c,h.sp).is_empty()).size()
  check(hits>30*1.2,"Drafts lean toward champions that share traits (%d synergy offers in 30 drafts)"%hits)
- while g.state.roster.size()<Dungeon.MAX_CHAMPIONS:
+ while g.state.roster.size()<Dungeon.guild_cap(g):
   Dungeon.offer_draft(g,"checkpoint",0);check(Dungeon.take_champion(g,0),"Unlock a champion")
- check(g.lineup().size()==6 and g.lineup_ready(),"Six champions take the field")
- Dungeon.offer_draft(g,"checkpoint",0);check(not Dungeon.take_champion(g,0),"No seventh champion")
+ check(Dungeon.guild_cap(g)==7 and g.lineup().size()==5 and g.lineup_ready(),"A guild of seven fields five (v0.78)")
+ Dungeon.offer_draft(g,"checkpoint",0);check(not Dungeon.take_champion(g,0),"No eighth champion")
+ g.state.dungeon.relics.append("war_council");Dungeon.fill_field(g)
+ check(Dungeon.field_cap(g)==6 and g.lineup().size()==6 and g.lineup_ready(),"War Council fields a sixth champion")
+ var rr=RandomNumberGenerator.new();rr.seed=5
+ check(Relics.offer(g,rr,["Common","Rare","Boss"]).all(func(r):return not Relics.info(str(r)).has("field")),"No more sixth-slot relics once six take the field")
  check(Dungeon.opponent(g).roster.size()==5,"Six champions meet a pack of five")
  # Old saves that still say "flames" load as lives.
  var old=Campaign.new();old.new_run("Old save",97,55,"Standard");Dungeon.start(old)
@@ -233,7 +237,8 @@ func run() -> void:
  var who=Dungeon.ferry_candidate(t);var size_before=t.state.roster.size();var gold_before=int(t.state.gold)
  td.event=ferry
  check(not who.is_empty() and str(who.id)!=str(t.state.headliner),"The ferryman never takes the headliner")
- check(Dungeon.choose_event(t,0)!="" and t.state.roster.size()==size_before-1 and int(t.state.gold)==gold_before+120 and td.loot_kind=="relic","The ferryman trades a champion for a Boss relic and gold")
+ var ferry_index=ferry.choices.find(ferry.choices.filter(func(ch):return ch.get("ferry",false))[0])
+ check(Dungeon.choose_event(t,ferry_index)!="" and t.state.roster.size()==size_before-1 and int(t.state.gold)==gold_before+120 and td.loot_kind=="relic","The ferryman trades a champion for a Boss relic and gold")
  check(td.loot.all(func(r):return Relics.info(str(r)).rarity=="Boss"),"The ferryman's relics are Boss relics")
  Dungeon.take_loot(t,0)
  # Threat reads: every fight room ahead gets a label, Wardens read harder than the first skirmish.
