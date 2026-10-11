@@ -6,6 +6,8 @@ signal hitstop(duration: float)
 
 ## Fighters read big and chunky on the floor (was 0.72).
 const MODEL_SCALE = 0.98
+## Big-bodied creatures: slower turns, longer squash, smaller flinch.
+const HEAVY := ["golem", "cyclops", "zaratan", "treant", "yeti", "minotaur", "troll", "hydra"]
 const BAR_LIFT = 1.32
 const HITFLASH = preload("res://shaders/vfx/hitflash.gdshader")
 var shake := 0.0
@@ -28,6 +30,7 @@ var camera_distance = 33.0 * ArenaGrid.LINEAR_SCALE
 var target_yaw = 0.30
 var target_distance = 33.0 * ArenaGrid.LINEAR_SCALE
 var elapsed = 0.0
+var released := {}   # uid -> sim time of its last melee release (to tell a landed swing from a DoT tick)
 var inspecting = false
 var flames: Array = []
 var current_speed = 1.0
@@ -304,7 +307,7 @@ func clear_fighters() -> void:
  if clarity: clarity.clear()
  trail_clock.clear()
  for tween in effect_tweens: tween.kill()
- effect_tweens.clear(); missiles.clear(); zone_visuals.clear(); telegraphs.clear(); combat_numbers.clear()
+ released.clear(); effect_tweens.clear(); missiles.clear(); zone_visuals.clear(); telegraphs.clear(); combat_numbers.clear()
  models.clear()
 
 func spawn(u: Dictionary) -> void:
@@ -321,12 +324,11 @@ func spawn(u: Dictionary) -> void:
  model.scale = Vector3.ONE * (0.48 if u.summon else MODEL_SCALE)
  var players = model.find_children("*", "AnimationPlayer", true, false)
  var player: AnimationPlayer = players[0] if not players.is_empty() else null
- if player:
-  for anim in ["idle", "walk"]:
-   if player.has_animation(anim): player.get_animation(anim).loop_mode = Animation.LOOP_LINEAR
-  if player.has_animation("idle"):
-   # Desynchronise idles so a squad of the same creature doesn't breathe in lockstep.
-   player.play("idle"); player.seek(randf() * player.get_animation("idle").length, true)
+ # v0.78: clips are driven by a per-fighter AnimationTree (forward-played swings timed to the sim's hit,
+ # skeletal flinches, per-unit hit-stop). See combat_animator.gd.
+ var tempo = randf_range(0.92, 1.08)
+ var anim = CombatAnimator.new()
+ anim.setup(model, path.get_file().get_basename(), u.hero.sp in HEAVY, tempo)
  var team_color = Color("70d6dd") if u.team == 0 else Color("eb987b")
  var circle = Node3D.new(); holder.add_child(circle) # Legacy selection anchor; team identity is in the health bar.
  var aura = Node3D.new(); holder.add_child(aura); aura.name = "EvolutionAura"
@@ -405,7 +407,7 @@ func spawn(u: Dictionary) -> void:
  var flash_mat = ShaderMaterial.new(); flash_mat.shader = HITFLASH
  for mi in model.find_children("*", "MeshInstance3D", true, false): mi.material_overlay = flash_mat
  if u.hero.has("monster"): Bestiary.dress(model, flash_mat, u.hero, u.summon)
- models[u.uid] = {"root": holder, "motion":motion, "stride":0.0, "recoil":Vector3.ZERO, "aura": aura, "model": model, "player": player, "bar": bar, "bars": bars, "ring": circle, "state": "idle", "lock": 0.0, "dead": false, "hp_label": hp_label, "cast_bar": cast_bar, "bubble": bubble, "shield_bar":shield_bar, "mana_bar": mana_bar, "stack_label": stack_label, "path_ring": path_ring, "item_tint": item_tint, "base_scale": model.scale, "bars_y": bars.position.y, "size_now": 1.0, "ghosts": [], "ghost_t": 0.0, "wind": null, "step_t": 0.0, "stagger": 0.0, "death_elapsed": 0.0, "arc": {}, "last_target": world_point(u.pos), "ground_speed": 0.0, "walk_hold": 0.0, "turn_rate": 0.0, "name_label": name_label, "tempo": randf_range(0.92, 1.08), "flash": flash_mat, "flash_amt": 0.0, "born": 0.0 if (u.summon or (sim_ref != null and sim_ref.time > 0.5)) else 1.0}
+ models[u.uid] = {"root": holder, "motion":motion, "stride":0.0, "recoil":Vector3.ZERO, "aura": aura, "model": model, "player": player, "bar": bar, "bars": bars, "ring": circle, "state": "idle", "lock": 0.0, "dead": false, "hp_label": hp_label, "cast_bar": cast_bar, "bubble": bubble, "shield_bar":shield_bar, "mana_bar": mana_bar, "stack_label": stack_label, "path_ring": path_ring, "item_tint": item_tint, "base_scale": model.scale, "bars_y": bars.position.y, "size_now": 1.0, "ghosts": [], "ghost_t": 0.0, "wind": null, "step_t": 0.0, "stagger": 0.0, "death_elapsed": 0.0, "arc": {}, "last_target": world_point(u.pos), "ground_speed": 0.0, "walk_hold": 0.0, "turn_rate": 0.0, "name_label": name_label, "tempo": tempo, "anim": anim, "squash": 0.0, "hit_dir": Vector3.ZERO, "death_dir": Vector3.ZERO, "jolt": 0.0, "flash": flash_mat, "flash_amt": 0.0, "born": 0.0 if (u.summon or (sim_ref != null and sim_ref.time > 0.5)) else 1.0}
  holder.position = world_point(u.pos)
  model.rotation.y = u.heading
 
@@ -455,58 +457,67 @@ func sync(sim: BattleSim, dt: float, speed: float = 1.0) -> void:
   visual.flash_amt = maxf(0.0, visual.flash_amt - dt * 6.0)
   visual.flash.set_shader_parameter("flash", visual.flash_amt)
   visual.name_label.visible = not (clarity and clarity.tactical)   # team rings identify sides in Tactical view
+  if not u.alive and not visual.dead:
+   visual.dead = true; visual.state = "death"
+   visual.death_dir = visual.hit_dir
+   visual.bars.visible = false; visual.ring.visible = false
   animate_weight(u, visual, dt * speed)
   visual.lock = maxf(0, visual.lock - dt * speed)
-  if visual.player: visual.player.speed_scale = speed * visual.tempo
-  if visual.born < 1.0:
-   # Summons and late arrivals grow in with a small overshoot instead of popping into existence.
-   visual.born = minf(1.0, visual.born + dt * speed / 0.35)
-   var b = visual.born
-   visual.motion.scale = Vector3.ONE * maxf(0.05, 1.0 + 2.70158 * pow(b - 1.0, 3) + 1.70158 * pow(b - 1.0, 2))   # ease-out-back
-  if not u.alive and not visual.dead:
-   visual.dead = true; play(u.uid, "death", 999)
-   visual.bars.visible = false; visual.ring.visible = false
-  elif u.alive:
-   if u.has("pending_cast"):
-    pose_phase(visual, "attack" if not AttackVisuals.style(u.hero.sp,u.pending_cast.effect).is_empty() else "cast", (1.0 - u.pending_cast.delay / u.pending_cast.total) * 0.46)
-   elif u.windup > 0:
-    pose_phase(visual, "attack", (1.0 - u.windup / maxf(0.01, u.windup_total)) * 0.46)
-   elif u.recovery > 0:
-    var clip=u.get("recovery_clip","attack")
-    if clip=="cast":
-     var skill_effect=HeroData.species[u.hero.sp].ab if u.credit=="signature" else HeroData.learned_ability(u.hero.sp,int(u.credit.trim_prefix("ability:"))).effect if u.credit.begins_with("ability:") else "basic"
-     if not AttackVisuals.style(u.hero.sp,skill_effect).is_empty():clip="attack"
-    pose_phase(visual,clip,0.46 + (1.0 - u.recovery / 0.22) * 0.53)
-   elif visual.lock <= 0:
-    # Walk while the body is really travelling (incl. shoves), with a short hold so
-    # stop-start steering doesn't chatter between idle and walk.
-    var travelling = (u.moving or visual.ground_speed > 1.0) and visual.arc.is_empty()
-    if travelling: visual.walk_hold = 0.16
-    play(u.uid, "walk" if visual.walk_hold > 0 else "idle")
-    if visual.player and visual.state == "walk":
-     visual.player.speed_scale = speed * GaitRates.walk_rate(u.hero.sp, maxf(visual.ground_speed, 0.6))
-
+  animate_clips(sim, u, visual, dt * speed)
+  shape_body(u, visual, dt * speed)
   if not u.alive:
+   # v0.78: the body is thrown back by the killing blow (animate_weight), the death clip plays at 1.3x,
+   # then it settles into the floor and shrinks away by 2.6 s instead of sinking for 3.5 s.
    visual.death_elapsed += dt * speed
-   visual.model.position.y = -maxf(0, visual.death_elapsed - 1.0) * 0.22
-   visual.model.visible = visual.death_elapsed < 3.5
+   visual.model.position.y = -maxf(0, visual.death_elapsed - 1.1) * 0.35
+   visual.model.visible = visual.death_elapsed < 2.6
  if clarity: clarity.sync(sim, dt * speed, models)
 
-func pose_phase(visual: Dictionary, clip: String, fraction: float) -> void:
- if not visual.player or not visual.player.has_animation(clip): return
- if visual.state != clip: visual.player.play(clip, 0.07); visual.state = clip
- visual.player.speed_scale = 0.0
- visual.player.seek(visual.player.get_animation(clip).length * clampf(fraction, 0, 0.99), true)
+## v0.78: feed the sim's state to the fighter's CombatAnimator. The simulation decides *when*; the
+## animator decides how the authored clip gets there (contact frame on the hit, swing-into-swing).
+func animate_clips(sim: BattleSim, u: Dictionary, visual: Dictionary, dt: float) -> void:
+ var anim: CombatAnimator = visual.anim
+ if anim == null or not anim.ok: return
+ var act = ""; var remaining = 0.0
+ if u.alive and u.has("pending_cast"):
+  act = "attack" if not AttackVisuals.style(u.hero.sp, u.pending_cast.effect).is_empty() else "cast"
+  remaining = float(u.pending_cast.delay)
+ elif u.alive and u.windup > 0:
+  act = "attack"; remaining = u.windup
+ # Walk while the body is really travelling (incl. shoves), with a short hold so
+ # stop-start steering doesn't chatter between idle and walk.
+ var travelling = (u.moving or visual.ground_speed > 1.0) and visual.arc.is_empty()
+ if travelling: visual.walk_hold = 0.16
+ var walking = visual.walk_hold > 0 and act == ""
+ var engaged = u.alive and int(u.get("target", -1)) >= 0 and not u.moving
+ var next_eta = 99.0
+ if engaged: next_eta = maxf(u.recovery, u.attack_timer / maxf(0.2, sim.as_mult(u)))
+ visual.state = "death" if not u.alive else act if act != "" else "walk" if walking else "idle"
+ anim.drive(dt, act, remaining, u.alive, sim.active(u, "stun"), walking,
+  GaitRates.walk_rate(u.hero.sp, maxf(visual.ground_speed, 0.6)), engaged, next_eta)
+
+## Grow-in for summons, contact squash and the shrink away after death, all on the CombatMotion node.
+func shape_body(u: Dictionary, visual: Dictionary, dt: float) -> void:
+ var k = 1.0
+ if visual.born < 1.0:
+  # Summons and late arrivals grow in with a small overshoot instead of popping into existence.
+  visual.born = minf(1.0, visual.born + dt / 0.35)
+  var b = visual.born
+  k = maxf(0.05, 1.0 + 2.70158 * pow(b - 1.0, 3) + 1.70158 * pow(b - 1.0, 2))   # ease-out-back
+ var heavy = u.hero.sp in HEAVY
+ if visual.squash > 0.0 and not visual.anim.frozen():
+  visual.squash = maxf(0.0, visual.squash - dt * (3.5 if heavy else 5.5))
+ var s = visual.squash * visual.squash * (1.35 if heavy else 1.0)
+ var shape = Vector3(1.0 + 0.045 * s, 1.0 - 0.065 * s, 1.0 + 0.045 * s)
+ if not u.alive: shape *= maxf(0.02, 1.0 - smoothstep(2.05, 2.55, visual.death_elapsed))
+ visual.motion.scale = shape * k
+ # The struck body shudders while the hit-stop holds it.
+ if visual.jolt > 0.0 and dt > 0.0:
+  visual.jolt = maxf(0.0, visual.jolt - dt)
+  visual.motion.position += Vector3(sin(elapsed * 113.0), 0.0, cos(elapsed * 97.0)) * 0.035 * minf(1.0, visual.jolt / 0.03)
 
 func effect_tween() -> Tween:
  var tween = create_tween(); tween.pause(); effect_tweens.append(tween); return tween
-
-func play(id: int, clip: String, lock: float = 0.0) -> void:
- if not models.has(id): return
- var v = models[id]
- if v.player and v.player.has_animation(clip) and (v.state != clip or lock > 0):
-  v.player.play(clip, 0.16); v.state = clip
- v.lock = maxf(v.lock, lock)
 
 func _process(dt: float) -> void:
  elapsed += dt
@@ -560,7 +571,9 @@ func handle_event(e: Dictionary) -> void:
     floating_text(e.target*FLOOR_SCALE,e.name,ItemFeedback.profile(e.item_id).color,23)
   "attack": pass
   "release":
-   if not e.ranged: AttackVisuals.strike(self,e.pos,e.target,e.get("species",""))
+   if not e.ranged:
+    AttackVisuals.strike(self,e.pos,e.target,e.get("species",""))
+    if sim_ref: released[e.uid] = sim_ref.time
   "interrupt":
    floating_text(e.pos, "INTERRUPTED", Color("ef9b83"), 30)
    if models.has(e.uid): models[e.uid].lock = 0
@@ -593,13 +606,8 @@ func handle_event(e: Dictionary) -> void:
    var skill = e.get("credit", "basic") != "basic"
    var amount = float(e.get("amount", 0.0))
    if amount >= 3: flash(e.uid, fx_context(e, color).hot if skill else Color(1, 0.95, 0.9), clampf(0.35 + amount / 60.0, 0.4, 1.2))
-   if models.has(e.uid) and amount >= 6:
-    models[e.uid].stagger = 0.20
-    if models.has(e.get("source",-1)):
-     var away = models[e.uid].root.position-models[e.source].root.position
-     models[e.uid].recoil = away.normalized()*minf(0.45,amount*0.004)
+   if models.has(e.uid): react(e, amount, skill)
    if skill and amount >= 30: punch(clampf(amount / 140.0, 0.2, 0.6))
-   if skill and amount >= 55: hitstop.emit(0.06)
    number_event(e)
   "heal":
    number_event(e)
@@ -635,6 +643,34 @@ func handle_event(e: Dictionary) -> void:
    if models.has(e.uid): flash(e.uid, Color("ffb347"), 0.6)
    if float(e.get("size", 1.0)) >= 1.5: punch(0.15)
   "projectile": pass # Visuals track live simulation projectiles, including pause and target movement.
+
+## v0.78 hit reaction: the victim's spine bends away from the blow (scaled by the share of its health
+## the hit took), and solid hits freeze just the two fighters for a few frames (per-unit hit-stop)
+## while the attacker's body squashes on contact. Kills, quakes and MEGA CRITs keep the global hit-stop.
+func react(e: Dictionary, amount: float, skill: bool) -> void:
+ var victim = models[e.uid]
+ var unit = sim_ref.find_unit(e.uid) if sim_ref else {}
+ var max_hp = maxf(1.0, float(unit.get("max_hp", 100.0)) if not unit.is_empty() else 100.0)
+ var share = amount / max_hp
+ var source_id = int(e.get("source", -1))
+ var away = Vector3.ZERO
+ if models.has(source_id) and source_id != e.uid:
+  away = victim.root.position - models[source_id].root.position; away.y = 0.0
+  if away.length_squared() > 0.0001: away = away.normalized(); victim.hit_dir = away
+ if amount >= 6:
+  victim.stagger = 0.20
+  if away != Vector3.ZERO: victim.recoil = away * minf(0.32, amount * 0.003)
+ if away != Vector3.ZERO and share >= 0.02: victim.anim.flinch(away, clampf(share * 5.0, 0.15, 1.0))
+ var source = sim_ref.find_unit(source_id) if sim_ref and models.has(source_id) else {}
+ # Contact: the swing that just landed (not a projectile, not a damage-over-time tick).
+ var contact = not source.is_empty() and source.alive and (physical_casts.has(source_id) or (sim_ref and is_equal_approx(float(released.get(source_id, -1.0)), sim_ref.time)))
+ var stop = 0.0
+ if share >= 0.03 or (skill and amount >= 30): stop = clampf(0.035 + share * 0.45, 0.035, 0.09)
+ if skill and amount >= 55: stop = maxf(stop, 0.08)
+ if stop > 0.0:
+  victim.anim.hitstop(stop); victim.jolt = stop
+  if contact: models[source_id].anim.hitstop(stop * 0.8)
+ if contact: models[source_id].squash = maxf(models[source_id].squash, clampf(0.55 + share * 8.0, 0.55, 1.0))
 
 func physical_contact(e: Dictionary) -> void:
  var source_id=e.get("source",-1)
@@ -858,9 +894,8 @@ func ghost(u: Dictionary, visual: Dictionary) -> void:
  var tint = visual.item_tint if visual.item_tint.a > 0.0 else Color("5fe3ff")
  gm.albedo_color = Color(tint.r, tint.g, tint.b, 0.32)
  for mi in g.find_children("*", "MeshInstance3D", true, false): mi.material_override = gm
- var players = g.find_children("*", "AnimationPlayer", true, false)
- if not players.is_empty() and visual.player and visual.player.current_animation != "":
-  players[0].play(visual.player.current_animation); players[0].seek(visual.player.current_animation_position, true); players[0].speed_scale = 0.0
+ var skeletons = g.find_children("*", "Skeleton3D", true, false)
+ if not skeletons.is_empty() and visual.anim: visual.anim.copy_pose_to(skeletons[0])
  var tw = effect_tween()
  tw.tween_property(gm, "albedo_color:a", 0.0, 0.28)
  tw.tween_callback(g.queue_free)
@@ -959,7 +994,9 @@ func animate_weight(u: Dictionary, visual: Dictionary, dt: float) -> void:
  if dt <= 0: return
  visual.recoil = visual.recoil.lerp(Vector3.ZERO,1-exp(-dt*12))
  if not u.alive:
-  visual.motion.position = visual.motion.position.lerp(Vector3.ZERO,1-exp(-dt*10))
+  # Thrown back along the killing blow, then settled.
+  var thrown = visual.death_dir * (0.75 if u.hero.sp not in HEAVY else 0.4)
+  visual.motion.position = visual.motion.position.lerp(thrown,1-exp(-dt*9))
   visual.motion.rotation = visual.motion.rotation.lerp(Vector3.ZERO,1-exp(-dt*10))
   return
  var pace = u.get("velocity",Vector2.ZERO).length()/maxf(0.1,u.speed) if u.moving else 0.0
