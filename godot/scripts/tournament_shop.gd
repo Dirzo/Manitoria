@@ -96,7 +96,7 @@ static func offer(game: Node,parent: Node,hero: Dictionary,index: int) -> void:
  var art=GearUI.token(game,row,item,48);art.payload=data;art.pressed.connect(func():GearUI.inspect(game,item,data))
  var info=VBoxContainer.new();info.size_flags_horizontal=Control.SIZE_EXPAND_FILL;info.add_theme_constant_override("separation",4);row.add_child(info)
  game.label(info,item.name,14)
- game.label(box,("★ LEGENDARY · WILD" if item.get("wild",false) else "FINISHED ITEM") if item.kind=="item" else "COMPONENT",10,Color("ffd36e") if item.get("wild",false) else tint)
+ game.label(box,("WILD · BIG UPSIDE, REAL DOWNSIDE" if item.get("wild",false) else "FINISHED ITEM · "+str(item.get("path_name","")).to_upper()) if item.kind=="item" else "COMPONENT",10,Color("ffd36e") if item.get("wild",false) else tint)
  var rec=Forge.rec_match(hero.sp,id,hero)
  if rec[0]!="":
   var rl=game.label(box,"★ CORE ITEM" if rec[0]=="core" else "★ Builds "+Forge.ITEMS[rec[1]].name,11,Color("ffd36e"),false)

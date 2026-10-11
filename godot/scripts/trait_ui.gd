@@ -22,7 +22,7 @@ static func species_line(game: Node, parent: Node, sp: String) -> void:
 	game.label(parent, "%s  ·  %s" % [Traits.scaling_text(sp), info.calling], 13, IDEAL, true)
 	game.label(parent, "Ideal: " + " · ".join(info.ideal), 12, IDEAL, true)
 
-const ROLL_SHORT := {"hp": "HP", "attack": "AD", "armor": "RES", "haste": "AS", "speed": "MANA", "potency": "AP"}
+const ROLL_SHORT := {"hp": "HP", "attack": "AD", "armor": "RES", "haste": "AS", "speed": "MANA", "potency": "AP", "size": "SIZE", "crit": "CRIT"}
 
 ## Colour for a Power number. Pass the champion (or a team's average quality): the colour reflects how
 ## good the champion is for its level (rarity, rolls, fit), not the raw number, which grows with level.
@@ -44,7 +44,7 @@ static func rolls(game: Node, parent: Node, hero: Dictionary, compact := false) 
 	var pw = game.label(head, "POWER %d" % p, 15, power_color(hero), false)
 	pw.tooltip_text = "Power level: tier, level, abilities, how well the rolls suit a %s, temperament fit and scaling." % HeroData.species[hero.sp].role
 	var tc = HeroData.roll_color(roundi(float(total) / HeroData.ROLL_KEYS.size()))
-	game.label(head, "STATS %d/%d" % [total, HeroData.ROLL_MAX * HeroData.ROLL_KEYS.size()], 13, tc, false).tooltip_text = "Sum of all six stat rolls."
+	game.label(head, "STATS %d/%d" % [total, HeroData.ROLL_MAX * HeroData.ROLL_KEYS.size()], 13, tc, false).tooltip_text = "Sum of all eight stat rolls."
 	var fit_text = "GREAT FIT" if fit >= 0.35 else ("GOOD FIT" if fit >= 0.1 else ("POOR FIT" if fit <= -0.25 else "OK FIT"))
 	var fit_col = Color("6fe08a") if fit >= 0.1 else (Color("ff5e5e") if fit <= -0.25 else Color("d6e86a"))
 	# Compact cards put the fit verdict on its own clipped line so it can never widen the card.
@@ -69,7 +69,7 @@ static func rolls(game: Node, parent: Node, hero: Dictionary, compact := false) 
 		bar.add_theme_stylebox_override("background", game.style(Color("1d2a31"), Color.TRANSPARENT, 4, 0, 0))
 		bar.add_theme_stylebox_override("fill", game.style(c, Color.TRANSPARENT, 4, 0, 0))
 		game.label(grid, "%d" % v, 13, c, false).custom_minimum_size.x = 24
-		var pct = roundi(HeroData.roll_norm_now(hero, k) * 5.0) if k == "armor" else roundi(HeroData.roll_norm_now(hero, k) * 12.0) if k == "potency" else roundi(HeroData.roll_norm_now(hero, k) * 10.0) if k == "speed" else roundi((HeroData.roll_mult(hero, k) - 1.0) * 100.0)
+		var pct = roundi(HeroData.roll_norm_now(hero, k) * 5.0) if k in ["armor", "crit"] else roundi(HeroData.roll_norm_now(hero, k) * 12.0) if k == "potency" else roundi(HeroData.roll_norm_now(hero, k) * 10.0) if k == "speed" else roundi(HeroData.roll_norm_now(hero, k) * 6.0) if k == "size" else roundi((HeroData.roll_mult(hero, k) - 1.0) * 100.0)
 		name.tooltip_text = roll_tip(hero, k); name.mouse_filter = Control.MOUSE_FILTER_STOP; bar.tooltip_text = name.tooltip_text
 		game.label(grid, ("%s  %+d %s" % [HeroData.roll_grade(v), pct, "Res" if k == "armor" else "AP"]) if k in ["armor", "potency"] else ("%s  %+d%%" % [HeroData.roll_grade(v), pct]), 12, c, false)
 

@@ -9,9 +9,17 @@ static func texture(key: String) -> Texture2D:
    if ResourceLoader.exists(signature_path):return load(signature_path)
    break
  if key.begins_with("item:"):
-  var ipath="res://assets/items/i_%s.png" % key.trim_prefix("item:")
+  # v0.77: generated art first (i_<id>.png, Legendaries i_leg_<id>.png), then the borrowed icon.
+  var iid=key.trim_prefix("item:")
+  var ipath="res://assets/items/i_%s.png" % iid
   if ResourceLoader.exists(ipath): return load(ipath)
-  key=Forge.ITEMS.get(key.trim_prefix("item:"),{}).get("art","ward")
+  var base=Forge.base_id(iid)
+  if base!=iid:
+   ipath="res://assets/items/i_%s.png" % base
+   if ResourceLoader.exists(ipath): return load(ipath)
+  var borrowed="res://assets/items/i_%s.png" % str(Forge.ITEMS.get(base,{}).get("icon",""))
+  if ResourceLoader.exists(borrowed): return load(borrowed)
+  key=Forge.ITEMS.get(base,{}).get("art","ward")
  if key.begins_with("comp:"):
   var cpath="res://assets/items/%s.png" % key.trim_prefix("comp:")
   if ResourceLoader.exists(cpath): return load(cpath)

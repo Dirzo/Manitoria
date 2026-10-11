@@ -58,7 +58,7 @@ static func apply_drop(game: Node,data: Dictionary,hero_id: String,_slot: String
    else:ok=c.transfer_item(data.owner,hero_id,str(data.slot),_slot)
  if ok and not bag:
   for v in c.hero_by_id(hero_id).get("equipment",{}).values():
-   if Forge.ITEMS.get(str(v),{}).get("wild",false) and str(v) not in before:Callable(FlowUI,"banner").call_deferred(game,"LEGENDARY!",Color("ffd36e"),Forge.ITEMS[str(v)].name+" equipped")
+   if Forge.ITEMS.get(str(v),{}).get("wild",false) and str(v) not in before:Callable(FlowUI,"banner").call_deferred(game,"WILD!",Color("ffd04a"),Forge.ITEMS[str(v)].name+" equipped")
  if ok and data.kind=="offer" and c.last_error=="bag":
   c.last_error="";game.sound.cue("upgrade");game.toast("%s is full · sent to your bag"%c.hero_by_id(hero_id).name);game.render();return true
  if ok:
@@ -205,6 +205,8 @@ static func picker(game: Node,hero: Dictionary,key: String) -> void:
   game.button(info,"Unequip",func():
    if c.unequip(hero.id,key):game.render()
    else:game.toast(c.last_error))
+  if Forge.ITEMS.has(id) and int(c.state.get("anvils",0))>0 and Forge.legend_held(hero).is_empty():
+   game.button(info,"Mythic Anvil → %s%s"%[Forge.ITEMS[id].leg[0]," (50% to shatter)" if Forge.is_wild(id) else ""],func():dialog.root.queue_free();anvil_confirm(game,hero,key),true)
   game.label(dialog.box,"MOVE OR SWAP · Choose a slot on another champion",14,game.GOLD)
   var destinations=HFlowContainer.new();dialog.box.add_child(destinations)
   for other in c.state.roster:
@@ -225,11 +227,52 @@ static func picker(game: Node,hero: Dictionary,key: String) -> void:
   button.pressed.connect(func():apply_drop(game,{"kind":"bag","id":item_id},hero.id))
  game.label(dialog.box,"Your bag is empty. Buy components at the outfitter or win medal chests." if seen.is_empty() else "Choose an item. A component placed on a champion holding a loose component forges a finished item.",16,game.MUTED)
 
+## v0.77: pick a finished item on this champion to reforge on the Mythic Anvil.
+static func anvil_dialog(game: Node,hero: Dictionary) -> void:
+ var c: Campaign=game.campaign
+ var dialog=modal(game,"Mythic Anvil · "+hero.name,Vector2(1080,620))
+ game.label(dialog.box,"Choose one finished item to become its Legendary. One Legendary per champion. Wild items have a 50%% chance to shatter instead. Anvils left: %d"%int(c.state.get("anvils",0)),16,game.MUTED)
+ if not Forge.legend_held(hero).is_empty():
+  game.label(dialog.box,"%s already carries %s."%[hero.name,Forge.info(Forge.legend_held(hero)).name],18,Color("ffd36e"));return
+ var any=false
+ for key in slot_keys(hero):
+  var id=str(hero.get("equipment",{}).get(key,""))
+  if not Forge.ITEMS.has(id):continue
+  any=true
+  var row=HBoxContainer.new();row.add_theme_constant_override("separation",14);dialog.box.add_child(row)
+  token(game,row,Forge.info(id),72)
+  game.label(row,"→",30,game.GOLD,false)
+  token(game,row,Forge.info(Forge.LEGEND+id),72)
+  var text=VBoxContainer.new();text.size_flags_horizontal=Control.SIZE_EXPAND_FILL;row.add_child(text)
+  game.label(text,Forge.ITEMS[id].leg[0],20,Color("ffd36e"),false)
+  game.label(text,Forge.ITEMS[id].leg[1],14,game.WHITE)
+  if Forge.is_wild(id):game.label(text,"WILD: 50% Legendary, 50% shattered.",13,Color("ff8a7a"),false)
+  game.button(row,"Reforge",func():dialog.root.queue_free();anvil_confirm(game,hero,key),true)
+ if not any:game.label(dialog.box,"%s has no finished item. Forge one first, then come back."%hero.name,18,game.MUTED)
+
+static func anvil_confirm(game: Node,hero: Dictionary,key: String) -> void:
+ var c: Campaign=game.campaign
+ var id=str(hero.get("equipment",{}).get(key,""))
+ if not Forge.ITEMS.has(id):return
+ var go=func():
+  var result=c.use_anvil(hero.id,key)
+  if result=="legendary":
+   game.sound.cue("upgrade",true)
+   FlowUI.banner(game,"LEGENDARY!",Color("ffd36e"),"%s becomes %s"%[Forge.ITEMS[id].name,Forge.ITEMS[id].leg[0]])
+  elif result=="destroyed":
+   game.sound.cue("interrupt",true)
+   FlowUI.banner(game,"SHATTERED!",Color("ff6a6a"),"%s broke on the anvil."%Forge.ITEMS[id].name)
+  else:game.toast(c.last_error)
+  game.render()
+ if Forge.is_wild(id):
+  FlowUI.confirm(game,"Reforge a Wild item?","%s has a 50%% chance to become %s and a 50%% chance to shatter."%[Forge.ITEMS[id].name,Forge.ITEMS[id].leg[0]],"Strike the anvil",go)
+ else:go.call()
+
 static func inspect(game: Node,item: Dictionary,data: Dictionary={}) -> void:
  var dialog=modal(game,item.name);var row=HBoxContainer.new();dialog.box.add_child(row)
  token(game,row,item,150)
  var box=VBoxContainer.new();box.size_flags_horizontal=Control.SIZE_EXPAND_FILL;row.add_child(box)
- game.label(box,("WILD ITEM" if item.get("wild",false) else "FINISHED ITEM") if item.kind=="item" else "COMPONENT",16,Color("ff9be0") if item.get("wild",false) else game.GOLD)
+ game.label(box,(("LEGENDARY ITEM" if item.get("legendary",false) else "WILD ITEM" if item.get("wild",false) else "FINISHED ITEM") + " · " + str(item.get("path_name","")).to_upper()) if item.kind=="item" else "COMPONENT",16,Color("ffd36e") if item.get("legendary",false) else Color("ff9be0") if item.get("wild",false) else game.GOLD)
  game.label(box,item.description,20)
  if item.kind=="component":
   game.label(box,"Forges into:",15,game.GOLD)
@@ -254,6 +297,9 @@ static func bag(game: Node,parent: Node,hero: Dictionary,compact: bool=false) ->
  var n=forgeable(c).size()
  game.button(row,"Forge (%d)"%n if n>0 else "Forge",func():forge_dialog(game),n>0).tooltip_text="Combine components from your bag"
  game.button(row,"Recipe book",func():recipe_book(game)).tooltip_text="Every component pair and what it forges"
+ if int(c.state.get("anvils",0))>0:
+  var ab=game.button(row,"Mythic Anvil ×%d"%int(c.state.anvils),func():anvil_dialog(game,hero),true)
+  ab.tooltip_text="Turn one finished item into its Legendary. Wild items have a 50% chance to shatter."
  var target=GearToken.new();target.game=game;target.bag_target=true;target.text="↓ Unequip";target.custom_minimum_size=Vector2(120,36);row.add_child(target);target.tooltip_text="Drop worn items here to return them to your bag."
  if compact:
   for child in row.get_children():
@@ -319,7 +365,7 @@ static func forge_dialog(game: Node) -> void:
 
 static func recipe_book(game: Node) -> void:
  var dialog=modal(game,"Recipe book",Vector2(1180,860))
- game.label(dialog.box,"Any two components forge the item where their row and column meet. Pink items are WILD and change how a champion fights.",16,game.MUTED)
+ game.label(dialog.box,"Any two components forge the item where their row and column meet. Trickster's Coin forges pink WILD items: a huge upside with a real downside. Every finished item has a Legendary version on the Mythic Anvil.",16,game.MUTED)
  var grid=GridContainer.new();grid.columns=Forge.COMPONENT_ORDER.size()+1;grid.add_theme_constant_override("h_separation",4);grid.add_theme_constant_override("v_separation",4);dialog.box.add_child(grid)
  var corner=Control.new();corner.custom_minimum_size=Vector2(50,50);grid.add_child(corner)
  for a in Forge.COMPONENT_ORDER:token(game,grid,Forge.info(a),50)

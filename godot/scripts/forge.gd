@@ -1,121 +1,214 @@
 class_name Forge
 extends RefCounted
-## Auto-battler itemisation: eight components, and every pair of components forges one of
-## 36 finished items. Components carry stats; finished items add an effect, and the wild ones
-## change how the champion behaves. Each champion carries up to three items. Dropping a second
-## component onto a champion who holds a loose component forges them together.
+## v0.77 itemisation. Eight components (one per stat path) plus Trickster's Coin. Two components
+## forge one of 36 finished items; Coin + a component forges one of 9 Wild items (big upside,
+## obvious downside). A Mythic Anvil turns a finished item into its Legendary ("leg_<id>").
+## Every item has one fantasy, a visible change on the champion and a felt moment in combat.
+##
+## Stat keys (components and "x"): ad (flat), as (fraction), ap (flat), mana (fraction), hp (flat),
+## res (flat), crit (chance), critdmg (added multiplier), size (added Size), hp_pct / ad_pct / as_pct
+## (multipliers, -0.4 = 40% less).
 
 const SLOTS := 3
 const COMPONENT_PRICE := 70
 const ITEM_PRICE := 190
+const LEGEND := "leg_"
 
 const COMPONENTS := {
-	"fang":     {"name": "Sharpened Fang", "art": "comp:fang", "attack": 0.12, "short": "+12% AD"},
-	"hide":     {"name": "Troll Hide", "art": "comp:hide", "hp": 0.10, "short": "+10% health"},
-	"plate":    {"name": "Bronze Plate", "art": "comp:plate", "armor": 0.05, "short": "+8 Resistance"},
-	"feather":  {"name": "Roc Feather", "art": "comp:feather", "haste": 0.09, "short": "+9% AS"},
-	"ember":    {"name": "Ember Shard", "art": "comp:ember", "potency": 0.12, "short": "+12 AP"},
-	"moon":     {"name": "Moonstone", "art": "comp:moon", "cd": 0.92, "short": "+9% Mana"},
-	"seed":     {"name": "Sapling Heart", "art": "comp:seed", "hp": 0.05, "potency": 0.06, "short": "+5% health, +6 AP"},
-	"storm":    {"name": "Storm Glass", "art": "comp:storm", "crit": 0.12, "short": "+12% critical strike chance"},
-	"silk":     {"name": "Shadow Silk", "art": "comp:silk", "dodge": 0.10, "short": "+10% chance to dodge basic attacks"},
-	"venom":    {"name": "Venom Gland", "art": "comp:venom", "lifesteal": 0.06, "short": "+6% lifesteal on all damage"},
-	"relic":    {"name": "Holy Relic", "art": "comp:relic", "tenacity": 0.30, "hp": 0.07, "short": "+30% crowd-control resistance, +7% health"},
-	"coin":     {"name": "Trickster's Coin", "art": "comp:coin", "attack": 0.04, "hp": 0.04, "short": "+4% AD and health · forges wild items"},
+	"fang":    {"name": "Sharpened Fang", "art": "comp:fang", "ad": 10.0, "short": "+10 AD"},
+	"feather": {"name": "Roc Feather", "art": "comp:feather", "as": 0.12, "short": "+12% AS"},
+	"ember":   {"name": "Ember Shard", "art": "comp:ember", "ap": 15.0, "short": "+15 AP"},
+	"moon":    {"name": "Moonstone", "art": "comp:moon", "mana": 0.12, "short": "+12% Mana"},
+	"hide":    {"name": "Troll Hide", "art": "comp:hide", "hp": 150.0, "short": "+150 HP"},
+	"plate":   {"name": "Bronze Plate", "art": "comp:plate", "res": 15.0, "short": "+15 Resistance"},
+	"storm":   {"name": "Storm Glass", "art": "comp:storm", "crit": 0.15, "short": "+15% Crit"},
+	"marrow":  {"name": "Titan Marrow", "art": "comp:marrow", "size": 0.10, "hp": 60.0, "short": "+10% Size, +60 HP"},
+	"coin":    {"name": "Trickster's Coin", "art": "comp:coin", "short": "Forges a Wild item: a huge upside with a real downside"},
 }
-const COMPONENT_ORDER := ["fang", "hide", "plate", "feather", "ember", "moon", "seed", "storm", "silk", "venom", "relic", "coin"]
+const COMPONENT_ORDER := ["fang", "feather", "ember", "moon", "hide", "plate", "storm", "marrow", "coin"]
+const PATHS := {"giant": "Giant", "tempo": "Tempo", "crit": "Crit", "spell": "Spell", "tank": "Tank", "sustain": "Sustain", "wild": "Wild"}
+const PATH_COLOR := {"giant": "ffb347", "tempo": "5fe3ff", "crit": "ff6a3d", "spell": "b07bff", "tank": "b8c4d0", "sustain": "e0344f", "wild": "ffd04a"}
 
-# Finished items. "x" holds extra stats on top of the two components. "wild" items rewrite behaviour.
+# icon = an existing item portrait (assets/items/i_<icon>.png).
 const ITEMS := {
-	"bloodmaw":    {"recipe": ["fang", "fang"], "name": "Bloodmaw", "art": "drain", "text": "Basic attacks heal for 18% of the damage dealt."},
-	"titan":       {"recipe": ["fang", "hide"], "name": "Titan's Wrath", "art": "prideroar", "text": "When hit, gain 1.5% AD (max 16 stacks)."},
-	"tusk":        {"recipe": ["fang", "plate"], "name": "Shieldbreaker Tusk", "art": "gore", "text": "Basic attacks ignore 30% Resistance and deal +60% to shields."},
-	"frenzy":      {"recipe": ["fang", "feather"], "name": "Frenzy Horn", "art": "howl", "text": "Each basic attack grants 3% AS for the rest of the fight (max 8 stacks)."},
-	"spellblade":  {"recipe": ["fang", "ember"], "name": "Spellblade", "art": "beam", "text": "After casting your signature, your next basic attack deals 120% bonus damage."},
-	"executioner": {"recipe": ["fang", "moon"], "name": "Executioner's Edge", "art": "execute", "text": "+50% basic damage to enemies under 30% health. Kills instantly ready your signature."},
-	"thornlash":   {"recipe": ["fang", "seed"], "name": "Thornroot Lash", "art": "roots", "text": "Every fourth basic attack roots the target for 0.8s."},
-	"berserker":   {"recipe": ["fang", "coin"], "name": "Berserker's Totem", "art": "maul", "wild": true, "x": {"attack": 0.20, "speed": 0.20}, "text": "WILD: ignores tactics and always charges the nearest enemy. +20% AD, +20% Mana, but heals on you are 30% weaker."},
-	"colossus":    {"recipe": ["hide", "hide"], "name": "Colossus Heart", "art": "vigor", "x": {"hp": 0.15}, "text": "+15% more health. Regenerate 1.2% health per second after 3s without being hit."},
-	"bastion":     {"recipe": ["hide", "plate"], "name": "Bastion Shell", "art": "shellup", "text": "The first time you fall below 50% health, gain a shield of 24% max health."},
-	"drum":        {"recipe": ["hide", "feather"], "name": "Rhythm Drum", "art": "rally", "text": "Every 7s, nearby allies gain Rally (+22% damage and speed) for 2.5s."},
-	"phoenixember":{"recipe": ["hide", "ember"], "name": "Phoenix Ember", "art": "rebirth", "wild": true, "text": "WILD: the first time you would die, burst back to life at 25% health."},
-	"bell":        {"recipe": ["hide", "moon"], "name": "Taunting Bell", "art": "shriek", "text": "Every 8s, enemies within 3.5m must attack you for 2s, and you gain an 8% shield."},
-	"lifebloom":   {"recipe": ["hide", "seed"], "name": "Lifebloom", "art": "regrowth", "text": "Every 5s, heal the most wounded nearby ally for 1.6% of your max health."},
-	"giant":       {"recipe": ["hide", "coin"], "name": "Giant's Draught", "art": "boulder", "wild": true, "x": {"hp": 0.25, "attack": 0.10, "speed": -0.15}, "text": "WILD: grow huge. +25% health and +10% AD, but 15% slower."},
-	"mirror":      {"recipe": ["plate", "plate"], "name": "Mirror Carapace", "art": "ward", "x": {"hp": 0.08}, "text": "+8% more health. Reflect 25% of ability damage taken back at the caster."},
-	"spikes":      {"recipe": ["plate", "feather"], "name": "Spiked Gauntlet", "art": "whirl", "text": "When hit by a basic attack, 45% chance to stun the attacker for 0.8s (3s cooldown)."},
-	"runeward":    {"recipe": ["plate", "ember"], "name": "Runeward", "art": "radiance", "text": "Negate the first enemy ability that hits you every 12 seconds."},
-	"stoneskin":   {"recipe": ["plate", "moon"], "name": "Stoneskin", "art": "stonedive", "x": {"hp": 0.10}, "text": "+10% health. Immune to stun, root and silence while above 50% health."},
-	"ironbark":    {"recipe": ["plate", "seed"], "name": "Ironbark", "art": "guardian", "text": "Take 12% less damage from every source."},
-	"turtle":      {"recipe": ["plate", "coin"], "name": "Turtle Shell", "art": "shellup", "wild": true, "text": "WILD: below 40% health, hide in your shell for 3s (invulnerable, can't act, heal 18%), then burst out with Rally for 7s."},
-	"tempest":     {"recipe": ["feather", "feather"], "name": "Tempest Talons", "art": "skystrike", "text": "Basic attacks bounce to a second enemy for 40% damage."},
-	"quiver":      {"recipe": ["feather", "ember"], "name": "Arcane Quiver", "art": "barrage", "text": "Every third basic attack explodes for 60% ability power around the target."},
-	"quicksilver": {"recipe": ["feather", "moon"], "name": "Quicksilver", "art": "gust", "text": "Each basic attack grants 2.5 bonus mana."},
-	"hunter":      {"recipe": ["feather", "seed"], "name": "Hunter's Mark", "art": "ambush", "text": "Basic attacks Weaken the target (-25% damage) for 2s."},
-	"sugarrush":   {"recipe": ["feather", "coin"], "name": "Sugar Rush", "art": "tailwind", "wild": true, "x": {"haste": 0.40, "speed": 0.30}, "text": "WILD: +40% AS and +30% Mana, but lose 0.6% max health every second (stops at 15%)."},
-	"archmage":    {"recipe": ["ember", "ember"], "name": "Archmage Orb", "art": "arcanist", "x": {"potency": 0.20}, "text": "+20 AP."},
-	"crown":       {"recipe": ["ember", "moon"], "name": "Blue Crown", "art": "stormcall", "x": {"cd": 0.88}, "text": "+14% Mana (plus the Moonstone)."},
-	"scepter":     {"recipe": ["ember", "seed"], "name": "Verdant Scepter", "art": "renew", "text": "Ability damage also heals your most wounded ally for 25% of it."},
-	"chaos":       {"recipe": ["ember", "coin"], "name": "Chaos Die", "art": "riddle", "wild": true, "text": "WILD: every signature rolls the die: a free extra blast, a team-wide heal, or a fizzle that stuns you."},
-	"hourglass":   {"recipe": ["moon", "moon"], "name": "Hourglass Crest", "art": "tidal", "x": {"cd": 0.90}, "text": "Start the fight with your signature ready. +11% Mana (plus both Moonstones)."},
-	"spiritbell":  {"recipe": ["moon", "seed"], "name": "Spirit Bell", "art": "wisps", "text": "When an ally falls, gain a 14% shield and Rally for 4s."},
-	"puppet":      {"recipe": ["moon", "coin"], "name": "Puppet Strings", "art": "summons", "wild": true, "text": "WILD: enemies you finish rise as small puppets that fight for you."},
-	"worldtree":   {"recipe": ["seed", "seed"], "name": "World Tree Seed", "art": "rootbloom", "text": "Heals and shields on you are 30% stronger. Regenerate 0.8% health per second."},
-	"swap":        {"recipe": ["seed", "coin"], "name": "Swap Charm", "art": "vanish", "wild": true, "text": "WILD: when an ally drops below 25% health, teleport to swap places with them and shield them (10s cooldown)."},
-	# ---- Storm Glass
-	"thundercleaver": {"recipe": ["storm", "fang"], "name": "Thundercleaver", "art": "chain", "text": "Critical strikes arc lightning to 2 nearby enemies for 50% of the hit."},
-	"stormmantle":    {"recipe": ["storm", "hide"], "name": "Stormhide Mantle", "art": "stormcall", "text": "Every 5s, zap the nearest enemy for 60% ability power."},
-	"lightningrod":   {"recipe": ["storm", "plate"], "name": "Lightning Rod", "art": "storm", "text": "When an enemy ability hits you, zap the caster for 80% attack (2s cooldown)."},
-	"galetalons":     {"recipe": ["storm", "feather"], "name": "Gale Talons", "art": "skystrike", "x": {"crit": 0.10}, "text": "+10% more crit chance. Critical strikes grant Rally for 3s."},
-	"stormorb":       {"recipe": ["storm", "ember"], "name": "Stormcaller Orb", "art": "storm", "text": "Your abilities can critically strike."},
-	"overcharge":     {"recipe": ["storm", "moon"], "name": "Overcharge Crown", "art": "beam", "x": {"crit": 0.08}, "text": "+8% more crit chance. Critical strikes grant 6 mana (once per second)."},
-	"rainbringer":    {"recipe": ["storm", "seed"], "name": "Rainbringer", "art": "tidal", "text": "Critical strikes heal your most wounded ally for 30% of the damage."},
-	"bottle":         {"recipe": ["storm", "coin"], "name": "Lightning in a Bottle", "art": "stormcall", "wild": true, "text": "WILD: every 7s a bolt strikes a random enemy for 120% attack... and sometimes an ally."},
-	"tempestcrown":   {"recipe": ["storm", "storm"], "name": "Tempest Crown", "art": "stormcall", "x": {"crit": 0.18}, "text": "+18% more crit chance. Your critical strikes deal 180% damage."},
-	"flicker":        {"recipe": ["storm", "silk"], "name": "Flicker Strike", "art": "ambush", "x": {"crit": 0.12, "attack": 0.08}, "text": "+12% more crit chance, +8% AD. Critical strikes blink you behind your target."},
-	"galvanic":       {"recipe": ["storm", "venom"], "name": "Galvanic Venom", "art": "acid", "x": {"crit": 0.10}, "text": "+10% more crit chance. Critical strikes on poisoned enemies deal +70% damage."},
-	"judgement":      {"recipe": ["storm", "relic"], "name": "Judgement Bolt", "art": "radiance", "text": "Every 7s, smite the weakest enemy for 75% ability power."},
-	# ---- Shadow Silk
-	"shadowblade":    {"recipe": ["silk", "fang"], "name": "Shadowblade", "art": "vanish", "text": "After dodging, your next basic attack deals +100% damage."},
-	"phantomcloak":   {"recipe": ["silk", "hide"], "name": "Phantom Cloak", "art": "wisps", "text": "Dodging an attack heals you for 3% max health."},
-	"smokeplate":     {"recipe": ["silk", "plate"], "name": "Smoke Bomb Plate", "art": "fear", "text": "The first time you fall below 50% health, vanish for 2s and shake off stuns and roots."},
-	"windwalker":     {"recipe": ["silk", "feather"], "name": "Windwalker Sash", "art": "gust", "x": {"speed": 0.20, "dodge": 0.05}, "text": "+20% Mana, +5% dodge. Dodging grants Rally for 2s."},
-	"illusion":       {"recipe": ["silk", "ember"], "name": "Illusionist's Veil", "art": "foxfire", "text": "Casting your signature turns you invisible for 1s."},
-	"eclipse":        {"recipe": ["silk", "moon"], "name": "Eclipse Mask", "art": "silence", "text": "Dodging grants 5 mana."},
-	"wispshroud":     {"recipe": ["silk", "seed"], "name": "Will-o'-Wisp Shroud", "art": "wisps", "text": "Dodging heals your most wounded ally for 2% of your max health."},
-	"doppel":         {"recipe": ["silk", "coin"], "name": "Doppelganger Cloak", "art": "vanish", "wild": true, "text": "WILD: at 50% health, a shadow copy of you tears free and fights for 10s."},
-	"nightshroud":    {"recipe": ["silk", "silk"], "name": "Nightshroud", "art": "vanish", "x": {"dodge": 0.15}, "text": "+15% more dodge. Begin every fight invisible for 3s."},
-	"assassinkit":    {"recipe": ["silk", "venom"], "name": "Assassin's Kit", "art": "ambush", "text": "Your first hit on each enemy deals +80% damage."},
-	"wardshroud":     {"recipe": ["silk", "relic"], "name": "Ward Shroud", "art": "ward", "text": "Your dodge chance also works against abilities."},
-	# ---- Venom Gland
-	"viperfang":      {"recipe": ["venom", "fang"], "name": "Viper Fang", "art": "venom", "text": "Basic attacks poison the target for 18% attack over 3s."},
-	"leechhide":      {"recipe": ["venom", "hide"], "name": "Leech Hide", "art": "drain", "text": "Your lifesteal is doubled below 40% health."},
-	"acidshell":      {"recipe": ["venom", "plate"], "name": "Acid Shell", "art": "acid", "text": "Enemies who hit you with basic attacks are poisoned."},
-	"needles":        {"recipe": ["venom", "feather"], "name": "Needle Storm", "art": "barrage", "text": "Every fourth basic attack fires 3 venom darts at random enemies (40% each)."},
-	"plaguetome":     {"recipe": ["venom", "ember"], "name": "Plague Tome", "art": "toxic", "text": "Your abilities also poison for 40% of their damage over 4s."},
-	"witherbloom":    {"recipe": ["venom", "moon"], "name": "Witherbloom", "art": "brood", "x": {"potency": 0.06, "cd": 0.95}, "text": "+6 AP, +5% Mana. Your abilities Weaken their targets (-25% damage) for 4s."},
-	"grievous":       {"recipe": ["venom", "seed"], "name": "Grievous Thorns", "art": "roots", "text": "Your hits cut enemy healing by 50% for 3s."},
-	"bloodfeast":     {"recipe": ["venom", "coin"], "name": "Bloodfeast", "art": "hunger", "wild": true, "text": "WILD: kills heal 30% max health. Heals from allies are 25% weaker."},
-	"hydravenom":     {"recipe": ["venom", "venom"], "name": "Hydra Venom", "art": "venom", "text": "All of your hits poison for 27% attack over 3s."},
-	"antidote":       {"recipe": ["venom", "relic"], "name": "Antidote Charm", "art": "renew", "x": {"hp": 0.12}, "text": "+12% health. Poisons and burns on you wear off three times as fast; regenerate 2% health per second while afflicted."},
-	# ---- Holy Relic
-	"crusader":       {"recipe": ["relic", "fang"], "name": "Crusader's Edge", "art": "execute", "text": "+25% damage while you are above 70% health."},
-	"martyr":         {"recipe": ["relic", "hide"], "name": "Martyr's Heart", "art": "renew", "text": "While above 50% health, heal allies within 4m for 1% of your max health each second."},
-	"aegis":          {"recipe": ["relic", "plate"], "name": "Sanctified Aegis", "art": "bulwark", "text": "Start every fight by shielding all allies for 8% of your max health."},
-	"pilgrim":        {"recipe": ["relic", "feather"], "name": "Pilgrim's Boots", "art": "tailwind", "x": {"speed": 0.12}, "text": "+12% Mana. Immune to slows."},
-	"halo":           {"recipe": ["relic", "ember"], "name": "Halo of Dawn", "art": "radiance", "x": {"potency": 0.10, "hp": 0.05}, "text": "+10 AP, +5% health. Your signature casts cleanse stuns, roots and silences from the nearest ally."},
-	"rosary":         {"recipe": ["relic", "moon"], "name": "Saint's Rosary", "art": "rally", "text": "Your first signature of the fight heals the whole team for 5%."},
-	"chalice":        {"recipe": ["relic", "seed"], "name": "Chalice of Renewal", "art": "regrowth", "x": {"potency": 0.08}, "text": "+8 AP. Heals you give are 25% stronger."},
-	"divine":         {"recipe": ["relic", "coin"], "name": "Divine Intervention", "art": "guardian", "wild": true, "text": "WILD: once per fight, the first ally to fall below 15% becomes invulnerable for 2.5s."},
-	"grail":          {"recipe": ["relic", "relic"], "name": "Holy Grail", "art": "radiance", "x": {"tenacity": 0.35}, "text": "+35% more crowd-control resistance. Regenerate 0.9% health per second."},
-	"idol":        {"recipe": ["coin", "coin"], "name": "Golden Idol", "art": "victory", "wild": true, "text": "WILD: +60 gold after every match you win, but the bearer takes 10% more damage."},
+	# ---------------------------------------------------------------- Giant
+	"titanheart":  {"recipe": ["marrow", "marrow"], "name": "Titan's Heart", "path": "giant", "icon": "colossus", "x": {"size": 0.30},
+		"text": "+30% Size. Size bonuses to HP and AD are doubled. Above 1.5× Size, can't be stunned, knocked back or pulled.",
+		"leg": ["Heart of the World", "+60% Size (cap 2.4×). Size bonuses to HP and AD are tripled. Always unstoppable."]},
+	"club":        {"recipe": ["marrow", "fang"], "name": "Colossus Club", "path": "giant", "icon": "titan",
+		"text": "Basic attacks become stomps that also hit every adjacent enemy for 60% AD. The radius grows with Size.",
+		"leg": ["Worldbreaker", "Stomps hit everything within 2 hexes; every 3rd stomp stuns them for 1s."]},
+	"belt":        {"recipe": ["marrow", "hide"], "name": "Titan's Belt", "path": "giant", "icon": "giant",
+		"text": "Start at +10% Size, then gain +5% Size every 2s in combat, up to +60%.",
+		"leg": ["The Living Mountain", "Keeps growing to 2.4×. At full size, takes 40% less damage and taunts everyone within 3 hexes."]},
+	"wrath":       {"recipe": ["hide", "fang"], "name": "Titan's Wrath", "path": "giant", "icon": "crusader",
+		"text": "When hit, gain +1% Size and +2% AD, up to 40 stacks.",
+		"leg": ["Wrath of Ages", "No stack cap. From 40 stacks, attacks hit every adjacent enemy."]},
+	"hooves":      {"recipe": ["marrow", "feather"], "name": "Thunderhoof Greaves", "path": "giant", "icon": "pilgrim",
+		"text": "Every 10% Size also gives +8% AS. Arriving on a hex tramples adjacent enemies a hex aside.",
+		"leg": ["Stampede Engine", "Every 10% Size gives +15% AS, and trampled enemies are stunned for 0.5s."]},
+	"patience":    {"recipe": ["marrow", "moon"], "name": "Mountain's Patience", "path": "giant", "icon": "stoneskin",
+		"text": "Each signature cast gives +10% Size and +150 max HP for the fight (up to 6 casts).",
+		"leg": ["Mountain King", "Each cast gives +20% Size and +300 max HP, with no cast limit."]},
+	"granite":     {"recipe": ["marrow", "plate"], "name": "Granite Hide", "path": "giant", "icon": "ironbark",
+		"text": "+1 Resistance for every 1% Size above its natural size.",
+		"leg": ["Living Granite", "+2 Resistance per 1% Size, and reflects 20% of basic-attack damage."]},
+	"draught":     {"recipe": ["marrow", "ember"], "name": "Titan's Draught", "path": "giant", "icon": "witherbloom", "x": {"size": 0.20},
+		"text": "+20% Size. Signature areas and projectiles grow with Size too.",
+		"leg": ["Titanic Elixir", "+40% Size; signature areas grow twice as fast with Size."]},
+	"maul":        {"recipe": ["marrow", "storm"], "name": "Earthshaker Maul", "path": "giant", "icon": "thundercleaver",
+		"text": "Crits send a shockwave that hits adjacent enemies for 50% of the crit. The radius grows with Size.",
+		"leg": ["Thunderstrike Maul", "Every crit is a stomp hitting all enemies within 2 hexes and stunning them for 0.5s."]},
+	# ---------------------------------------------------------------- Tempo
+	"frenzy":      {"recipe": ["feather", "fang"], "name": "Frenzy Horn", "path": "tempo", "icon": "frenzy",
+		"text": "Each attack gives +5% AS for the fight, with no cap. A stun removes half the stacks.",
+		"leg": ["Hurricane Horn", "+8% AS per attack; stuns no longer remove stacks. Above 4 AS, attacks hit every adjacent enemy."]},
+	"tempest":     {"recipe": ["feather", "feather"], "name": "Tempest Talons", "path": "tempo", "icon": "tempest",
+		"text": "Attacks bounce to 2 more enemies for 60% damage.",
+		"leg": ["Chain Tempest", "Attacks bounce to 4 more enemies for 70%."]},
+	"quicksilver": {"recipe": ["feather", "moon"], "name": "Quicksilver", "path": "tempo", "icon": "quicksilver",
+		"text": "Basic attacks give double mana.",
+		"leg": ["Quickening", "Attacks give triple mana, and each cast gives +30% AS for 3s."]},
+	"quiver":      {"recipe": ["feather", "ember"], "name": "Arcane Quiver", "path": "tempo", "icon": "quiver",
+		"text": "Every 3rd attack also fires a spell bolt for 60 AP.",
+		"leg": ["Echoing Quiver", "Every 4th attack also casts the signature at 30% strength."]},
+	"drum":        {"recipe": ["feather", "hide"], "name": "War Drum", "path": "tempo", "icon": "drum",
+		"text": "Every 5th attack beats the drum: allies within 2 hexes gain +25% AS for 3s.",
+		"leg": ["Warlord's Drum", "Every 3rd attack gives the whole team +40% AS for 3s."]},
+	"spikes":      {"recipe": ["feather", "plate"], "name": "Spiked Gauntlet", "path": "tempo", "icon": "spikes",
+		"text": "When hit by a basic attack, 30% chance to counterattack instantly.",
+		"leg": ["Thornstorm", "60% counterattack chance, and counters always crit."]},
+	"talons":      {"recipe": ["feather", "storm"], "name": "Storm Talons", "path": "tempo", "icon": "galetalons",
+		"text": "Each crit gives +8% AS for 5s, stacking.",
+		"leg": ["Cyclone Talons", "Each crit gives +12% AS for the rest of the fight."]},
+	# ---------------------------------------------------------------- Crit
+	"tempestcrown":{"recipe": ["storm", "storm"], "name": "Tempest Crown", "path": "crit", "icon": "tempestcrown", "x": {"crit": 0.30, "critdmg": 0.5},
+		"text": "+30% Crit and +0.5× crit damage.",
+		"leg": ["Crown of Storms", "+60% Crit and +1.0× crit damage. MEGA CRITS chain lightning to 2 enemies."]},
+	"dragonedge":  {"recipe": ["storm", "fang"], "name": "Dragon's Edge", "path": "crit", "icon": "executioner", "x": {"critdmg": 1.0},
+		"text": "+1.0× crit damage (crits for 3×). Crits on enemies below 40% HP deal double again.",
+		"leg": ["Godslayer", "Crits deal 5×. A MEGA CRIT executes an enemy below 15% HP outright."]},
+	"deathblade":  {"recipe": ["fang", "fang"], "name": "Deathblade", "path": "crit", "icon": "bloodmaw",
+		"text": "Each takedown gives +15 AD for the fight.",
+		"leg": ["Reaper's Blade", "+30 AD per takedown, and each takedown fills the mana bar."]},
+	"gauntlet":    {"recipe": ["storm", "ember"], "name": "Jeweled Gauntlet", "path": "crit", "icon": "stormorb", "x": {"crit": 0.10},
+		"text": "+10% Crit. The signature can crit.",
+		"leg": ["Starfall Gauntlet", "The signature always crits its first target; spell crits rain stars on 3 enemies for 30% of the crit."]},
+	"overcharge":  {"recipe": ["storm", "moon"], "name": "Overcharge Crown", "path": "crit", "icon": "overcharge",
+		"x": {"crit": 0.10}, "text": "+10% Crit. Each crit gives 10 mana.",
+		"leg": ["Overload Crown", "Crits give 15 mana; each cast gives +25% Crit for 4s."]},
+	# ---------------------------------------------------------------- Spell
+	"archmage":    {"recipe": ["ember", "ember"], "name": "Archmage Orb", "path": "spell", "icon": "archmage", "x": {"ap": 30.0},
+		"text": "+30 AP. Signature areas are 25% bigger.",
+		"leg": ["Archmage's Eye", "+60 AP; signature areas are 50% bigger."]},
+	"crown":       {"recipe": ["ember", "moon"], "name": "Blue Crown", "path": "spell", "icon": "crown",
+		"text": "After casting, refund 20 mana.",
+		"leg": ["Eternity Crown", "Refunds 40 mana after casting, and each cast has a 25% chance to cast again immediately."]},
+	"spellblade":  {"recipe": ["ember", "fang"], "name": "Spellblade", "path": "spell", "icon": "spellblade",
+		"text": "After casting, the next 3 attacks deal +100% AD + 40 AP.",
+		"leg": ["Arcblade", "After casting, the next 3 attacks deal +200% AD + 80 AP and arc to a second enemy."]},
+	"phoenix":     {"recipe": ["ember", "hide"], "name": "Phoenix Ember", "path": "spell", "icon": "phoenixember",
+		"text": "The first time it would die, it rises at 30% HP and explodes for 150 AP.",
+		"leg": ["Undying Phoenix", "Rises up to 3 times at 35% HP; each explosion is bigger (150 / 250 / 400 AP)."]},
+	"hourglass":   {"recipe": ["moon", "moon"], "name": "Hourglass Crest", "path": "spell", "icon": "hourglass",
+		"text": "Start with full mana. The first cast is 50% stronger.",
+		"leg": ["Hourglass of Ages", "Starts full; the first two casts are twice as strong."]},
+	# ---------------------------------------------------------------- Tank
+	"colossus":    {"recipe": ["hide", "hide"], "name": "Colossus Heart", "path": "tank", "icon": "worldtree", "x": {"hp_pct": 0.25},
+		"text": "+25% HP. Below 50% HP, regenerate 3% max HP per second.",
+		"leg": ["Heart of the Colossus", "+50% HP; regenerates 3% max HP per second whenever below 70%."]},
+	"bastion":     {"recipe": ["hide", "plate"], "name": "Bastion Shell", "path": "tank", "icon": "bastion",
+		"text": "At 50% HP, gain a shield of 35% max HP for 5s.",
+		"leg": ["Immortal Bastion", "Every 8s, a shield of 25% max HP; while shielded, reflects 50% of damage taken."]},
+	"mirror":      {"recipe": ["plate", "plate"], "name": "Mirror Carapace", "path": "tank", "icon": "mirror",
+		"text": "Reflect 30% of signature damage taken.",
+		"leg": ["Mirror of Ages", "Reflects 100% of signature damage, and fully negates the first enemy signature each fight."]},
+	"tusk":        {"recipe": ["fang", "plate"], "name": "Shieldbreaker Tusk", "path": "tank", "icon": "tusk",
+		"text": "Attacks shred 4 Resistance (stacking to 40) and cut healing by 40%.",
+		"leg": ["Ruin", "Shreds 8 Resistance per hit (to 80) and cuts healing by 70%."]},
+	"runeward":    {"recipe": ["ember", "plate"], "name": "Runeward", "path": "tank", "icon": "runeward",
+		"text": "Negate the first enemy signature every 8s.",
+		"leg": ["Runic Bulwark", "Negates a signature every 5s; each negate shields all allies for 150 AP."]},
+	"thunderhide": {"recipe": ["hide", "storm"], "name": "Thunder Hide", "path": "tank", "icon": "stormmantle",
+		"text": "When hit by a crit or a signature, zap all adjacent enemies for 80 AP.",
+		"leg": ["Storm Colossus", "Zaps within 2 hexes for 120 AP when hit by a crit or signature, and from basic attacks once every 2s."]},
+	"dragonscale": {"recipe": ["plate", "storm"], "name": "Dragonscale", "path": "tank", "icon": "lightningrod",
+		"text": "Crits against it deal normal damage, and each blocked crit gives +5 Resistance.",
+		"leg": ["Dragon's Hoard", "Immune to crits; each crit attempt against it gives +8 Resistance."]},
+	"bell":        {"recipe": ["moon", "hide"], "name": "Warding Bell", "path": "tank", "icon": "bell",
+		"text": "Each cast shields it and the nearest ally for 15% of its max HP.",
+		"leg": ["Sanctuary Bell", "Each cast shields every ally for 15% of its max HP."]},
+	"aegis":       {"recipe": ["moon", "plate"], "name": "Sanctified Aegis", "path": "tank", "icon": "aegis",
+		"text": "At the start of each fight, shield all allies for 200 + 5% of its max HP.",
+		"leg": ["Aegis of Dawn", "Opening shield of 300 + 8% max HP on all allies, refreshed once when the team falls below 50% total HP."]},
+	# ---------------------------------------------------------------- Sustain
+	"bloodmoon":   {"recipe": ["fang", "moon"], "name": "Bloodmoon Fang", "path": "sustain", "icon": "leechhide",
+		"text": "20% of all damage dealt heals it. Overhealing becomes a shield, up to 30% max HP.",
+		"leg": ["Crimson Moon", "40% of all damage heals it; the overheal shield goes up to 60% max HP, and kills heal 30%."]},
+	# ---------------------------------------------------------------- Wild (Trickster's Coin)
+	"bloodfeast":  {"recipe": ["coin", "fang"], "name": "Bloodfeast", "path": "wild", "wild": true, "icon": "bloodfeast",
+		"text": "Kills heal 40% max HP.", "down": "Heals from allies are 50% weaker.",
+		"leg": ["Feast of Ruin", "Kills heal 100% max HP and give +10% Size."]},
+	"spurs":       {"recipe": ["coin", "feather"], "name": "Reckless Spurs", "path": "wild", "wild": true, "icon": "sugarrush", "x": {"as_pct": 0.80},
+		"text": "+80% AS.", "down": "Takes 25% more damage.",
+		"leg": ["Blur", "+150% AS; takes 35% more damage."]},
+	"wildfire":    {"recipe": ["coin", "ember"], "name": "Wildfire Tome", "path": "wild", "wild": true, "icon": "plaguetome",
+		"text": "The signature costs 40% less mana.", "down": "Each cast burns 5% of its own max HP.",
+		"leg": ["Inferno Tome", "The signature costs 60% less mana; each cast burns 8% of its max HP."]},
+	"bottle":      {"recipe": ["coin", "moon"], "name": "Lightning in a Bottle", "path": "wild", "wild": true, "icon": "bottle",
+		"text": "Every 5s, a 200 AP bolt strikes a random unit.", "down": "1 in 4 bolts hits an ally.",
+		"leg": ["Storm in a Bottle", "Every 3s, a 300 AP bolt strikes a random unit (1 in 4 hits an ally)."]},
+	"giant":       {"recipe": ["coin", "hide"], "name": "Giant's Draught", "path": "wild", "wild": true, "icon": "giant", "x": {"size": 0.80, "as_pct": -0.40},
+		"text": "+80% Size.", "down": "−40% AS.",
+		"leg": ["Elixir of Titans", "Grows straight to 2.4× Size; −50% AS."]},
+	"turtle":      {"recipe": ["coin", "plate"], "name": "Turtle Shell", "path": "wild", "wild": true, "icon": "turtle",
+		"text": "Below 40% HP, hides for 3s: invulnerable, heals 25%, then +30% AS for 6s.", "down": "Can't act while hidden.",
+		"leg": ["Ancient Shell", "Hides twice (at 40% and 20% HP) and heals 40% each time."]},
+	"gambler":     {"recipe": ["coin", "storm"], "name": "Gambler's Edge", "path": "wild", "wild": true, "icon": "chaos",
+		"text": "Crits deal 8×.", "down": "Crit chance is halved, and non-crits deal 30% less.",
+		"leg": ["Loaded Dice", "Crits deal 12×."]},
+	"glasstitan":  {"recipe": ["coin", "marrow"], "name": "Glass Titan", "path": "wild", "wild": true, "icon": "doppel", "x": {"size": 0.60, "ad_pct": 1.0, "hp_pct": -0.50},
+		"text": "+100% AD and +60% Size.", "down": "−50% max HP.",
+		"leg": ["Shattered Titan", "+150% AD at 2× Size; −60% max HP."]},
+	"swap":        {"recipe": ["coin", "coin"], "name": "Swap Charm", "path": "wild", "wild": true, "icon": "swap",
+		"text": "When an ally drops below 25%, swaps places and shields them for 25% of its own HP (10s cooldown).", "down": "It takes the hits meant for them.",
+		"leg": ["Soul Swap", "The swapped ally is also invulnerable for 2s."]},
+}
+## Legendary stat overrides (on top of the base item's "x").
+const LEG_X := {
+	"titanheart": {"size": 0.60}, "draught": {"size": 0.40}, "tempestcrown": {"crit": 0.60, "critdmg": 1.0},
+	"dragonedge": {"critdmg": 3.0}, "archmage": {"ap": 60.0}, "colossus": {"hp_pct": 0.50},
+	"spurs": {"as_pct": 1.50}, "giant": {"size": 1.40, "as_pct": -0.50}, "glasstitan": {"size": 0.90, "ad_pct": 1.5, "hp_pct": -0.60},
+	"overcharge": {"crit": 0.10}, "gauntlet": {"crit": 0.10},
+}
+## Old (v0.76 and earlier) ids convert to their closest v0.77 item when a save loads.
+const RETIRED := {
+	"silk": "feather", "venom": "fang", "relic": "plate", "seed": "hide",
+	"bloodmaw": "bloodmoon", "titan": "wrath", "frenzy": "frenzy", "spellblade": "spellblade", "executioner": "dragonedge",
+	"thornlash": "club", "berserker": "bloodfeast", "colossus": "colossus", "bastion": "bastion", "drum": "drum",
+	"phoenixember": "phoenix", "bell": "bell", "lifebloom": "bell", "mirror": "mirror", "spikes": "spikes", "runeward": "runeward",
+	"stoneskin": "granite", "ironbark": "granite", "tempest": "tempest", "quiver": "quiver", "quicksilver": "quicksilver",
+	"hunter": "tusk", "sugarrush": "spurs", "archmage": "archmage", "crown": "crown", "scepter": "bell", "chaos": "wildfire",
+	"hourglass": "hourglass", "spiritbell": "bell", "puppet": "bottle", "worldtree": "colossus", "thundercleaver": "maul",
+	"stormmantle": "thunderhide", "lightningrod": "dragonscale", "galetalons": "talons", "stormorb": "gauntlet", "overcharge": "overcharge",
+	"rainbringer": "overcharge", "tempestcrown": "tempestcrown", "flicker": "dragonedge", "galvanic": "dragonedge", "judgement": "gauntlet",
+	"shadowblade": "deathblade", "phantomcloak": "bloodmoon", "smokeplate": "bastion", "windwalker": "talons", "illusion": "crown",
+	"eclipse": "quicksilver", "wispshroud": "bell", "doppel": "glasstitan", "nightshroud": "deathblade", "assassinkit": "dragonedge",
+	"wardshroud": "runeward", "viperfang": "deathblade", "leechhide": "bloodmoon", "acidshell": "tusk", "needles": "tempest",
+	"plaguetome": "archmage", "witherbloom": "crown", "grievous": "tusk", "hydravenom": "frenzy", "antidote": "colossus",
+	"crusader": "deathblade", "martyr": "aegis", "aegis": "aegis", "pilgrim": "hooves", "halo": "runeward", "rosary": "aegis",
+	"chalice": "bell", "divine": "swap", "grail": "colossus", "idol": "swap", "turtle": "turtle", "giant": "giant",
+	"bloodfeast": "bloodfeast", "bottle": "bottle", "swap": "swap", "tusk": "tusk",
 }
 
 static var _recipes: Dictionary = {}
 
+static func base_id(id: String) -> String: return id.trim_prefix(LEGEND)
+static func is_legend(id: String) -> bool: return id.begins_with(LEGEND) and ITEMS.has(base_id(id))
 static func is_component(id: String) -> bool: return COMPONENTS.has(id)
-static func is_item(id: String) -> bool: return ITEMS.has(id)
-static func valid(id: String) -> bool: return COMPONENTS.has(id) or ITEMS.has(id)
+static func is_item(id: String) -> bool: return ITEMS.has(base_id(id))
+static func is_wild(id: String) -> bool: return bool(ITEMS.get(base_id(id), {}).get("wild", false))
+static func valid(id: String) -> bool: return COMPONENTS.has(id) or ITEMS.has(base_id(id))
 
 static func combine(a: String, b: String) -> String:
 	if _recipes.is_empty():
@@ -126,45 +219,59 @@ static func combine(a: String, b: String) -> String:
 static func _key(a: String, b: String) -> String:
 	return a + "+" + b if a < b else b + "+" + a
 
+static func path_color(id: String) -> Color:
+	return Color(PATH_COLOR.get(str(ITEMS.get(base_id(id), {}).get("path", "")), "ffffff"))
+
 static func info(id: String) -> Dictionary:
 	if COMPONENTS.has(id):
 		var c = COMPONENTS[id].duplicate(); c.id = id; c.kind = "component"; c.rarity = "Common"; c.price = COMPONENT_PRICE
-		c.description = c.short + "\nCombine with another component to forge a finished item."
+		c.description = c.short + ("\nCombine with another component to forge a Wild item." if id == "coin" else "\nCombine with another component to forge a finished item.")
 		return c
-	if ITEMS.has(id):
-		var it = ITEMS[id].duplicate(); it.id = id; it.kind = "item"; it.sfx = it.art; it.art = "item:" + id; it.rarity = "Legendary" if it.get("wild", false) else "Rare"; it.price = ITEM_PRICE
-		it.description = it.text + "\n" + stat_line(id)
+	var b = base_id(id)
+	if ITEMS.has(b):
+		var src = ITEMS[b]; var it = src.duplicate(); it.id = id; it.kind = "item"; it.sfx = str(src.icon); it.art = "item:" + id; it.price = ITEM_PRICE
+		var legend = is_legend(id)
+		it.legendary = legend
+		if legend: it.name = src.leg[0]; it.text = src.leg[1]
+		it.rarity = "Legendary" if legend else ("Wild" if src.get("wild", false) else "Rare")
+		it.path_name = PATHS.get(str(src.path), "")
+		it.description = it.text + ("\nDownside: " + str(src.down) if src.has("down") else "") + "\n" + stat_line(id)
+		if legend: it.description += "\nLegendary of " + str(src.name) + "."
+		elif not src.get("wild", false): it.description += "\nMythic Anvil: becomes " + str(src.leg[0]) + " — " + str(src.leg[1])
+		else: it.description += "\nMythic Anvil (50% to destroy): becomes " + str(src.leg[0]) + " — " + str(src.leg[1])
 		return it
 	return {}
 
-## Stat contributions of one item or component.
+const STAT_KEYS := ["ad", "as", "ap", "mana", "hp", "res", "crit", "critdmg", "size", "hp_pct", "ad_pct", "as_pct"]
+
+## Stat contributions of one component, item or Legendary.
 static func stats_of(id: String) -> Dictionary:
-	var out = {"hp": 0.0, "attack": 0.0, "armor": 0.0, "haste": 0.0, "speed": 0.0, "potency": 0.0, "cd": 1.0, "crit": 0.0, "dodge": 0.0, "lifesteal": 0.0, "tenacity": 0.0}
-	var parts = [id] if COMPONENTS.has(id) else (ITEMS[id].recipe if ITEMS.has(id) else [])
+	var out = {}
+	for k in STAT_KEYS: out[k] = 0.0
+	var b = base_id(id)
+	var parts = [id] if COMPONENTS.has(id) else (ITEMS[b].recipe if ITEMS.has(b) else [])
 	for p in parts:
-		var c = COMPONENTS[p]
-		for k in c:
-			if k == "cd": out.cd *= float(c.cd)
-			elif out.has(k) and k != "cd": out[k] += float(c[k])
-	if ITEMS.has(id):
-		for k in ITEMS[id].get("x", {}):
-			if k == "cd": out.cd *= float(ITEMS[id].x.cd)
-			else: out[k] += float(ITEMS[id].x[k])
+		for k in COMPONENTS[p]:
+			if out.has(k): out[k] += float(COMPONENTS[p][k])
+	if ITEMS.has(b):
+		var x = LEG_X.get(b, ITEMS[b].get("x", {})) if is_legend(id) else ITEMS[b].get("x", {})
+		for k in x: out[k] += float(x[k])
 	return out
 
 static func stat_line(id: String) -> String:
 	var s = stats_of(id); var parts = []
-	if s.attack != 0: parts.append("%+d%% AD" % roundi(s.attack * 100))
-	if s.hp != 0: parts.append("%+d%% HP" % roundi(s.hp * 100))
-	if s.armor != 0: parts.append("%+d Resistance" % roundi(s.armor * HeroData.ARMOR_TO_RES))
-	if s.haste != 0: parts.append("%+d%% AS" % roundi(s.haste * 100))
-	var mana = s.speed + (1.0 / maxf(0.3, s.cd) - 1.0)
-	if absf(mana) > 0.001: parts.append("%+d%% Mana" % roundi(mana * 100))
-	if s.potency != 0: parts.append("%+d AP" % roundi(s.potency * 100))
-	if s.crit != 0: parts.append("%+d%% crit" % roundi(s.crit * 100))
-	if s.dodge != 0: parts.append("%+d%% dodge" % roundi(s.dodge * 100))
-	if s.lifesteal != 0: parts.append("%+d%% lifesteal" % roundi(s.lifesteal * 100))
-	if s.tenacity != 0: parts.append("%+d%% CC resistance" % roundi(s.tenacity * 100))
+	if s.ad != 0: parts.append("%+d AD" % roundi(s.ad))
+	if s.ad_pct != 0: parts.append("%+d%% AD" % roundi(s.ad_pct * 100))
+	if s["as"] != 0: parts.append("%+d%% AS" % roundi(s["as"] * 100))
+	if s.as_pct != 0: parts.append("%+d%% AS" % roundi(s.as_pct * 100))
+	if s.ap != 0: parts.append("%+d AP" % roundi(s.ap))
+	if s.mana != 0: parts.append("%+d%% Mana" % roundi(s.mana * 100))
+	if s.hp != 0: parts.append("%+d HP" % roundi(s.hp))
+	if s.hp_pct != 0: parts.append("%+d%% HP" % roundi(s.hp_pct * 100))
+	if s.res != 0: parts.append("%+d Resistance" % roundi(s.res))
+	if s.crit != 0: parts.append("%+d%% Crit" % roundi(s.crit * 100))
+	if s.critdmg != 0: parts.append("%+.1f× crit damage" % s.critdmg)
+	if s.size != 0: parts.append("%+d%% Size" % roundi(s.size * 100))
 	return " · ".join(parts)
 
 static func carried(hero: Dictionary) -> Array:
@@ -173,91 +280,163 @@ static func carried(hero: Dictionary) -> Array:
 		if valid(str(v)): out.append(str(v))
 	return out
 
+static func holds(hero: Dictionary, id: String) -> bool:
+	for v in carried(hero):
+		if base_id(v) == id: return true
+	return false
+
+static func holds_legend(hero: Dictionary, id: String) -> bool:
+	return (LEGEND + id) in carried(hero)
+
+## Totals as HeroData.stats() reads them.
 static func totals(hero: Dictionary) -> Dictionary:
-	var t = {"hp": 0.0, "attack": 0.0, "armor": 0.0, "haste": 0.0, "speed": 0.0, "potency": 0.0, "cd": 1.0, "crit": 0.0, "dodge": 0.0, "lifesteal": 0.0, "tenacity": 0.0}
+	var t = {"ad": 0.0, "as": 0.0, "ap": 0.0, "mana": 0.0, "hp": 0.0, "res": 0.0, "crit": 0.0, "critdmg": 0.0, "size": 0.0,
+		"hp_mult": 1.0, "ad_mult": 1.0, "as_mult": 1.0, "size_k": 1.0, "size_cap": HeroData.SIZE_CAP, "critdmg_cap": 0.0}
 	for id in carried(hero):
 		var s = stats_of(id)
-		for k in t:
-			if k == "cd": t.cd *= s.cd
-			else: t[k] += s[k]
+		for k in ["ad", "as", "ap", "mana", "hp", "res", "crit", "critdmg", "size"]: t[k] += s[k]
+		t.hp_mult *= 1.0 + s.hp_pct; t.ad_mult *= 1.0 + s.ad_pct; t.as_mult *= maxf(0.2, 1.0 + s.as_pct)
+		if is_legend(id) and ITEMS[base_id(id)].path in ["giant"] or id in [LEGEND + "giant", LEGEND + "glasstitan"]: t.size_cap = HeroData.SIZE_CAP_LEGEND
+	if holds(hero, "titanheart"): t.size_k = 3.0 if holds_legend(hero, "titanheart") else 2.0
+	if holds(hero, "gambler"):
+		t.crit *= 0.5; t.critdmg += 10.0 if holds_legend(hero, "gambler") else 6.0; t.critdmg_cap = 12.0
+	if holds_legend(hero, "giant"): t.size = maxf(t.size, 3.0)
 	return t
 
+## Is this item carried in a fight (normal or Legendary)?
 static func has(u: Dictionary, id: String) -> bool:
 	return not u.get("summon", false) and id in u.get("forge", [])
 
-# ---------------------------------------------------------------- combat hooks
+static func leg(u: Dictionary, id: String) -> bool:
+	return not u.get("summon", false) and id in u.get("legends", [])
+
+## An AP-scaled item number (AP and level, but not signature bonuses).
+static func ap(u: Dictionary, base: float) -> float:
+	return base * float(u.get("ap", 100.0)) / 100.0 * Signatures.level_factor(int(u.hero.get("level", 1)))
+
+# ---------------------------------------------------------------- Size in combat
+## The size factor that multiplies HP and AD for a champion at a given Size.
+static func size_factor(u: Dictionary, size: float) -> float:
+	return 1.0 + maxf(0.0, size - float(u.get("born_size", 1.0))) * 0.5 * float(u.get("size_k", 1.0))
+
+## Grow (or shrink) a champion mid-fight: HP, AD, Resistance and area follow, the model rescales.
+static func set_size(sim: BattleSim, u: Dictionary, size: float) -> void:
+	var cap = HeroData.SIZE_CAP_LEGEND if u.get("size_cap", 2.0) > 2.0 else HeroData.SIZE_CAP
+	size = clampf(size, 0.7, cap)
+	var old = float(u.get("size", 1.0))
+	if is_equal_approx(old, size): return
+	var r = size_factor(u, size) / size_factor(u, old)
+	var hp_ratio = u.hp / u.max_hp
+	u.max_hp *= r; u.hp = u.max_hp * hp_ratio
+	u.attack *= r; u.attack_basic = u.get("attack_basic", u.attack) * r
+	u.size = size
+	refresh_size(u)
+	if size > old + 0.04 and not sim.silent: sim.emit({"type": "grow", "uid": u.uid, "pos": u.pos, "size": size})
+
+static func refresh_size(u: Dictionary) -> void:
+	var over = maxf(0.0, u.size - float(u.get("born_size", 1.0)))
+	var area = 1.0 + over * 0.5
+	if has(u, "draught"): area += over * (1.0 if leg(u, "draught") else 0.5)
+	if has(u, "archmage"): area += 0.5 if leg(u, "archmage") else 0.25
+	u.area = area
+	if has(u, "granite"): u.res = float(u.base_res) + over * 100.0 * (2.0 if leg(u, "granite") else 1.0)
+	if has(u, "hooves"): u.buffs["hooves"] = {"as": over * (1.5 if leg(u, "hooves") else 0.8), "t": 9999.0}
+
+# ---------------------------------------------------------------- setup and ticking
 static func setup_unit(sim: BattleSim, u: Dictionary) -> void:
-	u.forge = [] if u.summon else carried(u.hero).filter(func(i): return ITEMS.has(i))
-	u.fx = {"last_hit": -10.0, "titan": 0, "frenzy": 0, "hits": 0, "base_interval": u.interval, "struck": {}}
-	if not u.summon:
-		var t = totals(u.hero)
-		u.fx.crit = minf(0.60,t.crit); u.fx.dodge = minf(0.45, t.dodge); u.fx.lifesteal = t.lifesteal; u.fx.tenacity = minf(0.65, t.tenacity)
+	u.forge = []; u.legends = []
+	u.fx = {"last_hit": -10.0, "hits": 0, "base_interval": u.interval, "struck": {}, "crit": 0.0, "dodge": 0.0, "lifesteal": 0.0, "tenacity": 0.0,
+		"stacks": {}, "casts": 0, "cast_n": 0, "banners": {}}
+	if u.summon: return
+	for id in carried(u.hero):
+		if ITEMS.has(base_id(id)):
+			u.forge.append(base_id(id))
+			if is_legend(id): u.legends.append(base_id(id))
+	var t = totals(u.hero)
+	u.size_cap = t.size_cap
+	refresh_size(u)
 	if has(u, "hourglass"): u.mana = u.max_mana
-	if has(u, "giant"): u.radius *= 1.2
+	if has(u, "wildfire"): u.max_mana *= 0.4 if leg(u, "wildfire") else 0.6; u.mana = minf(u.mana, u.max_mana)
+	if has(u, "belt"): set_size(sim, u, u.size + 0.10)
+
+static func stack(u: Dictionary, key: String, n: int = 1, cap: int = 9999) -> int:
+	var v = mini(cap, int(u.fx.stacks.get(key, 0)) + n)
+	u.fx.stacks[key] = v
+	return v
 
 static func tick(sim: BattleSim, u: Dictionary, dt: float) -> void:
-	if u.forge.is_empty() or not u.alive: return
+	if u.summon or not u.alive: return
+	if float(u.get("drain", 0.0)) > 0.0 and u.hp > u.max_hp * 0.10: u.hp = maxf(u.max_hp * 0.10, u.hp - u.max_hp * float(u.drain) * dt)
+	if u.get("doppel", false) and not u.fx.get("doppel_done", false) and sim.time > 0.1:
+		u.fx.doppel_done = true
+		var copy = sim.add_unit(u.hero, u.team, u.pos + Vector2(0.8, 0), 1.0, u.uid)
+		copy.max_hp = u.max_hp * 0.5; copy.hp = copy.max_hp; copy.attack = u.attack * 0.5; copy.attack_basic = copy.attack
+		copy.interval = u.interval; copy.range = u.range; copy.radius = u.radius; copy.ttl = 999.0; copy.size = u.size * 0.9
+		copy.doppel_copy = true
+		sim.emit({"type": "cast", "uid": u.uid, "effect": "vanish", "name": "Doppelganger", "pos": u.pos, "target": copy.pos})
+	if u.forge.is_empty(): return
 	var t = sim.time
-	if has(u, "colossus") and t - u.fx.last_hit > 3.0 and u.hp < u.max_hp: sim.heal(u, u, u.max_hp * 0.012 * dt, "item:colossus")
-	if has(u, "worldtree") and u.hp < u.max_hp: sim.heal(u, u, u.max_hp * 0.008 * dt, "item:worldtree")
-	if has(u, "sugarrush") and u.hp > u.max_hp * 0.15: u.hp = maxf(u.max_hp * 0.15, u.hp - u.max_hp * 0.006 * dt)
-	if has(u, "drum") and ready(sim, u, "drum", 7.0):
-		for a in sim.living(u.team, false):
-			if a.pos.distance_to(u.pos) <= 5.0: sim.status(a, "rally", 2.5)
-		proc(sim, u, "drum", u)
-	if has(u, "bell") and t > 2.0:
-		var near = sim.near_foes(u, u.pos, 3.5)
-		if not near.is_empty() and ready(sim, u, "bell", 8.0):
-			for e in near: e.taunt_by = u.uid; sim.status(e, "taunt", 2.0)
-			sim.shield(u, u.max_hp * 0.08)
-			proc(sim, u, "bell", u)
-	if has(u, "lifebloom"):
-		var hurt = sim.living(u.team, false).filter(func(a): return a.hp < a.max_hp and a.pos.distance_to(u.pos) <= 6.0)
-		if not hurt.is_empty() and ready(sim, u, "lifebloom", 5.0):
-			hurt.sort_custom(func(a, b): return a.hp / a.max_hp < b.hp / b.max_hp)
-			sim.heal(u, hurt[0], u.max_hp * 0.016, "item:lifebloom"); proc(sim, u, "lifebloom", hurt[0])
+	if not u.fx.get("opened", false) and t > 0.2:
+		u.fx.opened = true
+		if has(u, "aegis"):
+			var big = leg(u, "aegis")
+			for a in sim.living(u.team, false): sim.shield(a, (300.0 if big else 200.0) + u.max_hp * (0.08 if big else 0.05), 8.0)
+			proc(sim, u, "aegis", u)
+	if has(u, "aegis") and leg(u, "aegis") and not u.fx.get("aegis_refresh", false):
+		var mates = sim.living(u.team, false); var hp = 0.0; var mx = 0.0
+		for a in mates: hp += a.hp; mx += a.max_hp
+		if mx > 0 and hp / mx < 0.5:
+			u.fx.aegis_refresh = true
+			for a in mates: sim.shield(a, 300.0 + u.max_hp * 0.08, 8.0)
+			proc(sim, u, "aegis", u)
+	if has(u, "belt") and ready(sim, u, "belt", 2.0):
+		var cap = 2.4 if leg(u, "belt") else float(u.born_size) + 0.60 + float(u.get("belt_base", 0.0))
+		if not u.has("belt_base"): u.belt_base = u.size - float(u.born_size) - 0.10
+		if u.size < cap - 0.001:
+			set_size(sim, u, minf(cap, u.size + 0.05))
+			if not u.fx.banners.get("belt", false): proc(sim, u, "belt", u)
+			if u.size >= cap - 0.001: banner(sim, u, "belt", "TITAN!")
+	if has(u, "belt") and leg(u, "belt") and u.size >= 2.39 and ready(sim, u, "mountain_taunt", 3.0):
+		for e in SignatureCast.within(sim, u, u.pos, 3): e.taunt_by = u.uid; sim.status(e, "taunt", 2.0)
+	if has(u, "titanheart") and (leg(u, "titanheart") or u.size >= 1.5): sim.status(u, "unstoppable", 0.25)
+	if has(u, "colossus"):
+		var below = 0.70 if leg(u, "colossus") else 0.50
+		if u.hp < u.max_hp * below: sim.heal(u, u, u.max_hp * 0.03 * dt, "item:colossus")
+	if has(u, "bastion"):
+		if leg(u, "bastion"):
+			if ready(sim, u, "bastion", 8.0): sim.shield(u, u.max_hp * 0.25, 8.0); proc(sim, u, "bastion", u)
+		elif not u.fx.get("bastion", false) and u.hp < u.max_hp * 0.5:
+			u.fx.bastion = true; sim.shield(u, u.max_hp * 0.35, 5.0); proc(sim, u, "bastion", u)
+	if has(u, "bottle") and t > 1.0 and ready(sim, u, "bottle", 3.0 if leg(u, "bottle") else 5.0):
+		var pool = sim.foes(u)
+		if sim.rng.randf() < 0.25: pool = sim.living(u.team, false).filter(func(a): return a.uid != u.uid)
+		if not pool.is_empty():
+			var v = pool[sim.rng.randi_range(0, pool.size() - 1)]
+			sim.true_hit = false
+			sim.hurt(u, v, SignatureCast.ap(u, 300.0 if leg(u, "bottle") else 200.0) / float(u.get("sig_mult", 1.0)), true, "item:bottle")
+			sim.emit({"type": "bolt", "uid": u.uid, "pos": v.pos + Vector2(0, -0.1), "target": v.pos, "effect": "stormcall"})
+			proc(sim, u, "bottle", v)
+	if has(u, "turtle"):
+		var hide_end = float(u.fx.get("turtle_end", -1.0))
+		if hide_end > 0.0 and t >= hide_end:
+			u.fx.turtle_end = -1.0; u.buffs["turtle"] = {"as": 0.30, "t": 6.0}
+		var marks = [0.40, 0.20] if leg(u, "turtle") else [0.40]
+		var used = int(u.fx.get("turtle_used", 0))
+		if hide_end < 0.0 and used < marks.size() and u.hp < u.max_hp * float(marks[used]):
+			u.fx.turtle_used = used + 1; u.fx.turtle_end = t + 3.0
+			u.status["stun"] = 3.0; u.status["shell"] = 3.0
+			sim.heal(u, u, u.max_hp * (0.40 if leg(u, "turtle") else 0.25), "item:turtle")
+			proc(sim, u, "turtle", u)
 	if has(u, "swap") and float(u.items.get("swap", -1.0)) <= t:
 		for a in sim.living(u.team, false):
 			if a.uid != u.uid and a.hp / a.max_hp < 0.25 and a.pos.distance_to(u.pos) < 12.0 and u.hp / u.max_hp > 0.4:
 				ready(sim, u, "swap", 10.0)
 				sim.swap_hexes(u, a)
-				sim.shield(a, u.max_hp * 0.15)
+				sim.shield(a, u.max_hp * 0.25)
+				if leg(u, "swap"): a.status["divine"] = 2.0
 				sim.emit({"type": "cast", "uid": u.uid, "effect": "vanish", "name": "Swap Charm", "pos": u.pos, "target": a.pos})
 				proc(sim, u, "swap", a)
 				break
-	if not u.fx.get("opened", false):
-		u.fx.opened = true
-		if has(u, "nightshroud"): sim.status(u, "stealth", 3.0); proc(sim,u,"nightshroud",u)
-		if has(u, "aegis"):
-			for a in sim.living(u.team, false): sim.shield(a, u.max_hp * 0.08)
-			proc(sim, u, "aegis", u)
-	if has(u, "stormmantle") and t > 1.0:
-		var near = sim.foes(u); near.sort_custom(func(a, b): return u.pos.distance_squared_to(a.pos) < u.pos.distance_squared_to(b.pos))
-		if not near.is_empty() and u.pos.distance_to(near[0].pos) < 8.0 and ready(sim, u, "stormmantle", 5.0):
-			sim.hurt(u, near[0], u.ability_power * 0.6, true, "item:stormmantle"); proc(sim, u, "stormmantle", near[0])
-	if has(u, "judgement") and t > 1.0:
-		var foes = sim.foes(u)
-		if not foes.is_empty() and ready(sim, u, "judgement", 7.0):
-			foes.sort_custom(func(a, b): return a.hp / a.max_hp < b.hp / b.max_hp)
-			sim.hurt(u, foes[0], u.ability_power * 0.75, true, "item:judgement"); proc(sim, u, "judgement", foes[0])
-	if has(u, "bottle") and t > 1.0 and ready(sim, u, "bottle", 7.0):
-		var pool = sim.foes(u) if sim.rng.randf() > 0.12 else sim.living(u.team, false)
-		if not pool.is_empty():
-			var victim = pool[sim.rng.randi_range(0, pool.size() - 1)]
-			sim.hurt(u, victim, u.attack * 1.2, true, "item:bottle"); proc(sim, u, "bottle", victim)
-	if has(u, "grail") and u.hp < u.max_hp: sim.heal(u, u, u.max_hp * 0.009 * dt, "item:grail")
-	if has(u, "martyr") and u.hp / u.max_hp > 0.5:
-		for a in sim.living(u.team, false):
-			if a.uid != u.uid and a.hp < a.max_hp and a.pos.distance_to(u.pos) <= 4.0: sim.heal(u, a, u.max_hp * 0.01 * dt, "item:martyr")
-	if has(u, "antidote") and not u.dots.is_empty():
-		for d in u.dots: d.remaining -= dt * 2.0
-		sim.heal(u, u, u.max_hp * 0.02 * dt, "item:antidote")
-	if has(u, "divine") and not u.fx.get("divine_used", false):
-		for a in sim.living(u.team, false):
-			if a.hp / a.max_hp < 0.15:
-				u.fx.divine_used = true; a.status["divine"] = 2.5; proc(sim, u, "divine", a); break
-	if has(u, "turtle") and u.fx.get("turtle_end", -1.0) > 0 and t >= u.fx.turtle_end:
-		u.fx.turtle_end = -1.0; sim.status(u, "rally", 7.0)
 
 static func ready(sim: BattleSim, u: Dictionary, id: String, cooldown: float) -> bool:
 	if sim.time < float(u.items.get(id, -1.0)): return false
@@ -266,286 +445,418 @@ static func ready(sim: BattleSim, u: Dictionary, id: String, cooldown: float) ->
 
 static func proc(sim: BattleSim, u: Dictionary, id: String, target: Dictionary) -> void:
 	sim.track(u, "casts", 1, "item:" + id)
-	ItemFeedback.signal_effect(sim,u,id,target)
+	if sim.silent: return
+	if not u.fx.banners.has(id):
+		u.fx.banners[id] = true
+		var name = str(ITEMS[id].leg[0]) if leg(u, id) else str(ITEMS[id].name)
+		sim.emit({"type": "item_banner", "uid": u.uid, "pos": u.pos, "item_id": id, "name": name.to_upper() + "!", "color": PATH_COLOR.get(str(ITEMS[id].path), "ffffff"), "legend": leg(u, id)})
+	ItemFeedback.signal_effect(sim, u, id, target)
 
-## Damage shaping, before armor and shields.
+static func banner(sim: BattleSim, u: Dictionary, id: String, text: String) -> void:
+	if sim.silent: return
+	sim.emit({"type": "item_banner", "uid": u.uid, "pos": u.pos, "item_id": id, "name": text, "color": PATH_COLOR.get(str(ITEMS[id].path), "ffffff"), "legend": leg(u, id)})
+
+# ---------------------------------------------------------------- damage
+## Crit roll, crit-based and conditional multipliers, negation. Runs inside BattleSim.hurt before Resistance.
 static func damage_mod(sim: BattleSim, source: Dictionary, target: Dictionary, amount: float, magical: bool, credit: String) -> float:
-	if target.get("fx", {}).get("turtle_end", -1.0) > sim.time: return 0.0
+	sim.crit_mult = 0.0
+	if float(target.get("fx", {}).get("turtle_end", -1.0)) > sim.time: return 0.0
 	if target.get("status", {}).get("divine", 0.0) > 0.0: return 0.0
 	var basic = credit == "basic"
 	var item_hit = credit.begins_with("item:")
-	# Dodge.
-	var dodge = float(target.get("fx", {}).get("dodge", 0.0))
-	if dodge > 0.0 and not item_hit and (basic or has(target, "wardshroud")) and sim.rng.randf() < dodge:
-		target.fx.dodged = true
-		if has(target, "shadowblade"): target.fx.shadow_primed = true
-		if has(target, "phantomcloak"): sim.heal(target, target, target.max_hp * 0.03, "item:phantomcloak")
-		if has(target, "windwalker"): sim.status(target, "rally", 2.0)
-		if has(target, "eclipse"):
-			sim.add_mana(target, 5.0)
-		if has(target, "wispshroud"):
-			var hurt = sim.living(target.team, false).filter(func(a): return a.hp < a.max_hp)
-			if not hurt.is_empty():
-				hurt.sort_custom(func(a, b): return a.hp / a.max_hp < b.hp / b.max_hp); sim.heal(target, hurt[0], target.max_hp * 0.02, "item:wispshroud")
-		ItemFeedback.augment(sim,target,"dodge",target)
-		for id in ["shadowblade","windwalker","eclipse","wardshroud"]:
-			if has(target,id):proc(sim,target,id,target)
-		sim.emit({"type": "dodge", "uid": target.uid, "pos": target.pos})
-		return 0.0
-	if source.get("fx", {}).has("crit") and not item_hit:
-		source.fx.last_crit = false
-		if (basic or has(source, "stormorb")) and sim.rng.randf() < float(source.fx.crit):
-			source.fx.last_crit = true
-			ItemFeedback.augment(sim,source,"crit",target)
-			amount *= 1.8 if has(source, "tempestcrown") else 1.5
-			if has(source, "galvanic") and target.get("status", {}).get("poison", 0.0) > 0.0: amount *= 1.7
-	if not source.get("forge", []).is_empty() and not item_hit:
-		if has(source, "crusader") and source.hp / source.max_hp > 0.7: amount *= 1.25; proc(sim,source,"crusader",target)
-		if has(source, "assassinkit") and not source.fx.struck.has(target.uid): source.fx.struck[target.uid] = true; amount *= 1.8; proc(sim,source,"assassinkit",target)
-		if basic and has(source, "shadowblade") and source.fx.get("shadow_primed", false): source.fx.shadow_primed = false; amount += source.attack * 1.0; proc(sim, source, "shadowblade", target)
-	if not source.get("forge", []).is_empty():
-		if basic and has(source, "executioner") and target.hp / target.max_hp < 0.3: amount *= 1.5; proc(sim,source,"executioner",target)
-		if basic and has(source, "spellblade") and source.fx.get("primed", false):
-			source.fx.primed = false; amount += source.attack * 1.2; proc(sim, source, "spellblade", target)
-		if basic and has(source, "tusk"):
-			amount *= 1.0 + target.armor * 0.3
-			if target.shield > 0: amount *= 1.6
-			proc(sim,source,"tusk",target)
-	if not target.get("forge", []).is_empty():
-		if has(target, "ironbark"): amount *= 0.88; proc(sim,target,"ironbark",target)
-		if has(target, "idol"): amount *= 1.10; proc(sim,target,"idol",target)
-		if not basic and not credit.begins_with("item:") and has(target, "runeward") and ready(sim, target, "runeward", 12.0):
-			proc(sim, target, "runeward", source); return 0.0
+	# Signature negation (Runeward, Mirror of Ages).
+	if credit == "signature" and not target.get("summon", true) and not target.forge.is_empty():
+		var key = "%d:%d" % [source.uid, int(source.get("fx", {}).get("cast_n", 0))]
+		if str(target.fx.get("negating", "")) == key: return 0.0
+		var negate = false
+		if has(target, "mirror") and leg(target, "mirror") and not target.fx.get("mirror_used", false): target.fx.mirror_used = true; negate = true
+		elif has(target, "runeward") and ready(sim, target, "runeward", 5.0 if leg(target, "runeward") else 8.0): negate = true
+		if negate:
+			target.fx.negating = key
+			sim.emit({"type": "blocked", "uid": target.uid, "source": source.uid, "pos": target.pos, "amount": amount, "credit": "item:runeward"})
+			proc(sim, target, "runeward" if has(target, "runeward") else "mirror", source)
+			if has(target, "runeward") and leg(target, "runeward"):
+				for a in sim.living(target.team, false): sim.shield(a, ap(target, 150.0), 5.0)
+			return 0.0
+	if source.get("summon", true) or item_hit: return amount
+	# Crits: basic attacks always can; the signature only with Jeweled Gauntlet.
+	var can_crit = basic or (credit == "signature" and has(source, "gauntlet")) or credit == "counter"
+	if can_crit:
+		var chance = float(source.get("crit", 0.0)) + (0.25 if float(source.fx.get("overload_until", -1.0)) > sim.time else 0.0)
+		var forced = credit == "counter" and leg(source, "spikes")
+		if credit == "signature" and leg(source, "gauntlet") and not source.fx.get("starfall_done", true):
+			source.fx.starfall_done = true; forced = true
+		if forced or sim.rng.randf() < chance:
+			var mult = float(source.get("crit_damage", 2.0))
+			if has(source, "dragonedge") and not leg(source, "dragonedge") and target.hp / target.max_hp < 0.40: mult *= 2.0
+			if has(target, "dragonscale"):
+				target.res = float(target.res) + (8.0 if leg(target, "dragonscale") else 5.0)
+				proc(sim, target, "dragonscale", source)
+				mult = 1.0
+			if mult > 1.0:
+				sim.crit_mult = mult
+				amount *= mult
+				ItemFeedback.augment(sim, source, "crit", target)
+		elif has(source, "gambler"):
+			amount *= 0.70
+	# Spellblade empowered attacks.
+	if basic and int(source.fx.get("spellblade", 0)) > 0:
+		source.fx.spellblade -= 1
+		var big = leg(source, "spellblade")
+		amount += source.attack * (2.0 if big else 1.0) + ap(source, 80.0 if big else 40.0)
+		proc(sim, source, "spellblade", target)
+	# Incoming modifiers.
+	amount *= float(target.get("taken_mult", 1.0))
+	if not target.get("summon", true):
+		if has(target, "spurs"): amount *= 1.35 if leg(target, "spurs") else 1.25
+		if has(target, "belt") and leg(target, "belt") and target.size >= 2.39: amount *= 0.60
+		if has(target, "mirror") and credit == "signature" and not sim.reflecting:
+			sim.reflecting = true; sim.hurt(target, source, amount * (1.0 if leg(target, "mirror") else 0.30), true, "item:mirror"); sim.reflecting = false
+			if ready(sim, target, "mirror_fx", 1.0): proc(sim, target, "mirror", source)
+		if has(target, "bastion") and leg(target, "bastion") and target.shield > 0 and not sim.reflecting:
+			sim.reflecting = true; sim.hurt(target, source, amount * 0.50, true, "item:bastion"); sim.reflecting = false
+		if has(target, "granite") and leg(target, "granite") and basic and not sim.reflecting:
+			sim.reflecting = true; sim.hurt(target, source, amount * 0.20, true, "item:granite"); sim.reflecting = false
 	return amount
 
-## After damage lands.
+## After damage lands (actual = HP lost). Most on-hit and when-hit items live here.
 static func after_hit(sim: BattleSim, source: Dictionary, target: Dictionary, actual: float, magical: bool, credit: String) -> void:
+	var crit = sim.last_crit
 	var basic = credit == "basic"
-	if not target.get("forge", []).is_empty() and target.alive and actual > 0:
-		target.fx.last_hit = sim.time
-		if has(target, "titan") and target.fx.titan < 16 and ready(sim, target, "titan", 0.4):
-			target.fx.titan += 1; target.attack *= 1.015; target.attack_basic = target.get("attack_basic", target.attack) * 1.015; proc(sim,target,"titan",target)
-		if has(target, "bastion") and target.hp / target.max_hp < 0.5 and not target.fx.get("bastion", false):
-			target.fx.bastion = true; sim.shield(target, target.max_hp * 0.24); proc(sim, target, "bastion", target)
-		if basic and has(target, "spikes") and source.alive and sim.rng.randf() < 0.45 and ready(sim, target, "spikes", 3.0):
-			sim.status(source, "stun", 0.8); proc(sim, target, "spikes", source)
-		if not basic and not credit.begins_with("item:") and has(target, "mirror") and source.alive and not source.summon:
-			sim.hurt(target, source, actual * 0.25, true, "item:mirror")
-		if not basic and not credit.begins_with("item:") and has(target, "lightningrod") and source.alive and ready(sim, target, "lightningrod", 2.0):
-			sim.hurt(target, source, target.attack * 0.8, true, "item:lightningrod"); proc(sim, target, "lightningrod", source)
-		if basic and has(target, "acidshell") and source.alive: sim.poison(target, source, 3.0, target.attack * 0.08, "poison"); proc(sim,target,"acidshell",source)
-		if has(target, "smokeplate") and target.hp / target.max_hp < 0.5 and not target.fx.get("smoked", false):
-			target.fx.smoked = true
-			for k in ["stun", "root", "slow"]: target.status.erase(k)
-			sim.status(target, "stealth", 2.0); proc(sim, target, "smokeplate", target)
-		if has(target, "doppel") and target.hp / target.max_hp < 0.5 and not target.fx.get("doppel", false):
-			target.fx.doppel = true
-			var copy = sim.add_unit(target.hero, target.team, target.pos + Vector2(0.8, 0.0), 1.0, target.uid)
-			copy.ttl = 10.0; copy.max_hp *= 1.6; copy.hp = copy.max_hp; copy.attack *= 1.6; copy.attack_basic = copy.attack
-			sim.emit({"type": "summon", "uid": target.uid, "pos": target.pos}); proc(sim, target, "doppel", target)
-		if has(target, "turtle") and target.hp / target.max_hp < 0.4 and not target.fx.get("turtled", false) and target.hp > 0:
-			target.fx.turtled = true; target.fx.turtle_end = sim.time + 3.0; sim.status(target, "stun", 3.0); sim.heal(target, target, target.max_hp * 0.18, "item:turtle"); proc(sim, target, "turtle", target)
-	if not source.alive or actual <= 0: return
 	var item_hit = credit.begins_with("item:")
-	var ls = float(source.get("fx", {}).get("lifesteal", 0.0))
-	if ls > 0.0 and not item_hit:
-		if has(source, "leechhide") and source.hp / source.max_hp < 0.4: ls *= 2.0
-		sim.heal(source, source, actual * ls, "item:lifesteal")
-	if source.get("forge", []).is_empty(): return
-	if not item_hit:
-		if source.fx.get("last_crit", false):
-			source.fx.last_crit = false
-			if has(source, "thundercleaver"):
-				var arcs = sim.foes(source).filter(func(e): return e.uid != target.uid and e.pos.distance_to(target.pos) <= 3.5)
-				for e in arcs.slice(0, 2): sim.hurt(source, e, actual * 0.5, true, "item:thundercleaver")
-			if has(source, "galetalons"): sim.status(source, "rally", 3.0); proc(sim,source,"galetalons",source)
-			if has(source, "overcharge") and ready(sim,source,"overcharge",1.0):
-				sim.add_mana(source, 6.5)
-				proc(sim,source,"overcharge",source)
-			if has(source, "rainbringer"):
-				var hurt = sim.living(source.team, false).filter(func(a): return a.hp < a.max_hp)
-				if not hurt.is_empty():
-					hurt.sort_custom(func(a, b): return a.hp / a.max_hp < b.hp / b.max_hp); sim.heal(source, hurt[0], actual * 0.3, "item:rainbringer")
-			if has(source, "flicker") and target.alive:
-				var dir = (target.pos - source.pos).normalized()
-				sim.relocate_hex(source, target.pos + dir * ArenaGrid.ROW_GAP); proc(sim,source,"flicker",target)
-		if has(source, "grievous") and target.alive: target.scorch_source = source.uid; sim.status(target, "scorch", 3.0); proc(sim,source,"grievous",target)
-		if has(source, "hydravenom") and target.alive: sim.poison(source, target, 3.0, source.attack * 0.09, "poison"); proc(sim,source,"hydravenom",target)
-		if not basic:
-			if has(source, "plaguetome") and target.alive: sim.poison(source, target, 4.0, actual * 0.1, "poison"); proc(sim,source,"plaguetome",target)
-			if has(source, "witherbloom") and target.alive: sim.status(target, "weaken", 4.0); proc(sim,source,"witherbloom",target)
-	if basic:
-		if has(source, "viperfang") and target.alive: sim.poison(source, target, 3.0, source.attack * 0.06, "poison"); proc(sim,source,"viperfang",target)
-		if has(source, "needles") and (source.fx.hits + 1) % 4 == 0:
+	# Bearer was hit.
+	if not target.get("summon", true) and target.alive and not target.forge.is_empty() and actual > 0.0 and not item_hit:
+		target.fx.last_hit = sim.time
+		if has(target, "wrath") and ready(sim, target, "wrath", 0.25):
+			var n = stack(target, "wrath", 1, 99999 if leg(target, "wrath") else 40)
+			if n <= 40 or leg(target, "wrath"):
+				target.attack *= 1.02; target.attack_basic *= 1.02
+				if n <= 40: set_size(sim, target, target.size + 0.01)
+				if n == 1: proc(sim, target, "wrath", target)
+		if has(target, "thunderhide") and not sim.reflecting:
+			var big = leg(target, "thunderhide")
+			if (crit > 0.0 or credit == "signature" or (big and basic)) and ready(sim, target, "thunderhide", 2.0 if (basic and crit <= 0.0) else 0.5):
+				sim.reflecting = true
+				for e in SignatureCast.within(sim, target, target.pos, 2 if big else 1):
+					sim.hurt(target, e, ap(target, 120.0 if big else 80.0), true, "item:thunderhide")
+				sim.reflecting = false
+				sim.emit({"type": "cast", "uid": target.uid, "effect": "stormcall", "name": "", "pos": target.pos, "target": target.pos})
+				proc(sim, target, "thunderhide", target)
+		if has(target, "spikes") and basic and source.alive and not sim.countering and source.uid != target.uid:
+			if sim.rng.randf() < (0.60 if leg(target, "spikes") else 0.30) and sim.in_attack_range(target, source):
+				sim.countering = true
+				sim.hurt(target, source, target.get("attack_basic", target.attack), false, "counter")
+				sim.countering = false
+				proc(sim, target, "spikes", source)
+	if source.get("summon", true) or item_hit: return
+	if float(source.fx.get("lifesteal", 0.0)) > 0.0 and actual > 0.0: sim.heal(source, source, actual * float(source.fx.lifesteal), "item:lifesteal")
+	if source.forge.is_empty(): return
+	# Lifesteal (Bloodmoon Fang / Crimson Moon) on all damage.
+	if has(source, "bloodmoon") and actual > 0.0:
+		var big = leg(source, "bloodmoon")
+		var heal_amount = actual * (0.40 if big else 0.20)
+		var room = source.max_hp - source.hp
+		if heal_amount > room:
+			var over = heal_amount - room
+			source.shield = minf(source.max_hp * (0.60 if big else 0.30), source.shield + over); source.shield_time = maxf(source.shield_time, 4.0)
+		sim.heal(source, source, minf(heal_amount, room), "item:bloodmoon")
+		if ready(sim, source, "bloodmoon_fx", 2.5): proc(sim, source, "bloodmoon", source)
+	if crit > 0.0:
+		if has(source, "talons"):
+			if leg(source, "talons"): source.buffs["talons"] = {"as": float(source.buffs.get("talons", {}).get("as", 0.0)) + 0.12, "t": 9999.0}
+			else: source.buffs["talons_%d" % stack(source, "talons_n")] = {"as": 0.08, "t": 5.0}
+			proc(sim, source, "talons", source)
+		if has(source, "overcharge"):
+			source.mana = minf(source.max_mana, source.mana + (15.0 if leg(source, "overcharge") else 10.0))
+			proc(sim, source, "overcharge", source)
+		if has(source, "maul") and actual > 0.0:
+			var big = leg(source, "maul")
+			var radius = 2 if big else 1
+			for e in SignatureCast.within(sim, source, target.pos, radius):
+				if e.uid == target.uid: continue
+				sim.hurt(source, e, actual * 0.5, true, "item:maul")
+				if big: sim.status(e, "stun", 0.5)
+			sim.emit({"type": "stomp", "uid": source.uid, "pos": target.pos, "radius": radius, "color": PATH_COLOR.giant})
+			proc(sim, source, "maul", target)
+		if crit >= 3.0:
+			if has(source, "tempestcrown") and leg(source, "tempestcrown"):
+				var near = sim.foes(source).filter(func(e): return e.uid != target.uid)
+				near.sort_custom(func(a, b): return a.pos.distance_squared_to(target.pos) < b.pos.distance_squared_to(target.pos))
+				for e in near.slice(0, 2):
+					sim.hurt(source, e, actual * 0.5, true, "item:tempestcrown")
+					sim.emit({"type": "bolt", "uid": source.uid, "pos": target.pos, "target": e.pos, "effect": "chain"})
+			if has(source, "dragonedge") and leg(source, "dragonedge") and target.alive and target.hp < target.max_hp * 0.15:
+				sim.true_hit = true; sim.hurt(source, target, target.hp + 1.0, true, "item:dragonedge"); sim.true_hit = false
+				banner(sim, source, "dragonedge", "EXECUTED!")
+		if credit == "signature" and has(source, "gauntlet") and ready(sim, source, "gauntlet_fx", 2.0): proc(sim, source, "gauntlet", target)
+		if credit == "signature" and has(source, "gauntlet") and leg(source, "gauntlet") and actual > 0.0 and ready(sim, source, "starfall", 0.3):
 			var pool = sim.foes(source)
-			for i in range(mini(3, pool.size())): sim.hurt(source, pool[sim.rng.randi_range(0, pool.size() - 1)], source.attack * 0.4, false, "item:needles")
-			proc(sim, source, "needles", target)
-		source.fx.hits += 1
-		if has(source, "bloodmaw"): sim.heal(source, source, actual * 0.18, "item:bloodmaw")
-		if has(source, "frenzy") and source.fx.frenzy < 8:
-			source.fx.frenzy += 1; source.interval = source.fx.base_interval / (1.0 + 0.03 * source.fx.frenzy); proc(sim,source,"frenzy",source)
-		if has(source, "thornlash") and source.fx.hits % 4 == 0 and target.alive: sim.status(target, "root", 0.8); proc(sim, source, "thornlash", target)
-		if has(source, "hunter") and target.alive: sim.status(target, "weaken", 2.0); proc(sim,source,"hunter",target)
-		if has(source, "quicksilver"):
-			sim.add_mana(source, 2.5)
-			proc(sim,source,"quicksilver",source)
-		if has(source, "tempest"):
-			var others = sim.foes(source).filter(func(e): return e.uid != target.uid and e.pos.distance_to(target.pos) <= 3.0)
-			if not others.is_empty(): sim.hurt(source, others[0], actual * 0.4, false, "item:tempest")
-		if has(source, "quiver") and source.fx.hits % 3 == 0:
-			for e in sim.near_foes(source, target.pos, 1.6): sim.hurt(source, e, source.ability_power * 0.6, true, "item:quiver")
+			for i in range(mini(3, pool.size())):
+				var e = pool[sim.rng.randi_range(0, pool.size() - 1)]
+				sim.hurt(source, e, actual * 0.30, true, "item:gauntlet")
+				sim.emit({"type": "bolt", "uid": source.uid, "pos": e.pos + Vector2(0.2, -0.2), "target": e.pos, "effect": "stormcall"})
+	if not (basic or credit == "counter"): return
+	# On basic attack.
+	source.fx.hits = int(source.fx.hits) + 1
+	var hits = int(source.fx.hits)
+	if has(source, "quicksilver") and hits == 1: proc(sim, source, "quicksilver", source)
+	if has(source, "quicksilver"): source.mana = minf(source.max_mana, source.mana + sim.MANA_PER_ATTACK * float(source.mana_gain) * (2.0 if leg(source, "quicksilver") else 1.0))
+	if has(source, "frenzy"):
+		var n = stack(source, "frenzy")
+		source.buffs["frenzy"] = {"as": n * (0.08 if leg(source, "frenzy") else 0.05), "t": 9999.0}
+		if n == 1 or n % 10 == 0: proc(sim, source, "frenzy", source)
+	if has(source, "tusk") and target.alive:
+		var big = leg(source, "tusk")
+		var n = mini(int(target.fx.get("tusk_stacks", 0)) + 1, 10)
+		target.fx["tusk_stacks"] = n
+		target.buffs["tusk"] = {"res": -n * (8.0 if big else 4.0), "t": 6.0}
+		sim.status(target, "scorch", 3.0); target.scorch_source = source.uid; target.scorch_factor = 0.30 if big else 0.60
+		if n == 1: proc(sim, source, "tusk", target)
+	if has(source, "tempest"):
+		var big = leg(source, "tempest")
+		var near = sim.foes(source).filter(func(e): return e.uid != target.uid and ArenaGrid.distance(e.cell, target.cell) <= 3)
+		near.sort_custom(func(a, b): return a.pos.distance_squared_to(target.pos) < b.pos.distance_squared_to(target.pos))
+		var from = target.pos
+		for e in near.slice(0, 4 if big else 2):
+			sim.hurt(source, e, source.get("attack_basic", source.attack) * (0.70 if big else 0.60), false, "item:tempest")
+			sim.emit({"type": "bolt", "uid": source.uid, "pos": from, "target": e.pos, "effect": "chain"})
+			from = e.pos
+		if not near.is_empty() and ready(sim, source, "tempest_fx", 3.0): proc(sim, source, "tempest", target)
+	if has(source, "club"):
+		var big = leg(source, "club")
+		var radius = 2 if big else 1
+		var n = stack(source, "club")
+		for e in SignatureCast.within(sim, source, target.pos, radius):
+			if e.uid == target.uid: continue
+			sim.hurt(source, e, source.attack * 0.60, false, "item:club")
+			if big and n % 3 == 0: sim.status(e, "stun", 1.0)
+		if big and n % 3 == 0: sim.status(target, "stun", 1.0)
+		sim.emit({"type": "stomp", "uid": source.uid, "pos": target.pos, "radius": radius, "color": PATH_COLOR.giant, "quake": big and n % 3 == 0})
+		if n == 1: proc(sim, source, "club", target)
+	var wide = (has(source, "frenzy") and leg(source, "frenzy") and sim.attack_rate(source) >= 4.0) or (has(source, "wrath") and leg(source, "wrath") and int(source.fx.stacks.get("wrath", 0)) >= 40)
+	if wide:
+		for e in SignatureCast.within(sim, source, source.pos, 1):
+			if e.uid != target.uid: sim.hurt(source, e, source.get("attack_basic", source.attack), false, "item:frenzy" if has(source, "frenzy") else "item:wrath")
+	if has(source, "quiver"):
+		if leg(source, "quiver"):
+			if hits % 4 == 0: sim.echo_cast(source, target, 0.30); proc(sim, source, "quiver", target)
+		elif hits % 3 == 0:
+			sim.launch(source, target, ap(source, 60.0), 0.35, true, "wisps")
+			sim.projectiles.back().credit = "item:quiver"
 			proc(sim, source, "quiver", target)
-	elif not credit.begins_with("item:") and has(source, "scepter"):
-		var hurt = sim.living(source.team, false).filter(func(a): return a.hp < a.max_hp)
-		if not hurt.is_empty():
-			hurt.sort_custom(func(a, b): return a.hp / a.max_hp < b.hp / b.max_hp)
-			sim.heal(source, hurt[0], actual * 0.25, "item:scepter")
+	if has(source, "drum"):
+		var big = leg(source, "drum")
+		if hits % (3 if big else 5) == 0:
+			var mates = sim.living(source.team, false) if big else SignatureCast.allies_within(sim, source, 2)
+			for a in mates: a.buffs["drum"] = {"as": 0.40 if big else 0.25, "t": 3.0}
+			sim.emit({"type": "stomp", "uid": source.uid, "pos": source.pos, "radius": 2, "color": PATH_COLOR.tempo, "soft": true})
+			proc(sim, source, "drum", source)
 
 static func on_cast(sim: BattleSim, u: Dictionary, target: Dictionary) -> void:
-	if u.get("forge", []).is_empty() or u.get("casting_chaos", false): return
-	if has(u, "spellblade"): u.fx.primed = true
-	if has(u, "illusion"): sim.status(u, "stealth", 1.0); proc(sim,u,"illusion",u)
-	if has(u, "halo"):
-		var allies = sim.living(u.team, false).filter(func(a): return a.uid != u.uid and (sim.active(a, "stun") or sim.active(a, "root") or sim.active(a, "silence")))
-		if not allies.is_empty():
-			allies.sort_custom(func(a, b): return u.pos.distance_squared_to(a.pos) < u.pos.distance_squared_to(b.pos))
-			for k in ["stun", "root", "silence"]: allies[0].status.erase(k)
-			proc(sim, u, "halo", allies[0])
-	if has(u, "rosary") and not u.fx.get("rosary", false):
-		u.fx.rosary = true
-		for a in sim.living(u.team, false): sim.heal(u, a, a.max_hp * 0.05, "item:rosary")
-		proc(sim, u, "rosary", u)
-	if has(u, "chaos") and not target.is_empty():
-		var roll = sim.rng.randi_range(0, 2)
-		if roll == 0:
-			u.casting_chaos = true
-			for e in sim.near_foes(u, target.pos, 2.2): sim.hurt(u, e, u.ability_power * 0.8, true, "item:chaos")
-			u.erase("casting_chaos")
-		elif roll == 1:
-			for a in sim.living(u.team, false): sim.heal(u, a, a.max_hp * 0.03, "item:chaos")
-		else:
-			sim.status(u, "stun", 0.8)
-		proc(sim, u, "chaos", target)
+	if u.get("summon", false) or u.get("forge", []).is_empty(): return
+	u.fx.cast_n = int(u.fx.get("cast_n", 0)) + 1
+	u.fx.starfall_done = false
+	var n = int(u.fx.cast_n)
+	u.sig_scale = 1.0 * (1.20 if u.get("elite", false) else 1.0)
+	if has(u, "hourglass"):
+		var big = leg(u, "hourglass")
+		if n <= (2 if big else 1): u.sig_scale *= 2.0 if big else 1.5; proc(sim, u, "hourglass", u)
+	if has(u, "spellblade"): u.fx.spellblade = 3
+	if has(u, "crown"):
+		var big = leg(u, "crown")
+		u.fx.crown_refund = 40.0 if big else 20.0
+		if big and sim.rng.randf() < 0.25: u.fx.echo_pending = true; banner(sim, u, "crown", "ECHO!")
+	if has(u, "patience"):
+		var big = leg(u, "patience")
+		if big or n <= 6:
+			set_size(sim, u, u.size + (0.20 if big else 0.10))
+			var add = 300.0 if big else 150.0
+			u.max_hp += add; u.hp += add
+			proc(sim, u, "patience", u)
+	if has(u, "bell"):
+		var amount = u.max_hp * 0.15
+		var mates = sim.living(u.team, false) if leg(u, "bell") else [u]
+		if not leg(u, "bell"):
+			var others = sim.living(u.team, false).filter(func(a): return a.uid != u.uid)
+			others.sort_custom(func(a, b): return a.pos.distance_squared_to(u.pos) < b.pos.distance_squared_to(u.pos))
+			if not others.is_empty(): mates.append(others[0])
+		for a in mates: sim.shield(a, amount, 5.0)
+		proc(sim, u, "bell", u)
+	if has(u, "quicksilver") and leg(u, "quicksilver"): u.buffs["quickening"] = {"as": 0.30, "t": 3.0}
+	if has(u, "overcharge") and leg(u, "overcharge"): u.fx.overload_until = sim.time + 4.0
+	if has(u, "wildfire"):
+		var burn = u.max_hp * (0.08 if leg(u, "wildfire") else 0.05)
+		u.hp = maxf(1.0, u.hp - burn)
+		proc(sim, u, "wildfire", u)
+
+## After the signature resolves: refunds and echoes.
+static func after_cast(sim: BattleSim, u: Dictionary, target: Dictionary) -> void:
+	if u.get("summon", false) or u.get("forge", []).is_empty(): return
+	if float(u.fx.get("crown_refund", 0.0)) > 0.0:
+		u.mana = minf(u.max_mana, u.mana + float(u.fx.crown_refund)); u.fx.crown_refund = 0.0
+		proc(sim, u, "crown", u)
+	if u.fx.get("echo_pending", false):
+		u.fx.echo_pending = false
+		sim.echo_cast(u, target, 1.0)
 
 ## Return true to cancel the death.
 static func on_death(sim: BattleSim, u: Dictionary) -> bool:
-	if has(u, "phoenixember") and not u.fx.get("revived", false):
-		u.fx.revived = true; u.hp = u.max_hp * 0.25; u.status.clear(); u.dots.clear()
-		sim.emit({"type": "cast", "uid": u.uid, "effect": "rebirth", "name": "Phoenix Ember", "pos": u.pos, "target": u.pos})
-		proc(sim, u, "phoenixember", u)
-		return true
+	if has(u, "phoenix"):
+		var big = leg(u, "phoenix")
+		var used = int(u.fx.get("revived", 0))
+		if used < (3 if big else 1):
+			u.fx.revived = used + 1
+			u.hp = u.max_hp * (0.35 if big else 0.30); u.status.clear(); u.dots.clear()
+			var power = [150.0, 250.0, 400.0][mini(used, 2)]
+			for e in SignatureCast.within(sim, u, u.pos, 1 + used):
+				sim.hurt(u, e, ap(u, power), true, "item:phoenix")
+			sim.emit({"type": "cast", "uid": u.uid, "effect": "rebirth", "name": "Phoenix Ember", "pos": u.pos, "target": u.pos})
+			sim.emit({"type": "stomp", "uid": u.uid, "pos": u.pos, "radius": 1 + used, "color": "ff8a3a"})
+			proc(sim, u, "phoenix", u)
+			return true
 	return false
 
 static func on_kill(sim: BattleSim, killer: Dictionary, victim: Dictionary) -> void:
-	if killer.get("forge", []).is_empty() or victim.summon: return
-	if has(killer, "executioner"): killer.mana = killer.max_mana
-	if has(killer, "bloodfeast") and killer.alive: sim.heal(killer, killer, killer.max_hp * 0.30, "item:bloodfeast"); proc(sim, killer, "bloodfeast", killer)
-	if has(killer, "puppet") and killer.alive:
+	if victim.summon: return
+	if killer.get("puppets", false) and not killer.get("summon", false):
 		var puppet = sim.add_unit(victim.hero, killer.team, victim.pos, 1.0, killer.uid)
-		puppet.ttl = 12.0
-		sim.emit({"type": "summon", "uid": killer.uid, "pos": victim.pos})
-		proc(sim, killer, "puppet", victim)
+		puppet.max_hp = victim.max_hp * 0.25; puppet.hp = puppet.max_hp; puppet.attack = victim.attack * 0.25; puppet.attack_basic = puppet.attack
+		puppet.interval = victim.interval; puppet.range = victim.range; puppet.ttl = 999.0
+		sim.emit({"type": "cast", "uid": killer.uid, "effect": "summons", "name": "Puppet Strings", "pos": victim.pos, "target": victim.pos})
+	if killer.get("summon", false) or killer.get("forge", []).is_empty(): return
+	if has(killer, "deathblade"):
+		var big = leg(killer, "deathblade")
+		var add = 30.0 if big else 15.0
+		killer.attack += add; killer.attack_basic = killer.get("attack_basic", killer.attack) + add
+		stack(killer, "deathblade")
+		if big: killer.mana = killer.max_mana
+		proc(sim, killer, "deathblade", killer)
+	if not killer.alive: return
+	if has(killer, "bloodfeast"):
+		sim.heal(killer, killer, killer.max_hp * (1.0 if leg(killer, "bloodfeast") else 0.40), "item:bloodfeast")
+		if leg(killer, "bloodfeast"): set_size(sim, killer, killer.size + 0.10)
+		proc(sim, killer, "bloodfeast", killer)
+	if has(killer, "bloodmoon") and leg(killer, "bloodmoon"):
+		sim.heal(killer, killer, killer.max_hp * 0.30, "item:bloodmoon")
 
-static func on_ally_death(sim: BattleSim, victim: Dictionary) -> void:
-	for a in sim.living(victim.team, false):
-		if has(a, "spiritbell"):
-			sim.shield(a, a.max_hp * 0.14); sim.status(a, "rally", 4.0); proc(sim, a, "spiritbell", a)
+static func on_ally_death(_sim: BattleSim, _victim: Dictionary) -> void:
+	pass
+
+## Arriving on a new hex (Thunderhoof Greaves tramples).
+static func on_move(sim: BattleSim, u: Dictionary) -> void:
+	if u.get("summon", false) or not has(u, "hooves") or not ready(sim, u, "hooves_trample", 1.2): return
+	var near = SignatureCast.within(sim, u, u.pos, 1)
+	for e in near:
+		SignatureCast.push(sim, e, u.pos, 1)
+		if leg(u, "hooves"): sim.status(e, "stun", 0.5)
+	if not near.is_empty():
+		sim.emit({"type": "stomp", "uid": u.uid, "pos": u.pos, "radius": 1, "color": PATH_COLOR.giant})
+		proc(sim, u, "hooves", u)
+
+## A stun cuts Frenzy Horn's ramp in half (not for Hurricane Horn).
+static func on_stunned(_sim: BattleSim, u: Dictionary) -> void:
+	if u.get("summon", false) or not has(u, "frenzy") or leg(u, "frenzy"): return
+	var n = int(u.fx.stacks.get("frenzy", 0)) / 2
+	u.fx.stacks["frenzy"] = n
+	u.buffs["frenzy"] = {"as": n * 0.05, "t": 9999.0}
 
 static func status_mod(u: Dictionary, key: String, seconds: float) -> float:
-	if key == "slow" and has(u, "pilgrim"): return 0.0
 	if key in ["stun", "root", "silence", "slow"]: seconds *= 1.0 - float(u.get("fx", {}).get("tenacity", 0.0))
-	if key in ["stun", "root", "silence"] and has(u, "stoneskin") and u.hp / u.max_hp > 0.5 and not u.get("fx", {}).get("turtle_end", -1.0) > 0: return 0.0
 	return seconds
 
 static func heal_mod(target: Dictionary, amount: float, source: Dictionary = {}) -> float:
-	if has(source, "chalice"): amount *= 1.25
-	if has(target, "bloodfeast") and source.get("uid", -1) != target.get("uid", -2): amount *= 0.75
-	if has(target, "worldtree"): amount *= 1.3
-	if has(target, "berserker"): amount *= 0.7
+	if has(target, "bloodfeast") and source.get("uid", -1) != target.get("uid", -2): amount *= 0.50
+	if target.get("relic_heal_cut", 0.0) > 0.0: amount *= 1.0 - float(target.relic_heal_cut)
 	return amount
 
-static func shield_mod(target: Dictionary, amount: float) -> float:
-	return amount * (1.3 if has(target, "worldtree") else 1.0)
+static func shield_mod(_target: Dictionary, amount: float) -> float:
+	return amount
 
-## Berserker's Totem overrides target choice.
-static func forced_target(sim: BattleSim, u: Dictionary, all: Array) -> Dictionary:
-	if not has(u, "berserker") or all.is_empty(): return {}
+## Berserker's Totem (relic) overrides target choice: always the nearest enemy.
+static func forced_target(_sim: BattleSim, u: Dictionary, all: Array) -> Dictionary:
+	if not u.get("berserk", false) or all.is_empty(): return {}
 	var best = all[0]
 	for e in all:
 		if u.pos.distance_squared_to(e.pos) < u.pos.distance_squared_to(best.pos): best = e
 	return best
 
+## Anvil: turn a finished item into its Legendary. Wild items: 50% Legendary, 50% destroyed.
+## Returns "legendary", "destroyed" or "" when not allowed.
+static func anvil(hero: Dictionary, slot: String, rng: RandomNumberGenerator) -> String:
+	var id = str(hero.get("equipment", {}).get(slot, ""))
+	if not ITEMS.has(id): return ""
+	for v in carried(hero):
+		if is_legend(v): return ""
+	if is_wild(id) and rng.randf() < 0.5:
+		hero.equipment.erase(slot)
+		return "destroyed"
+	hero.equipment[slot] = LEGEND + id
+	return "legendary"
+
+static func legend_held(hero: Dictionary) -> String:
+	for v in carried(hero):
+		if is_legend(v): return v
+	return ""
+
+## Old item ids (v0.76 and earlier) convert to v0.77 items.
+static func migrate_id(id: String) -> String:
+	if valid(id) and not RETIRED.has(id): return id
+	if COMPONENTS.has(id): return id
+	return str(RETIRED.get(id, id if valid(id) else ""))
+
+# ---------------------------------------------------------------- rival gear
 ## Rival clubs: deterministic loadouts that grow with the tour level.
-## `level` is the tour stage (1-20 across five cups). A fractional item budget staggers
-## finished items across bearers; a component bridges milestones. One compatible wild item at most.
 static func rival_loadout(hero: Dictionary, level: int, difficulty: String = "Standard") -> Dictionary:
-	var budget=TourBalance.gear_budget(level,difficulty)
-	var roll=abs(hash(str(hero.get("id",""))+"|gear"))%100
-	var n=int(floor(budget))+(1 if roll<float(fposmod(budget,1))*100 else 0)
-	n=mini(n,mini(3,HeroData.item_slots(hero)))
-	var out={};var core=recommended(hero.sp,hero)
-	for i in range(n):out[str(i)]=core[i]
-	# A loose component bridges finished-item milestones at player-accessible cost.
-	if n<mini(3,HeroData.item_slots(hero)):
-		var next=core[n];out[str(n)]=ITEMS[next].recipe[roll%2]
-	# Wild effects arrive late, at most one per bearer, with stat-compatible choices.
-	if difficulty=="Champion" and level>=15 and roll<25 and n>0:
-		var ad=SkillScaling.audited(hero.sp,"signature").get("build_path","ap")=="ad"
-		var wild=["berserker","bloodfeast","bottle"] if ad else ["chaos","phoenixember","doppel"]
-		out[str(n-1)]=wild[roll%wild.size()]
-	if difficulty=="Champion" and level>=20 and roll<20 and HeroData.item_slots(hero)>=4:
-		out["3"]=COMPONENT_ORDER[roll%COMPONENT_ORDER.size()]
+	var budget = TourBalance.gear_budget(level, difficulty)
+	var roll = abs(hash(str(hero.get("id", "")) + "|gear")) % 100
+	var n = int(floor(budget)) + (1 if roll < float(fposmod(budget, 1)) * 100 else 0)
+	n = mini(n, mini(3, HeroData.item_slots(hero)))
+	var out = {}; var core = recommended(hero.sp, hero)
+	for i in range(n): out[str(i)] = core[i]
+	if n < mini(3, HeroData.item_slots(hero)):
+		var next = core[n]; out[str(n)] = ITEMS[next].recipe[roll % 2]
+	if difficulty == "Champion" and level >= 15 and roll < 25 and n > 0:
+		var wilds = ["spurs", "bloodfeast", "gambler"] if Signatures.primary(hero.sp) in ["ad", "as"] else ["wildfire", "bottle", "giant"]
+		out[str(n - 1)] = wilds[roll % wilds.size()]
+	# Legendaries arrive from cup 4 (tour level 13+).
+	if level >= 13 and n > 0 and roll < (15 + (level - 13) * 6):
+		out["0"] = LEGEND + str(out["0"]) if ITEMS.has(str(out["0"])) else out["0"]
 	return out
 
-# ------------------------------------------------------------------ recommended builds
-## A core build per species: three finished items that suit its kit and role.
+# ---------------------------------------------------------------- recommended builds
+## Which path suits each species best (first is the core build).
+const SPECIES_PATHS := {
+	"minotaur": ["giant", "crit"], "golem": ["tank", "giant"], "troll": ["giant", "tank"], "wendigo": ["tempo", "sustain"],
+	"direwolf": ["tempo", "spell"], "manticore": ["crit", "tempo"], "griffin": ["crit", "giant"], "kitsune": ["spell", "crit"],
+	"wyvern": ["crit", "tempo"], "harpy": ["tempo", "crit"], "phoenix": ["spell", "tank"], "kirin": ["spell", "tempo"],
+	"basilisk": ["spell", "tank"], "treant": ["spell", "tank"], "naga": ["spell", "tank"], "unicorn": ["spell", "tank"],
+	"cerberus": ["tempo", "sustain"], "nemean": ["tank", "giant"], "yeti": ["tank", "giant"], "zaratan": ["giant", "tank"],
+	"owlbear": ["tempo", "crit"], "hydra": ["tempo", "giant"], "chimera": ["crit", "spell"], "gargoyle": ["giant", "crit"],
+	"nekomata": ["crit", "sustain"], "jackalope": ["tempo", "crit"], "cyclops": ["crit", "giant"], "thunderbird": ["spell", "tempo"],
+	"sphinx": ["spell", "tank"], "pegasus": ["spell", "tank"], "arachne": ["spell", "tempo"], "salamander": ["spell", "giant"],
+}
 const RECOMMENDED := {
-	"minotaur": ["titan", "bloodmaw", "stoneskin"], "golem": ["bastion", "bell", "mirror"], "troll": ["colossus", "worldtree", "titan"],
-	"wendigo": ["bloodmaw", "leechhide", "frenzy"], "direwolf": ["frenzy", "tempest", "executioner"], "manticore": ["viperfang", "assassinkit", "galvanic"],
-	"griffin": ["shadowblade", "crusader", "executioner"], "kitsune": ["illusion", "eclipse", "archmage"], "wyvern": ["plaguetome", "archmage", "crown"],
-	"harpy": ["tempest", "frenzy", "galetalons"], "phoenix": ["archmage", "stormorb", "crown"], "kirin": ["archmage", "stormorb", "crown"],
-	"basilisk": ["witherbloom", "crown", "plaguetome"], "treant": ["chalice", "scepter", "lifebloom"], "naga": ["rosary", "aegis", "chalice"],
-	"unicorn": ["halo", "rosary", "martyr"], "cerberus": ["frenzy", "bloodmaw", "spellblade"], "nemean": ["titan", "ironbark", "aegis"],
-	"yeti": ["ironbark", "stoneskin", "spikes"], "zaratan": ["bell", "colossus", "runeward"], "owlbear": ["crusader", "titan", "thornlash"],
-	"hydra": ["worldtree", "hydravenom", "grievous"], "chimera": ["spellblade", "crusader", "quicksilver"], "gargoyle": ["runeward", "stormmantle", "archmage"],
-	"nekomata": ["assassinkit", "shadowblade", "nightshroud"], "jackalope": ["frenzy", "pilgrim", "executioner"], "cyclops": ["tusk", "executioner", "spellblade"],
-	"thunderbird": ["archmage", "stormorb", "crown"], "sphinx": ["crown", "hourglass", "witherbloom"], "pegasus": ["drum", "rosary", "pilgrim"],
-	"arachne": ["archmage", "crown", "plaguetome"], "salamander": ["plaguetome", "archmage", "grievous"],
+	"minotaur": ["club", "titanheart", "dragonedge"], "golem": ["bastion", "granite", "aegis"], "troll": ["belt", "club", "colossus"],
+	"wendigo": ["frenzy", "bloodmoon", "tempest"], "direwolf": ["frenzy", "quiver", "drum"], "manticore": ["dragonedge", "tempestcrown", "talons"],
+	"griffin": ["dragonedge", "deathblade", "tempestcrown"], "kitsune": ["archmage", "gauntlet", "crown"], "wyvern": ["dragonedge", "tempestcrown", "quicksilver"],
+	"harpy": ["frenzy", "tempest", "talons"], "phoenix": ["archmage", "crown", "phoenix"], "kirin": ["archmage", "gauntlet", "crown"],
+	"basilisk": ["crown", "hourglass", "runeward"], "treant": ["archmage", "bell", "crown"], "naga": ["archmage", "aegis", "crown"],
+	"unicorn": ["archmage", "bell", "hourglass"], "cerberus": ["frenzy", "bloodmoon", "tusk"], "nemean": ["aegis", "bastion", "titanheart"],
+	"yeti": ["granite", "bastion", "thunderhide"], "zaratan": ["belt", "colossus", "granite"], "owlbear": ["frenzy", "tempestcrown", "talons"],
+	"hydra": ["frenzy", "belt", "bloodmoon"], "chimera": ["dragonedge", "spellblade", "tempestcrown"], "gargoyle": ["club", "titanheart", "maul"],
+	"nekomata": ["dragonedge", "deathblade", "bloodmoon"], "jackalope": ["frenzy", "tempestcrown", "talons"], "cyclops": ["dragonedge", "tempestcrown", "maul"],
+	"thunderbird": ["archmage", "quiver", "gauntlet"], "sphinx": ["crown", "hourglass", "archmage"], "pegasus": ["hourglass", "aegis", "crown"],
+	"arachne": ["archmage", "crown", "quiver"], "salamander": ["archmage", "draught", "crown"],
 }
 
-static func recommended(sp: String,hero: Dictionary={}) -> Array:
-	HeroData.load_data()
-	var champion=hero if not hero.is_empty() else {"sp":sp,"learned":{}}
-	var weights=SkillScaling.build_weights(champion)
-	var effects=[HeroData.species[sp].ab]
-	for key in champion.get("learned",{}):effects.append(HeroData.learned_ability(sp,int(key)).effect)
-	var evolution_skill=Evolutions.grant_index(str(champion.get("evolution","")))
-	if evolution_skill>=0:effects.append(HeroData.learned_ability(sp,evolution_skill).effect)
-	var healing=effects.any(func(effect):return effect in ["renew","radiance","rootbloom","regrowth"])
-	var ranked=[]
-	for id in ITEMS:
-		if ITEMS[id].get("wild",false):continue
-		var stats=stats_of(id)
-		var score=stats.attack/0.12*weights.ad+stats.potency/0.12*weights.ap+stats.haste/0.09*weights["as"]+stats.armor/0.05*weights.armor+stats.hp/0.10*weights.hp+(1.0-stats.cd)/0.08*weights.cd
-		if id in ["bloodmaw","tusk","frenzy","executioner","tempest","thornlash","crusader","shadowblade","assassinkit","thundercleaver","galetalons"]:score+=1.2*(weights.ad+weights["as"])
-		if id in ["archmage","stormorb","plaguetome","witherbloom","quiver","stormmantle"]:score+=1.2*weights.ap
-		if id in ["bell","bastion","ironbark","mirror","spikes","stoneskin","aegis","runeward"]:score+=weights.armor+weights.hp
-		if id in ["colossus","worldtree","lifebloom","grail"]:score+=weights.hp
-		if id in ["crown","hourglass","quicksilver","overcharge"]:score+=weights.cd
-		if id=="spellblade":score+=minf(weights.ad,weights.ap)*2.0+weights.cd*0.5
-		if healing and id=="chalice":score+=2.3*weights.ap
-		if HeroData.species[sp].role=="Support" and id in ["halo","rosary","scepter","lifebloom"]:score+=1.3
-		if id in RECOMMENDED.get(sp,[]):score+=1.0
-		ranked.append({"id":id,"score":score})
-	# Stable ties keep offers and item hints consistent across redraws.
-	ranked.sort_custom(func(a,b):return a.score>b.score if not is_equal_approx(a.score,b.score) else a.id<b.id)
-	return ranked.slice(0,3).map(func(row):return row.id)
+static func recommended(sp: String, _hero: Dictionary = {}) -> Array:
+	return RECOMMENDED.get(sp, ["archmage", "crown", "colossus"]).duplicate()
 
 ## Is this offer part of the champion's recommended build? "core" = the finished item itself,
 ## "part" = a component of one, "" = neither. Returns [kind, item_id].
-static func rec_match(sp: String, id: String,hero: Dictionary={}) -> Array:
-	for r in recommended(sp,hero):
-		if r == id: return ["core", r]
-	for r in recommended(sp,hero):
+static func rec_match(sp: String, id: String, hero: Dictionary = {}) -> Array:
+	for r in recommended(sp, hero):
+		if r == base_id(id): return ["core", r]
+	for r in recommended(sp, hero):
 		if ITEMS.has(r) and id in ITEMS[r].recipe: return ["part", r]
 	return ["", ""]

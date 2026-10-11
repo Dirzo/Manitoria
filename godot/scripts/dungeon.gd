@@ -34,6 +34,7 @@ const ROOMS := {
  "event":    {"name": "Unknown", "glyph": "roll", "color": "b9a2ff", "text": "Something waits in the dark. Choose how to face it."},
  "checkpoint": {"name": "Checkpoint", "glyph": "banner", "color": "8fe0c0", "text": "A lost champion waits at the waystone. Choose one of five to join the guild (until you have six)."},
  "treasure": {"name": "Treasure", "glyph": "trophy", "color": "ffd36e", "text": "A sealed chest: gold and one of three finished items."},
+ "anvil":    {"name": "Mythic Anvil", "glyph": "anvil", "color": "ffd36e", "text": "A forge older than the dungeon. Take a Mythic Anvil: it turns one finished item into its Legendary (Wild items may shatter)."},
  "boss":     {"name": "Warden", "glyph": "skull", "color": "ff5a6a", "text": "The boss of this depth. Defeat it to descend. Losing costs a life and you must try again."},
 }
 const EVENTS := [
@@ -143,6 +144,16 @@ static func generate(c: Campaign, act: int) -> Array:
   var row = []
   for i in range(count): row.append({"type": room_type(rng, r), "links": [], "done": false})
   rows.append(row)
+ # v0.77: from the second depth, one opt-in Mythic Anvil room sits on the map (mid depth in act 2,
+ # anywhere past the checkpoint later), beside other rooms so taking it is a choice.
+ if act >= 2:
+  var lo = 4 if act == 2 else 2
+  var ar = rng.randi_range(lo, ROWS - 3)
+  if rows[ar].size() >= 2 or ar != 3:
+   var pick = rng.randi_range(0, rows[ar].size() - 1)
+   if rows[ar][pick].type == "checkpoint": pick = (pick + 1) % rows[ar].size()
+   if rows[ar].size() < 2: rows[ar].append({"type": "battle", "links": [], "done": false})
+   rows[ar][pick].type = "anvil"
  # Every depth holds at least one elite before its Warden.
  if not rows.slice(2, ROWS - 2).any(func(row): return row.any(func(n): return n.type == "elite")):
   var er = rng.randi_range(4, ROWS - 3); rows[er][rng.randi_range(0, rows[er].size() - 1)].type = "elite"
@@ -238,6 +249,10 @@ static func enter(c: Campaign, col: int) -> String:
    if c.state.roster.size() < MAX_CHAMPIONS: offer_draft(c, "checkpoint", 0)
    else:
     offer_loot(c, "item"); c.add_news("Checkpoint", "Your guild is full: the waystone offers a finished item instead.")
+  "anvil":
+   n.done = true
+   c.state.anvils = int(c.state.get("anvils", 0)) + 1
+   c.add_news("Mythic Anvil", "You carry a Mythic Anvil. Open a champion's items and drop it on a finished item to make it Legendary.")
   "treasure":
    n.done = true
    var gold = 60 + 20 * mini(int(d.act), 6); c.state.gold += gold; c.state.earned_gold += gold
@@ -256,7 +271,7 @@ static func offer_loot(c: Campaign, kind: String) -> void:
   picks = Relics.offer(c, rng, ["Boss"] if kind == "boss_relic" else (["Rare"] if kind == "rare_relic" else (["Common", "Rare"] if rng.randf() < 0.6 else ["Rare"])))
   if picks.is_empty(): picks = Relics.offer(c, rng, ["Common", "Rare", "Boss"])
  else:
-  var pool = Forge.COMPONENT_ORDER.duplicate() if kind == "component" else Forge.ITEMS.keys()
+  var pool = Forge.COMPONENT_ORDER.duplicate() if kind == "component" else Forge.ITEMS.keys().filter(func(k): return not Forge.is_wild(k))
   pool.sort()
   while picks.size() < 3 and not pool.is_empty():
    var id = pool[rng.randi_range(0, pool.size() - 1)]; pool.erase(id); picks.append(id)
@@ -538,7 +553,7 @@ static func threat_label(ratio: float) -> Dictionary:
 
 ## What a fight room pays, for tooltips.
 static func reward_text(kind: String) -> String:
- return {"battle": "Win: pick a component · +100 pts", "elite": "Win: pick a relic and a card reroll · +250 pts", "boss": "Win: a finished item, a Boss relic, a chest and 2 card rerolls · +800 pts"}.get(kind, "") + "  ·  Flawless: +50% points, +25% gold"
+ return {"battle": "Win: pick a component · +100 pts", "elite": "Win: pick a relic and a card reroll · +250 pts", "boss": "Win: finished items, a Boss relic, a chest and 2 card rerolls (a Mythic Anvil from depth 2) · +800 pts"}.get(kind, "") + "  ·  Flawless: +50% points, +25% gold"
 
 static func add_score(c: Campaign, points: int) -> void:
  var d = c.state.dungeon
@@ -743,6 +758,10 @@ static func resolve(c: Campaign, sim: BattleSim) -> bool:
   else:
    d.wardens = int(d.wardens) + 1
    offer_loot(c, "item"); offer_loot(c, "boss_relic")
+   # v0.77 pacing: the first Warden gives a second finished item so a carry can hold three
+   # before the first Anvil room (act 2); later Wardens give a Mythic Anvil.
+   if int(d.act) <= 1: offer_loot(c, "item")
+   else: c.state.anvils = int(c.state.get("anvils", 0)) + 1
    c.state.card_rerolls = int(c.state.get("card_rerolls", 0)) + 2
    report.warden_down = true
    d.history.append({"act": int(d.act), "name": depth(c).name, "fights": int(d.fights), "lives": int(d.lives)})

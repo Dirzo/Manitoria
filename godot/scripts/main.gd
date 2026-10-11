@@ -215,7 +215,12 @@ func _ready() -> void:
     if qa=="role_catalog":set_meta("shop_catalog",true);set_meta("shop_category",1)
     campaign.state.tour.shop=true;campaign.state.tour.stock=WorldTour.stock(campaign);phase="shop";render()
    elif qa=="tour_arena":
-    var outfits=[{"0":"bastion","1":"bell"},{"0":"berserker","1":"bloodmaw"},{"0":"archmage","1":"crown"},{"0":"tempest","1":"quiver"},{"0":"lifebloom","1":"swap"}]
+    var outfits=[{"0":"bastion","1":"bell"},{"0":"bloodfeast","1":"bloodmoon"},{"0":"archmage","1":"crown"},{"0":"tempest","1":"quiver"},{"0":"aegis","1":"swap"}]
+    if OS.get_environment("QA_ITEMS")=="1":
+     # Feel check: a Legendary Giant, a Legendary Tempo carry and a Legendary Crit carry.
+     outfits=[{"0":"leg_belt","1":"titanheart","2":"club"},{"0":"leg_frenzy","1":"tempest","2":"spurs"},{"0":"leg_dragonedge","1":"tempestcrown","2":"maul"},{"0":"archmage","1":"crown"},{"0":"aegis","1":"bell"}]
+    if OS.get_environment("QA_ITEMS")=="2":
+     outfits=[{"0":"leg_frenzy","1":"tempest","2":"spurs"},{"0":"leg_belt","1":"titanheart","2":"club"},{"0":"leg_dragonedge","1":"tempestcrown","2":"gambler"},{"0":"archmage","1":"crown"},{"0":"aegis","1":"bell"}]
     for i in range(campaign.state.roster.size()):campaign.state.roster[i].equipment=outfits[i%outfits.size()]
     phase="prep";begin_battle()
    elif qa=="tour_legendary":
@@ -1086,6 +1091,10 @@ func impact_board(box: Node, report: Dictionary) -> void:
  for r in rows:
   if r.ais > mvp.ais: mvp = r
  label(box, "★ MVP  %s  ·  %d impact" % [mvp.name, mvp.ais], 20, GOLD).tooltip_text = "%s · Arena Impact Score" % HeroData.species[mvp.sp].n
+ var crit_row = {}
+ for r in report.get("rows", []):
+  if float(r.get("biggest_crit", 0.0)) > float(crit_row.get("biggest_crit", 0.0)): crit_row = r
+ if not crit_row.is_empty(): label(box, "Biggest crit  %d  ·  %s" % [roundi(crit_row.biggest_crit), crit_row.name], 17, Color("ff9a5a"))
  for team in [0, 1]:
   var line = HBoxContainer.new(); line.add_theme_constant_override("separation", 14); box.add_child(line)
   label(line, "YOU" if team == 0 else "RIVAL", 14, Color("86dbf2") if team == 0 else Color("ffa093"), false).custom_minimum_size.x = 60
@@ -1170,8 +1179,8 @@ func build_stat_cards(box: Node, h: Dictionary, waiting: int) -> void:
   var big = label(content, StatCards.value_text(card.key, card.value), 54, tint); big.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
   var after_h = h.duplicate(true); StatCards.apply(after_h, card)
   var after = HeroData.stats(after_h)
-  var key_stat = {"ad": "attack", "as": "as", "ap": "ap", "mana": "mana", "hp": "hp", "res": "res"}[card.key]
-  var fmt = func(v): return ("%.2f" % v) if card.key == "as" else ("%d%%" % roundi(v * 100)) if card.key == "mana" else str(roundi(v))
+  var key_stat = {"ad": "attack", "as": "as", "ap": "ap", "mana": "mana", "hp": "hp", "res": "res", "size": "size", "crit": "crit"}[card.key]
+  var fmt = func(v): return ("%.2f" % v) if card.key == "as" else ("%.2f×" % v) if card.key == "size" else ("%d%%" % roundi(v * 100)) if card.key in ["mana", "crit"] else str(roundi(v))
   var change = label(content, "%s  %s  →  %s" % [StatCards.NAMES[card.key], fmt.call(float(now[key_stat])), fmt.call(float(after[key_stat]))], 22, WHITE); change.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
   if card.key in Signatures.build_keys(h.sp):
    label(content, "★ Your signature scales with %s" % StatCards.NAMES[card.key], 16, Color("6fe08a")).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -1180,6 +1189,8 @@ func build_stat_cards(box: Node, h: Dictionary, waiting: int) -> void:
   var preview = label(content, Signatures.fill(str(sig.text), after_h, after), 16, Color("dfe8ec")); preview.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
   if card.key == "mana": label(content, "Casts about %d%% more often." % roundi((float(after.mana) / float(now.mana) - 1.0) * 100.0), 16, Color("8fc4ff"))
   if card.key == "res": label(content, "Blocks %d%% of all damage (was %d%%)." % [roundi(after.armor * 100), roundi(now.armor * 100)], 16, Color("8fc4ff"))
+  if card.key == "size": label(content, "Grows bigger: more HP and AD, wider attacks and spells, but easier to hit with area effects.", 16, Color("ffc27a"))
+  if card.key == "crit": label(content, "Basic attacks crit for %.1f× damage." % float(after.crit_damage), 16, Color("ff9a6a"))
   var spacer = Control.new(); spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL; content.add_child(spacer)
   button(content, "Keep this card", func():
    if campaign.choose(h.id, index): sound.cue("upgrade", true); render()
@@ -1263,7 +1274,7 @@ func _process(dt: float) -> void:
   if has_meta("qa_mouse") and qa_elapsed > 1.0 and not has_meta("qa_mouse_done"):
    set_meta("qa_mouse_done", true)
    var mm = InputEventMouseMotion.new(); mm.position = get_viewport().get_final_transform() * get_meta("qa_mouse"); mm.global_position = mm.position; get_viewport().push_input(mm)
-  if qa_elapsed > (12 if qa in ["arena", "evolved_arena", "exhibition", "tour_arena", "dungeon_boss"] else 7 if qa in ["intro","chest"] else 4 if qa in ["guild_demo","draft_demo","builds_demo","tree_demo","evolution","levelup","tour_intro"] else 1.65 if qa in ["attacks_slam","attacks_weapon"] else 1.43 if qa.begins_with("attacks_") else 2 if qa.begins_with("particles_") else 3):
+  if qa_elapsed > (float(OS.get_environment("QA_DELAY")) if OS.get_environment("QA_DELAY") != "" else 12 if qa in ["arena", "evolved_arena", "exhibition", "tour_arena", "dungeon_boss"] else 7 if qa in ["intro","chest"] else 4 if qa in ["guild_demo","draft_demo","builds_demo","tree_demo","evolution","levelup","tour_intro"] else 1.65 if qa in ["attacks_slam","attacks_weapon"] else 1.43 if qa.begins_with("attacks_") else 2 if qa.begins_with("particles_") else 3):
    qa_taken = true
    await RenderingServer.frame_post_draw
    if not qa_capture.is_empty():

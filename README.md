@@ -1,6 +1,8 @@
 # Manitoria
 
-**0.76 — Combat and leveling rework.** Six stats (AD, AS, AP, Mana, HP, Resistance), one signature ability per champion cast when its mana bar fills, and level-ups that deal three stat cards to choose from. Evolutions now only reshape the signature, stats or movement. Old saves migrate automatically. Play it from [`builds/v0.76`](builds/v0.76) (run `JOIN-ME.bat`). See [COMBAT-REWORK-0.76.md](COMBAT-REWORK-0.76.md).
+**0.77 — Item overhaul.** Items make champions huge, blindingly fast or crit for screen-shaking MEGA CRITS. Size and Crit join the stats (an octagon), every item has a Legendary from the new Mythic Anvil, and Wild items come back with real downsides. Play it from [`builds/v0.77`](builds/v0.77). See [ITEM-OVERHAUL-0.77.md](ITEM-OVERHAUL-0.77.md).
+
+**0.76 — Combat and leveling rework.** Six stats (AD, AS, AP, Mana, HP, Resistance), one signature ability per champion cast when its mana bar fills, and level-ups that deal three stat cards to choose from. Evolutions now only reshape the signature, stats or movement. Old saves migrate automatically. See [COMBAT-REWORK-0.76.md](COMBAT-REWORK-0.76.md).
 
 **0.75 — Visual overhaul, part 1.** Dungeon mode is the headline feature on a new title screen. The dungeon is immersive, with no tournament menus. Every menu has a cleaner look, buttons that respond to hover and press, and floating tooltip cards. Each zone now has five mobs and a Warden. See [UI-OVERHAUL-0.75.md](UI-OVERHAUL-0.75.md), and the [dungeon art brief](DUNGEON-ART-BRIEF.md) for the 70 image prompts and the Meshy steps.
 

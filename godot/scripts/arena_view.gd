@@ -319,7 +319,6 @@ func spawn(u: Dictionary) -> void:
  var motion = Node3D.new(); motion.name = "CombatMotion"; holder.add_child(motion)
  var model = resources[path].instantiate(); motion.add_child(model)
  model.scale = Vector3.ONE * (0.48 if u.summon else MODEL_SCALE)
- if not u.summon and "giant" in Forge.carried(u.hero): model.scale *= 1.25   # Giant's Draught
  var players = model.find_children("*", "AnimationPlayer", true, false)
  var player: AnimationPlayer = players[0] if not players.is_empty() else null
  if player:
@@ -381,11 +380,32 @@ func spawn(u: Dictionary) -> void:
 
  var name_label = Label3D.new(); name_label.text = u.hero.name; name_label.position.y = 0.22; name_label.font_size = 29; name_label.pixel_size = 0.010; name_label.modulate = team_color.lightened(0.4); name_label.outline_size = 8; name_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED; bars.add_child(name_label)
  if u.summon: bars.visible = false
+ # v0.77 item feedback: path aura, stack badge, Legendary nameplate.
+ var stack_label = Label3D.new(); stack_label.font_size = 30; stack_label.pixel_size = 0.010; stack_label.outline_size = 8; stack_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+ stack_label.position = Vector3(1.1, 0.0, 0.03); stack_label.modulate = Color("ffd36e"); stack_label.visible = false; bars.add_child(stack_label)
+ var path_ring = Node3D.new(); holder.add_child(path_ring)
+ var item_tint = Color(0, 0, 0, 0)
+ if not u.summon:
+  var counts = {}
+  for id in Forge.carried(u.hero):
+   if Forge.is_item(id): var pth = str(Forge.ITEMS[Forge.base_id(id)].path); counts[pth] = int(counts.get(pth, 0)) + (2 if Forge.is_legend(id) else 1)
+  var best = ""; var most = 0
+  for pth in counts:
+   if counts[pth] > most: most = counts[pth]; best = pth
+  if most >= 1:
+   item_tint = Color(Forge.PATH_COLOR[best])
+   var torus = TorusMesh.new(); torus.inner_radius = 0.95; torus.outer_radius = 1.05 + 0.06 * most
+   var ring_mat = StandardMaterial3D.new(); ring_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED; ring_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+   ring_mat.albedo_color = Color(item_tint.r, item_tint.g, item_tint.b, minf(0.95, 0.55 + 0.15 * most))
+   mesh(path_ring, torus, ring_mat, Vector3(0, 0.06, 0))
+  if not Forge.legend_held(u.hero).is_empty():
+   name_label.modulate = Color("ffd36e"); name_label.outline_modulate = Color("5a3a08")
+   name_label.text = "★ " + name_label.text
  # Every mesh shares one overlay so the whole body flashes when struck or casting.
  var flash_mat = ShaderMaterial.new(); flash_mat.shader = HITFLASH
  for mi in model.find_children("*", "MeshInstance3D", true, false): mi.material_overlay = flash_mat
  if u.hero.has("monster"): Bestiary.dress(model, flash_mat, u.hero, u.summon)
- models[u.uid] = {"root": holder, "motion":motion, "stride":0.0, "recoil":Vector3.ZERO, "aura": aura, "model": model, "player": player, "bar": bar, "bars": bars, "ring": circle, "state": "idle", "lock": 0.0, "dead": false, "hp_label": hp_label, "cast_bar": cast_bar, "bubble": bubble, "shield_bar":shield_bar, "mana_bar": mana_bar, "stagger": 0.0, "death_elapsed": 0.0, "arc": {}, "last_target": world_point(u.pos), "ground_speed": 0.0, "walk_hold": 0.0, "turn_rate": 0.0, "name_label": name_label, "tempo": randf_range(0.92, 1.08), "flash": flash_mat, "flash_amt": 0.0, "born": 0.0 if (u.summon or (sim_ref != null and sim_ref.time > 0.5)) else 1.0}
+ models[u.uid] = {"root": holder, "motion":motion, "stride":0.0, "recoil":Vector3.ZERO, "aura": aura, "model": model, "player": player, "bar": bar, "bars": bars, "ring": circle, "state": "idle", "lock": 0.0, "dead": false, "hp_label": hp_label, "cast_bar": cast_bar, "bubble": bubble, "shield_bar":shield_bar, "mana_bar": mana_bar, "stack_label": stack_label, "path_ring": path_ring, "item_tint": item_tint, "base_scale": model.scale, "bars_y": bars.position.y, "size_now": 1.0, "ghosts": [], "ghost_t": 0.0, "wind": null, "step_t": 0.0, "stagger": 0.0, "death_elapsed": 0.0, "arc": {}, "last_target": world_point(u.pos), "ground_speed": 0.0, "walk_hold": 0.0, "turn_rate": 0.0, "name_label": name_label, "tempo": randf_range(0.92, 1.08), "flash": flash_mat, "flash_amt": 0.0, "born": 0.0 if (u.summon or (sim_ref != null and sim_ref.time > 0.5)) else 1.0}
  holder.position = world_point(u.pos)
  model.rotation.y = u.heading
 
@@ -430,6 +450,7 @@ func sync(sim: BattleSim, dt: float, speed: float = 1.0) -> void:
   if visual.cast_bar.visible:
    var remaining = u.pending_cast.delay / u.pending_cast.total if u.has("pending_cast") else u.windup / maxf(0.01, u.windup_total)
    visual.cast_bar.mesh.size.x = maxf(0.01, 1.75 * (1.0 - remaining))
+  item_visuals(sim, u, visual, dt * speed)
   visual.stagger = maxf(0, visual.stagger - dt * speed)
   visual.flash_amt = maxf(0.0, visual.flash_amt - dt * 6.0)
   visual.flash.set_shader_parameter("flash", visual.flash_amt)
@@ -595,6 +616,24 @@ func handle_event(e: Dictionary) -> void:
     punch(0.38 if e.get("small", false) else 0.60)
   "bolt":
    fx_bolt(e, color)
+  "item_banner":
+   var col = Color(str(e.get("color", "ffffff")))
+   floating_text(e.pos, str(e.name), Color("ffd36e") if e.get("legend", false) else col, 44 if e.get("legend", false) else 34)
+   if models.has(e.uid): flash(e.uid, col, 0.8)
+  "stomp":
+   var col = Color(str(e.get("color", "ffb347")))
+   var radius = float(e.get("radius", 1)) * ArenaGrid.ROW_GAP * FLOOR_SCALE * 1.05
+   if vfx:
+    var at = world_point(e.pos, 0.08)
+    vfx.rune(at, radius, col, 1, 0.5, 0.0, 1.4 if e.get("soft", false) else 2.2)
+    if not e.get("soft", false):
+     vfx.smoke(at + Vector3.UP * 0.2, radius * 0.9, Color(0.55, 0.47, 0.36, 0.6), 0.7)
+     vfx.spray(at, 10, "shard", col, Vector2(2.0, 4.0), Vector2(0.25, 0.5), 0.10, Vector3.UP, 1.3, 6.0, 0.8)
+   if not e.get("soft", false): punch(0.65 if e.get("quake", false) else 0.28)
+   if e.get("quake", false): hitstop.emit(0.06)
+  "grow":
+   if models.has(e.uid): flash(e.uid, Color("ffb347"), 0.6)
+   if float(e.get("size", 1.0)) >= 1.5: punch(0.15)
   "projectile": pass # Visuals track live simulation projectiles, including pause and target movement.
 
 func physical_contact(e: Dictionary) -> void:
@@ -760,7 +799,76 @@ func sync_telegraphs(sim: BattleSim) -> void:
 
 # Coalesce rapid ticks for a short window without discarding small hits.
 # The displayed amount is effective HP damage/healing, not nominal power.
+## v0.77: Size, tempo afterimages, wind ring, stack badge, heavy footsteps.
+func item_visuals(sim: BattleSim, u: Dictionary, visual: Dictionary, dt: float) -> void:
+ if u.summon or not visual.has("base_scale"): return
+ # Size: the model, its bars and its path ring grow smoothly with Size above its natural build.
+ var want = 1.0 + (float(u.get("size", 1.0)) / maxf(0.1, float(u.get("born_size", 1.0))) - 1.0) * 0.8
+ visual.size_now = lerpf(float(visual.size_now), want, 1.0 - exp(-dt * 6.0))
+ visual.model.scale = visual.base_scale * visual.size_now
+ visual.bars.position.y = float(visual.bars_y) * minf(1.7, 1.0 + (visual.size_now - 1.0) * 0.6)
+ visual.path_ring.scale = Vector3.ONE * visual.size_now
+ visual.path_ring.visible = u.alive
+ # Heavy footsteps for giants.
+ if u.alive and visual.size_now >= 1.5 and u.moving:
+  visual.step_t -= dt
+  if visual.step_t <= 0.0:
+   visual.step_t = 0.45
+   punch(0.10 + (visual.size_now - 1.5) * 0.25)
+   if vfx: vfx.smoke(visual.root.position + Vector3.UP * 0.1, 0.8 * visual.size_now, Color(0.55, 0.48, 0.38, 0.5), 0.6)
+ # Tempo: afterimages from 2 attacks/s, a wind ring from 3.
+ var rate = sim.attack_rate(u) if u.alive else 0.0
+ if rate >= 2.0 and u.alive:
+  visual.ghost_t -= dt
+  if visual.ghost_t <= 0.0:
+   visual.ghost_t = 0.09
+   ghost(u, visual)
+ if rate >= 3.0 and u.alive:
+  if visual.wind == null:
+   var torus = TorusMesh.new(); torus.inner_radius = 0.7; torus.outer_radius = 0.82
+   var wm = material(Color(0.4, 0.95, 1.0, 0.45), 0.0, 0.3, true); wm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+   visual.wind = mesh(visual.root, torus, wm, Vector3(0, 0.35, 0))
+  visual.wind.visible = true
+  visual.wind.rotation.y += dt * (6.0 + rate * 2.0)
+  visual.wind.scale = Vector3.ONE * visual.size_now * (1.0 + 0.08 * sin(Time.get_ticks_msec() * 0.02))
+ elif visual.wind != null: visual.wind.visible = false
+ # Stack badge: the biggest ramp this champion is building.
+ var best = 0; var label = ""
+ for k in ["frenzy", "wrath", "deathblade", "talons_n", "club"]:
+  var v = int(u.get("fx", {}).get("stacks", {}).get(k, 0))
+  if k == "club" or k == "talons_n": continue
+  if v > best: best = v; label = k
+ visual.stack_label.visible = best > 0 and u.alive
+ if best > 0:
+  var txt = "×%d" % best
+  if visual.stack_label.text != txt:
+   visual.stack_label.text = txt
+   visual.stack_label.scale = Vector3.ONE * 1.5
+  visual.stack_label.scale = visual.stack_label.scale.lerp(Vector3.ONE, 1.0 - exp(-dt * 10.0))
+  visual.stack_label.modulate = Color(Forge.PATH_COLOR.get({"frenzy": "tempo", "wrath": "giant", "deathblade": "crit"}.get(label, "crit"), "ffd36e"))
+
+## A translucent copy of the champion that fades where it stood (attack-speed afterimage).
+func ghost(u: Dictionary, visual: Dictionary) -> void:
+ var path = Bestiary.model_path(u.hero)
+ if path.is_empty(): path = "res://assets/beasts/" + u.hero.sp + ".glb"
+ if not resources.has(path): return
+ var g = resources[path].instantiate(); add_child(g)
+ g.global_transform = visual.model.global_transform
+ var gm = StandardMaterial3D.new(); gm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED; gm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+ var tint = visual.item_tint if visual.item_tint.a > 0.0 else Color("5fe3ff")
+ gm.albedo_color = Color(tint.r, tint.g, tint.b, 0.32)
+ for mi in g.find_children("*", "MeshInstance3D", true, false): mi.material_override = gm
+ var players = g.find_children("*", "AnimationPlayer", true, false)
+ if not players.is_empty() and visual.player and visual.player.current_animation != "":
+  players[0].play(visual.player.current_animation); players[0].seek(visual.player.current_animation_position, true); players[0].speed_scale = 0.0
+ var tw = effect_tween()
+ tw.tween_property(gm, "albedo_color:a", 0.0, 0.28)
+ tw.tween_callback(g.queue_free)
+
 func number_event(e: Dictionary) -> void:
+ var crit = float(e.get("crit", 0.0))
+ if e.type == "hit" and crit > 0.0:
+  crit_number(e, crit); return
  var key = "%s:%s" % [e.uid,e.type]
  # Small damage-over-time ticks pool for longer so the fight isn't buried in "0.7"s.
  var window = 0.48 if e.amount >= 6.0 else 0.9
@@ -787,6 +895,36 @@ func number_event(e: Dictionary) -> void:
  if combat_numbers.has(key): combat_numbers[key+":"+str(label.get_instance_id())] = combat_numbers[key]
  combat_numbers[key] = entry
  update_number(entry)
+
+## Crits never merge with other numbers: orange with "!", and MEGA CRITS (3× or more) in big gold
+## with a hit-stop and a camera kick.
+func crit_number(e: Dictionary, crit: float) -> void:
+ var mega = crit >= 3.0
+ var label = Label3D.new(); effects.add_child(label)
+ label.text = str(maxi(1, roundi(e.amount))) + ("!!" if mega else "!")
+ label.font = load("res://assets/fonts/uncialantiqua.ttf")
+ label.font_size = 92 if mega else 60; label.pixel_size = 0.014; label.no_depth_test = true; label.outline_size = 16 if mega else 12
+ label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+ label.modulate = Color("ffd23a") if mega else Color("ff8a3d"); label.outline_modulate = Color(0.25, 0.05, 0.0)
+ label.position = Vector3(e.pos.x, 4.6 + (0.4 if mega else 0.0), e.pos.y)
+ var start = label.position
+ label.scale = Vector3.ONE * (2.2 if mega else 1.6)
+ var tw = effect_tween()
+ tw.tween_property(label, "scale", Vector3.ONE, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+ tw.tween_interval(0.35 if mega else 0.2)
+ tw.set_parallel(true)
+ tw.tween_property(label, "position", start + Vector3(0, 1.1, 0), 0.7)
+ tw.tween_property(label, "modulate:a", 0.0, 0.7)
+ tw.tween_property(label, "outline_modulate:a", 0.0, 0.7)
+ tw.chain().tween_callback(label.queue_free)
+ if mega:
+  var tag = Label3D.new(); effects.add_child(tag); tag.text = "MEGA CRIT"; tag.font_size = 34; tag.pixel_size = 0.012; tag.no_depth_test = true; tag.outline_size = 8
+  tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED; tag.modulate = Color("fff1b0"); tag.position = start + Vector3(0, 0.75, 0)
+  var tt = effect_tween().set_parallel(true); tt.tween_property(tag, "position:y", start.y + 1.6, 0.9); tt.tween_property(tag, "modulate:a", 0.0, 0.9); tt.chain().tween_callback(tag.queue_free)
+  hitstop.emit(0.08); punch(0.55)
+  if vfx: vfx.glow(world_point(e.pos, 1.2), 2.2, Color("ffd23a"), 0.35, 0, 0.0, 3.0)
+ else:
+  punch(0.18)
 
 func update_number(entry: Dictionary) -> void:
  var amount = str(maxi(1, roundi(entry.amount)))

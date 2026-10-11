@@ -17,6 +17,10 @@ var battle_seed = 0
 var team_cast := [-10.0, -10.0]
 ## v0.76: set while a signature deals true damage (ignores Resistance).
 var true_hit := false
+## v0.77: the crit multiplier of the hit being resolved (0 = no crit), and of the last landed hit.
+var crit_mult := 0.0
+var last_crit := 0.0
+var countering := false
 ## Mana earned per basic attack and the cap from one hit taken (TFT rules).
 const MANA_PER_ATTACK := 10.0
 const MANA_HIT_CAP := 40.0   # when each team's latest skill lands (CombatPacing.TEAM_SPACING)
@@ -65,6 +69,10 @@ func add_unit(hero: Dictionary, team: int, pos: Vector2, quality: float = 1.0, o
  # v0.76: six stats and a mana bar.
  u.ap = s.ap; u.res = s.res; u.mana_gain = s.mana; u.base_as = s.base_as
  u.max_mana = float(s.max_mana); u.mana = float(s.start_mana); u.buffs = {}; u.sig = {}; u.sig_mult = Signatures.power_mult(hero)
+ # v0.77: Size and Crit.
+ u.size = float(s.size); u.born_size = float(s.born_size); u.size_k = float(s.size_k); u.area = 1.0
+ u.crit = float(s.crit); u.crit_damage = float(s.crit_damage); u.base_res = float(s.res)
+ if owner >= 0: u.size = 0.5; u.born_size = 0.5; u.crit = 0.0
  u.velocity = Vector2.ZERO
  u.start_pos = pos; u.area_wait = {}; u.recovery = 0.0; u.windup_total = 0.0
  u.dots = []; u.credit = "basic"; u.ability_stats = {}; u.timeline = {}; u.damage_taken = 0.0; u.healing_received = 0.0
@@ -177,6 +185,7 @@ func advance_hex_step(unit: Dictionary, dt: float) -> void:
   unit.cell=unit.next_cell;unit.erase("next_cell")
   unit.pos=destination;unit.velocity=Vector2.ZERO;unit.moving=false
   ItemFeedback.augment(self,unit,"move",unit)
+  Forge.on_move(self,unit)
 
 func living(team: int, include_summons: bool = true) -> Array:
  return units.filter(func(u): return u.alive and u.team == team and (include_summons or not u.summon))
@@ -273,8 +282,6 @@ func status(u: Dictionary, key: String, seconds: float) -> void:
  seconds = Forge.status_mod(u, key, seconds)
  if seconds<original_seconds:
   ItemFeedback.augment(self,u,"resist",u)
-  if key=="slow" and Forge.has(u,"pilgrim"):ItemFeedback.signal_effect(self,u,"pilgrim",u)
-  if key in ["stun","root","silence"] and Forge.has(u,"stoneskin") and u.hp/u.max_hp>.5:ItemFeedback.signal_effect(self,u,"stoneskin",u)
  if seconds <= 0.0: return
  if ItemEffects.has(u,"windstep") and key in ["stun","root","slow"]:
   seconds*=0.7
@@ -282,6 +289,7 @@ func status(u: Dictionary, key: String, seconds: float) -> void:
  if CC_WEIGHT.has(key) and not cc_source.is_empty() and cc_source.team != u.team:
   cc_source.cc = cc_source.get("cc", 0.0) + seconds * CC_WEIGHT[key]
  u.status[key] = maxf(u.status.get(key, 0.0), seconds)
+ if key == "stun": Forge.on_stunned(self, u)
  if key == "stun" or (key == "silence" and u.has("pending_cast")):
   if u.windup > 0 or u.has("pending_cast"):
    emit({"type": "interrupt", "uid": u.uid, "pos": u.pos})
@@ -291,7 +299,6 @@ func status(u: Dictionary, key: String, seconds: float) -> void:
 func shield(u: Dictionary, value: float, seconds: float = 5.0) -> void:
  var original_value=value
  value = Forge.shield_mod(u, value)
- if value>original_value:ItemFeedback.signal_effect(self,u,"worldtree",u)
  value *= CombatPacing.sustain_factor(time)
  u.shield = minf(u.max_hp * 0.75, u.shield + value)
  u.shield_time = maxf(u.shield_time, seconds)
@@ -305,8 +312,8 @@ func heal(source: Dictionary, target: Dictionary, amount: float, credit: String 
  amount *= CombatPacing.sustain_factor(time)
  if active(target,"scorch"):
   var owner_unit=find_unit(int(target.get("scorch_source",-1)))
-  var healing_factor=.50 if not owner_unit.is_empty() and Forge.has(owner_unit,"grievous") else .65
-  if not owner_unit.is_empty():track(owner_unit,"healing_denied",minf(amount,target.max_hp-target.hp)-minf(amount*healing_factor,target.max_hp-target.hp),"item:grievous" if healing_factor==.50 else "item:emberfang")
+  var healing_factor=float(target.get("scorch_factor",.65))
+  if not owner_unit.is_empty():track(owner_unit,"healing_denied",minf(amount,target.max_hp-target.hp)-minf(amount*healing_factor,target.max_hp-target.hp),"item:tusk")
   amount*=healing_factor
  var actual = minf(amount, target.max_hp - target.hp)
  target.hp += actual; source.healing += actual; target.healing_received += actual
@@ -320,8 +327,6 @@ func heal(source: Dictionary, target: Dictionary, amount: float, credit: String 
   if not owner_unit.is_empty(): owner_unit.healing += actual
  if actual>0:
   ItemFeedback.credited(self,source,target,credit,actual)
-  if Forge.has(source,"chalice"):ItemFeedback.signal_effect(self,source,"chalice",target,"proc",actual)
-  if Forge.has(target,"worldtree"):ItemFeedback.signal_effect(self,target,"worldtree",target,"proc",actual)
  if actual > 0: emit({"type": "heal", "uid": target.uid, "source": source.uid, "amount": actual, "pos": target.pos, "credit": credit if not credit.is_empty() else source.credit})
 
  ItemEffects.on_heal(self,source,target,actual,credit)
@@ -342,6 +347,7 @@ func hurt(source: Dictionary, target: Dictionary, amount: float, magical: bool =
   var broken=minf(target.shield,source.attack*0.35)
   target.shield-=broken;target.blocked+=broken;track(target,"blocked",broken,"incoming");track(source,"shield_break",broken,"item:claw");ItemEffects.proc(self,source,"claw",target)
  amount = Forge.damage_mod(self, source, target, amount, magical, hit_credit)
+ var crit = crit_mult; crit_mult = 0.0
  amount *= SignatureCast.damage_mult(self, source, target)
  amount *= 1.22 if active(source, "rally") else 1.0
  amount *= 1.0 + buff_sum(source, "ad") if hit_credit == "basic" else 1.0
@@ -383,13 +389,16 @@ func hurt(source: Dictionary, target: Dictionary, amount: float, magical: bool =
  var th = float(Evolutions.perk(target.hero, "thorns", 0.0)) if not target.summon else 0.0
  if th > 0.0 and actual > 0 and source.alive and not reflecting and source.uid != target.uid:
   reflecting = true; hurt(target, source, actual * th, true, "thorns"); reflecting = false
- if actual > 0: emit({"type": "hit", "uid": target.uid, "source": source.uid, "amount": actual, "pos": target.pos, "credit": credit if not credit.is_empty() else source.credit})
+ if actual > 0: emit({"type": "hit", "uid": target.uid, "source": source.uid, "amount": actual, "pos": target.pos, "credit": credit if not credit.is_empty() else source.credit, "crit": crit})
+ if crit > 0.0 and not source.summon and actual > float(source.get("biggest_crit", 0.0)): source.biggest_crit = actual
  if actual>0:
   ItemFeedback.credited(self,source,target,hit_credit,actual)
   ItemFeedback.augment(self,target,"guard",target)
   if hit_credit=="basic":ItemFeedback.augment(self,source,"basic",target)
  ItemEffects.on_hit(self,source,target,actual,hit_credit)
+ last_crit = crit
  Forge.after_hit(self, source, target, actual, magical, hit_credit)
+ last_crit = 0.0
  if not target.alive: return
  ItemEffects.defend(self,target)
  if not hit_credit.begins_with("item:") and actual>0:
@@ -658,8 +667,34 @@ func cast_signature(u: Dictionary, target: Dictionary) -> bool:
  u.credit = "signature"; track(u,"casts",1)
  cast_visual(u, key, sig_name, target.pos)
  u.base_as_now = 1.0 / u.interval
+ var echo = false
+ if u.get("chaos_die", false):
+  var roll = rng.randf()
+  if roll < 0.20:
+   emit({"type": "item_banner", "uid": u.uid, "pos": u.pos, "item_id": "", "name": "FIZZLE!", "color": "ff6a6a", "legend": false})
+   u.status["stun"] = 1.0
+   return true
+  echo = roll < 0.60
  SignatureCast.cast(self, u, target)
+ Forge.after_cast(self, u, target)
+ if echo:
+  emit({"type": "item_banner", "uid": u.uid, "pos": u.pos, "item_id": "", "name": "DOUBLE!", "color": "ffd04a", "legend": false})
+  echo_cast(u, target, 1.0)
  return true
+
+## A free extra cast at a fraction of strength (Echoing Quiver, Eternity Crown, Chaos Die).
+func echo_cast(u: Dictionary, target: Dictionary, scale: float) -> void:
+ if not u.alive or target.is_empty() or not target.alive: return
+ var keep = float(u.get("sig_scale", 1.0)); var keep_mana = u.mana
+ u.sig_scale = keep * scale; u.credit = "signature"
+ emit({"type": "cast", "uid": u.uid, "effect": HeroData.species[u.hero.sp].ab, "name": "Echo", "pos": u.pos, "target": target.pos})
+ u.base_as_now = 1.0 / u.interval
+ SignatureCast.cast(self, u, target)
+ u.sig_scale = keep; u.mana = keep_mana
+
+## Attacks per second right now.
+func attack_rate(u: Dictionary) -> float:
+ return as_mult(u) / maxf(0.05, u.interval)
 
 ## Mana: earned from attacks and hits, scaled by the Mana stat, not while silenced or channeling.
 func add_mana(u: Dictionary, amount: float) -> void:
@@ -804,5 +839,5 @@ func report_rows() -> Array:
  var rows = []
  for u in units:
   if u.summon: continue
-  rows.append({"id":u.hero.id,"name":u.hero.name,"sp":u.hero.sp,"team":u.team,"damage":u.damage,"healing":u.healing,"taken":u.damage_taken,"healing_received":u.healing_received,"blocked":u.blocked,"kills":u.kills,"cc":u.get("cc",0.0),"alive":u.alive,"hp":u.hp,"max_hp":u.max_hp,"ability_stats":u.ability_stats.duplicate(true),"timeline":u.timeline.duplicate(true)})
+  rows.append({"id":u.hero.id,"name":u.hero.name,"sp":u.hero.sp,"team":u.team,"damage":u.damage,"healing":u.healing,"taken":u.damage_taken,"healing_received":u.healing_received,"blocked":u.blocked,"kills":u.kills,"cc":u.get("cc",0.0),"biggest_crit":u.get("biggest_crit",0.0),"size":u.get("size",1.0),"alive":u.alive,"hp":u.hp,"max_hp":u.max_hp,"ability_stats":u.ability_stats.duplicate(true),"timeline":u.timeline.duplicate(true)})
  return rows

@@ -7,17 +7,20 @@ extends Control
 
 # Clockwise from the top-left corner, like a classic RPG stat chart. Keys are the save's roll keys:
 # attack = AD, haste = AS, potency = AP, speed = Mana, hp = HP, armor = Resistance.
-const AXES := ["attack", "haste", "potency", "speed", "hp", "armor"]
-const SHORT := {"attack": "AD", "haste": "AS", "potency": "AP", "speed": "MANA", "hp": "HP", "armor": "RES"}
+const AXES := ["attack", "haste", "crit", "potency", "speed", "hp", "armor", "size"]
+const N := 8
+const SHORT := {"attack": "AD", "haste": "AS", "potency": "AP", "speed": "MANA", "hp": "HP", "armor": "RES", "size": "SIZE", "crit": "CRIT"}
 const GUIDE := {
 	"attack": {"name": "AD", "does": "Attack damage: each basic attack, and every signature number marked % AD.", "scale": "+2% base per level, plus AD cards, rolls, temperament and items."},
 	"haste": {"name": "AS", "does": "Attack speed: attacks per second. More attacks also means more mana, so faster casts.", "scale": "AS cards, rolls, temperament and items."},
 	"potency": {"name": "AP", "does": "Ability power: every signature number marked AP. Everyone starts at 100.", "scale": "AP cards, rolls and items. Signature AP numbers also grow 4.5% per level."},
 	"speed": {"name": "Mana", "does": "Mana gain: multiplies all mana earned, so the signature casts more often.", "scale": "Mana cards, rolls, temperament and items."},
 	"hp": {"name": "HP", "does": "Health: damage it can take before it falls.", "scale": "+3% base per level, plus HP cards, rolls, temperament and items."},
+	"size": {"name": "Size", "does": "Body size. Above its natural size, every +10% gives +5% HP, +5% AD and wider attacks and spells; big champions are easier to hit with area effects.", "scale": "Set by role (tanks big, assassins small); Size cards, Giant items and temperament."},
+	"crit": {"name": "Crit", "does": "Chance for a basic attack to crit for 2× (more with Crit items). Over 100% turns into extra crit damage.", "scale": "Set by role (assassins and carries high, tanks low); Crit cards, Crit items and temperament."},
 	"armor": {"name": "Resistance", "does": "Reduces all damage: Resistance ÷ (100 + Resistance). 50 blocks 33%, 100 blocks 50%. True damage ignores it.", "scale": "Resistance cards, rolls and items."},
 }
-const BUILD_TO_AXIS := {"ad": "attack", "as": "haste", "ap": "potency", "mana": "speed", "hp": "hp", "res": "armor"}
+const BUILD_TO_AXIS := {"ad": "attack", "as": "haste", "ap": "potency", "mana": "speed", "hp": "hp", "res": "armor", "size": "size", "crit": "crit"}
 
 ## The axes this champion's signature scales with (marked with a dot).
 static func key_axes(sp: String) -> Array:
@@ -45,7 +48,7 @@ static var _ranges := {}
 ## Effective value of each stat (bigger is better for every axis).
 static func effective(h: Dictionary) -> Dictionary:
 	var s = HeroData.stats(h)
-	return {"attack": s.attack, "haste": float(s["as"]), "speed": float(s.mana), "hp": s.hp, "armor": float(s.res), "potency": float(s.ap)}
+	return {"attack": s.attack, "haste": float(s["as"]), "speed": float(s.mana), "hp": s.hp, "armor": float(s.res), "potency": float(s.ap), "size": float(s.size), "crit": float(s.crit) + (float(s.crit_damage) - 2.0) * 0.25}
 
 ## Min/max of every stat across all species at a level, with average rolls (cached per level).
 static func ranges(level: int) -> Dictionary:
@@ -67,6 +70,8 @@ static func ranges(level: int) -> Dictionary:
 	# AP and Mana start equal for everyone, so their scale comes from what cards and items can add.
 	lo.potency = 70.0; hi.potency = 130.0 + 6.0 * level
 	lo.speed = 0.80; hi.speed = 1.20 + 0.025 * level
+	lo.size = 0.80; hi.size = 1.30 + 0.02 * level
+	lo.crit = 0.0; hi.crit = 0.30 + 0.015 * level
 	_ranges[cache_key] = {"lo": lo, "hi": hi}
 	return _ranges[cache_key]
 
@@ -130,36 +135,36 @@ func center() -> Vector2: return size * 0.5 + Vector2(0, 4)
 func radius() -> float: return minf(size.x * 0.5 - 84.0, size.y * 0.5 - 26.0)
 
 func corner(i: int, r: float) -> Vector2:
-	# Flat-top hexagon: corners at 240, 300, 0, 60, 120, 180 degrees, starting top-left.
-	var a = deg_to_rad(240.0 + 60.0 * i)
+	# Octagon: eight axes, starting just left of the top and running clockwise.
+	var a = deg_to_rad(-112.5 + 45.0 * i)
 	return center() + Vector2(cos(a), sin(a)) * r
 
 func _draw() -> void:
 	if values.is_empty(): return
 	var R = radius()
-	var rim = PackedVector2Array(); for i in range(7): rim.append(corner(i % 6, R))
+	var rim = PackedVector2Array(); for i in range(N + 1): rim.append(corner(i % N, R))
 	draw_colored_polygon(rim.slice(0, 6), Color(0, 0, 0, 0.22))
 	for f in [0.5]:
-		var ring = PackedVector2Array(); for i in range(7): ring.append(corner(i % 6, R * f))
+		var ring = PackedVector2Array(); for i in range(N + 1): ring.append(corner(i % N, R * f))
 		draw_polyline(ring, SPOKE, 1.0, true)
-	for i in range(3): draw_line(corner(i, R), corner(i + 3, R), SPOKE, 1.0, true)
+	for i in range(N / 2): draw_line(corner(i, R), corner(i + N / 2, R), SPOKE, 1.0, true)
 	draw_polyline(rim, RIM, 2.5, true)
 	# Species baseline (average rolls) as a faint outline.
 	var ghost = PackedVector2Array()
-	for i in range(7): ghost.append(corner(i % 6, R * (0.08 + 0.92 * baseline[AXES[i % 6]])))
+	for i in range(N + 1): ghost.append(corner(i % N, R * (0.08 + 0.92 * baseline[AXES[i % N]])))
 	draw_polyline(ghost, GHOST, 1.5, true)
 	# Gold outline holds the pre-purchase stats while the current polygon expands.
 	if not prior_values.is_empty():
 		var prior=PackedVector2Array()
-		for i in range(7):prior.append(corner(i%6,R*(.08+.92*prior_values[AXES[i%6]])))
+		for i in range(N + 1):prior.append(corner(i%N,R*(.08+.92*prior_values[AXES[i%N]])))
 		draw_polyline(prior,STAR,2.0,true)
 	# This champion.
 	var poly = PackedVector2Array()
-	for i in range(6): poly.append(corner(i, R * (0.08 + 0.92 * lerpf(prior_values.get(AXES[i],values[AXES[i]]),values[AXES[i]],reveal))))
+	for i in range(N): poly.append(corner(i, R * (0.08 + 0.92 * lerpf(prior_values.get(AXES[i],values[AXES[i]]),values[AXES[i]],reveal))))
 	draw_colored_polygon(poly, FILL)
 	var edge = poly.duplicate(); edge.append(poly[0]); draw_polyline(edge, EDGE, 2.0, true)
 	var w = key_axes(hero.sp)
-	for i in range(6):
+	for i in range(N):
 		var k = AXES[i]; var p = corner(i, R + 14.0)
 		var name = ("★ " if k in excels else "") + (SHORT[k] if size.x<500 else GUIDE[k].name) + (" •" if k in w else "")
 		if improvement.get(k,0.0)>.00001:
@@ -170,19 +175,17 @@ func _draw() -> void:
 		var fs = 14 if size.x >= 400 else 12
 		var tw = font.get_string_size(name, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 		var x = p.x - tw * 0.5
-		if i == 2: x = p.x + 2.0                      # right corner: text runs outward
-		elif i == 5: x = p.x - tw - 2.0               # left corner
-		if size.x<500 and i in [0,4]:x=p.x-tw
-		elif size.x<500 and i in [1,3]:x=p.x
+		if i in [2, 3]: x = p.x + 2.0                 # right side: text runs outward
+		elif i in [6, 7]: x = p.x - tw - 2.0          # left side
 		var y = p.y + 5.0
 		if i in [0, 1]: y = p.y - 2.0                 # top corners sit above the rim
-		elif i in [3, 4]: y = p.y + 14.0              # bottom corners sit below
+		elif i in [4, 5]: y = p.y + 14.0              # bottom corners sit below
 		draw_string(font, Vector2(x, y), name, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)
 
 func _gui_input(e: InputEvent) -> void:
 	if e is InputEventMouseMotion:
 		var best = -1; var d = INF
-		for i in range(6):
+		for i in range(N):
 			var dd = e.position.distance_to(corner(i, radius() * 0.75))
 			if dd < d: d = dd; best = i
 		if best != hover: hover = best; queue_redraw()
@@ -235,7 +238,7 @@ static func explain(game: Node, h: Dictionary = {}) -> void:
 	var head = func(t: String): game.label(box, t, 17, Color("ffd36e"), false)
 	var para = func(t: String):
 		var l = game.label(box, t, 14, Color("dfe8ec"), true); l.custom_minimum_size.x = 1080
-	head.call("THE SIX STATS")
+	head.call("THE EIGHT STATS")
 	var grid = GridContainer.new(); grid.columns = 3; grid.add_theme_constant_override("h_separation", 16); grid.add_theme_constant_override("v_separation", 6); box.add_child(grid)
 	for k in AXES:
 		var g = GUIDE[k]
@@ -271,5 +274,5 @@ static func explain(game: Node, h: Dictionary = {}) -> void:
 ## Small "?  How stats work" button.
 static func help_button(game: Node, parent: Node, h: Dictionary = {}, text := "?  How stats work") -> Button:
 	var b = game.button(parent, text, func(): explain(game, h))
-	b.tooltip_text = "The six stats, mana and the signature, level-up cards, rolls, fit and Power."
+	b.tooltip_text = "The eight stats, mana and the signature, level-up cards, rolls, fit and Power."
 	return b

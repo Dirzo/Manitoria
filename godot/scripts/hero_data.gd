@@ -134,9 +134,19 @@ static func make_hero(sp: String, id: String, nickname: String, level: int = 1) 
 # ---------------------------------------------------------------- stat genes
 ## Set once per run (from the campaign seed) so every new game deals different traits and rolls.
 static var run_salt := ""
-const ROLL_KEYS = ["hp", "attack", "armor", "haste", "speed", "potency"]
+const ROLL_KEYS = ["hp", "attack", "armor", "haste", "speed", "potency", "size", "crit"]
 ## Roll keys kept from older saves; v0.76 shows them as the six stats (armor -> Resistance, speed -> Mana).
-const ROLL_NAMES = {"hp": "HP", "attack": "AD", "armor": "Resistance", "haste": "AS", "speed": "Mana", "potency": "AP"}
+const ROLL_NAMES = {"hp": "HP", "attack": "AD", "armor": "Resistance", "haste": "AS", "speed": "Mana", "potency": "AP", "size": "Size", "crit": "Crit"}
+## v0.77: Size and Crit are stats 7 and 8, set by role. Size is a body multiplier; Crit a crit chance.
+const ROLE_SIZE := {"Tank": 1.15, "Warden": 1.12, "Bruiser": 1.08, "Diver": 1.0, "Duelist": 1.0, "Skirmisher": 0.95, "Assassin": 0.92, "Trickster": 0.95, "Ranged": 0.95, "Artillery": 1.0, "Caster": 0.92, "Controller": 0.95, "Support": 0.92, "Summoner": 0.95}
+const ROLE_CRIT := {"Tank": 0.02, "Warden": 0.04, "Bruiser": 0.08, "Diver": 0.12, "Duelist": 0.15, "Skirmisher": 0.15, "Assassin": 0.20, "Trickster": 0.12, "Ranged": 0.15, "Artillery": 0.12, "Caster": 0.04, "Controller": 0.04, "Support": 0.02, "Summoner": 0.04}
+const SIZE_CAP := 2.0
+const SIZE_CAP_LEGEND := 2.4
+const CRIT_DAMAGE := 2.0
+const CRIT_DAMAGE_CAP := 6.0
+
+static func base_size(sp: String) -> float:
+ load_data(); return float(ROLE_SIZE.get(species[sp].role, 1.0))
 const ROLL_MAX = 31
 ## How much each stat matters to a role. Power level only rewards the rolls a role actually uses,
 ## so a tank with great damage rolls but poor health and armor is still a poor tank.
@@ -180,7 +190,13 @@ static func rolls(hero: Dictionary) -> Dictionary:
  if not (r is Dictionary and r.size() == ROLL_KEYS.size()):
   # Older saves and generated stand-ins: stable rolls from the champion's id.
   var rng = RandomNumberGenerator.new(); rng.seed = hash(str(hero.get("id", "")) + "|rolls|" + run_salt)
-  r = roll_stats(rng, roll_floor(str(hero.get("sp", ""))))
+  if r is Dictionary and r.size() == 6:
+   # v0.76 saves: keep the six rolls, add Size and Crit rolls.
+   r = r.duplicate()
+   var extra = roll_stats(rng, roll_floor(str(hero.get("sp", ""))))
+   r.size = extra.size; r.crit = extra.crit
+  else:
+   r = roll_stats(rng, roll_floor(str(hero.get("sp", ""))))
  var f = roll_floor(str(hero.get("sp", "")))
  if f > 0 and r.values().any(func(v): return int(v) < f):
   r = r.duplicate()
@@ -273,8 +289,7 @@ static func stats(hero: Dictionary, quality: float = 1.0) -> Dictionary:
  mana *= Traits.mod(hero, "speed") / Traits.mod(hero, "cd")
  # Items (old fractions convert: armor -> Resistance, move speed and cooldowns -> Mana).
  var f = Forge.totals(hero)
- hp *= 1.0 + f.hp; ad *= 1.0 + f.attack; aspd *= 1.0 + f.haste; res += f.armor * ARMOR_TO_RES
- ap += f.potency * 100.0; mana += f.speed + (1.0 / maxf(0.3, f.cd) - 1.0)
+ hp += f.hp; ad += f.ad; aspd *= 1.0 + f["as"]; res += f.res; ap += f.ap; mana += f.mana
  for item in Campaign.EQUIPMENT:
   if item.id not in hero.get("equipment", {}).values(): continue
   hp *= 1.0 + item.get("hp", 0.0); ad *= 1.0 + item.get("attack", 0.0); aspd *= 1.0 + item.get("haste", 0.0)
@@ -295,8 +310,21 @@ static func stats(hero: Dictionary, quality: float = 1.0) -> Dictionary:
  match str(hero.get("apex", "")):
   "apex_body": hp *= 1.0 + APEX_STAT; ad *= 1.0 + APEX_STAT; ap *= 1.0 + APEX_STAT
   "apex_instinct": aspd *= 1.15; mana += 0.15
- res = maxf(0.0, res); aspd = clampf(aspd, 0.2, 5.0); mana = maxf(0.2, mana)
- var result = {"hp": hp, "attack": ad, "ad": ad, "as": aspd, "ap": ap, "mana": mana, "res": res,
+ # v0.77: Size and Crit.
+ var born = base_size(hero.sp)
+ var size = born * (1.0 + roll_norm_now(hero, "size") * 0.06) * Traits.mod(hero, "size") + StatCards.total(hero, "size") + f.size
+ var crit = float(ROLE_CRIT.get(d.role, 0.05)) + roll_norm_now(hero, "crit") * 0.05 + Traits.mod_add(hero, "crit") + StatCards.total(hero, "crit") + f.crit
+ var crit_damage = CRIT_DAMAGE + f.critdmg
+ if Evolutions.has(str(hero.get("evolution", ""))): size += Evolutions.flat(hero, "size"); crit += Evolutions.flat(hero, "crit")
+ var cap = SIZE_CAP_LEGEND if f.size_cap > SIZE_CAP else SIZE_CAP
+ size = clampf(size, 0.7, cap)
+ if crit > 1.0: crit_damage += crit - 1.0; crit = 1.0
+ crit_damage = minf(crit_damage, f.critdmg_cap if f.critdmg_cap > 0.0 else CRIT_DAMAGE_CAP)
+ # Size above the champion's natural build adds HP and AD (+5% each per +10% Size).
+ var grow = maxf(0.0, size - born) * 0.5 * f.size_k
+ hp *= (1.0 + grow) * f.hp_mult; ad *= (1.0 + grow) * f.ad_mult; aspd *= f.as_mult
+ res = maxf(0.0, res); aspd = clampf(aspd, 0.2, 8.0); mana = maxf(0.2, mana)
+ var result = {"hp": hp, "attack": ad, "ad": ad, "as": aspd, "ap": ap, "mana": mana, "res": res, "size": size, "born_size": born, "crit": crit, "crit_damage": crit_damage, "size_k": f.size_k,
   "armor": res / (100.0 + res), "speed": d.mv * 0.036 * Evolutions.mod(hero, "speed"),
   "range": maxf(0.7, d.range / 44.0), "interval": 1.0 / aspd, "cooldown": 0.0,
   "base_hp": base_hp, "base_armor": base_res / (100.0 + base_res), "base_interval": 1.0 / (d["as"] * 0.85), "base_as": d["as"] * 0.85 * (0.8 if d.role == "Artillery" else 1.0)}

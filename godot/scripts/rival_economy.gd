@@ -4,7 +4,8 @@ extends RefCounted
 static func item_cost(id: String) -> int:
  if Forge.is_item(id):
   var total=0
-  for component in Forge.ITEMS[id].recipe:total+=int(Forge.info(component).price)
+  for component in Forge.ITEMS[Forge.base_id(id)].recipe:total+=int(Forge.info(component).price)
+  if Forge.is_legend(id):total+=150
   return total
  return int(Forge.info(id).get("price",0))
 static func ensure(club: Dictionary) -> void:
@@ -39,7 +40,7 @@ static func develop(c: Campaign,club: Dictionary) -> void:
    var credit=0
    if not old.is_empty():
     credit=item_cost(old)
-    if not Forge.is_item(id) or old not in Forge.ITEMS[id].recipe:credit/=2
+    if not Forge.is_item(id) or (old not in Forge.ITEMS[Forge.base_id(id)].recipe and Forge.base_id(id)!=old):credit/=2
    var cost=maxi(0,item_cost(id)-credit)
    if pay(club,cost):h.equipment[key]=id
 static func prize(c: Campaign,club: Dictionary,place: int) -> void:

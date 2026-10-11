@@ -15,9 +15,12 @@ static func ap(u: Dictionary, base: float) -> float:
 static func evo(u: Dictionary) -> int:
 	return -1 if u.summon else Signatures.evo_index(u.hero)
 
+## Enemies within a hex radius. The caster's Area (from Size and items) widens it, and big
+## targets (1.6× Size or more) are caught one hex further out.
 static func within(sim: BattleSim, u: Dictionary, center: Vector2, hexes: int) -> Array:
 	var c = ArenaGrid.nearest(center)
-	return sim.foes(u).filter(func(e): return ArenaGrid.distance(e.cell, c) <= hexes)
+	var r = maxi(hexes, roundi(hexes * float(u.get("area", 1.0)))) if hexes > 0 else hexes
+	return sim.foes(u).filter(func(e): return ArenaGrid.distance(e.cell, c) - (1 if float(e.get("size", 1.0)) >= 1.6 else 0) <= r)
 
 static func allies_within(sim: BattleSim, u: Dictionary, hexes: int, include_summons := false) -> Array:
 	return sim.living(u.team, include_summons).filter(func(a): return ArenaGrid.distance(a.cell, u.cell) <= hexes)

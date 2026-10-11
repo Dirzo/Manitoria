@@ -2,14 +2,15 @@ class_name StatCards
 extends RefCounted
 ## v0.76 level-ups: three cards, each a different random stat at a random rarity. Keep one.
 
-const KEYS := ["ad", "as", "ap", "mana", "hp", "res"]
-const NAMES := {"ad": "AD", "as": "AS", "ap": "AP", "mana": "Mana", "hp": "HP", "res": "Resistance"}
-const LONG := {"ad": "Attack damage", "as": "Attack speed", "ap": "Ability power", "mana": "Mana gain", "hp": "Health", "res": "Resistance"}
+const KEYS := ["ad", "as", "ap", "mana", "hp", "res", "size", "crit"]
+const NAMES := {"ad": "AD", "as": "AS", "ap": "AP", "mana": "Mana", "hp": "HP", "res": "Resistance", "size": "Size", "crit": "Crit"}
+const LONG := {"ad": "Attack damage", "as": "Attack speed", "ap": "Ability power", "mana": "Mana gain", "hp": "Health", "res": "Resistance", "size": "Size", "crit": "Crit chance"}
 const RARITIES := ["Common", "Rare", "Epic", "Legendary"]
 ## Value per rarity. AS and Mana are fractions (+0.05 = +5%); the rest are flat points.
 const VALUES := {
 	"ad": [4, 7, 11, 16], "as": [0.05, 0.09, 0.14, 0.20], "ap": [8, 14, 22, 32],
 	"mana": [0.05, 0.09, 0.14, 0.20], "hp": [60, 110, 170, 250], "res": [5, 9, 14, 20],
+	"size": [0.03, 0.05, 0.08, 0.12], "crit": [0.03, 0.05, 0.08, 0.12],
 }
 const ODDS := [0.55, 0.28, 0.13, 0.04]
 const ODDS_LATE := [0.45, 0.30, 0.20, 0.05]   # level 15+
@@ -25,7 +26,7 @@ static func rarity(rng: RandomNumberGenerator, level: int) -> int:
 	return 0
 
 static func value_text(key: String, v: float) -> String:
-	return "+%d%% %s" % [roundi(v * 100), NAMES[key]] if key in ["as", "mana"] else "+%d %s" % [roundi(v), NAMES[key]]
+	return "+%d%% %s" % [roundi(v * 100), NAMES[key]] if key in ["as", "mana", "size", "crit"] else "+%d %s" % [roundi(v), NAMES[key]]
 
 static func card(key: String, tier: int) -> Dictionary:
 	var v = float(VALUES[key][tier]); var r = RARITIES[tier]
@@ -62,7 +63,7 @@ static func auto_pick(hero: Dictionary, cards: Array) -> int:
 
 ## One line with the six stats, as shown on cards and the champion view.
 static func stat_line(s: Dictionary) -> String:
-	return "AD %d  ·  AS %.2f  ·  AP %d  ·  Mana %d%%  ·  HP %d  ·  Resistance %d" % [roundi(s.attack), float(s["as"]), roundi(s.ap), roundi(float(s.mana) * 100.0), roundi(s.hp), roundi(s.res)]
+	return "AD %d  ·  AS %.2f  ·  AP %d  ·  Mana %d%%  ·  HP %d  ·  Resistance %d  ·  Size %.2f×  ·  Crit %d%% (%.1f×)" % [roundi(s.attack), float(s["as"]), roundi(s.ap), roundi(float(s.mana) * 100.0), roundi(s.hp), roundi(s.res), float(s.size), roundi(float(s.crit) * 100.0), float(s.crit_damage)]
 
 ## What this champion's level-up cards have added so far ("" when none).
 static func picks_line(hero: Dictionary) -> String:

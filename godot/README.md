@@ -1,3 +1,7 @@
+# Manitoria 0.77 — Item overhaul
+
+Size and Crit stats, 36 items, Wild items, Mythic Anvil Legendaries and item feedback in combat. See [ITEM-OVERHAUL-0.77.md](../ITEM-OVERHAUL-0.77.md).
+
 # Manitoria 0.76 — Combat and leveling rework
 
 Six stats, one mana-cast signature per champion, stat-card level-ups and rewritten evolutions. See [COMBAT-REWORK-0.76.md](../COMBAT-REWORK-0.76.md).
