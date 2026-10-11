@@ -84,7 +84,8 @@ static func marks(model_key: String, clip: String) -> Dictionary:
 	var contact = float(m.get("hit", base.hit))
 	var ready = float(m.get("ready", base.ready))
 	var resume = float(m.get("resume", base.resume))
-	if contact < 0.2 or contact > 0.75: contact = base.hit; ready = base.ready; resume = base.resume
+	var limit = 0.9 if m.get("picked", false) else 0.75
+	if contact < 0.08 or contact > limit: contact = base.hit; ready = base.ready; resume = base.resume
 	ready = clampf(ready, 0.0, contact)
 	resume = clampf(resume, contact, 0.95)
 	return {"ready": ready, "hit": contact, "resume": resume}
@@ -114,12 +115,37 @@ static func subtree(sk: Skeleton3D, b: int) -> int:
 	for c in sk.get_bone_children(b): n += subtree(sk, c)
 	return n
 
+## Retargeted combat clips (tools/retarget_creature.gd) live beside the model in
+## assets/beasts/clips/<model>.res and replace the model's own clips of the same name. The model's
+## animation library is shared by every instance of that model, so this happens once per model.
+const CLIP_LIBRARY := "res://assets/beasts/clips/%s.res"
+static func apply_clip_library(ap: AnimationPlayer, model_key: String) -> int:
+	var path = CLIP_LIBRARY % model_key
+	if not ResourceLoader.exists(path): return 0
+	var extra: AnimationLibrary = load(path)
+	if extra == null: return 0
+	if not ap.has_animation_library(""): ap.add_animation_library("", AnimationLibrary.new())
+	var lib = ap.get_animation_library("")
+	var n = 0
+	for name in extra.get_animation_list():
+		var anim = extra.get_animation(name)
+		if lib.has_animation(name):
+			if lib.get_animation(name) == anim: continue
+			lib.remove_animation(name)
+		lib.add_animation(name, anim); n += 1
+	# Older code paths and previews that ask for the single "attack" get the new first swing.
+	if extra.has_animation("attack_1") and lib.get_animation("attack") != extra.get_animation("attack_1"):
+		if lib.has_animation("attack"): lib.remove_animation("attack")
+		lib.add_animation("attack", extra.get_animation("attack_1"))
+	return n
+
 func setup(model: Node3D, model_key: String, heavy_body: bool, unit_tempo: float) -> void:
 	key = model_key; heavy = heavy_body; tempo = unit_tempo
 	var players = model.find_children("*", "AnimationPlayer", true, false)
 	var skeletons = model.find_children("*", "Skeleton3D", true, false)
 	if players.is_empty() or skeletons.is_empty(): return
 	player = players[0]; skeleton = skeletons[0]
+	apply_clip_library(player, model_key)
 	for clip in CLIP_SET:
 		if player.has_animation(clip): clips[clip] = player.get_animation(clip); sources[clip] = clip
 	if not clips.has("idle"): return
@@ -350,7 +376,9 @@ func advance_slot(s: Dictionary, eff: float, remaining: float, stunned: bool, ne
 		var rate = tempo
 		if next_eta < left: rate = clampf(left / maxf(0.05, next_eta), tempo, 3.0)
 		s.t = minf(s.length, s.t + eff * rate)
-		if s.t >= s.length - 0.001: s.phase = "out"
+		# Finished, but the next swing is about to start: hold the last frame so the two swings
+		# cross-fade straight into each other instead of dipping toward idle in between.
+		if s.t >= s.length - 0.001 and next_eta > FADE_OUT: s.phase = "out"
 
 ## Where the clip should be after eff seconds of a windup that resolves in `remaining` seconds:
 ## play the anticipation at natural speed and hold it, then strike so contact lands on the release.

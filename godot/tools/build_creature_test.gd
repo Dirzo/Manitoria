@@ -105,7 +105,7 @@ func run() -> void:
 		var b: Vector3 = walk.track_get_key_value(root_track, walk.track_get_key_count(root_track) - 1)
 		check(Vector2(b.x - a.x, b.z - a.z).length() < 0.01, "walk travel stripped (%.4f left)" % Vector2(b.x - a.x, b.z - a.z).length())
 	# The animator accepts it, and loops the cycles (glTF itself carries no loop flag).
-	var anim = CombatAnimator.new(); anim.setup(built, "direwolf", false, 1.0)
+	var anim = CombatAnimator.new(); anim.setup(built, "build_test_beast", false, 1.0)   # no clip library for this key
 	check(anim.ok and anim.clip_for("attack", 0) == "attack_1", "CombatAnimator drives the built model")
 	check(walk.loop_mode == Animation.LOOP_LINEAR and ap.get_animation("idle").loop_mode == Animation.LOOP_LINEAR and ap.get_animation("attack_1").loop_mode == Animation.LOOP_NONE, "cycles loop in game, actions don't")
 	print("\n%s: %d failure(s)" % ["OK" if failures == 0 else "FAILED", failures])

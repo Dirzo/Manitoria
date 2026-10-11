@@ -34,6 +34,7 @@ func run() -> void:
 		get_root().add_child(model)
 		await process_frame
 		var ap: AnimationPlayer = model.find_children("*", "AnimationPlayer", true, false)[0]
+		CombatAnimator.apply_clip_library(ap, sp)
 		var sk: Skeleton3D = model.find_children("*", "Skeleton3D", true, false)[0]
 		var row = {"bones": sk.get_bone_count(), "clips": {}, "missing": [], "warnings": []}
 		for clip in SET:

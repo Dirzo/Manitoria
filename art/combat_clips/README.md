@@ -9,6 +9,23 @@ Record both in the table at the bottom as you go.
 
 Briefs: [minotaur](minotaur.md) · [direwolf](direwolf.md) · [wyvern](wyvern.md) · [naga](naga.md)
 
+## How the pilot clips were made: retargeting (default route)
+
+Meshy's animation presets are humanoid only; four-legged rigs get a walk and nothing else. So the pilot clips are retargeted instead, from [Mesh2Motion](../mesh2motion/README.md)'s public-domain (CC0) libraries onto each creature's existing Meshy rig. No re-rigging, no Meshy credits, and the `.glb` is never touched.
+
+1. List each clip's source in `godot/data/retarget_jobs.json`: the source clip and library (human, fox, horse, kaiju, snake, spider, dragon), plus optional tuning:
+   - `twist`: how much of the body's turn to keep, so spinning sword combos face the target.
+   - `amplify`: exaggerate subtle motion.
+   - `speed` and `trim`.
+   - `ground`: keep the feet on the floor.
+   - `roles`: drive only some chains.
+   - `ready` / `hit`: hand-picked contact points.
+   - `chains`: name the bones for rigs the shape rules misread, like the naga.
+2. Build: `godot --headless --path godot -s tools/retarget_creature.gd -- --species <creature>`. This writes `godot/assets/beasts/clips/<creature>.res`, which the game layers over the model's own clips.
+3. Review: `tools/clip_sheet.gd` renders contact sheets (it needs a display or `xvfb-run`). Then run `tools/anim_contact_probe.gd` and `tools/anim_audit.gd`.
+
+The Meshy export route below still works for humanoids, or for clips keyed by hand. `tools/build_creature.gd` merges those into the model.
+
 ## The 14 clips
 
 The game looks clips up by these exact names. Every name except the original five is optional, and the game falls back cleanly when one is missing, so you can import a creature halfway through and keep playing.
@@ -71,9 +88,11 @@ Where the current clips stand (`anim_audit`, share of the rig each clip moves): 
 
 ## Pilot log
 
-| Creature | Rig route | Clips from presets | Clips keyed by hand | Hours | Notes |
+| Creature | Rig route | Clips retargeted | Clips keyed by hand | Still on fallback | Notes |
 | --- | --- | --- | --- | --- | --- |
-| minotaur | | | | | |
-| direwolf | | | | | |
-| wyvern | | | | | |
-| naga | | | | | |
+| minotaur | existing rig, human library | 14 of 14 | 0 | none | Sword combos turn the body up to 145°, so attacks keep 30–50% of the turn. The heavy hit is a shield-break stagger: the knockback clip is a full fall-and-get-up. |
+| direwolf | existing rig, fox library (+ horse head-butt, kaiju hit) | 12 of 14 | 0 | `hit_heavy`, `stun` | The fox bite is subtle, so it's amplified 2×. The pounce and spawn come from the fox jump. |
+| wyvern | not started | 0 | 0 | all | The dragon library only has flight, idle and walk, so attacks need keying or another source. |
+| naga | existing rig with named chains, human library on the upper body | 12 of 14 | 0 | `run`, `spawn`; the walk is the original | Her trident is in her left hand, so `attack_2` is a left jab. The tail and hair don't move yet; a spring-bone pass would fix both. |
+
+Clip picking and review took under an hour per creature once the retargeter existed. Contact points were picked by eye from 12-frame strips where the probe was fooled by fast wind-ups.

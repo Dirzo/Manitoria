@@ -55,6 +55,7 @@ func run() -> void:
 		var skeletons = model.find_children("*", "Skeleton3D", true, false)
 		if players.is_empty() or skeletons.is_empty(): model.queue_free(); continue
 		var ap: AnimationPlayer = players[0]
+		CombatAnimator.apply_clip_library(ap, key)
 		var sk: Skeleton3D = skeletons[0]
 		var tips = []
 		for i in sk.get_bone_count():
@@ -81,6 +82,17 @@ func run() -> void:
 			result[key][clip] = marks
 			if verbose: print(key, " ", clip, " ", marks, " curve=", speeds.map(func(s): return snappedf(s, 0.1)))
 		model.queue_free()
+	# Hand-picked landmarks for retargeted clips (data/retarget_jobs.json) override the measurement.
+	var jobs = JSON.parse_string(FileAccess.get_file_as_string("res://data/retarget_jobs.json")) if FileAccess.file_exists("res://data/retarget_jobs.json") else {}
+	for sp in jobs:
+		if not jobs[sp] is Dictionary or not result.has(sp): continue
+		for clip in jobs[sp].get("clips", {}):
+			var c = jobs[sp].clips[clip]
+			if c.has("hit") and result[sp].has(clip):
+				result[sp][clip].hit = float(c.hit); result[sp][clip].ready = float(c.get("ready", c.hit))
+				result[sp][clip].resume = maxf(float(c.hit), float(result[sp][clip].get("resume", c.hit)))
+				result[sp][clip]["picked"] = true
+				if clip == "attack_1" and result[sp].has("attack"): result[sp]["attack"] = result[sp][clip].duplicate()
 	var file = FileAccess.open("res://data/anim_contact.json", FileAccess.WRITE)
 	file.store_string(JSON.stringify(result, "\t", true))
 	print("Wrote clip landmarks for ", result.size(), " models")
