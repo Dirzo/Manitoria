@@ -110,12 +110,11 @@ const EFFECTS = {
 static func load_data() -> void:
  if species.is_empty():
   species = JSON.parse_string(FileAccess.get_file_as_string("res://data/species.json"))
-  species.wendigo.ability_description = "Frenzies for 5s: +22% attack and speed, healing for 45% of damage dealt."
-  species.nemean.ability_description = "Taunts nearby foes and rallies allies with +22% attack and speed. Its hide reduces incoming damage by 16%."
-  species.harpy.ability_description = "Damages nearby foes and silences their abilities for 2.5 seconds."
-  species.hydra.ability_description = "Below 72% health, restores 23% maximum health and rallies for 4s. Basic attacks cleave nearby foes."
-  species.pegasus.ability_description = "Nearby allies gain 22% attack and movement speed for 5 seconds."
-  species.direwolf.ability_description = "Summons two pups for 16 seconds. The pack pressures wounded foes."
+  # v0.76: names and text come from the signature data.
+  for sp in species:
+   var sig = Signatures.of(sp)
+   species[sp].ability_name = sig.name
+   species[sp].ability_description = Signatures.fill(str(sig.text), {}, {})
 
 static func line(sp: String) -> String:
  load_data()
@@ -125,7 +124,7 @@ static func line(sp: String) -> String:
 
 static func make_hero(sp: String, id: String, nickname: String, level: int = 1) -> Dictionary:
  load_data()
- var h = {"id": id, "sp": sp, "name": nickname, "level": level, "xp": 0, "signature_rank": 1, "learned": {}, "vigor": 0, "force": 0, "slot": -1, "bouts": 0, "wins": 0, "kills": 0, "impact": 0.0, "pending": [], "history": [], "evolution": "", "rewards": [], "last_offers": [], "progression_version": 2}
+ var h = {"id": id, "sp": sp, "name": nickname, "level": level, "xp": 0, "signature_rank": 1, "learned": {}, "vigor": 0, "force": 0, "slot": -1, "bouts": 0, "wins": 0, "kills": 0, "impact": 0.0, "pending": [], "history": [], "evolution": "", "rewards": [], "last_offers": [], "progression_version": PROGRESSION_VERSION, "cards": {}}
  # Every champion is rolled fresh each run: a random temperament and random stat genes.
  var rng = RandomNumberGenerator.new(); rng.seed = hash(id + "|identity|" + run_salt)
  h.trait = Traits.roll(rng)
@@ -135,8 +134,19 @@ static func make_hero(sp: String, id: String, nickname: String, level: int = 1) 
 # ---------------------------------------------------------------- stat genes
 ## Set once per run (from the campaign seed) so every new game deals different traits and rolls.
 static var run_salt := ""
-const ROLL_KEYS = ["hp", "attack", "armor", "haste", "speed", "potency"]
-const ROLL_NAMES = {"hp": "Health", "attack": "Attack damage", "armor": "Armor", "haste": "Attack speed", "speed": "Move speed", "potency": "Ability power"}
+const ROLL_KEYS = ["hp", "attack", "armor", "haste", "speed", "potency", "size", "crit"]
+## Roll keys kept from older saves; v0.76 shows them as the six stats (armor -> Resistance, speed -> Mana).
+const ROLL_NAMES = {"hp": "HP", "attack": "AD", "armor": "Resistance", "haste": "AS", "speed": "Mana", "potency": "AP", "size": "Size", "crit": "Crit"}
+## v0.77: Size and Crit are stats 7 and 8, set by role. Size is a body multiplier; Crit a crit chance.
+const ROLE_SIZE := {"Tank": 1.15, "Warden": 1.12, "Bruiser": 1.08, "Diver": 1.0, "Duelist": 1.0, "Skirmisher": 0.95, "Assassin": 0.92, "Trickster": 0.95, "Ranged": 0.95, "Artillery": 1.0, "Caster": 0.92, "Controller": 0.95, "Support": 0.92, "Summoner": 0.95}
+const ROLE_CRIT := {"Tank": 0.02, "Warden": 0.04, "Bruiser": 0.08, "Diver": 0.12, "Duelist": 0.15, "Skirmisher": 0.15, "Assassin": 0.20, "Trickster": 0.12, "Ranged": 0.15, "Artillery": 0.12, "Caster": 0.04, "Controller": 0.04, "Support": 0.02, "Summoner": 0.04}
+const SIZE_CAP := 2.0
+const SIZE_CAP_LEGEND := 2.4
+const CRIT_DAMAGE := 2.0
+const CRIT_DAMAGE_CAP := 6.0
+
+static func base_size(sp: String) -> float:
+ load_data(); return float(ROLE_SIZE.get(species[sp].role, 1.0))
 const ROLL_MAX = 31
 ## How much each stat matters to a role. Power level only rewards the rolls a role actually uses,
 ## so a tank with great damage rolls but poor health and armor is still a poor tank.
@@ -180,7 +190,13 @@ static func rolls(hero: Dictionary) -> Dictionary:
  if not (r is Dictionary and r.size() == ROLL_KEYS.size()):
   # Older saves and generated stand-ins: stable rolls from the champion's id.
   var rng = RandomNumberGenerator.new(); rng.seed = hash(str(hero.get("id", "")) + "|rolls|" + run_salt)
-  r = roll_stats(rng, roll_floor(str(hero.get("sp", ""))))
+  if r is Dictionary and r.size() == 6:
+   # v0.76 saves: keep the six rolls, add Size and Crit rolls.
+   r = r.duplicate()
+   var extra = roll_stats(rng, roll_floor(str(hero.get("sp", ""))))
+   r.size = extra.size; r.crit = extra.crit
+  else:
+   r = roll_stats(rng, roll_floor(str(hero.get("sp", ""))))
  var f = roll_floor(str(hero.get("sp", "")))
  if f > 0 and r.values().any(func(v): return int(v) < f):
   r = r.duplicate()
@@ -188,9 +204,9 @@ static func rolls(hero: Dictionary) -> Dictionary:
  return r
 
 ## How much a stat has grown from levelling.
-static func roll_growth(hero: Dictionary, key: String) -> int:
- var lvl = int(hero.get("level", 1)) - 1
- return int(floor(lvl * (GROWTH_KEY if role_weights(str(hero.get("sp", ""))).has(key) else GROWTH_OTHER)))
+## v0.76: rolls no longer grow; level-up cards replace roll growth.
+static func roll_growth(_hero: Dictionary, _key: String) -> int:
+ return 0
 
 ## The roll as it stands now (base + growth). This is what the stats actually use.
 static func roll_now(hero: Dictionary, key: String) -> int:
@@ -215,7 +231,7 @@ static func roll_total(hero: Dictionary) -> int:
 static func role_weights(sp: String) -> Dictionary:
  load_data()
  var build=SkillScaling.build_weights({"sp":sp,"learned":{}})
- var weights={"hp":build.hp+0.10,"attack":build.ad,"armor":build.armor,"haste":build["as"],"speed":0.10,"potency":build.ap}
+ var weights={"hp":build.hp,"attack":build.ad,"armor":build.armor,"haste":build["as"],"speed":build.cd,"potency":build.ap}
  var total=0.0
  for value in weights.values():total+=value
  for key in weights:weights[key]/=total
@@ -252,66 +268,88 @@ static func roll_grade(v: int) -> String:
 static func stats(hero: Dictionary, quality: float = 1.0) -> Dictionary:
  load_data()
  var d = species[hero.sp]
- var level = hero.level
+ var level = int(hero.level); var lv = float(level - 1)
  var tierf = League.stat_factor(hero.sp)   # draft tier (Legendary / Epic / Common) and per-species balance
- var result = {"hp": (450.0 + (level - 1) * 24.0) * d.hp * tierf * quality * (1.0 + hero.get("vigor", 0) * 0.10), "attack": (43.0 + (level - 1) * 2.6) * d.atk * tierf * quality * (1.0 + hero.get("force", 0) * 0.08), "armor": clampf(0.08 + d.def * 0.09, 0.10, 0.28), "speed": d.mv * 0.036, "range": maxf(0.7, d.range / 44.0), "interval": 1.0 / (d.as * 0.85), "cooldown": d.cd}
- if result.range > 2.0:
-  result.range *= 1.55 if d.role == "Artillery" else 1.35
- if d.role == "Artillery":
-  # Fewer, weightier basic shots. Longer commitment keeps melee counterplay.
-  result.interval *= 1.25
+ var curve = Traits.curve(hero)
+ # v0.76: six stats. Level adds +3% base HP and +2% base AD; level-up cards add the rest.
+ var base_hp = 520.0 * d.hp * tierf * quality * curve
+ var base_ad = 39.6 * d.atk * tierf * quality * curve
+ var base_res = clampf(0.08 + d.def * 0.09, 0.10, 0.28)
+ base_res = base_res / (1.0 - base_res) * 100.0
+ var hp = base_hp * (1.0 + 0.03 * lv)
+ var ad = base_ad * (1.0 + 0.02 * lv)
+ var aspd = d["as"] * 0.85 * (0.8 if d.role == "Artillery" else 1.0)
+ var res = base_res; var ap = 100.0; var mana = 1.0
+ # Birth rolls: armor roll -> Resistance, move-speed roll -> Mana, potency roll -> AP.
+ hp *= roll_mult(hero, "hp"); ad *= roll_mult(hero, "attack"); aspd *= roll_mult(hero, "haste")
+ res += roll_norm_now(hero, "armor") * 5.0; mana += roll_norm_now(hero, "speed") * 0.10; ap += roll_norm_now(hero, "potency") * 12.0
+ # Temperament.
+ hp *= Traits.mod(hero, "hp"); ad *= Traits.mod(hero, "attack"); aspd *= Traits.mod(hero, "haste")
+ res += Traits.mod(hero, "armor") * ARMOR_TO_RES; ap *= Traits.mod(hero, "potency")
+ mana *= Traits.mod(hero, "speed") / Traits.mod(hero, "cd")
+ # Items (old fractions convert: armor -> Resistance, move speed and cooldowns -> Mana).
+ var f = Forge.totals(hero)
+ hp += f.hp; ad += f.ad; aspd *= 1.0 + f["as"]; res += f.res; ap += f.ap; mana += f.mana
  for item in Campaign.EQUIPMENT:
   if item.id not in hero.get("equipment", {}).values(): continue
-  result.hp *= 1.0 + item.get("hp", 0.0)
-  result.attack *= 1.0 + item.get("attack", 0.0)
-  result.speed *= 1.0 + item.get("speed", 0.0)
-  result.interval /= 1.0 + item.get("haste", 0.0)
-  result.armor += item.get("armor", 0.0)
- # Temperament, scaling curve and forged items.
- result.hp *= roll_mult(hero, "hp"); result.attack *= roll_mult(hero, "attack")
- result.armor += roll_norm_now(hero, "armor") * 0.03
- result.interval /= roll_mult(hero, "haste"); result.speed *= roll_mult(hero, "speed")
- result.interval /= 1.0 + hero.get("agility", 0) * 0.08
- var curve = Traits.curve(hero)
- result.base_hp=(450.0+(level-1)*24.0)*d.hp*tierf*quality*curve
- result.base_armor=clampf(0.08+d.def*0.09,0.10,0.28)
- result.base_interval=1.0/(d.as*0.85)*(1.25 if d.role=="Artillery" else 1.0)
- result.skill_base=(43.0+(level-1)*2.6)*d.atk*tierf*quality*curve
- result.ability_power=result.skill_base*spell_factor(hero)*(1.0+hero.get("focus",0)*0.08)
- result.hp *= Traits.mod(hero, "hp") * curve
- result.attack *= Traits.mod(hero, "attack") * curve
- result.armor += Traits.mod(hero, "armor")
- result.speed *= Traits.mod(hero, "speed")
- result.interval /= Traits.mod(hero, "haste")
- var f = Forge.totals(hero)
- result.hp *= 1.0 + f.hp; result.attack *= 1.0 + f.attack; result.armor = clampf(result.armor + f.armor, 0.0, 0.45)
- result.interval /= 1.0 + f.haste; result.speed *= 1.0 + f.speed
- # Species evolutions (level 8): stat changes that define the niche.
+  hp *= 1.0 + item.get("hp", 0.0); ad *= 1.0 + item.get("attack", 0.0); aspd *= 1.0 + item.get("haste", 0.0)
+  res += item.get("armor", 0.0) * ARMOR_TO_RES; mana += item.get("speed", 0.0)
+ # Evolution stat changes.
  if Evolutions.has(str(hero.get("evolution", ""))):
-  result.hp *= Evolutions.mod(hero, "hp"); result.attack *= Evolutions.mod(hero, "attack")
-  result.speed *= Evolutions.mod(hero, "speed"); result.interval /= Evolutions.mod(hero, "haste")
-  result.armor = clampf(result.armor + Evolutions.mod(hero, "armor", 0.0), 0.0, 0.5)
- match hero.get("evolution", ""):
-  "ravager": result.attack *= 1.20; result.hp *= 0.90; result.speed *= 1.15
-  "guardian": result.hp *= 1.15; result.armor += 0.04; result.attack *= 0.90
-  "arcanist": result.attack *= 0.85; result.interval *= 1.15
- result.hp*=1.0+hero.get("legacy_hp",0.0)
- result.attack*=1.0+hero.get("legacy_attack",0.0)
- if is_awakened(hero):result.attack*=0.9
- if hero.get("apex", "") == "apex_stats": result.hp *= 1.0 + APEX_STAT; result.attack *= 1.0 + APEX_STAT
- # Physical kits face full armor mitigation; keep their primary damage competitive with spells.
- if SkillScaling.audited(hero.sp,"signature").get("build_path","ap")=="ad":result.attack*=1.12
+  hp = hp * Evolutions.mod(hero, "hp") + Evolutions.flat(hero, "hp_flat")
+  ad = (ad + Evolutions.flat(hero, "ad")) * Evolutions.mod(hero, "ad_pct"); aspd *= Evolutions.mod(hero, "as")
+  res += Evolutions.flat(hero, "res"); ap += Evolutions.flat(hero, "ap"); mana += Evolutions.flat(hero, "mana")
+ # Level-up cards.
+ hp += StatCards.total(hero, "hp"); ad += StatCards.total(hero, "ad"); aspd *= 1.0 + StatCards.total(hero, "as")
+ ap += StatCards.total(hero, "ap"); mana += StatCards.total(hero, "mana"); res += StatCards.total(hero, "res")
+ # Legacy growth fields from older saves.
+ hp *= 1.0 + hero.get("vigor", 0) * 0.10 + hero.get("legacy_hp", 0.0)
+ ad *= 1.0 + hero.get("force", 0) * 0.08 + hero.get("legacy_attack", 0.0)
+ aspd *= 1.0 + hero.get("agility", 0) * 0.08; ap += hero.get("focus", 0) * 8.0
+ if is_awakened(hero): hp *= 1.10; ad *= 1.10; ap += 10.0
+ match str(hero.get("apex", "")):
+  "apex_body": hp *= 1.0 + APEX_STAT; ad *= 1.0 + APEX_STAT; ap *= 1.0 + APEX_STAT
+  "apex_instinct": aspd *= 1.15; mana += 0.15
+ # v0.77: Size and Crit.
+ var born = base_size(hero.sp)
+ var size = born * (1.0 + roll_norm_now(hero, "size") * 0.06) * Traits.mod(hero, "size") + StatCards.total(hero, "size") + f.size
+ var crit = float(ROLE_CRIT.get(d.role, 0.05)) + roll_norm_now(hero, "crit") * 0.05 + Traits.mod_add(hero, "crit") + StatCards.total(hero, "crit") + f.crit
+ var crit_damage = CRIT_DAMAGE + f.critdmg
+ if Evolutions.has(str(hero.get("evolution", ""))): size += Evolutions.flat(hero, "size"); crit += Evolutions.flat(hero, "crit")
+ var cap = SIZE_CAP_LEGEND if f.size_cap > SIZE_CAP else SIZE_CAP
+ size = clampf(size, 0.7, cap)
+ if crit > 1.0: crit_damage += crit - 1.0; crit = 1.0
+ crit_damage = minf(crit_damage, f.critdmg_cap if f.critdmg_cap > 0.0 else CRIT_DAMAGE_CAP)
+ # Size above the champion's natural build adds HP and AD (+5% each per +10% Size).
+ var grow = maxf(0.0, size - born) * 0.5 * f.size_k
+ hp *= (1.0 + grow) * f.hp_mult; ad *= (1.0 + grow) * f.ad_mult; aspd *= f.as_mult
+ res = maxf(0.0, res); aspd = clampf(aspd, 0.2, 8.0); mana = maxf(0.2, mana)
+ var result = {"hp": hp, "attack": ad, "ad": ad, "as": aspd, "ap": ap, "mana": mana, "res": res, "size": size, "born_size": born, "crit": crit, "crit_damage": crit_damage, "size_k": f.size_k,
+  "armor": res / (100.0 + res), "speed": d.mv * 0.036 * Evolutions.mod(hero, "speed"),
+  "range": maxf(0.7, d.range / 44.0), "interval": 1.0 / aspd, "cooldown": 0.0,
+  "base_hp": base_hp, "base_armor": base_res / (100.0 + base_res), "base_interval": 1.0 / (d["as"] * 0.85), "base_as": d["as"] * 0.85 * (0.8 if d.role == "Artillery" else 1.0)}
+ if result.range > 2.0:
+  result.range *= 1.55 if d.role == "Artillery" else 1.35
+ # Old-scale spell magnitude, still used by item and relic procs.
+ result.skill_base = base_ad * (1.0 + 0.026 * lv) * 1.09
+ result.ability_power = result.skill_base * ap / 100.0
+ var m = Signatures.mana(hero)
+ result.start_mana = m[0]; result.max_mana = m[1]
+ if str(hero.get("apex", "")) == "apex_instinct": result.start_mana = m[1]
  return result
+
+## Old item/relic armor fractions become Resistance points (+0.05 armor = +8 Resistance).
+const ARMOR_TO_RES := 160.0
 
 ## Second evolution (Apex) at level 16: one permanent choice.
 const APEX_LEVEL := 16
 const APEX_STAT := 0.15
-const APEX_SKILL := 0.25
 const APEX := {
- "apex_stats": {"name": "Apex Body", "summary": "+15% health, damage and ability power", "description": "A permanent +15% to health, damage and ability power."},
- "apex_skill": {"name": "Apex Mastery", "summary": "Every skill +1 rank and +25% power", "description": "Every skill this champion owns (signature included) gains a rank where it can and +25% power."},
- "apex_slot": {"name": "Apex Arsenal", "summary": "Unlock a 5th item slot", "description": "Carry a fifth item. Pairs with any build."},
+ "apex_body": {"name": "Apex Body", "summary": "+15% HP, AD and AP", "description": "A permanent +15% to HP, AD and AP."},
+ "apex_sig": {"name": "Apex Signature", "summary": "Signature +25%, max mana −10", "description": "Every number in the signature is 25% stronger and it costs 10 less mana."},
+ "apex_instinct": {"name": "Apex Instinct", "summary": "+15% AS and Mana, first cast instant", "description": "+15% AS and +15% Mana, and the first cast of every fight starts at full mana."},
 }
+const APEX_LEGACY := {"apex_stats": "apex_body", "apex_skill": "apex_sig", "apex_slot": "apex_body"}
 
 ## Item slots: 3, a 4th after the first evolution (or an awakening), a 5th from Apex Arsenal.
 static func item_slots(hero: Dictionary) -> int:
@@ -420,7 +458,7 @@ const SIGNATURE_SUMMARY = {"gore":"Charge + stun", "bulwark":"Taunt + stone shie
 
 static func signature_summary(sp: String) -> String:
  load_data()
- return SIGNATURE_SUMMARY.get(species[sp].ab, species[sp].ability_name)
+ return "%s · %s" % [Signatures.of(sp).name, Signatures.of(sp).builds]
 
 ## Awakening (from Gold-chest unlocks) is separate from the level-10 evolution, so a champion keeps both.
 static func is_awakened(hero: Dictionary) -> bool:
@@ -434,12 +472,12 @@ static func evolution_info(hero: Dictionary) -> Dictionary:
 static func evolution_color(hero: Dictionary) -> Color:
  return Color(evolution_info(hero).get("color","ffffff"))
 
+## v0.76: no cooldowns; kept as the inverse of Mana gain for older callers.
 static func cooldown_factor(hero: Dictionary) -> float:
- return clampf((0.85 if hero.get("evolution", "") == "arcanist" else 1.0) * Evolutions.mod(hero, "cd") * Traits.mod(hero, "cd") * Forge.totals(hero).cd,0.60,1.50)
+ return clampf(1.0 / float(stats(hero).mana), 0.40, 2.0)
 
 static func spell_factor(hero: Dictionary) -> float:
- var apex = {"apex_stats": 1.0 + APEX_STAT, "apex_skill": 1.0 + APEX_SKILL}.get(str(hero.get("apex", "")), 1.0)
- return apex * (1.20 if hero.get("evolution", "") == "arcanist" else 1.0) * Evolutions.mod(hero, "potency") * roll_mult(hero, "potency") * Traits.mod(hero, "potency") * (1.0 + Forge.totals(hero).potency)
+ return stats(hero).ap / 100.0
 
 ## A legendary occupies its own one-skill slot; the regular four-slot kit is unchanged.
 static func regular_learned_count(hero: Dictionary) -> int:
@@ -460,90 +498,32 @@ static func legendary_card(sp: String) -> Dictionary:
 static func choices(hero: Dictionary, won: bool, rng: RandomNumberGenerator, reward_level: int = -1) -> Array:
  var out = []
  var level = int(hero.level) if reward_level < 0 else reward_level
- if level >= EVOLVE_LEVEL and hero.get("evolution", "").is_empty():
-  # Three evolutions unique to this species, each defining a different playstyle.
+ if level >= EVOLVE_LEVEL and str(hero.get("evolution", "")).is_empty():
+  # Three evolutions unique to this species, each pointing at a different build.
   for key in Evolutions.options(hero.sp):
    var e = Evolutions.entry(key)
-   out.append({"type":"evolution", "key":key, "name":e.name, "summary":e.niche.to_upper() + " · " + e.text, "description":e.niche + ". " + e.text, "rarity":"Evolution", "bonus":1.0})
+   var t = Evolutions.text(key, hero)
+   out.append({"type":"evolution", "key":key, "name":e.name, "summary":str(e.tag).to_upper() + " · " + t, "description":e.tag + ". " + t, "rarity":"Evolution", "bonus":1.0})
   if not out.is_empty(): return out
-  for key in EVOLUTIONS:
-   var e = EVOLUTIONS[key]
-   out.append({"type":"evolution", "key":key, "name":species[hero.sp].n + " · " + e.name, "description":e.description, "rarity":"Evolution", "bonus":1.0})
-  return out
  if level >= APEX_LEVEL and str(hero.get("apex", "")).is_empty() and not str(hero.get("evolution", "")).is_empty():
   for key in APEX:
    out.append({"type":"apex", "key":key, "name":APEX[key].name, "summary":"APEX · " + APEX[key].summary, "description":"Second evolution. " + APEX[key].description, "rarity":"Evolution", "bonus":1.0})
   return out
- # Upgrades always follow the skills this champion already chose; new skills only fill empty slots.
- var upgrades = []
- for key in hero.learned:
-  if key == "100": continue
-  var r = int(hero.learned[key])
-  if r >= MAX_RANK: continue
-  var a = learned_ability(hero.sp, int(key))
-  upgrades.append({"type":"ability", "key":key, "name":a.name + " · Rank %d" % (r + 1), "summary":"Upgrade your %s: +20%% power, faster" % a.name, "description":a.description + " Rank %d: +20%% skill power and 8%% shorter cooldown." % (r + 1), "rarity":"Uncommon", "bonus":1.0, "upgrade":true})
- if hero.signature_rank < MAX_RANK:
-  upgrades.append({"type":"signature", "key":"signature", "name":species[hero.sp].ability_name + " · Rank %d" % (hero.signature_rank + 1), "summary":"Upgrade your signature: +20% power, faster", "description":"Your signature gains 20% skill power and an 8% shorter cooldown. "+SkillScaling.description(hero.sp,species[hero.sp].ab), "rarity":"Uncommon", "bonus":1.0, "upgrade":true})
- var discoveries = []
- if regular_learned_count(hero) + 1 < ABILITY_SLOTS:
-  for i in range(DISCOVERY_CHOICES):
-   if hero.learned.has(str(i)): continue
-   var a = learned_ability(hero.sp, i)
-   discoveries.append({"type":"ability", "key":str(i), "name":a.name, "summary":"NEW SKILL · " + a.summary, "description":a.description + " Fills an empty ability slot.", "rarity":"Uncommon", "bonus":1.0})
- for i in range(discoveries.size()-1, 0, -1):
-  var j = rng.randi_range(0, i); var temp = discoveries[i]; discoveries[i] = discoveries[j]; discoveries[j] = temp
- for i in range(upgrades.size()-1, 0, -1):
-  var j = rng.randi_range(0, i); var temp = upgrades[i]; upgrades[i] = upgrades[j]; upgrades[j] = temp
- # With open slots: two new skills and one upgrade of something you own. Full: all upgrades.
- if not discoveries.is_empty():
-  var recent = hero.get("last_offers", []).duplicate(); recent.append_array(hero.get("offered_discoveries",[]))
-  var fresh = discoveries.filter(func(c): return c.key not in recent); var repeat = discoveries.filter(func(c): return c.key in recent)
-  discoveries = fresh + repeat
-  out = discoveries.slice(0, 3 if upgrades.is_empty() else 2) + upgrades.slice(0, 1)
- else:
-  out = upgrades.slice(0, 3)
- if out.is_empty():
-  var spell_growth = ["focus", "Arcane Affinity", "+8% ability potency."]
-  if SkillScaling.audited(hero.sp,"signature").get("build_path","ap") == "ad":
-   spell_growth = ["agility", "Relentless Tempo", "+8% attack speed."]
-  for t in [["vigor", "Iron Vitality", "+10% maximum health."], ["force", "Killing Instinct", "+8% attack."], spell_growth]:
-   out.append({"type":t[0], "key":t[0], "name":t[1], "summary":t[2], "description":"Every skill is at max rank. " + t[2], "rarity":"Common", "bonus":1.0})
- for card in out:
-  if card.type in ["ability","signature"]:
-   var roll=rng.randf()
-   var rare_chance = (0.22 if won else 0.16) if level>=5 else (0.31 if won else 0.21)
-   if roll<rare_chance:
-    card.rarity="Rare";card.bonus=1.1;card.description+=" Rare: +30% skill power and a luminous spell effect."
- # One rare discovery roll per reward, independent of regular card upgrades.
- if level>=5 and not hero.learned.has("100") and rng.randf()<(0.05 if won else 0.03):
-  out[rng.randi_range(0,out.size()-1)] = legendary_card(hero.sp)
- return out
+ # v0.76: every other level-up deals three stat cards at random rarities.
+ return StatCards.draw(rng, level)
 
 static func apply_choice(hero: Dictionary, card: Dictionary) -> void:
- if card.type in ["ability","signature"]:
-  if card.type=="ability" and card.key!="100" and not hero.learned.has(card.key) and regular_learned_count(hero)+1>=ABILITY_SLOTS:return
-  if not hero.has("skill_rarity"):hero.skill_rarity={}
-  var previous=RarityStyle.for_skill(hero,"signature" if card.type=="signature" else "ability:"+card.key)
-  if previous!="Legendary" and (card.rarity=="Legendary" or previous!="Rare"):hero.skill_rarity[card.key]=card.rarity
  match card.type:
-  "ability":
-   if card.key!="100" and not hero.learned.has(card.key) and regular_learned_count(hero)+1 >= ABILITY_SLOTS: return
-   hero.learned[card.key] = 1 if card.key=="100" else mini(MAX_RANK, int(hero.learned.get(card.key, 0)) + 1)
-   hero["ability_bonus_" + card.key] = maxf(hero.get("ability_bonus_" + card.key, 1.0), card.bonus)
-  "signature":
-   hero.signature_rank = mini(MAX_RANK, hero.signature_rank + 1)
-   hero.signature_bonus=maxf(hero.get("signature_bonus",1.0),card.bonus)
+  "stat": StatCards.apply(hero, card)
   "evolution":
-   if not hero.get("evolution", "").is_empty(): return
+   if not str(hero.get("evolution", "")).is_empty(): return
    hero.evolution = card.key
   "apex":
    if not str(hero.get("apex", "")).is_empty(): return
    hero.apex = card.key
-   if card.key == "apex_skill":
-    hero.signature_rank = mini(MAX_RANK, hero.signature_rank + 1)
-    for k in hero.learned:
-     if k!="100":hero.learned[k] = mini(MAX_RANK, int(hero.learned[k]) + 1)
   "vigor", "force", "focus", "agility": hero[card.type] = int(hero.get(card.type, 0)) + 1
+  _: return
+ if not hero.has("history"): hero.history = []
  hero.history.append(card.name)
 
 static func queue_reward(hero: Dictionary, level: int, won: bool, seed_value: int) -> void:
@@ -558,27 +538,52 @@ static func materialize_reward(hero: Dictionary) -> void:
  var rng = RandomNumberGenerator.new(); rng.seed = int(reward.seed)
  hero.pending[0] = choices(hero, reward.won, rng, int(reward.level))
 
+const PROGRESSION_VERSION := 3
+
 static func migrate_progression(hero: Dictionary) -> void:
- # Convert only unchosen legacy Legendary upgrades. Already learned skills retain balance.
- if not hero.get("legendary_offers_v1",false):
-  var replaced = false
-  for group in hero.get("pending",[]):
-   for i in range(group.size()):
-    if group[i].get("rarity","") == "Legendary" and group[i].get("type","") in ["ability","signature"]:
-     if not hero.learned.has("100") and not replaced:
-      group[i] = legendary_card(hero.sp); replaced = true
-     else:
-      group[i].rarity = "Rare";group[i].bonus = 1.1
-      group[i].description = group[i].description.split(" Legendary:")[0]+" Rare: +30% skill power and a luminous spell effect."
-  hero.legendary_offers_v1 = true
- if hero.get("progression_version", 0) >= 2: return
- var count = hero.get("pending", []).size()
- hero.pending = []; hero.rewards = []; hero.last_offers = []
- hero.evolution = hero.get("evolution", "")
- hero.progression_version = 2
- # Existing high-level heroes receive their missed evolution once, without a reset.
- if hero.level >= EVOLVE_LEVEL and hero.evolution.is_empty(): queue_reward(hero, EVOLVE_LEVEL, false, hash(hero.id + "evolution"))
- for i in range(count): queue_reward(hero, maxi(2, int(hero.level)-count+i+1), false, hash(hero.id + str(i)))
+ if int(hero.get("progression_version", 0)) >= PROGRESSION_VERSION: return
+ # v0.76: skills, ranks and discoveries are gone. Past level-ups become auto-picked stat cards,
+ # which the player may reset once for free. Level, rolls, evolution and items stay.
+ var pending_count = hero.get("pending", []).size()
+ hero.learned = {}; hero.signature_rank = 1; hero.erase("skill_rarity"); hero.erase("signature_bonus")
+ for k in hero.keys().duplicate():
+  if str(k).begins_with("ability_bonus_"): hero.erase(k)
+ hero.apex = APEX_LEGACY.get(str(hero.get("apex", "")), str(hero.get("apex", "")))
+ if str(hero.get("evolution", "")) in ["ravager", "guardian", "arcanist", "ascended"]:
+  if str(hero.evolution) == "ascended": hero.awakened = true
+  hero.evolution = ""
+ hero.cards = {}; hero.pending = []; hero.rewards = []; hero.last_offers = []
+ hero.progression_version = PROGRESSION_VERSION
+ var lvl = int(hero.get("level", 1))
+ var rng = RandomNumberGenerator.new(); rng.seed = hash(str(hero.get("id", "")) + "|v076")
+ for l in range(2, lvl - pending_count + 1):
+  if (l == EVOLVE_LEVEL) or (l == APEX_LEVEL): continue
+  var cards = StatCards.draw(rng, l)
+  StatCards.apply(hero, cards[StatCards.auto_pick(hero, cards)])
+ hero.card_reset = true
+ if lvl >= EVOLVE_LEVEL and str(hero.evolution).is_empty(): queue_reward(hero, EVOLVE_LEVEL, false, hash(str(hero.id) + "evolution"))
+ if lvl >= APEX_LEVEL and str(hero.get("apex", "")).is_empty(): queue_reward(hero, APEX_LEVEL, false, hash(str(hero.id) + "apex"))
+ for i in range(pending_count): queue_reward(hero, maxi(2, lvl - pending_count + i + 1), false, hash(str(hero.id) + str(i)))
+
+## Undo every stat card and redraw them as fresh picks (the one-time free reset for migrated saves).
+static func reset_cards(hero: Dictionary) -> bool:
+ if not bool(hero.get("card_reset", false)): return false
+ hero.card_reset = false; hero.cards = {}
+ var lvl = int(hero.get("level", 1))
+ for l in range(2, lvl + 1):
+  if l == EVOLVE_LEVEL or l == APEX_LEVEL: continue
+  queue_reward(hero, l, false, hash(str(hero.id) + "|reset|" + str(l)))
+ return true
 
 static func xp_needed(level: int) -> int:
  return 100 + (level - 1) * 30
+
+## Rivals, recruits and monsters arrive with their level-ups already picked (signature-focused).
+static func auto_cards(h: Dictionary, seed_text: String) -> void:
+ h.learned = {}; h.signature_rank = 1; h.cards = {}
+ var rng = RandomNumberGenerator.new(); rng.seed = hash(seed_text + "|cards|" + run_salt)
+ for l in range(2, int(h.level) + 1):
+  if l == EVOLVE_LEVEL or l == APEX_LEVEL: continue
+  var cards = StatCards.draw(rng, l)
+  StatCards.apply(h, cards[StatCards.auto_pick(h, cards)])
+ if int(h.level) >= APEX_LEVEL and str(h.get("apex", "")).is_empty(): h.apex = APEX.keys()[rng.randi_range(0, APEX.size() - 1)]

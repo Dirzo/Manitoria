@@ -41,8 +41,8 @@ static func on_cast(sim: BattleSim, u: Dictionary) -> void:
   var allies=sim.living(u.team,false).filter(func(a):return a.uid!=u.uid and a.pos.distance_to(u.pos)<=4.0)
   allies.sort_custom(func(a,b):return a.pos.distance_squared_to(u.pos)<b.pos.distance_squared_to(u.pos))
   if not allies.is_empty() and ready(sim,u,"totem",6.0): ward(sim,u,allies[0],u.max_hp*0.05,"totem")
- if has(u,"starheart") and str(u.credit).begins_with("ability:") and u.cd>0 and ready(sim,u,"starheart",4.0):
-  sim.track(u,"cooldown_recovered",minf(u.cd,1.5),"item:starheart");u.cd=maxf(0,u.cd-1.5);proc(sim,u,"starheart",u)
+ if has(u,"starheart") and str(u.credit)=="signature" and ready(sim,u,"starheart",4.0):
+  sim.track(u,"cooldown_recovered",15.0,"item:starheart");sim.add_mana(u,15.0);proc(sim,u,"starheart",u)
 
 static func on_heal(sim: BattleSim, u: Dictionary, target: Dictionary, actual: float, credit: String) -> void:
  if actual<=0 or u.team!=target.team or u.uid==target.uid or not u.alive or str(credit).begins_with("item:"): return

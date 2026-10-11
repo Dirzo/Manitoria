@@ -314,7 +314,18 @@ static func event_sound(e: Dictionary, unit: Dictionary) -> Dictionary:
    if not e.has("effect") or e.get("credit","") == "basic": return result
    result.key = "impact_stone" if effect in ["stone","quake"] else "impact_arcane"
    result.gain = -14 if e.get("small",false) else -10; result.priority = 2; result.gap = 0.16
+  "item_banner":
+   result.key = "upgrade" if e.get("legend", false) else "impact_arcane"; result.gain = -12 if e.get("legend", false) else -15; result.priority = 2; result.gap = 0.3
+  "stomp":
+   result.key = "impact_stone"; result.gain = -8 if e.get("quake", false) else -13; result.priority = 2; result.gap = 0.14
+  "grow":
+   result.key = "nature"; result.gain = -18; result.gap = 0.5
   "hit":
+   # v0.77: crits crack, MEGA CRITS crack loud.
+   if float(e.get("crit", 0.0)) > 0.0 and e.get("amount", 0) >= 4:
+    var mega = float(e.crit) >= 3.0
+    result.key = "impact_metal"; result.gain = -5.0 if mega else -11.0; result.priority = 3 if mega else 2; result.gap = 0.08
+    return result
    # Single physical hits get a contact transient. Spell/DoT ticks stay
    # silent; the cast or projectile impact already carries their identity.
    if e.get("credit", "") != "basic" or e.get("amount",0) < 4: return result

@@ -5,20 +5,20 @@ extends RefCounted
 ## fade; late scalers start soft and take over in the later cups.
 
 # Multipliers: hp, attack (basic + ability damage), potency (ability strength incl. heals/shields),
-# cd (ability cooldowns, <1 = faster), haste (attack speed), speed (movement), armor (flat), scale (curve shift).
+# v0.76: cd and speed now scale Mana gain (Mana x speed / cd), haste = AS, potency = AP, armor -> Resistance (x160), scale (curve shift).
 const TRAITS := {
-	"Courageous": {"hp": 1.14, "potency": 0.90, "cd": 1.06, "up": "+14% health", "down": "-10% ability strength, slower skills"},
-	"Shy":        {"potency": 1.14, "cd": 0.92, "attack": 0.88, "up": "+14% ability strength, faster skills", "down": "-12% damage"},
-	"Ferocious":  {"attack": 1.12, "hp": 0.90, "up": "+12% damage", "down": "-10% health"},
-	"Stoic":      {"armor": 0.05, "hp": 1.05, "speed": 0.88, "up": "+5 armor, +5% health", "down": "-12% move speed"},
-	"Swift":      {"speed": 1.15, "haste": 1.08, "hp": 0.92, "up": "+15% move, +8% attack speed", "down": "-8% health"},
-	"Cunning":    {"cd": 0.86, "attack": 0.92, "up": "14% faster skills", "down": "-8% damage"},
-	"Reckless":   {"attack": 1.10, "haste": 1.06, "armor": -0.05, "up": "+10% damage, +6% attack speed", "down": "-5 armor"},
-	"Gentle":     {"potency": 1.16, "attack": 0.90, "up": "+16% ability strength", "down": "-10% damage"},
-	"Proud":      {"hp": 1.08, "attack": 1.08, "cd": 1.12, "up": "+8% health and damage", "down": "12% slower skills"},
+	"Courageous": {"hp": 1.14, "potency": 0.90, "cd": 1.06, "up": "+14% HP", "down": "-10% AP, -6% Mana"},
+	"Shy":        {"potency": 1.14, "cd": 0.92, "attack": 0.88, "up": "+14% AP, +9% Mana", "down": "-12% AD"},
+	"Ferocious":  {"attack": 1.12, "hp": 0.90, "crit": 0.04, "up": "+12% AD, +4% Crit", "down": "-10% HP"},
+	"Stoic":      {"armor": 0.05, "hp": 1.05, "speed": 0.88, "size": 1.05, "up": "+8 Resistance, +5% HP, +5% Size", "down": "-12% Mana"},
+	"Swift":      {"speed": 1.15, "haste": 1.08, "hp": 0.92, "size": 0.95, "up": "+15% Mana, +8% AS", "down": "-8% HP, -5% Size"},
+	"Cunning":    {"cd": 0.86, "attack": 0.92, "up": "+16% Mana", "down": "-8% AD"},
+	"Reckless":   {"attack": 1.10, "haste": 1.06, "armor": -0.05, "crit": 0.05, "up": "+10% AD, +6% AS, +5% Crit", "down": "-8 Resistance"},
+	"Gentle":     {"potency": 1.16, "attack": 0.90, "up": "+16% AP", "down": "-10% AD"},
+	"Proud":      {"hp": 1.08, "attack": 1.08, "cd": 1.12, "size": 1.06, "up": "+8% HP and AD, +6% Size", "down": "-11% Mana"},
 	"Patient":    {"scale": 2.0, "up": "Scales much harder late", "down": "Weaker in the early cups"},
 	"Eager":      {"scale": -2.0, "up": "Strong from the first cup", "down": "Falls off late"},
-	"Steadfast":  {"hp": 1.07, "armor": 0.03, "haste": 0.94, "up": "+7% health, +3 armor", "down": "-6% attack speed"},
+	"Steadfast":  {"hp": 1.07, "armor": 0.03, "haste": 0.94, "up": "+7% HP, +5 Resistance", "down": "-6% AS"},
 	# Reference only (never rolled): no modifiers, used for species baselines in stat charts.
 	"Neutral":    {"up": "", "down": ""},
 }
@@ -91,7 +91,11 @@ static func curve(hero: Dictionary) -> float:
 	return clampf(1.0 + d, 0.80, 1.32)
 
 static func mod(hero: Dictionary, key: String) -> float:
-	return float(TRAITS[trait_of(hero)].get(key, 0.0 if key == "armor" else 1.0))
+	return float(TRAITS[trait_of(hero)].get(key, 0.0 if key in ["armor", "crit"] else 1.0))
+
+## Additive temperament bonuses (Crit).
+static func mod_add(hero: Dictionary, key: String) -> float:
+	return float(TRAITS[trait_of(hero)].get(key, 0.0))
 
 ## How well the temperament suits the role, -1..1: an ideal temperament is a full match; otherwise
 ## its bonuses and penalties are weighed by how much the role relies on each stat.

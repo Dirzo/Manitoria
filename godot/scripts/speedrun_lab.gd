@@ -32,7 +32,7 @@ static func validate(c: Campaign,p: Dictionary) -> String:
  for h in c.lineup():
   var ev=str(p.get("evolutions",{}).get(h.id,""))
   if not ev.is_empty() and ev not in Evolutions.options(h.sp):return "Choose a valid species evolution."
-  var apex=str(p.get("apex",{}).get(h.id,"apex_skill"))
+  var apex=str(p.get("apex",{}).get(h.id,"apex_sig"))
   if apex not in HeroData.APEX:return "Choose a valid Apex evolution."
   if str(p.get("goals",{}).get(h.id,"Adaptive")) not in DecisionMatrix.GOALS:return "Choose a valid build path."
  return ""
@@ -62,7 +62,7 @@ static func buy_priorities(c: Campaign,p: Dictionary,purchases: Array,done: Dict
 
 static func skill_score(h: Dictionary,card: Dictionary,p: Dictionary) -> float:
  if card.type=="evolution":return 10000.0 if card.key==p.get("evolutions",{}).get(h.id,"") else 100.0
- if card.type=="apex":return 10000.0 if card.key==p.get("apex",{}).get(h.id,"apex_skill") else 100.0
+ if card.type=="apex":return 10000.0 if card.key==p.get("apex",{}).get(h.id,"apex_sig") else 100.0
  if card.type in ["ability","signature"]:
   var key="signature" if card.type=="signature" else str(card.key)
   var a=HeroData.species[h.sp] if card.type=="signature" else HeroData.learned_ability(h.sp,int(card.key))

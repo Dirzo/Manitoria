@@ -121,7 +121,7 @@ static func evolutions(game: Node,lab: SpeedrunLab) -> void:
    var preview=h.duplicate(true);preview.evolution=lab.plan.evolutions[h.id];game.label(box,Evolutions.of(preview).get("text",""),13,game.MUTED)
   var apex=OptionButton.new();box.add_child(apex);var keys=HeroData.APEX.keys()
   for key in keys:apex.add_item("Apex · "+str(HeroData.APEX[key].name))
-  apex.selected=maxi(0,keys.find(lab.plan.apex.get(h.id,"apex_skill")))
+  apex.selected=maxi(0,keys.find(lab.plan.apex.get(h.id,"apex_sig")))
   apex.item_selected.connect(func(i):lab.plan.apex[h.id]=keys[i];refresh(game,lab))
   game.button(box,"Tactics",func():game.show_tactics(h.id))
 

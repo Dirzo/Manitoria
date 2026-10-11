@@ -1,0 +1,639 @@
+[
+ {
+  "id": "marrow",
+  "file": "godot/assets/items/marrow.png",
+  "legendary": false,
+  "path": "giant",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Component: Titan Marrow, a cracked giant thigh bone with glowing amber marrow inside. Palette: amber, bone white and warm stone. Match the painted look of the other component icons (fang.png, hide.png)."
+ },
+ {
+  "id": "titanheart",
+  "file": "godot/assets/items/i_titanheart.png",
+  "legendary": false,
+  "path": "giant",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a huge stone-and-flesh titan heart, beating, veined with molten amber, chips of granite crust. Palette: amber, ochre and warm stone."
+ },
+ {
+  "id": "leg_titanheart",
+  "file": "godot/assets/items/i_leg_titanheart.png",
+  "legendary": true,
+  "path": "giant",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: the heart cracked open around a miniature glowing world-core, amber magma rivers. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: amber, ochre and warm stone with gold."
+ },
+ {
+  "id": "club",
+  "file": "godot/assets/items/i_club.png",
+  "legendary": false,
+  "path": "giant",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a colossal stone-studded war club with a cracked ground-impact shockwave at its head. Palette: amber, ochre and warm stone."
+ },
+ {
+  "id": "leg_club",
+  "file": "godot/assets/items/i_leg_club.png",
+  "legendary": true,
+  "path": "giant",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: an enormous club wreathed in rings of falling rock and dust, a crater beneath it. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: amber, ochre and warm stone with gold."
+ },
+ {
+  "id": "belt",
+  "file": "godot/assets/items/i_belt.png",
+  "legendary": false,
+  "path": "giant",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a giant's thick leather belt with a massive bronze buckle shaped like a mountain. Palette: amber, ochre and warm stone."
+ },
+ {
+  "id": "leg_belt",
+  "file": "godot/assets/items/i_leg_belt.png",
+  "legendary": true,
+  "path": "giant",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: the buckle grown into a living mountain peak, boulders orbiting the belt. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: amber, ochre and warm stone with gold."
+ },
+ {
+  "id": "wrath",
+  "file": "godot/assets/items/i_wrath.png",
+  "legendary": false,
+  "path": "giant",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a clenched titan fist bursting out of cracked bronze, red veins swelling. Palette: amber, ochre and warm stone."
+ },
+ {
+  "id": "leg_wrath",
+  "file": "godot/assets/items/i_leg_wrath.png",
+  "legendary": true,
+  "path": "giant",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a gigantic fist trailing red-gold fury flames, cracks spreading through stone around it. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: amber, ochre and warm stone with gold."
+ },
+ {
+  "id": "hooves",
+  "file": "godot/assets/items/i_hooves.png",
+  "legendary": false,
+  "path": "giant",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a pair of heavy iron-shod greaves with hoof soles, kicking up dust and small lightning sparks. Palette: amber, ochre and warm stone."
+ },
+ {
+  "id": "leg_hooves",
+  "file": "godot/assets/items/i_leg_hooves.png",
+  "legendary": true,
+  "path": "giant",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: thundering greaves leaving a stampede trail of dust and blue-amber lightning. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: amber, ochre and warm stone with gold."
+ },
+ {
+  "id": "patience",
+  "file": "godot/assets/items/i_patience.png",
+  "legendary": false,
+  "path": "giant",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a moss-covered standing stone with a glowing moonstone set in it, slowly growing. Palette: amber, ochre and warm stone."
+ },
+ {
+  "id": "leg_patience",
+  "file": "godot/assets/items/i_leg_patience.png",
+  "legendary": true,
+  "path": "giant",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a mountain crowned with a giant moonstone, rings of growth like tree rings. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: amber, ochre and warm stone with gold."
+ },
+ {
+  "id": "granite",
+  "file": "godot/assets/items/i_granite.png",
+  "legendary": false,
+  "path": "giant",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a slab of layered granite armor plates curling like a shell. Palette: amber, ochre and warm stone."
+ },
+ {
+  "id": "leg_granite",
+  "file": "godot/assets/items/i_leg_granite.png",
+  "legendary": true,
+  "path": "giant",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: living granite armor with glowing amber fissures and orbiting rock shards. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: amber, ochre and warm stone with gold."
+ },
+ {
+  "id": "draught",
+  "file": "godot/assets/items/i_draught.png",
+  "legendary": false,
+  "path": "giant",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a stoppered flask of thick amber growth potion with tiny swirling giants inside. Palette: amber, ochre and warm stone."
+ },
+ {
+  "id": "leg_draught",
+  "file": "godot/assets/items/i_leg_draught.png",
+  "legendary": true,
+  "path": "giant",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: an oversized ornate elixir bottle overflowing with glowing amber and violet vapor. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: amber, ochre and warm stone with gold."
+ },
+ {
+  "id": "maul",
+  "file": "godot/assets/items/i_maul.png",
+  "legendary": false,
+  "path": "giant",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a heavy stone maul crackling with small lightning, ground cracking beneath. Palette: amber, ochre and warm stone."
+ },
+ {
+  "id": "leg_maul",
+  "file": "godot/assets/items/i_leg_maul.png",
+  "legendary": true,
+  "path": "giant",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a thunder maul with a crater and branching lightning ring below it. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: amber, ochre and warm stone with gold."
+ },
+ {
+  "id": "frenzy",
+  "file": "godot/assets/items/i_frenzy.png",
+  "legendary": false,
+  "path": "tempo",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a curved war horn wrapped in cyan wind ribbons, motion streaks. Palette: electric cyan and silver."
+ },
+ {
+  "id": "leg_frenzy",
+  "file": "godot/assets/items/i_leg_frenzy.png",
+  "legendary": true,
+  "path": "tempo",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a hurricane horn with a spiraling cyan cyclone pouring out of its bell. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: electric cyan and silver with gold."
+ },
+ {
+  "id": "tempest",
+  "file": "godot/assets/items/i_tempest.png",
+  "legendary": false,
+  "path": "tempo",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a set of sharp silver talons with cyan lightning arcing between the tips. Palette: electric cyan and silver."
+ },
+ {
+  "id": "leg_tempest",
+  "file": "godot/assets/items/i_leg_tempest.png",
+  "legendary": true,
+  "path": "tempo",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: talons with chains of lightning leaping to several distant sparks. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: electric cyan and silver with gold."
+ },
+ {
+  "id": "quicksilver",
+  "file": "godot/assets/items/i_quicksilver.png",
+  "legendary": false,
+  "path": "tempo",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a flowing droplet of liquid quicksilver in a crystal vial, mana-blue streaks. Palette: electric cyan and silver."
+ },
+ {
+  "id": "leg_quicksilver",
+  "file": "godot/assets/items/i_leg_quicksilver.png",
+  "legendary": true,
+  "path": "tempo",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a quicksilver vial bursting into three streaking liquid ribbons. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: electric cyan and silver with gold."
+ },
+ {
+  "id": "quiver",
+  "file": "godot/assets/items/i_quiver.png",
+  "legendary": false,
+  "path": "tempo",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a slim quiver of glowing violet-cyan arcane arrows. Palette: electric cyan and silver."
+ },
+ {
+  "id": "leg_quiver",
+  "file": "godot/assets/items/i_leg_quiver.png",
+  "legendary": true,
+  "path": "tempo",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a quiver whose arrows echo as ghostly copies fanning out. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: electric cyan and silver with gold."
+ },
+ {
+  "id": "drum",
+  "file": "godot/assets/items/i_drum.png",
+  "legendary": false,
+  "path": "tempo",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a hide war drum with cyan beat rings pulsing off it. Palette: electric cyan and silver."
+ },
+ {
+  "id": "leg_drum",
+  "file": "godot/assets/items/i_leg_drum.png",
+  "legendary": true,
+  "path": "tempo",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a grand warlord's drum on a bronze stand, huge shockwave rings. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: electric cyan and silver with gold."
+ },
+ {
+  "id": "spikes",
+  "file": "godot/assets/items/i_spikes.png",
+  "legendary": false,
+  "path": "tempo",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a spiked gauntlet with steel thorns, a counter-strike spark. Palette: electric cyan and silver."
+ },
+ {
+  "id": "leg_spikes",
+  "file": "godot/assets/items/i_leg_spikes.png",
+  "legendary": true,
+  "path": "tempo",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a thorn-covered gauntlet unleashing a burst of flying steel thorns. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: electric cyan and silver with gold."
+ },
+ {
+  "id": "talons",
+  "file": "godot/assets/items/i_talons.png",
+  "legendary": false,
+  "path": "tempo",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: storm-feather talons trailing cyan wind and small crit sparks. Palette: electric cyan and silver."
+ },
+ {
+  "id": "leg_talons",
+  "file": "godot/assets/items/i_leg_talons.png",
+  "legendary": true,
+  "path": "tempo",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: talons inside a spinning cyclone of feathers and lightning. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: electric cyan and silver with gold."
+ },
+ {
+  "id": "tempestcrown",
+  "file": "godot/assets/items/i_tempestcrown.png",
+  "legendary": false,
+  "path": "crit",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a jagged gold crown crackling with orange-red sparks. Palette: crimson-orange and polished gold."
+ },
+ {
+  "id": "leg_tempestcrown",
+  "file": "godot/assets/items/i_leg_tempestcrown.png",
+  "legendary": true,
+  "path": "crit",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a crown of storms with lightning bolts rising like spires. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: crimson-orange and polished gold with gold."
+ },
+ {
+  "id": "dragonedge",
+  "file": "godot/assets/items/i_dragonedge.png",
+  "legendary": false,
+  "path": "crit",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a curved blade with a dragon-scale spine, a gleam of light on its edge. Palette: crimson-orange and polished gold."
+ },
+ {
+  "id": "leg_dragonedge",
+  "file": "godot/assets/items/i_leg_dragonedge.png",
+  "legendary": true,
+  "path": "crit",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a godslaying blade with a blinding red-gold edge flash. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: crimson-orange and polished gold with gold."
+ },
+ {
+  "id": "deathblade",
+  "file": "godot/assets/items/i_deathblade.png",
+  "legendary": false,
+  "path": "crit",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a dark blade with notches for each kill, faint red glow. Palette: crimson-orange and polished gold."
+ },
+ {
+  "id": "leg_deathblade",
+  "file": "godot/assets/items/i_leg_deathblade.png",
+  "legendary": true,
+  "path": "crit",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a reaper's blade with a spectral scythe silhouette behind it. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: crimson-orange and polished gold with gold."
+ },
+ {
+  "id": "gauntlet",
+  "file": "godot/assets/items/i_gauntlet.png",
+  "legendary": false,
+  "path": "crit",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: an ornate gauntlet set with jewels, spell sparks at the fingertips. Palette: crimson-orange and polished gold."
+ },
+ {
+  "id": "leg_gauntlet",
+  "file": "godot/assets/items/i_leg_gauntlet.png",
+  "legendary": true,
+  "path": "crit",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a gauntlet raining tiny falling stars from its open palm. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: crimson-orange and polished gold with gold."
+ },
+ {
+  "id": "overcharge",
+  "file": "godot/assets/items/i_overcharge.png",
+  "legendary": false,
+  "path": "crit",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a crown of blue crystals with orange crit sparks feeding into it. Palette: crimson-orange and polished gold."
+ },
+ {
+  "id": "leg_overcharge",
+  "file": "godot/assets/items/i_leg_overcharge.png",
+  "legendary": true,
+  "path": "crit",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: an overloaded crown with crackling blue-orange energy spilling over. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: crimson-orange and polished gold with gold."
+ },
+ {
+  "id": "archmage",
+  "file": "godot/assets/items/i_archmage.png",
+  "legendary": false,
+  "path": "spell",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a floating violet orb inside a silver claw mount, runes orbiting. Palette: violet and arcane blue."
+ },
+ {
+  "id": "leg_archmage",
+  "file": "godot/assets/items/i_leg_archmage.png",
+  "legendary": true,
+  "path": "spell",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a giant arcane eye inside the orb, rune circles expanding. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: violet and arcane blue with gold."
+ },
+ {
+  "id": "crown",
+  "file": "godot/assets/items/i_crown.png",
+  "legendary": false,
+  "path": "spell",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a slender blue crown with a mana gem. Palette: violet and arcane blue."
+ },
+ {
+  "id": "leg_crown",
+  "file": "godot/assets/items/i_leg_crown.png",
+  "legendary": true,
+  "path": "spell",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: an eternal crown with a looping ouroboros of blue light around it. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: violet and arcane blue with gold."
+ },
+ {
+  "id": "spellblade",
+  "file": "godot/assets/items/i_spellblade.png",
+  "legendary": false,
+  "path": "spell",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a sword with a violet rune-lit blade. Palette: violet and arcane blue."
+ },
+ {
+  "id": "leg_spellblade",
+  "file": "godot/assets/items/i_leg_spellblade.png",
+  "legendary": true,
+  "path": "spell",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a blade with arcing violet lightning jumping off its edge. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: violet and arcane blue with gold."
+ },
+ {
+  "id": "phoenix",
+  "file": "godot/assets/items/i_phoenix.png",
+  "legendary": false,
+  "path": "spell",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a glowing ember shaped like a phoenix feather. Palette: violet and arcane blue."
+ },
+ {
+  "id": "leg_phoenix",
+  "file": "godot/assets/items/i_leg_phoenix.png",
+  "legendary": true,
+  "path": "spell",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a phoenix rising in fire from a nest of embers. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: violet and arcane blue with gold."
+ },
+ {
+  "id": "hourglass",
+  "file": "godot/assets/items/i_hourglass.png",
+  "legendary": false,
+  "path": "spell",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a gold hourglass filled with glowing blue sand. Palette: violet and arcane blue."
+ },
+ {
+  "id": "leg_hourglass",
+  "file": "godot/assets/items/i_leg_hourglass.png",
+  "legendary": true,
+  "path": "spell",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: an ornate hourglass with sand flowing upward, time ripples. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: violet and arcane blue with gold."
+ },
+ {
+  "id": "colossus",
+  "file": "godot/assets/items/i_colossus.png",
+  "legendary": false,
+  "path": "tank",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a massive armored heart encased in green-tinted bronze plates. Palette: steel grey, bronze and pale gold."
+ },
+ {
+  "id": "leg_colossus",
+  "file": "godot/assets/items/i_leg_colossus.png",
+  "legendary": true,
+  "path": "tank",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a colossal heart with green regeneration light pulsing through steel. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: steel grey, bronze and pale gold with gold."
+ },
+ {
+  "id": "bastion",
+  "file": "godot/assets/items/i_bastion.png",
+  "legendary": false,
+  "path": "tank",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a thick tortoise-like shell shield with bronze rim. Palette: steel grey, bronze and pale gold."
+ },
+ {
+  "id": "leg_bastion",
+  "file": "godot/assets/items/i_leg_bastion.png",
+  "legendary": true,
+  "path": "tank",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: an immortal bastion shield with a golden bubble around it. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: steel grey, bronze and pale gold with gold."
+ },
+ {
+  "id": "mirror",
+  "file": "godot/assets/items/i_mirror.png",
+  "legendary": false,
+  "path": "tank",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a polished mirror carapace reflecting a beam of light. Palette: steel grey, bronze and pale gold."
+ },
+ {
+  "id": "leg_mirror",
+  "file": "godot/assets/items/i_leg_mirror.png",
+  "legendary": true,
+  "path": "tank",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: an ancient mirror shield reflecting a large spell back. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: steel grey, bronze and pale gold with gold."
+ },
+ {
+  "id": "tusk",
+  "file": "godot/assets/items/i_tusk.png",
+  "legendary": false,
+  "path": "tank",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a huge tusk with a chisel tip, shattered shield fragments. Palette: steel grey, bronze and pale gold."
+ },
+ {
+  "id": "leg_tusk",
+  "file": "godot/assets/items/i_leg_tusk.png",
+  "legendary": true,
+  "path": "tank",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a ruinous tusk splitting a shield and armor into pieces. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: steel grey, bronze and pale gold with gold."
+ },
+ {
+  "id": "runeward",
+  "file": "godot/assets/items/i_runeward.png",
+  "legendary": false,
+  "path": "tank",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a stone tablet carved with a glowing protective rune. Palette: steel grey, bronze and pale gold."
+ },
+ {
+  "id": "leg_runeward",
+  "file": "godot/assets/items/i_leg_runeward.png",
+  "legendary": true,
+  "path": "tank",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a ring of protective runes forming a bulwark dome. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: steel grey, bronze and pale gold with gold."
+ },
+ {
+  "id": "thunderhide",
+  "file": "godot/assets/items/i_thunderhide.png",
+  "legendary": false,
+  "path": "tank",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a heavy hide cloak crackling with lightning. Palette: steel grey, bronze and pale gold."
+ },
+ {
+  "id": "leg_thunderhide",
+  "file": "godot/assets/items/i_leg_thunderhide.png",
+  "legendary": true,
+  "path": "tank",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a storm-charged colossus hide with lightning bursting outward. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: steel grey, bronze and pale gold with gold."
+ },
+ {
+  "id": "dragonscale",
+  "file": "godot/assets/items/i_dragonscale.png",
+  "legendary": false,
+  "path": "tank",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a single large dragon scale with gold edges. Palette: steel grey, bronze and pale gold."
+ },
+ {
+  "id": "leg_dragonscale",
+  "file": "godot/assets/items/i_leg_dragonscale.png",
+  "legendary": true,
+  "path": "tank",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a hoard of dragon scales forming a gleaming shield. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: steel grey, bronze and pale gold with gold."
+ },
+ {
+  "id": "bell",
+  "file": "godot/assets/items/i_bell.png",
+  "legendary": false,
+  "path": "tank",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a bronze warding bell with a soft shield ripple. Palette: steel grey, bronze and pale gold."
+ },
+ {
+  "id": "leg_bell",
+  "file": "godot/assets/items/i_leg_bell.png",
+  "legendary": true,
+  "path": "tank",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a sanctuary bell with many shield ripples spreading out. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: steel grey, bronze and pale gold with gold."
+ },
+ {
+  "id": "aegis",
+  "file": "godot/assets/items/i_aegis.png",
+  "legendary": false,
+  "path": "tank",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a holy round aegis shield with a sunburst emblem. Palette: steel grey, bronze and pale gold."
+ },
+ {
+  "id": "leg_aegis",
+  "file": "godot/assets/items/i_leg_aegis.png",
+  "legendary": true,
+  "path": "tank",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a radiant dawn aegis with rays of golden light. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: steel grey, bronze and pale gold with gold."
+ },
+ {
+  "id": "bloodmoon",
+  "file": "godot/assets/items/i_bloodmoon.png",
+  "legendary": false,
+  "path": "sustain",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a fang dripping crimson under a small red moon. Palette: blood crimson and dark silver."
+ },
+ {
+  "id": "leg_bloodmoon",
+  "file": "godot/assets/items/i_leg_bloodmoon.png",
+  "legendary": true,
+  "path": "sustain",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a crimson full moon with a bloody fang silhouette across it. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: blood crimson and dark silver with gold."
+ },
+ {
+  "id": "bloodfeast",
+  "file": "godot/assets/items/i_bloodfeast.png",
+  "legendary": false,
+  "path": "wild",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a goblet overflowing with dark red wine and bones. Palette: gold and hot pink, playful and dangerous."
+ },
+ {
+  "id": "leg_bloodfeast",
+  "file": "godot/assets/items/i_leg_bloodfeast.png",
+  "legendary": true,
+  "path": "wild",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a feast goblet the size of a cauldron, red mist rising. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: gold and hot pink, playful and dangerous with gold."
+ },
+ {
+  "id": "spurs",
+  "file": "godot/assets/items/i_spurs.png",
+  "legendary": false,
+  "path": "wild",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: golden spurs spinning dangerously fast with sparks. Palette: gold and hot pink, playful and dangerous."
+ },
+ {
+  "id": "leg_spurs",
+  "file": "godot/assets/items/i_leg_spurs.png",
+  "legendary": true,
+  "path": "wild",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: spurs blurred into a pink-gold streak of speed. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: gold and hot pink, playful and dangerous with gold."
+ },
+ {
+  "id": "wildfire",
+  "file": "godot/assets/items/i_wildfire.png",
+  "legendary": false,
+  "path": "wild",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a burning spell tome with pink-gold fire licking the pages. Palette: gold and hot pink, playful and dangerous."
+ },
+ {
+  "id": "leg_wildfire",
+  "file": "godot/assets/items/i_leg_wildfire.png",
+  "legendary": true,
+  "path": "wild",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a tome erupting in a wildfire tornado. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: gold and hot pink, playful and dangerous with gold."
+ },
+ {
+  "id": "bottle",
+  "file": "godot/assets/items/i_bottle.png",
+  "legendary": false,
+  "path": "wild",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a corked bottle with a lightning bolt trapped inside. Palette: gold and hot pink, playful and dangerous."
+ },
+ {
+  "id": "leg_bottle",
+  "file": "godot/assets/items/i_leg_bottle.png",
+  "legendary": true,
+  "path": "wild",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a cracking bottle with a storm bursting out. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: gold and hot pink, playful and dangerous with gold."
+ },
+ {
+  "id": "giant",
+  "file": "godot/assets/items/i_giant.png",
+  "legendary": false,
+  "path": "wild",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a fat potion bottle with a tiny giant silhouette swirling inside, pink fizz. Palette: gold and hot pink, playful and dangerous."
+ },
+ {
+  "id": "leg_giant",
+  "file": "godot/assets/items/i_leg_giant.png",
+  "legendary": true,
+  "path": "wild",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a huge elixir bottle with a towering giant shadow behind it. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: gold and hot pink, playful and dangerous with gold."
+ },
+ {
+  "id": "turtle",
+  "file": "godot/assets/items/i_turtle.png",
+  "legendary": false,
+  "path": "wild",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a spiky turtle shell with a gold coin rim. Palette: gold and hot pink, playful and dangerous."
+ },
+ {
+  "id": "leg_turtle",
+  "file": "godot/assets/items/i_leg_turtle.png",
+  "legendary": true,
+  "path": "wild",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: an ancient turtle shell with glowing gold runes. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: gold and hot pink, playful and dangerous with gold."
+ },
+ {
+  "id": "gambler",
+  "file": "godot/assets/items/i_gambler.png",
+  "legendary": false,
+  "path": "wild",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a dagger with dice embedded in the hilt. Palette: gold and hot pink, playful and dangerous."
+ },
+ {
+  "id": "leg_gambler",
+  "file": "godot/assets/items/i_leg_gambler.png",
+  "legendary": true,
+  "path": "wild",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: loaded golden dice with a dagger through them. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: gold and hot pink, playful and dangerous with gold."
+ },
+ {
+  "id": "glasstitan",
+  "file": "godot/assets/items/i_glasstitan.png",
+  "legendary": false,
+  "path": "wild",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a glass statue of a titan, cracked and glowing inside. Palette: gold and hot pink, playful and dangerous."
+ },
+ {
+  "id": "leg_glasstitan",
+  "file": "godot/assets/items/i_leg_glasstitan.png",
+  "legendary": true,
+  "path": "wild",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a shattered glass titan with shards flying, glowing core. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: gold and hot pink, playful and dangerous with gold."
+ },
+ {
+  "id": "swap",
+  "file": "godot/assets/items/i_swap.png",
+  "legendary": false,
+  "path": "wild",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. Item: a charm with two linked silhouettes swapping places. Palette: gold and hot pink, playful and dangerous."
+ },
+ {
+  "id": "leg_swap",
+  "file": "godot/assets/items/i_leg_swap.png",
+  "legendary": true,
+  "path": "wild",
+  "prompt": "Use case: stylized-concept. Create ONE premium hand-painted fantasy RPG item icon, a single object isolated on a fully transparent background, no text, no border, no frame, no hands, no character. Rich painted texture, crisp sculptural detail, dramatic rim light, soft glow. Subject centred and fully inside the middle 85 percent, strong silhouette readable at 48 px. No letters, numbers, UI or watermark. LEGENDARY item: a soul charm with two glowing spirits swapping in a spiral. Make it clearly the same object as its base version, reforged: more ornate, gilded gold filigree, a radiant aura. Palette: gold and hot pink, playful and dangerous with gold."
+ }
+]

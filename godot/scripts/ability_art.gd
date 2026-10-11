@@ -9,9 +9,17 @@ static func texture(key: String) -> Texture2D:
    if ResourceLoader.exists(signature_path):return load(signature_path)
    break
  if key.begins_with("item:"):
-  var ipath="res://assets/items/i_%s.png" % key.trim_prefix("item:")
+  # v0.77: generated art first (i_<id>.png, Legendaries i_leg_<id>.png), then the borrowed icon.
+  var iid=key.trim_prefix("item:")
+  var ipath="res://assets/items/i_%s.png" % iid
   if ResourceLoader.exists(ipath): return load(ipath)
-  key=Forge.ITEMS.get(key.trim_prefix("item:"),{}).get("art","ward")
+  var base=Forge.base_id(iid)
+  if base!=iid:
+   ipath="res://assets/items/i_%s.png" % base
+   if ResourceLoader.exists(ipath): return load(ipath)
+  var borrowed="res://assets/items/i_%s.png" % str(Forge.ITEMS.get(base,{}).get("icon",""))
+  if ResourceLoader.exists(borrowed): return load(borrowed)
+  key=Forge.ITEMS.get(base,{}).get("art","ward")
  if key.begins_with("comp:"):
   var cpath="res://assets/items/%s.png" % key.trim_prefix("comp:")
   if ResourceLoader.exists(cpath): return load(cpath)
@@ -21,7 +29,6 @@ static func texture(key: String) -> Texture2D:
   var path="res://assets/abilities/%s-%s.png" % [parts[1],parts[2]]
   if ResourceLoader.exists(path): return load(path)
   key=HeroData.learned_ability(parts[1],int(parts[2])).effect
- key = {"legend_cataclysm":"meteor","legend_bastion":"ward"}.get(key,key)
  var atlas = load("res://assets/ability-atlas.png") as Texture2D
  var index = KEYS.find(key)
  if index < 0: index = 58
@@ -36,10 +43,8 @@ static func card_key(hero: Dictionary, card: Dictionary) -> String:
   var gi=Evolutions.grant_index(str(card.key))
   return "discovery:%s:%d"%[hero.sp,gi] if gi>=0 else Evolutions.art(card.key)
  if card.type == "apex":
-  if card.key == "apex_skill" and Evolutions.has(str(hero.get("evolution", ""))):
-   var apex_grant=Evolutions.grant_index(str(hero.evolution))
-   return "discovery:%s:%d"%[hero.sp,apex_grant] if apex_grant>=0 else Evolutions.art(hero.evolution)
-  return {"apex_stats": "renew", "apex_slot": "ward"}.get(str(card.key), "ward")
+  if card.key == "apex_sig": return HeroData.species[hero.sp].ab
+  return {"apex_body": "renew", "apex_instinct": "tailwind"}.get(str(card.key), "ward")
  return card.key
 static func metric_info(sp: String, key: String) -> Dictionary:
  if key in ["evolution","on_hit"]:return {"name":"Evolution on-hit" if key=="evolution" else "On-hit damage","art":HeroData.species[sp].ab}

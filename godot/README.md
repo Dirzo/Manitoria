@@ -1,12 +1,10 @@
-# Current Godot workspace
+# Manitoria 0.77 — Item overhaul
 
-This source declares 0.75.4 and runs with the local Godot 4.7.2 editor. Current authority,
-remaining work and next action are in the shared [living plan](../../docs/IMPLEMENTATION_PLAN.md).
-See [approved direction](../../docs/GAME_SPEC.md) and [run/test commands](../../docs/DEVELOPMENT.md).
-Read [juice.md](../../juice.md) and its relevant links for presentation changes;
-[COPYWRITING.md](../../COPYWRITING.md) owns audience/message guidance. Maintain affected
-expressive direction within the approved scope.
-The release notes below are historical evidence, not current delivery instructions.
+Size and Crit stats, 36 items, Wild items, Mythic Anvil Legendaries and item feedback in combat. See [ITEM-OVERHAUL-0.77.md](../ITEM-OVERHAUL-0.77.md).
+
+# Manitoria 0.76 — Combat and leveling rework
+
+Six stats, one mana-cast signature per champion, stat-card level-ups and rewritten evolutions. See [COMBAT-REWORK-0.76.md](../COMBAT-REWORK-0.76.md).
 
 # Manitoria 0.73 — Speedrun Stat Check
 

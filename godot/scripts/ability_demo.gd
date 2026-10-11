@@ -45,7 +45,7 @@ func setup(source: Dictionary,offer: Dictionary,layout: String="Clustered") -> v
 func freeze_actions() -> void:
  for u in sim.units:
   if u.summon:continue
-  u.speed=0;u.velocity=Vector2.ZERO;u.attack_timer=1000;u.cd=1000
+  u.speed=0;u.velocity=Vector2.ZERO;u.attack_timer=1000;u.cd=1000;u.mana=0.0
   for key in u.ability_cds:u.ability_cds[key]=1000
 
 func advance(dt: float) -> void:

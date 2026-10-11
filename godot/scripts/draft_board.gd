@@ -6,8 +6,8 @@ extends RefCounted
 
 const TABLE_COLS := [
 	["", "", 56], ["Champion", "Board", 200], ["Role", "Role", 104], ["Power", "Power", 74], ["Trait", "Ideal", 132],
-	["Scale", "Scale", 84], ["HP", "hp", 54], ["DMG", "attack", 54], ["ARM", "armor", 54], ["AS", "haste", 54],
-	["MOV", "speed", 54], ["AP", "potency", 54], ["Fit", "Fit", 200], ["Cost", "Price", 66], ["", "", 128],
+	["Scale", "Scale", 84], ["AD", "attack", 54], ["AS", "haste", 54], ["AP", "potency", 54], ["MANA", "speed", 58],
+	["HP", "hp", 54], ["RES", "armor", 54], ["Fit", "Fit", 200], ["Cost", "Price", 66], ["", "", 128],
 ]
 
 static func view(game: Node) -> String:

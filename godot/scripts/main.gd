@@ -211,27 +211,36 @@ func _ready() -> void:
   elif qa == "runover":
    campaign.state.run_over = true; phase = "runover"; render()
   elif qa == "arena":
-   for h in campaign.state.roster: h.level = 3; h.learned = {"0": 1}
+   for h in campaign.state.roster: h.level = 3; HeroData.auto_cards(h, str(h.id))
    phase = "prep"; begin_battle()
   elif qa in ["tour_shop","role_catalog","tour_world","tour_legendary","tour_arena"]:
    campaign.state.tour.level=5;campaign.state.gold=1800
-   for h in campaign.state.roster:h.level=10;h.learned={"0":2,"1":2,"2":2};h.skill_rarity={"0":"Legendary","1":"Rare","2":"Rare","signature":"Legendary"}
+   for h in campaign.state.roster:h.level=10;HeroData.auto_cards(h,str(h.id))
    if qa in ["tour_shop","role_catalog"]:
     campaign.state.inventory=["fang","ember","coin","moon","archmage","phoenixember","seed"]
     campaign.state.roster[0].equipment={"0":"bastion","1":"fang"}
     if qa=="role_catalog":set_meta("shop_catalog",true);set_meta("shop_category",1)
     campaign.state.tour.shop=true;campaign.state.tour.stock=WorldTour.stock(campaign);phase="shop";render()
    elif qa=="tour_arena":
-    var outfits=[{"0":"bastion","1":"bell"},{"0":"berserker","1":"bloodmaw"},{"0":"archmage","1":"crown"},{"0":"tempest","1":"quiver"},{"0":"lifebloom","1":"swap"}]
+    var outfits=[{"0":"bastion","1":"bell"},{"0":"bloodfeast","1":"bloodmoon"},{"0":"archmage","1":"crown"},{"0":"tempest","1":"quiver"},{"0":"aegis","1":"swap"}]
+    if OS.get_environment("QA_ITEMS")=="1":
+     # Feel check: a Legendary Giant, a Legendary Tempo carry and a Legendary Crit carry.
+     outfits=[{"0":"leg_belt","1":"titanheart","2":"club"},{"0":"leg_frenzy","1":"tempest","2":"spurs"},{"0":"leg_dragonedge","1":"tempestcrown","2":"maul"},{"0":"archmage","1":"crown"},{"0":"aegis","1":"bell"}]
+    if OS.get_environment("QA_ITEMS")=="2":
+     outfits=[{"0":"leg_frenzy","1":"tempest","2":"spurs"},{"0":"leg_belt","1":"titanheart","2":"club"},{"0":"leg_dragonedge","1":"tempestcrown","2":"gambler"},{"0":"archmage","1":"crown"},{"0":"aegis","1":"bell"}]
     for i in range(campaign.state.roster.size()):campaign.state.roster[i].equipment=outfits[i%outfits.size()]
     phase="prep";begin_battle()
    elif qa=="tour_legendary":
-    var h=campaign.state.roster[0];h.learned={};h.pending=[[{"type":"ability","key":"0","name":"Fault Line · Rank 1","description":"A devastating fracture. Legendary: +25% potency.","rarity":"Legendary","bonus":1.25},{"type":"ability","key":"1","name":"Granite Covenant · Rank 1","description":"Fortify your allies. Rare: +10% potency.","rarity":"Rare","bonus":1.1},{"type":"ability","key":"2","name":"Stone Golem Cyclone · Rank 1","description":"A sweeping strike.","rarity":"Uncommon","bonus":1.0}]];phase="upgrade";render()
+    var h=campaign.state.roster[0];h.learned={};h.pending=[[StatCards.card("ad",3),StatCards.card("mana",1),StatCards.card("hp",0)]];h.rewards=[{"level":10,"won":true,"seed":1}];phase="upgrade";render()
    else:phase="hub";tab="overview";render()
   elif qa == "exhibition":
    start_exhibition()
+  elif qa == "levelup":
+   var h = campaign.state.roster[0]; h.level = 6
+   h.pending = [[StatCards.card("ad", 2), StatCards.card("as", 0), StatCards.card("mana", 1)]]; h.rewards = [{"level": 6, "won": true, "seed": 1}]
+   phase = "upgrade"; render()
   elif qa == "evolution":
-   var h = campaign.state.roster[0]; h.level = 10; h.learned = {"0":2, "2":2, "4":2}; h.signature_rank = 2
+   var h = campaign.state.roster[0]; h.level = 10; HeroData.auto_cards(h, str(h.id))
    HeroData.queue_reward(h, 10, true, 918)
    phase = "upgrade"; preview_team(); render()
   elif qa == "evolved_arena":
@@ -1100,6 +1109,10 @@ func impact_board(box: Node, report: Dictionary) -> void:
  for r in rows:
   if r.ais > mvp.ais: mvp = r
  label(box, "★ MVP  %s  ·  %d impact" % [mvp.name, mvp.ais], 20, GOLD).tooltip_text = "%s · Arena Impact Score" % HeroData.species[mvp.sp].n
+ var crit_row = {}
+ for r in report.get("rows", []):
+  if float(r.get("biggest_crit", 0.0)) > float(crit_row.get("biggest_crit", 0.0)): crit_row = r
+ if not crit_row.is_empty(): label(box, "Biggest crit  %d  ·  %s" % [roundi(crit_row.biggest_crit), crit_row.name], 17, Color("ff9a5a"))
  for team in [0, 1]:
   var line = HBoxContainer.new(); line.add_theme_constant_override("separation", 14); box.add_child(line)
   label(line, "YOU" if team == 0 else "RIVAL", 14, Color("86dbf2") if team == 0 else Color("ffa093"), false).custom_minimum_size.x = 60
@@ -1125,9 +1138,11 @@ func build_upgrade() -> void:
  label(details, "ARENA LEVEL UP  ·  ONE HERO, ONE CHOICE", 14, GOLD)
  var reward_level = h.rewards[0].level if not h.get("rewards", []).is_empty() else h.level
  label(details, "%s · Level %d" % [h.name, reward_level], 28)
- label(details, "%s  /  %s  /  %s build" % [HeroData.species[h.sp].n, HeroData.species[h.sp].role,SkillScaling.audited(h.sp,"signature").get("build_path","ap").to_upper()], 20, GOLD)
- label(details, "Choose an evolution to define this hero’s build. Evolving also unlocks a 4th item slot." if h.pending[0][0].type == "evolution" else "APEX · the second evolution. Pick one permanent upgrade." if h.pending[0][0].type == "apex" else "%d / %d abilities · Discover your kit, then rank up your chosen abilities." % [HeroData.regular_learned_count(h)+1, HeroData.ABILITY_SLOTS], 18, MUTED)
+ label(details, "%s  /  %s  /  %s builds %s" % [HeroData.species[h.sp].n, HeroData.species[h.sp].role, Signatures.of(h.sp).name, Signatures.of(h.sp).builds], 20, GOLD)
+ label(details, "Choose an evolution to define this hero’s build. Evolving also unlocks a 4th item slot." if h.pending[0][0].type == "evolution" else "APEX · the second evolution. Pick one permanent upgrade." if h.pending[0][0].type == "apex" else "Keep one card. Now: " + StatCards.stat_line(HeroData.stats(h)), 18, MUTED)
  var row = HBoxContainer.new(); box.add_child(row)
+ if h.pending[0][0].type == "stat":
+  build_stat_cards(box, h, pending.size()); return
  for index in range(h.pending[0].size()):
   var card = h.pending[0][index]
   var shell = PanelContainer.new(); shell.name = "UpgradeCard%d" % index; shell.size_flags_horizontal = Control.SIZE_EXPAND_FILL; shell.custom_minimum_size = Vector2(405, 0); row.add_child(shell)
@@ -1169,11 +1184,51 @@ func build_upgrade() -> void:
      var demo=AbilityPreview.new();demo.game=self;demo.hero=before_choice;demo.card=card.duplicate(true);demo.unlocked=true;ui.add_child(demo);demo.build()
    else: toast(campaign.last_error), true)
   choose_button.name = "ChooseSkill%d" % index
- label(box, "%d heroes awaiting their own choice. Wins slightly improve rarity." % pending.size(), 15, MUTED)
+ label(box, "%d hero%s awaiting a choice." % [pending.size(), "" if pending.size() == 1 else "es"], 15, MUTED)
+
+## v0.76 level-up: three stat cards at random rarities; keep one. Each card previews the result.
+func build_stat_cards(box: Node, h: Dictionary, waiting: int) -> void:
+ var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 18); box.add_child(row)
+ var now = HeroData.stats(h)
+ for index in range(h.pending[0].size()):
+  var card = h.pending[0][index]
+  var tint = Color(StatCards.COLORS[card.rarity])
+  var shell = PanelContainer.new(); shell.name = "StatCard%d" % index; shell.size_flags_horizontal = Control.SIZE_EXPAND_FILL; shell.custom_minimum_size = Vector2(440, 400); row.add_child(shell)
+  shell.add_theme_stylebox_override("panel", style(Color("1c3440").lerp(tint, 0.10), tint, 12, 17, 3 if card.tier >= 2 else 2))
+  var content = VBoxContainer.new(); content.add_theme_constant_override("separation", 10); shell.add_child(content)
+  label(content, card.rarity.to_upper() + "  ·  " + StatCards.LONG[card.key].to_upper(), 16, tint.lightened(0.25))
+  var big = label(content, StatCards.value_text(card.key, card.value), 54, tint); big.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+  var after_h = h.duplicate(true); StatCards.apply(after_h, card)
+  var after = HeroData.stats(after_h)
+  var key_stat = {"ad": "attack", "as": "as", "ap": "ap", "mana": "mana", "hp": "hp", "res": "res", "size": "size", "crit": "crit"}[card.key]
+  var fmt = func(v): return ("%.2f" % v) if card.key == "as" else ("%.2f×" % v) if card.key == "size" else ("%d%%" % roundi(v * 100)) if card.key in ["mana", "crit"] else str(roundi(v))
+  var change = label(content, "%s  %s  →  %s" % [StatCards.NAMES[card.key], fmt.call(float(now[key_stat])), fmt.call(float(after[key_stat]))], 22, WHITE); change.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+  if card.key in Signatures.build_keys(h.sp):
+   label(content, "★ Your signature scales with %s" % StatCards.NAMES[card.key], 16, Color("6fe08a")).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+  var sig = Signatures.of(h.sp)
+  label(content, sig.name.to_upper() + " AFTER THIS CARD", 14, GOLD)
+  var preview = label(content, Signatures.fill(str(sig.text), after_h, after), 16, Color("dfe8ec")); preview.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+  if card.key == "mana": label(content, "Casts about %d%% more often." % roundi((float(after.mana) / float(now.mana) - 1.0) * 100.0), 16, Color("8fc4ff"))
+  if card.key == "res": label(content, "Blocks %d%% of all damage (was %d%%)." % [roundi(after.armor * 100), roundi(now.armor * 100)], 16, Color("8fc4ff"))
+  if card.key == "size": label(content, "Grows bigger: more HP and AD, wider attacks and spells, but easier to hit with area effects.", 16, Color("ffc27a"))
+  if card.key == "crit": label(content, "Basic attacks crit for %.1f× damage." % float(after.crit_damage), 16, Color("ff9a6a"))
+  var spacer = Control.new(); spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL; content.add_child(spacer)
+  button(content, "Keep this card", func():
+   if campaign.choose(h.id, index): sound.cue("upgrade", true); render()
+   else: toast(campaign.last_error), true)
+  if card.rarity == "Legendary": sound.cue("upgrade", true)
+ var foot = HBoxContainer.new(); foot.add_theme_constant_override("separation", 16); box.add_child(foot)
+ var left = int(campaign.state.get("card_rerolls", 0))
+ var reroll = button(foot, "Reroll cards  ·  %d left" % left, func():
+  if campaign.reroll_cards(h.id): sound.cue("shop_roll", true); render()
+  else: toast("No card rerolls left. Elite and Warden wins in the dungeon give more."), false, left <= 0)
+ reroll.tooltip_text = "Redraw these three cards. Every run starts with %d; dungeon elites give 1 and Wardens give 2." % StatCards.REROLLS_START
+ reroll.custom_minimum_size.x = 300
+ label(foot, "%d hero%s awaiting a choice." % [waiting, "" if waiting == 1 else "es"], 16, MUTED, false)
 
 func show_guide() -> void:
  var dialog = AcceptDialog.new(); ui.add_child(dialog); dialog.title = "Your first match · three steps"
- dialog.dialog_text = "1. DRAFT YOUR SQUAD\nSign a Legendary headliner (×3 cost), then build from the draft board: Epics cost ×2, Commons ×1. An elite four (2 Epics + 1 Common) gets the elite-squad bonus; a full five (1 Epic + 3 Commons) brings numbers.\n\n2. ARRANGE & SET TACTICS\nRoster → Arrange formation → drag your five into position.\nHero tactics → choose an approach and target priority.\n\n3. COMPETE, THEN DEVELOP\nEnter the arena. Fielded heroes earn XP; level-ups offer individual abilities.\n\nEach cup is a double-elimination bracket: lose twice and you're out. Every cup moves you on to the next; finish 1st, 2nd or 3rd for a Gold, Silver or Bronze chest.\n\n4. FORGE ITEMS\nBuy components at the outfitter after every match. Each champion carries 3 items (4 after its first evolution at level 8, 5 with the Apex Arsenal at level 16); drop a second component on a champion holding one to forge a finished item (see the Recipe book). Trickster's Coin forges WILD items that change how a champion fights.\n\n5. TEMPERAMENT & SCALING\nEvery champion has a temperament (a strength and a weakness) and a scaling curve: early scalers dominate the first cups, late scalers start weak and take over. Gold text marks a champion's perfect role and ideal temperaments. Club → Settings changes difficulty."
+ dialog.dialog_text = "1. DRAFT YOUR SQUAD\nSign a Legendary headliner (×3 cost), then build from the draft board: Epics cost ×2, Commons ×1. An elite four (2 Epics + 1 Common) gets the elite-squad bonus; a full five (1 Epic + 3 Commons) brings numbers.\n\n2. ARRANGE & SET TACTICS\nRoster → Arrange formation → drag your five into position.\nHero tactics → choose an approach and target priority.\n\n3. COMPETE, THEN DEVELOP\nEnter the arena. Fielded heroes earn XP. Every level-up deals three stat cards (AD, AS, AP, Mana, HP or Resistance at a random rarity); keep the one your signature wants.\n\nEach cup is a double-elimination bracket: lose twice and you're out. Every cup moves you on to the next; finish 1st, 2nd or 3rd for a Gold, Silver or Bronze chest.\n\n4. FORGE ITEMS\nBuy components at the outfitter after every match. Each champion carries 3 items (4 after its first evolution at level 8); drop a second component on a champion holding one to forge a finished item (see the Recipe book). Trickster's Coin forges WILD items that change how a champion fights.\n\n5. TEMPERAMENT & SCALING\nEvery champion has a temperament (a strength and a weakness) and a scaling curve: early scalers dominate the first cups, late scalers start weak and take over. Gold text marks a champion's perfect role and ideal temperaments. Club → Settings changes difficulty."
  dialog.popup_centered(Vector2i(650, 420))
 
 func toggle_music() -> void:
@@ -1240,7 +1295,7 @@ func _process(dt: float) -> void:
   if has_meta("qa_mouse") and qa_elapsed > 1.0 and not has_meta("qa_mouse_done"):
    set_meta("qa_mouse_done", true)
    var mm = InputEventMouseMotion.new(); mm.position = get_viewport().get_final_transform() * get_meta("qa_mouse"); mm.global_position = mm.position; get_viewport().push_input(mm)
-  if qa_elapsed > (12 if qa in ["arena", "evolved_arena", "exhibition", "tour_arena", "dungeon_boss"] else 7 if qa in ["intro","chest"] else 4 if qa in ["guild_demo","draft_demo","builds_demo","tree_demo","evolution","levelup","tour_intro"] else 1.65 if qa in ["attacks_slam","attacks_weapon"] else 1.43 if qa.begins_with("attacks_") else 2 if qa.begins_with("particles_") else 3):
+  if qa_elapsed > (float(OS.get_environment("QA_DELAY")) if OS.get_environment("QA_DELAY") != "" else 12 if qa in ["arena", "evolved_arena", "exhibition", "tour_arena", "dungeon_boss"] else 7 if qa in ["intro","chest"] else 4 if qa in ["guild_demo","draft_demo","builds_demo","tree_demo","evolution","levelup","tour_intro"] else 1.65 if qa in ["attacks_slam","attacks_weapon"] else 1.43 if qa.begins_with("attacks_") else 2 if qa.begins_with("particles_") else 3):
    qa_taken = true
    await RenderingServer.frame_post_draw
    if not qa_capture.is_empty():
@@ -1333,7 +1388,7 @@ func start_exhibition() -> void:
   for i in range(5):
    var sp = ["golem","minotaur","direwolf","kirin","unicorn"][i] if team == 0 else ["yeti","owlbear","griffin","phoenix","naga"][i]
    var h = HeroData.make_hero(sp,"show_%d_%d" % [team,i],HeroData.themed_name(sp,"show_%d_%d" % [team,i]),10)
-   h.slot = Campaign.FORMATION[i]; h.learned = {"0":2,"1":2,"2":2}; h.signature_rank = 2
+   h.slot = Campaign.FORMATION[i]; HeroData.auto_cards(h, str(h.id))
    h.evolution = ["guardian","ravager","ravager","arcanist","guardian"][i]
    if team == 0: campaign.state.roster.append(h)
    else: exhibition_rivals.append(h)

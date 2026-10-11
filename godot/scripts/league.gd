@@ -144,13 +144,12 @@ static func form(h: Dictionary) -> float:
 # ------------------------------------------------------------------ Madden-style ratings
 const TIER_BASE := {"Legendary": 76, "Epic": 70, "Common": 64}
 
+## v0.76: level-up card quality (in Common-card units) and the evolution/apex choices.
 static func skill_points(h: Dictionary) -> float:
-	var p = (h.signature_rank - 1) * 1.5
-	for k in h.get("learned", {}):
-		p += 1.5 + (int(h.learned[k]) - 1) * 1.0
-		var r = RarityStyle.for_skill(h, "ability:" + str(k))
-		p += 3.0 if r == "Legendary" else 1.0 if r == "Rare" else 0.0
-	if RarityStyle.for_skill(h, "signature") == "Legendary": p += 3.0
+	var p = 0.0
+	for k in StatCards.KEYS: p += StatCards.total(h, k) / float(StatCards.VALUES[k][0]) * 0.5
+	if not str(h.get("evolution", "")).is_empty(): p += 3.0
+	if not str(h.get("apex", "")).is_empty(): p += 3.0
 	return p
 
 ## Sub-ratings 40-99: POW (damage), DUR (toughness), SPD (mobility & attack speed), SKL (kit), IMP (form).

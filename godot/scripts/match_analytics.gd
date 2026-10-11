@@ -78,4 +78,4 @@ func rebuild() -> void:
   if values.get("healing_denied",0)>0:text(stack,"%d effective healing denied"%roundi(values.healing_denied),12,game.MUTED)
   if values.get("cooldown_recovered",0)>0:text(stack,"%.1fs signature cooldown recovered"%values.cooldown_recovered,12,game.MUTED)
 
-  if values.get("mitigated",0)>0:text(stack,"%d damage reduced before armor"%roundi(values.mitigated),12,game.MUTED)
+  if values.get("mitigated",0)>0:text(stack,"%d damage reduced before Resistance"%roundi(values.mitigated),12,game.MUTED)

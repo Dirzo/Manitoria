@@ -28,7 +28,7 @@ static func starter(game: Node) -> void:
  var opts=func(h):
   return {"selected":h.sp==chosen,"on_select":func():game.set_meta("starter_species",h.sp);game.sound.cue("contest_reveal");game.sound.announce(h.sp);game.render()}
  if DraftBoard.view(game)=="Table":
-  DraftBoard.table(game,left,legends,opts,[["","",56],["Champion","Board",176],["Power","Power",64],["Trait","Ideal",122],["Scale","Scale",80],["HP","hp",48],["DMG","attack",48],["ARM","armor",48],["AS","haste",48],["MOV","speed",48],["AP","potency",48],["","",96]])
+  DraftBoard.table(game,left,legends,opts,[["","",56],["Champion","Board",176],["Power","Power",64],["Trait","Ideal",122],["Scale","Scale",80],["AD","attack",48],["AS","haste",48],["AP","potency",48],["MANA","speed",54],["HP","hp",48],["RES","armor",48],["","",96]])
  else:
   DraftBoard.grid(game,left,legends,opts,4,200,166)
  var detail=game.panel(Rect2(1016,128,558,652));game.label(detail,hero.name+"  ·  "+HeroData.species[chosen].n,28,game.GOLD)

@@ -32,7 +32,7 @@ static func build(game: Node) -> void:
  var name_label=game.label(right,hero.name+" · "+HeroData.species[hero.sp].n,24);name_label.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
  var stats=HeroData.stats(hero);game.label(right,"Lv %d · %s · %d HP · %d ATK"%[hero.level,HeroData.species[hero.sp].role,stats.hp,stats.attack],15,game.GOLD,false)
  if hero.get("build_goal","Adaptive")!="Adaptive":game.label(right,"RUN PLAN · %s item priority"%hero.build_goal,13,Color("8effac"))
- game.label(right,"%d AP · %.2f attacks/s · %d%% shorter skill cooldowns"%[stats.ability_power,1.0/stats.interval,roundi((1.0-HeroData.cooldown_factor(hero))*100)],12,Color("bba2ff"))
+ game.label(right,StatCards.stat_line(stats),12,Color("bba2ff"))
  game.label(right,"Attack range: %d hexes · Move one hex at a time"%ArenaGrid.attack_hexes(stats.range),13,game.MUTED)
  var hex=StatHex.make(right,hero,Vector2(470,160));hex.name="ShopChampionStatHex"
  game.label(right,"Current combat stats · XP, items and evolution",11,game.MUTED)
@@ -56,7 +56,7 @@ static func build(game: Node) -> void:
  swap_button.tooltip_text="Manage the whole team's equipment. Drag items onto another champion's slots to transfer or swap."
  TraitUI.rolls(game,gear,hero,true)
  GearUI.recommended_row(game,right,hero,40)
- game.label(right,"Counter healing: Grievous Thorns · Counter armor/shields: Shieldbreaker Tusk. Use Tactics to focus healers or the back line.",12,game.GOLD)
+ game.label(right,"Counter healing: Grievous Thorns · Counter Resistance/shields: Shieldbreaker Tusk. Use Tactics to focus healers or the back line.",12,game.GOLD)
  var support_count=c.lineup().filter(func(h):return HeroData.species[h.sp].role=="Support").size()
  if support_count>1:game.label(right,"%d Supports · healing at %d%% while they are alive. A single Support heals at full strength."%[support_count,roundi(CombatPacing.support_heal_factor(support_count)*100)],12,game.MUTED)
  ChampionKit.build(game,right,hero,170)
@@ -96,7 +96,7 @@ static func offer(game: Node,parent: Node,hero: Dictionary,index: int) -> void:
  var art=GearUI.token(game,row,item,48);art.payload=data;art.pressed.connect(func():GearUI.inspect(game,item,data))
  var info=VBoxContainer.new();info.size_flags_horizontal=Control.SIZE_EXPAND_FILL;info.add_theme_constant_override("separation",4);row.add_child(info)
  game.label(info,item.name,14)
- game.label(box,("★ LEGENDARY · WILD" if item.get("wild",false) else "FINISHED ITEM") if item.kind=="item" else "COMPONENT",10,Color("ffd36e") if item.get("wild",false) else tint)
+ game.label(box,("WILD · BIG UPSIDE, REAL DOWNSIDE" if item.get("wild",false) else "FINISHED ITEM · "+str(item.get("path_name","")).to_upper()) if item.kind=="item" else "COMPONENT",10,Color("ffd36e") if item.get("wild",false) else tint)
  var rec=Forge.rec_match(hero.sp,id,hero)
  if rec[0]!="":
   var rl=game.label(box,"★ CORE ITEM" if rec[0]=="core" else "★ Builds "+Forge.ITEMS[rec[1]].name,11,Color("ffd36e"),false)

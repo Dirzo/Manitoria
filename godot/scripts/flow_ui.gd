@@ -67,6 +67,15 @@ class Glyph extends Control:
 				draw_rect(Rect2(c.x - s * 0.20, c.y + s * 0.08, s * 0.40, s * 0.26), bone)
 				for d in [-1.0, 1.0]: draw_circle(c + Vector2(d * s * 0.13, -s * 0.06), s * 0.09, Color("2a0c12"))
 				for i in range(3): draw_line(c + Vector2((i - 1) * s * 0.11, s * 0.16), c + Vector2((i - 1) * s * 0.11, s * 0.34), Color("2a0c12"), maxf(1.0, s * 0.04))
+			"anvil":
+				var iron = Color("9aa6b2") if on else Color(1, 1, 1, 0.2); var edge = Color("2a3038")
+				var top = PackedVector2Array([c + Vector2(-s * 0.44, -s * 0.18), c + Vector2(s * 0.30, -s * 0.18), c + Vector2(s * 0.46, -s * 0.30), c + Vector2(s * 0.40, -s * 0.06), c + Vector2(-s * 0.30, -s * 0.02)])
+				draw_colored_polygon(top, iron)
+				draw_rect(Rect2(c.x - s * 0.14, c.y - s * 0.02, s * 0.28, s * 0.24), iron.darkened(0.15))
+				draw_rect(Rect2(c.x - s * 0.30, c.y + s * 0.22, s * 0.60, s * 0.12), iron.darkened(0.25))
+				var line = top.duplicate(); line.append(top[0]); draw_polyline(line, edge, maxf(1.0, s * 0.05), true)
+				if on:
+					for i in range(3): draw_line(c + Vector2(s * 0.02, -s * 0.30), c + Vector2(s * (-0.14 + i * 0.14), -s * 0.46), Color("ffd36e"), maxf(1.0, s * 0.05), true)
 			"roll":
 				draw_arc(c, s * 0.32, 0.4, TAU - 0.4, 24, Color("c8ff9d"), maxf(2.0, s * 0.11), true)
 				var tip = c + Vector2(cos(0.4), sin(0.4)) * s * 0.32

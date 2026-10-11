@@ -33,6 +33,11 @@ func _ready() -> void:
    var bar = ProgressBar.new(); bar.max_value = u.max_hp; bar.value = u.hp; bar.show_percentage = false; bar.custom_minimum_size.y = 7; stack.add_child(bar)
    bar.add_theme_stylebox_override("background",DungeonUI.skin(Color("5a4a34"),Color(0.05,0.04,0.06,0.9),3,false,1))
    bar.add_theme_stylebox_override("fill",DungeonUI.skin(Color(0,0,0,0),Color("70d6bd") if team == 0 else Color("ed9c80"),3,false,0))
+   # v0.76: the mana bar fills toward the next signature cast.
+   var mana = ProgressBar.new(); mana.max_value = 1; mana.value = 0; mana.show_percentage = false; mana.custom_minimum_size.y = 4; stack.add_child(mana)
+   mana.add_theme_stylebox_override("background",game.style(Color(0,0,0,0.35),Color.TRANSPARENT,2,0,0))
+   mana.add_theme_stylebox_override("fill",game.style(Color("4f9dff"),Color.TRANSPARENT,2,0,0))
+   mana.tooltip_text = "Mana: %s casts at full." % HeroData.species[u.hero.sp].ability_name
    # Live damage meter: scaled to the biggest hitter on the field.
    var dmg_row = HBoxContainer.new(); dmg_row.add_theme_constant_override("separation",4); stack.add_child(dmg_row)
    var dmg = ProgressBar.new(); dmg.max_value = 1; dmg.value = 0; dmg.show_percentage = false; dmg.custom_minimum_size = Vector2(110,6); dmg.size_flags_vertical = Control.SIZE_SHRINK_CENTER; dmg_row.add_child(dmg)
@@ -40,7 +45,7 @@ func _ready() -> void:
    dmg.add_theme_stylebox_override("fill",game.style(Color("5fb7d9") if team == 0 else Color("e0735f"),Color.TRANSPARENT,2,0,0))
    var dmg_label = game.label(dmg_row,"0",11,Color("c9d6dc"),false)
    var status = game.label(stack,"",11,game.MUTED,false); status.visible = false
-   rows[u.uid] = {"bar":bar,"status":status,"portrait":portrait,"name":name_label,"dmg":dmg,"dmg_label":dmg_label,"team":team}
+   rows[u.uid] = {"mana":mana,"bar":bar,"status":status,"portrait":portrait,"name":name_label,"dmg":dmg,"dmg_label":dmg_label,"team":team}
  var panel = PanelContainer.new(); add_child(panel); panel.position = Vector2(385,652); panel.size = Vector2(830,127)
  panel.add_theme_stylebox_override("panel",DungeonUI.skin(Color("8a6a3a"),Color(0.05,0.04,0.07,0.94),8,true,2))
  detail = VBoxContainer.new(); detail.add_theme_constant_override("separation",7); panel.add_child(detail)
@@ -59,11 +64,10 @@ func inspect(id: int) -> void:
  game.label(top,u.hero.name + "  /  " + HeroData.species[u.hero.sp].n + ("  ·  " + HeroData.evolution_info(u.hero).name if not branch.is_empty() else ""),13,game.GOLD,false).size_flags_horizontal = Control.SIZE_EXPAND_FILL
  var close = HudKit.medallion(top,game,"close","","Close",func(): detail_panel.visible = false; selected_uid = -1,false,32)
  var row = HBoxContainer.new(); row.add_theme_constant_override("separation",12); detail.add_child(row)
- add_ability(row,HeroData.species[u.hero.sp].ability_name,HeroData.signature_summary(u.hero.sp)+"\n\n"+HeroData.species[u.hero.sp].ability_description,"signature",u.hero.signature_rank)
- for key in u.hero.learned:
-  var a = HeroData.learned_ability(u.hero.sp,int(key)); add_ability(row,a.name,a.summary+"\n\n"+a.description,key,int(u.hero.learned[key]))
- for i in range(maxi(0,HeroData.ABILITY_SLOTS-1-HeroData.regular_learned_count(u.hero))):
-  var empty = game.label(row,"UNDISCOVERED\nEarn an arena level",12,game.MUTED); empty.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ add_ability(row,HeroData.species[u.hero.sp].ability_name,Signatures.description(u.hero),"signature",1)
+ var stats_box = VBoxContainer.new(); stats_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL; row.add_child(stats_box)
+ game.label(stats_box,"AD %d · AS %.2f · AP %d" % [roundi(u.attack), 1.0 / u.interval, roundi(u.get("ap", 100))],12,game.WHITE,false)
+ game.label(stats_box,"Mana %d%% · Resistance %d" % [roundi(float(u.get("mana_gain", 1.0)) * 100), roundi(u.get("res", 0))],12,game.WHITE,false)
 func add_ability(row: HBoxContainer, title: String, description: String, key: String, rank: int) -> void:
  var stack = VBoxContainer.new(); stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL; stack.add_theme_constant_override("separation",3); row.add_child(stack)
  var heading=HBoxContainer.new(); stack.add_child(heading)
@@ -72,10 +76,10 @@ func add_ability(row: HBoxContainer, title: String, description: String, key: St
  var art=AbilityArt.icon(heading,art_key,34); art.tooltip_text=description
  RarityStyle.decorate(art,RarityStyle.for_skill(unit.hero,"signature" if key=="signature" else "ability:"+key))
  var title_label = game.label(heading,title,13,RarityStyle.color(RarityStyle.for_skill(unit.hero,"signature" if key=="signature" else "ability:"+key))); title_label.tooltip_text = description; title_label.custom_minimum_size.x = 110; title_label.size_flags_horizontal=Control.SIZE_EXPAND_FILL
- var status = game.label(stack,"RANK %d" % rank,11,game.GOLD,false)
+ var status = game.label(stack,"MANA",11,game.GOLD,false)
  var bar = ProgressBar.new(); bar.max_value = 1; bar.value = 1; bar.show_percentage = false; bar.custom_minimum_size.y = 4; stack.add_child(bar)
  bar.add_theme_stylebox_override("background",game.style(Color("293d49"),Color.TRANSPARENT,2,0,0))
- bar.add_theme_stylebox_override("fill",game.style(game.GOLD,Color.TRANSPARENT,2,0,0))
+ bar.add_theme_stylebox_override("fill",game.style(Color("4f9dff"),Color.TRANSPARENT,2,0,0))
  var totals = game.label(stack,"0 DMG  ·  0 HEAL",11,game.MUTED,false)
  cooldowns.append({"totals":totals,"key":key,"rank":rank,"status":status,"bar":bar})
 func _process(dt: float) -> void:
@@ -94,16 +98,16 @@ func _process(dt: float) -> void:
   row.dmg.value = lerpf(row.dmg.value, u.damage / top_dmg, 1 - exp(-dt * 6))
   row.dmg_label.text = ("%.1fk" % (u.damage / 1000.0)) if u.damage >= 1000 else str(roundi(u.damage))
   row.bar.value = lerpf(row.bar.value,u.hp,1-exp(-dt*14))
+  row.mana.value = clampf(float(u.get("mana", 0.0)) / maxf(1.0, float(u.get("max_mana", 100.0))), 0.0, 1.0) if u.alive else 0.0
   row.status.text = "%d / %d HP%s" % [ceili(u.hp),ceili(u.max_hp),"  +%d" % ceili(u.shield) if u.shield > 0 else ""] if u.alive else "FALLEN"
   row.portrait.modulate = Color.WHITE if u.alive else Color(0.35,0.4,0.45)
   row.name.modulate = Color.WHITE if id == selected_uid else Color(0.8,0.88,0.92)
  var u = game.sim.find_unit(selected_uid)
  if u.is_empty(): return
  for card in cooldowns:
-  var remaining = u.cd if card.key == "signature" else u.ability_cds.get(card.key,0.0)
-  var total = CombatPacing.signature_cd(u.hero) if card.key == "signature" else CombatPacing.ability_cd(u.hero, card.key)
-  card.bar.value = clampf(1-remaining/total,0,1)
-  card.status.text = "FALLEN" if not u.alive else "RANK %d  ·  %.1fs" % [card.rank,remaining] if remaining > 0 else "RANK %d  ·  READY" % card.rank
+  var mana = float(u.get("mana", 0.0)); var cap = maxf(1.0, float(u.get("max_mana", 100.0)))
+  card.bar.value = clampf(mana / cap,0,1)
+  card.status.text = "FALLEN" if not u.alive else "MANA %d / %d" % [roundi(mana), roundi(cap)] + ("  ·  READY" if mana >= cap else "")
   var credit = "signature" if card.key == "signature" else "ability:" + card.key
   var stats = u.ability_stats.get(credit,{})
   card.totals.text = "%d DMG  ·  %d HEAL" % [roundi(stats.get("damage",0)),roundi(stats.get("healing",0))]

@@ -139,7 +139,7 @@ func next_fixture() -> void:
  if state.round >= 17:
   text(fixture, "SEASON %d COMPLETE" % state.season, 14, GOLD)
   text(fixture, campaign.standings()[0].name + " take the crown.", 34)
-  text(fixture, "Your club finished with %d league wins, %d draws and %d losses. Your heroes, equipment and learned abilities carry into the next season." % [state.league_wins, state.league_draws, state.league_losses], 21, MUTED)
+  text(fixture, "Your club finished with %d league wins, %d draws and %d losses. Your heroes, equipment and level-up cards carry into the next season." % [state.league_wins, state.league_draws, state.league_losses], 21, MUTED)
   action(fixture, "Review the final league table", func(): prefs.intel = "Standings"; navigate("intel"))
   return
  var top = horizontal(fixture)
@@ -282,7 +282,7 @@ func roster_card(parent: Node, h: Dictionary) -> void:
  portrait(box, h.sp, 210)
  if not h.get("evolution", "").is_empty(): text(box,HeroData.evolution_info(h).name.to_upper(),12,HeroData.evolution_color(h))
  text(box, h.name, 23); text(box, HeroData.species[h.sp].n + " · " + HeroData.line(h.sp), 14, MUTED)
- text(box,"%d / 4 abilities · %s" % [HeroData.regular_learned_count(h)+1,"Evolved" if not h.get("evolution", "").is_empty() else "Evolution at Lv %d" % HeroData.EVOLVE_LEVEL],12,GOLD)
+ text(box,"%s · %s" % [Signatures.of(h.sp).name,"Evolved" if not h.get("evolution", "").is_empty() else "Evolution at Lv %d" % HeroData.EVOLVE_LEVEL],12,GOLD)
  progress(box, "Level %d" % h.level, h.xp, HeroData.xp_needed(h.level))
  action(box, "Inspect hero", func(): profile(h, true))
  if h.slot >= 0: action(box, "Bench", func(): campaign.bench(h.id); game.render())
@@ -315,7 +315,7 @@ func profile(h: Dictionary, yours: bool) -> void:
  TraitUI.rolls(game, left, h, true)
  GearUI.recommended_row(game, left, h, 40)
  if h.has("ais_history"): text(left, "Arena Impact form: %d  ·  last match %d  ·  %d matches" % [roundi(League.form(h)), int(h.get("ais_last", 0)), int(h.get("ais_games", 0))], 15, GOLD)
- text(left, "%d HP  ·  %d DMG  ·  %d%% armor  ·  %.1fs per attack  ·  %.1f range" % [stats.hp, stats.attack, stats.armor * 100, stats.interval, stats.range], 14)
+ text(left, StatCards.stat_line(stats), 14).tooltip_text = "Resistance %d blocks %d%% of all damage. Range %.1f." % [roundi(stats.res), roundi(stats.armor * 100), stats.range]
  text(left, "%d tour pts  ·  %d-%d  ·  %d MVP  ·  %d kills" % [int(h.get("tour_points", 0)), int(h.wins), int(h.get("losses", 0)), int(h.get("mvps", 0)), h.kills], 15, MUTED).tooltip_text = "World tour points: win +3, MVP +2, plus the cup finish for every champion who played (10 / 6 / 4 / 2).\n%d bouts · %.1f career impact per bout" % [h.bouts, h.impact / maxf(1, h.bouts)]
  if yours:
   action(left,"Team headliner" if h.id==state.get("headliner","") else "Make team headliner",func():
@@ -342,31 +342,18 @@ func profile(h: Dictionary, yours: bool) -> void:
  StatHex.make(mid, h, Vector2(440, 270))
  StatHex.guide(game, mid, h)
  StatHex.scaling(game, mid, h)
- # Right: every skill on one screen, then the skill book.
+ # Right: the signature, how level-up cards built this champion, and its evolution.
  var right = column(split)
- var full_text = FlowUI.detailed(game)
- var kit_head = HBoxContainer.new(); right.add_child(kit_head)
- text(kit_head, "ABILITIES · %d / %d" % [HeroData.regular_learned_count(h)+1, HeroData.ABILITY_SLOTS], 13, GOLD).size_flags_horizontal = Control.SIZE_EXPAND_FILL
- text(right, "LEGENDARY · learned" if h.learned.has("100") else "LEGENDARY · separate slot · rare roll from level 5", 12, GOLD)
- for entry in ChampionKit.entries(h): ChampionKit.row(game, right, entry, full_text)
- if HeroData.regular_learned_count(h)+1 < HeroData.ABILITY_SLOTS:
-  text(right, "%d empty slot%s · level up in the arena to learn more" % [HeroData.ABILITY_SLOTS-HeroData.regular_learned_count(h)-1, "" if HeroData.ABILITY_SLOTS-HeroData.regular_learned_count(h)-1 == 1 else "s"], 13, MUTED)
- # The full skill book: every skill this species can learn (hover for details).
- text(right, "SKILL BOOK · %d skills · hover for details" % HeroData.DISCOVERY_CHOICES, 13, GOLD)
- var book = GridContainer.new(); book.columns = 2; book.add_theme_constant_override("h_separation", 8); book.add_theme_constant_override("v_separation", 4); right.add_child(book)
- for i in range(HeroData.DISCOVERY_CHOICES):
-  var sk = HeroData.learned_ability(h.sp, i); var owned = h.learned.has(str(i))
-  var cell = HBoxContainer.new(); cell.custom_minimum_size.x = 186; cell.add_theme_constant_override("separation", 6); book.add_child(cell); cell.mouse_filter = Control.MOUSE_FILTER_STOP
-  cell.tooltip_text = sk.name + " · " + sk.summary + "\n" + sk.description
-  var ic = AbilityArt.icon(cell, "discovery:%s:%d" % [h.sp, i], 30); ic.modulate = Color.WHITE if owned else Color(0.7, 0.7, 0.75); ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
-  var nm = game.label(cell, sk.name + ("  ✓" if owned else ""), 13, TEAL if owned else WHITE, false); nm.mouse_filter = Control.MOUSE_FILTER_IGNORE
-  nm.clip_text = true; nm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS; nm.custom_minimum_size.x = 140
- var evolution = h.get("evolution", "")
- text(right, "EVOLUTION · " + (HeroData.evolution_info(h).name if not evolution.is_empty() else "Unlocks at level %d" % HeroData.EVOLVE_LEVEL), 15, GOLD)
- text(right, HeroData.evolution_info(h).description if not evolution.is_empty() else "Choose Ravager, Guardian or Arcanist to change combat strengths and visual effects.", 16, MUTED)
- text(right, "Fill four ability slots, then raise chosen abilities to Rank 2. Wins slightly improve rare-card odds.", 15, GOLD)
+ ChampionKit.build(game, right, h, 300)
+ text(right, "LEVEL-UP CARDS", 13, GOLD)
+ var picks = StatCards.picks_line(h)
+ text(right, picks if not picks.is_empty() else "No cards yet. Every level-up deals three stat cards; keep one.", 13, WHITE if not picks.is_empty() else MUTED)
+ if yours and bool(h.get("card_reset", false)):
+  action(right, "Re-pick level-up cards (free, once)", func():
+   if campaign.reset_cards(h.id): game.toast("%s's level-up cards are ready to pick again." % h.name); dialog.root.queue_free(); game.render()
+   else: game.toast(campaign.last_error))
  if yours:
-  text(right, "ITEMS · %d slots%s" % [HeroData.item_slots(h), "  ·  4th slot at first evolution (Lv %d)" % HeroData.EVOLVE_LEVEL if HeroData.item_slots(h) < 4 else ("  ·  5th slot: Apex Arsenal at Lv %d" % HeroData.APEX_LEVEL if HeroData.item_slots(h) < 5 and str(h.get("apex", "")).is_empty() else "")], 13, GOLD)
+  text(right, "ITEMS · %d slots%s" % [HeroData.item_slots(h), "  ·  4th slot at first evolution (Lv %d)" % HeroData.EVOLVE_LEVEL if HeroData.item_slots(h) < 4 else ("")], 13, GOLD)
   if not state.has("tour") and state.earned_gold < 300: text(right, "Unlock the armory by earning 300 gold in the arena.", 16, MUTED)
   else:
    var slots=horizontal(right)
@@ -393,9 +380,9 @@ func compare_heroes() -> void:
   var box = card(row); portrait(box, h.sp, 190); text(box, h.name + " · " + HeroData.species[h.sp].n, 26)
   var s = HeroData.stats(h)
   text(box, "Level %d    /    %d power" % [h.level, HeroData.power(h)], 21, TEAL)
-  text(box, "%d health\n%d attack\n%d%% armor\n%.2fs attack interval\n%.1f attack range\n%d learned abilities" % [s.hp, s.attack, s.armor * 100, s.interval, s.range, h.learned.size()], 21)
+  text(box, "%d HP\n%d AD\n%.2f AS\n%d AP\n%d%% Mana\n%d Resistance" % [s.hp, s.attack, s["as"], s.ap, s.mana * 100, s.res], 21)
   text(box, HeroData.species[h.sp].ability_name, 22, GOLD)
-  text(box, HeroData.species[h.sp].ability_description, 17, MUTED)
+  text(box, Signatures.description(h), 17, MUTED)
 
 func fixture_name(round_index: int) -> String:
  if round_index < 3: return ["The Old Keepers", "The Practice Pack", "The Gate Wardens"][round_index]
