@@ -369,6 +369,12 @@ func spawn(u: Dictionary) -> void:
  var shield_shape = QuadMesh.new(); shield_shape.size = Vector2(1.75,0.035)
  var shield_mat = health_mat.duplicate(); shield_mat.albedo_color = Color("a8d9ef")
  var shield_bar = mesh(bars,shield_shape,shield_mat,Vector3(0,0.075,0.02)); shield_bar.visible = false
+ # v0.76: the mana bar sits under the health bar, as in TFT.
+ var mana_back = mesh(bars, QuadMesh.new(), back_mat, Vector3(0, -0.085, 0.0)); mana_back.mesh.size = Vector2(1.75, 0.055)
+ var mana_shape = QuadMesh.new(); mana_shape.size = Vector2(1.75, 0.045)
+ var mana_mat = health_mat.duplicate(); mana_mat.albedo_color = Color("4f9dff")
+ var mana_bar = mesh(bars, mana_shape, mana_mat, Vector3(0, -0.085, 0.02))
+ hp_label.position.y = -0.21
  var bubble_shape = SphereMesh.new(); bubble_shape.radius = 1.25; bubble_shape.height = 2.9
  var bubble_mat = material(Color(0.35, 0.82, 0.95, 0.16), 0.2, 0.3, true); bubble_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
  var bubble = mesh(holder, bubble_shape, bubble_mat, Vector3(0, 1.1, 0)); bubble.visible = false
@@ -379,7 +385,7 @@ func spawn(u: Dictionary) -> void:
  var flash_mat = ShaderMaterial.new(); flash_mat.shader = HITFLASH
  for mi in model.find_children("*", "MeshInstance3D", true, false): mi.material_overlay = flash_mat
  if u.hero.has("monster"): Bestiary.dress(model, flash_mat, u.hero, u.summon)
- models[u.uid] = {"root": holder, "motion":motion, "stride":0.0, "recoil":Vector3.ZERO, "aura": aura, "model": model, "player": player, "bar": bar, "bars": bars, "ring": circle, "state": "idle", "lock": 0.0, "dead": false, "hp_label": hp_label, "cast_bar": cast_bar, "bubble": bubble, "shield_bar":shield_bar, "stagger": 0.0, "death_elapsed": 0.0, "arc": {}, "last_target": world_point(u.pos), "ground_speed": 0.0, "walk_hold": 0.0, "turn_rate": 0.0, "name_label": name_label, "tempo": randf_range(0.92, 1.08), "flash": flash_mat, "flash_amt": 0.0, "born": 0.0 if (u.summon or (sim_ref != null and sim_ref.time > 0.5)) else 1.0}
+ models[u.uid] = {"root": holder, "motion":motion, "stride":0.0, "recoil":Vector3.ZERO, "aura": aura, "model": model, "player": player, "bar": bar, "bars": bars, "ring": circle, "state": "idle", "lock": 0.0, "dead": false, "hp_label": hp_label, "cast_bar": cast_bar, "bubble": bubble, "shield_bar":shield_bar, "mana_bar": mana_bar, "stagger": 0.0, "death_elapsed": 0.0, "arc": {}, "last_target": world_point(u.pos), "ground_speed": 0.0, "walk_hold": 0.0, "turn_rate": 0.0, "name_label": name_label, "tempo": randf_range(0.92, 1.08), "flash": flash_mat, "flash_amt": 0.0, "born": 0.0 if (u.summon or (sim_ref != null and sim_ref.time > 0.5)) else 1.0}
  holder.position = world_point(u.pos)
  model.rotation.y = u.heading
 
@@ -414,6 +420,12 @@ func sync(sim: BattleSim, dt: float, speed: float = 1.0) -> void:
   visual.bubble.visible = false
   visual.shield_bar.visible = u.alive and u.shield > 0
   visual.shield_bar.mesh.size.x = maxf(0.01,1.75*minf(1,u.shield/(u.max_hp*0.55)))
+  if visual.has("mana_bar"):
+   var mana_ratio = clampf(float(u.get("mana", 0.0)) / maxf(1.0, float(u.get("max_mana", 100.0))), 0.0, 1.0)
+   visual.mana_bar.visible = u.alive and not u.summon
+   visual.mana_bar.mesh.size.x = maxf(0.005, 1.75 * mana_ratio)
+   var ready_soon = float(u.get("mana", 0.0)) + sim.MANA_PER_ATTACK * float(u.get("mana_gain", 1.0)) >= float(u.get("max_mana", 100.0))
+   visual.mana_bar.material_override.albedo_color = Color("bfe4ff") if ready_soon else Color("4f9dff")
   visual.cast_bar.visible = u.alive and (u.windup > 0 or u.has("pending_cast"))
   if visual.cast_bar.visible:
    var remaining = u.pending_cast.delay / u.pending_cast.total if u.has("pending_cast") else u.windup / maxf(0.01, u.windup_total)

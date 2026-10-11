@@ -35,10 +35,8 @@ static func card_key(hero: Dictionary, card: Dictionary) -> String:
   var gi=Evolutions.grant_index(str(card.key))
   return "discovery:%s:%d"%[hero.sp,gi] if gi>=0 else Evolutions.art(card.key)
  if card.type == "apex":
-  if card.key == "apex_skill" and Evolutions.has(str(hero.get("evolution", ""))):
-   var apex_grant=Evolutions.grant_index(str(hero.evolution))
-   return "discovery:%s:%d"%[hero.sp,apex_grant] if apex_grant>=0 else Evolutions.art(hero.evolution)
-  return {"apex_stats": "renew", "apex_slot": "ward"}.get(str(card.key), "ward")
+  if card.key == "apex_sig": return HeroData.species[hero.sp].ab
+  return {"apex_body": "renew", "apex_instinct": "tailwind"}.get(str(card.key), "ward")
  return card.key
 static func metric_info(sp: String, key: String) -> Dictionary:
  if key in ["evolution","on_hit"]:return {"name":"Evolution on-hit" if key=="evolution" else "On-hit damage","art":HeroData.species[sp].ab}

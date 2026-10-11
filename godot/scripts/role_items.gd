@@ -76,7 +76,7 @@ static func trigger(sim: BattleSim, u: Dictionary, event: String, other: Diction
     "controlled":
      if not sim.active(target,"root") and not sim.active(target,"stun") and not sim.active(target,"silence"):continue
     "cooling":
-     if target.cd<=0:continue
+     if target.mana>=target.max_mana:continue
     "secondary":
      var enemies=sim.foes(u).filter(func(e):return e.uid!=target.uid and e.pos.distance_to(target.pos)<=3.0)
      enemies.sort_custom(func(a,b):return a.pos.distance_squared_to(target.pos)<b.pos.distance_squared_to(target.pos))
@@ -87,7 +87,7 @@ static func trigger(sim: BattleSim, u: Dictionary, event: String, other: Diction
      echoes.sort_custom(func(a,b):return a.hp/a.max_hp<b.hp/b.max_hp)
      if echoes.is_empty():continue
      target=echoes[0]
-  if item.effect=="self_cooldown" and u.cd<=0:continue
+  if item.effect=="self_cooldown" and u.mana>=u.max_mana:continue
   if not ItemEffects.ready(sim,u,id,float(item.proc_cd)):continue
   if condition=="spell_primed":u.items.erase("spell_primed_until")
   apply(sim,u,target,item,amount,nearby)
@@ -121,8 +121,8 @@ static func apply(sim: BattleSim,u: Dictionary,target: Dictionary,item: Dictiona
   "self_rally":sim.status(u,"rally",value)
   "ally_rally", "opening_rally":sim.status(target,"rally",value)
   "self_cooldown":
-   sim.track(u,"cooldown_recovered",minf(value,u.cd),credit);u.cd=maxf(0,u.cd-value)
+   sim.track(u,"cooldown_recovered",value*10.0,credit);sim.add_mana(u,value*10.0)
   "ally_cooldown":
-   sim.track(u,"cooldown_recovered",minf(value,target.cd),credit);target.cd=maxf(0,target.cd-value)
+   sim.track(u,"cooldown_recovered",value*10.0,credit);sim.add_mana(target,value*10.0)
   "root", "slow", "silence", "weaken":sim.status(target,item.effect,value)
  ItemEffects.proc(sim,u,id,target if not target.is_empty() else u)

@@ -11,35 +11,35 @@ extends RefCounted
 
 const RELICS := {
  # Common
- "whetstone":     {"name": "Whetstone", "rarity": "Common", "art": "maul", "text": "+8% damage.", "mods": [{"attack": 0.08}]},
- "giants_belt":   {"name": "Giant's Belt", "rarity": "Common", "art": "vigor", "text": "+10% health.", "mods": [{"hp": 0.10}]},
- "war_drum":      {"name": "War Drum", "rarity": "Common", "art": "rally", "text": "+8% attack speed.", "mods": [{"haste": 0.08}]},
- "sage_lantern":  {"name": "Sage's Lantern", "rarity": "Common", "art": "radiance", "text": "+12% ability power.", "mods": [{"power": 0.12}]},
+ "whetstone":     {"name": "Whetstone", "rarity": "Common", "art": "maul", "text": "+8% AD.", "mods": [{"attack": 0.08}]},
+ "giants_belt":   {"name": "Giant's Belt", "rarity": "Common", "art": "vigor", "text": "+10% HP.", "mods": [{"hp": 0.10}]},
+ "war_drum":      {"name": "War Drum", "rarity": "Common", "art": "rally", "text": "+8% AS.", "mods": [{"haste": 0.08}]},
+ "sage_lantern":  {"name": "Sage's Lantern", "rarity": "Common", "art": "radiance", "text": "+12% AP.", "mods": [{"power": 0.12}]},
  "feather_charm": {"name": "Feather Charm", "rarity": "Common", "art": "tailwind", "text": "8% dodge.", "mods": [{"dodge": 0.08}]},
- "iron_banner":   {"name": "Iron Banner", "rarity": "Common", "art": "bulwark", "text": "Front line: +5 armor and +8% health.", "mods": [{"armor": 0.05, "hp": 0.08, "filter": {"line": "Front"}}]},
- "hunters_eye":   {"name": "Hunter's Eye", "rarity": "Common", "art": "focus", "text": "Back line: +14% damage.", "mods": [{"attack": 0.14, "filter": {"line": "Back"}}]},
+ "iron_banner":   {"name": "Iron Banner", "rarity": "Common", "art": "bulwark", "text": "Front line: +8 Resistance and +8% HP.", "mods": [{"armor": 0.05, "hp": 0.08, "filter": {"line": "Front"}}]},
+ "hunters_eye":   {"name": "Hunter's Eye", "rarity": "Common", "art": "focus", "text": "Back line: +14% AD.", "mods": [{"attack": 0.14, "filter": {"line": "Back"}}]},
  "shadow_dagger": {"name": "Shadow Dagger", "rarity": "Common", "art": "ambush", "text": "Flankers: 15% critical chance.", "mods": [{"crit": 0.15, "filter": {"line": "Flank"}}]},
  "aegis_sigil":   {"name": "Aegis Sigil", "rarity": "Common", "art": "ward", "text": "Start every fight with a shield worth 12% of max health.", "mods": [{"shield": 0.12}]},
- "swift_boots":   {"name": "Swift Boots", "rarity": "Common", "art": "gust", "text": "+12% move speed and +4% attack speed.", "mods": [{"speed": 0.12, "haste": 0.04}]},
+ "swift_boots":   {"name": "Swift Boots", "rarity": "Common", "art": "gust", "text": "+12% Mana and +4% AS.", "mods": [{"speed": 0.12, "haste": 0.04}]},
  "lucky_coin":    {"name": "Lucky Coin", "rarity": "Common", "art": "riddle", "text": "+40 gold after every win.", "gold_win": 40},
  "scholars_tome": {"name": "Scholar's Tome", "rarity": "Common", "art": "arcanist", "text": "+30% XP from fights.", "xp": 0.30},
  # Rare
  "vampiric_chalice": {"name": "Vampiric Chalice", "rarity": "Rare", "art": "drain", "text": "8% lifesteal.", "mods": [{"lifesteal": 0.08}]},
  "hourglass_shard":  {"name": "Hourglass Shard", "rarity": "Rare", "art": "chain", "text": "Signatures are ready twice as fast at the start of a fight.", "mods": [{"cd": 0.5}]},
- "headliner_crown":  {"name": "Headliner's Crown", "rarity": "Rare", "art": "prideroar", "text": "Your headliner gains +22% health and damage.", "mods": [{"hp": 0.22, "attack": 0.22, "filter": {"headliner": true}}]},
- "stoneskin_idol":   {"name": "Stoneskin Idol", "rarity": "Rare", "art": "shellup", "text": "30% tenacity and +3 armor.", "mods": [{"tenacity": 0.30, "armor": 0.03}]},
- "blood_pact":       {"name": "Blood Pact", "rarity": "Rare", "art": "hunger", "text": "+18% damage, but -8% health.", "mods": [{"attack": 0.18, "hp": -0.08}]},
- "glass_lens":       {"name": "Glass Lens", "rarity": "Rare", "art": "beam", "text": "+22% ability power, but -8% health.", "mods": [{"power": 0.22, "hp": -0.08}]},
+ "headliner_crown":  {"name": "Headliner's Crown", "rarity": "Rare", "art": "prideroar", "text": "Your headliner gains +22% HP and damage.", "mods": [{"hp": 0.22, "attack": 0.22, "filter": {"headliner": true}}]},
+ "stoneskin_idol":   {"name": "Stoneskin Idol", "rarity": "Rare", "art": "shellup", "text": "30% tenacity and +5 Resistance.", "mods": [{"tenacity": 0.30, "armor": 0.03}]},
+ "blood_pact":       {"name": "Blood Pact", "rarity": "Rare", "art": "hunger", "text": "+18% AD, but -8% HP.", "mods": [{"attack": 0.18, "hp": -0.08}]},
+ "glass_lens":       {"name": "Glass Lens", "rarity": "Rare", "art": "beam", "text": "+22% AP, but -8% HP.", "mods": [{"power": 0.22, "hp": -0.08}]},
  "bulwark_charm":    {"name": "Bulwark Charm", "rarity": "Rare", "art": "guardian", "text": "Front line: shield of 24% max health the first time they drop below half.", "mods": [{"grant": ["bastion"], "filter": {"line": "Front"}}]},
  "heartstone":       {"name": "Heartstone", "rarity": "Rare", "art": "renew", "text": "+1 maximum life (and one restored).", "max_lives": 1},
  "trait_emblem":     {"name": "Trait Emblem", "rarity": "Rare", "art": "summons", "text": "Counts as one extra champion for a run trait."},
  # Warden relics
- "ember_heart":    {"name": "Ember Heart", "rarity": "Boss", "art": "rebirth", "text": "Your headliner rises once per fight at 25% health.", "mods": [{"grant": ["phoenixember"], "filter": {"headliner": true}}]},
- "warlords_horn":  {"name": "Warlord's Horn", "rarity": "Boss", "art": "howl", "text": "+14% damage and attack speed. Campfires can no longer restore lives.", "mods": [{"attack": 0.14, "haste": 0.14}], "no_rest": true},
- "titan_core":     {"name": "Titan Core", "rarity": "Boss", "art": "boulder", "text": "+25% health and +4 armor, but -8% move speed.", "mods": [{"hp": 0.25, "armor": 0.04, "speed": -0.08}]},
+ "ember_heart":    {"name": "Ember Heart", "rarity": "Boss", "art": "rebirth", "text": "Your headliner rises once per fight at 25% HP.", "mods": [{"grant": ["phoenixember"], "filter": {"headliner": true}}]},
+ "warlords_horn":  {"name": "Warlord's Horn", "rarity": "Boss", "art": "howl", "text": "+14% AD and AS. Campfires can no longer restore lives.", "mods": [{"attack": 0.14, "haste": 0.14}], "no_rest": true},
+ "titan_core":     {"name": "Titan Core", "rarity": "Boss", "art": "boulder", "text": "+25% HP and +6 Resistance, but -8% Mana.", "mods": [{"hp": 0.25, "armor": 0.04, "speed": -0.08}]},
  "abyssal_eye":    {"name": "Abyssal Eye", "rarity": "Boss", "art": "gaze", "text": "15% critical chance and 15% dodge.", "mods": [{"crit": 0.15, "dodge": 0.15}]},
  "golden_idol":    {"name": "Golden Idol", "rarity": "Boss", "art": "victory", "text": "+90 gold after every win, but -1 maximum life.", "gold_win": 90, "max_lives": -1},
- "everflame":      {"name": "Everflame Brazier", "rarity": "Boss", "art": "fire", "text": "Your team regenerates 1% health per second.", "mods": [{"regen": 0.01}]},
+ "everflame":      {"name": "Everflame Brazier", "rarity": "Boss", "art": "fire", "text": "Your team regenerates 1% HP per second.", "mods": [{"regen": 0.01}]},
 }
 
 static func owned(c: Campaign) -> Array:
@@ -104,13 +104,13 @@ static func apply(sim: BattleSim, u: Dictionary, list: Array) -> void:
   if not matches(u, m.get("filter", {})): continue
   if m.has("hp"): u.max_hp *= 1.0 + float(m.hp); u.hp = u.max_hp
   if m.has("attack"): u.attack *= 1.0 + float(m.attack); u.attack_basic = u.get("attack_basic", u.attack) * (1.0 + float(m.attack))
-  if m.has("power"): u.ability_power *= 1.0 + float(m.power); u.skill_base *= 1.0 + float(m.power)
+  if m.has("power"): u.ability_power *= 1.0 + float(m.power); u.skill_base *= 1.0 + float(m.power); u.ap = float(u.get("ap", 100.0)) * (1.0 + float(m.power))
   if m.has("haste"): u.interval /= 1.0 + float(m.haste); u.fx.base_interval = u.interval
-  if m.has("speed"): u.speed *= 1.0 + float(m.speed)
-  if m.has("armor"): u.armor = clampf(u.armor + float(m.armor), 0.0, 0.6)
+  if m.has("speed"): u.mana_gain = float(u.get("mana_gain", 1.0)) + float(m.speed)   # v0.76: move speed bonuses became Mana
+  if m.has("armor"): u.res = float(u.get("res", 0.0)) + float(m.armor) * HeroData.ARMOR_TO_RES; u.armor = u.res / (100.0 + u.res)
   for k in ["crit", "dodge", "lifesteal", "tenacity"]:
    if m.has(k): u.fx[k] = minf({"crit": 0.75, "dodge": 0.5, "lifesteal": 0.4, "tenacity": 0.7}[k], float(u.fx.get(k, 0.0)) + float(m[k]))
-  if m.has("cd"): u.cd *= float(m.cd)
+  if m.has("cd"): u.mana = maxf(float(u.get("mana", 0.0)), float(u.get("max_mana", 100.0)) * (1.0 - float(m.cd)))
   if m.has("regen"): u.run_regen = float(u.get("run_regen", 0.0)) + float(m.regen)
   if m.has("shield"): u.shield = minf(u.max_hp * 0.55, u.shield + u.max_hp * float(m.shield)); u.shield_time = 6.0
   for item in m.get("grant", []):

@@ -22,6 +22,14 @@ const PROFILES = {
 
 static var audit_book: Dictionary = {}
 static func audited(sp: String,key: String) -> Dictionary:
+ # v0.76: only the signature remains; its build comes from Signatures.
+ if key=="signature" and Signatures.DATA.has(sp):
+  var keys=Signatures.build_keys(sp)
+  var path="ad" if Signatures.primary(sp) in ["ad","as"] else "ap"
+  var scaling={}
+  for k in keys:scaling[{"res":"armor","mana":"ap"}.get(k,k)]=1.0/keys.size()
+  HeroData.load_data()
+  return {"build_path":path,"scaling":scaling,"effect":HeroData.species[sp].ab,"magical":path=="ap"}
  if audit_book.is_empty():audit_book=JSON.parse_string(FileAccess.get_file_as_string("res://data/skill-audit.json"))
  return audit_book.get(sp,{}).get(key,{})
 
@@ -56,32 +64,12 @@ static func magical(sp: String,effect: String,key: String="") -> bool:
  if effect=="meteor":return sp!="cyclops"
  return effect not in ["gore","maul","skystrike","antlerrush","vanish","ambush","execute","smash","quake","fissure","whirl","triplebite","barrage","boulder","stonedive"]
 
+## v0.76: what a champion should build, from its signature's scaling stats.
 static func build_weights(hero: Dictionary) -> Dictionary:
  HeroData.load_data()
- var out={"ad":0.0,"ap":0.0,"armor":0.0,"hp":0.0,"as":0.0,"cd":0.55}
- var profiles=[profile(hero.sp,HeroData.species[hero.sp].ab)]
- for key in hero.get("learned",{}):
-  var a=HeroData.learned_ability(hero.sp,int(key));profiles.append(profile(hero.sp,a.effect,str(key)))
- var gi=Evolutions.grant_index(str(hero.get("evolution","")))
- if gi>=0:
-  var a=HeroData.learned_ability(hero.sp,gi);profiles.append(profile(hero.sp,a.effect,str(gi)))
- for p in profiles:
-  for key in ["ad","ap","armor","hp","as"]:out[key]+=p.get(key,0.0)/profiles.size()
- var role=HeroData.species[hero.sp].role
- var primary=audited(hero.sp,"signature").get("build_path","ap")
- if role in ["Ranged","Duelist","Skirmisher","Assassin","Diver","Bruiser"]:out[primary]+=0.40;out["as"]+=0.40
- if role=="Artillery":out[primary]+=0.40;out["as"]+=0.20
- if role in ["Tank","Warden","Bruiser"]:out.armor+=0.50;out.hp+=0.50
- if role=="Support":out.hp+=0.15;out.cd+=0.20
- var on_hit=Evolutions.perk(hero,"on_hit",null)
- if on_hit is Array:
-  out["as"]+=0.30
-  if str(on_hit[0]) in ["burn","venom"]:out[primary]+=0.15
- if float(Evolutions.perk(hero,"lifesteal",0.0))>0.0:
-  out.ad+=0.15;out["as"]+=0.15
- var goal={"Attack damage":"ad","Ability power":"ap","Attack speed":"as","Armor":"armor","Cooldowns":"cd"}.get(str(hero.get("build_goal","Adaptive")),"")
+ var out={"ad":0.15,"ap":0.15,"armor":0.15,"hp":0.25,"as":0.15,"cd":0.15}
+ for k in Signatures.build_keys(str(hero.sp)):
+  out[{"res":"armor","mana":"cd"}.get(k,k)]+=1.0
+ var goal={"Attack damage":"ad","Ability power":"ap","Attack speed":"as","Armor":"armor","Resistance":"armor","Cooldowns":"cd","Mana":"cd"}.get(str(hero.get("build_goal","Adaptive")),"")
  if not goal.is_empty():out[goal]*=1.5
- out.ap*=Evolutions.mod(hero,"potency")
- out.ad*=Evolutions.mod(hero,"attack")
- out["as"]*=Evolutions.mod(hero,"haste")
  return out

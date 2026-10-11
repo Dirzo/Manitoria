@@ -130,10 +130,9 @@ static func make(key: String, id: String, level: int, stage: int, difficulty: St
  var m = info(key)
  var h = HeroData.make_hero(m.sp, id, m.name, level)
  h.name = m.name; h.monster = key; h.slot = slot
- for k in range(mini(3, maxi(0, level - 1))): h.learned[str(k)] = 2 if level >= 8 else 1
- if level >= 5: h.signature_rank = 2
+ HeroData.auto_cards(h, id)
  var tier = TourBalance.rarity(stage, difficulty, id)
- h.skill_rarity = {"0": tier}; h.ability_bonus_0 = 1.25 if tier == "Legendary" else 1.1 if tier == "Rare" else 1.0
+ h.erase("skill_rarity")
  h.equipment = Forge.rival_loadout(h, stage, difficulty)
  if level >= HeroData.EVOLVE_LEVEL: h.evolution = "%s:%d" % [m.sp, abs(hash(id)) % 3]
  return h

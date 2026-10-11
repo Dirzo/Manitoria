@@ -538,7 +538,7 @@ static func threat_label(ratio: float) -> Dictionary:
 
 ## What a fight room pays, for tooltips.
 static func reward_text(kind: String) -> String:
- return {"battle": "Win: pick a component · +100 pts", "elite": "Win: pick a relic · +250 pts", "boss": "Win: a finished item, a Boss relic and a chest · +800 pts"}.get(kind, "") + "  ·  Flawless: +50% points, +25% gold"
+ return {"battle": "Win: pick a component · +100 pts", "elite": "Win: pick a relic and a card reroll · +250 pts", "boss": "Win: a finished item, a Boss relic, a chest and 2 card rerolls · +800 pts"}.get(kind, "") + "  ·  Flawless: +50% points, +25% gold"
 
 static func add_score(c: Campaign, points: int) -> void:
  var d = c.state.dungeon
@@ -654,8 +654,7 @@ static func offer_draft(c: Campaign, kind: String, cost: int) -> void:
  for sp in picks:
   var id = "h%d" % int(c.state.next_id); c.state.next_id = int(c.state.next_id) + 1
   var h = HeroData.make_hero(sp, id, HeroData.themed_name(sp, id), level)
-  for k in range(mini(3, maxi(0, level - 1))): h.learned[str(k)] = 1
-  if level >= 5: h.signature_rank = 2
+  HeroData.auto_cards(h, id)
   h.price = 0
   offers.append(h)
  d.draft = {"kind": kind, "offers": offers, "cost": cost}
@@ -740,10 +739,11 @@ static func resolve(c: Campaign, sim: BattleSim) -> bool:
   add_score(c, points + (points / 2 if flawless else 0))
   if flawless: d.flawless = int(d.get("flawless", 0)) + 1; report.flawless = true
   if kind == "battle": offer_loot(c, "component")
-  elif kind == "elite": d.elites = int(d.elites) + 1; offer_loot(c, "relic")
+  elif kind == "elite": d.elites = int(d.elites) + 1; offer_loot(c, "relic"); c.state.card_rerolls = int(c.state.get("card_rerolls", 0)) + 1
   else:
    d.wardens = int(d.wardens) + 1
    offer_loot(c, "item"); offer_loot(c, "boss_relic")
+   c.state.card_rerolls = int(c.state.get("card_rerolls", 0)) + 2
    report.warden_down = true
    d.history.append({"act": int(d.act), "name": depth(c).name, "fights": int(d.fights), "lives": int(d.lives)})
    t.history.append({"level": int(d.act), "location": depth(c).name, "wins": int(d.wins), "attempt": 1, "promoted": true, "place": 1})

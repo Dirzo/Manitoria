@@ -14,7 +14,12 @@ var shot_id = 0
 var ticks = 0
 var silent = false
 var battle_seed = 0
-var team_cast := [-10.0, -10.0]   # when each team's latest skill lands (CombatPacing.TEAM_SPACING)
+var team_cast := [-10.0, -10.0]
+## v0.76: set while a signature deals true damage (ignores Resistance).
+var true_hit := false
+## Mana earned per basic attack and the cap from one hit taken (TFT rules).
+const MANA_PER_ATTACK := 10.0
+const MANA_HIT_CAP := 40.0   # when each team's latest skill lands (CombatPacing.TEAM_SPACING)
 ## Run-wide modifiers per team (dungeon relics and run traits), applied once the fighters are placed.
 var team_mods: Array = [[], []]
 ## The guild run's four-champion "elite squad" bonus; the dungeon sizes fights to the squad instead.
@@ -46,35 +51,30 @@ func setup(left: Array, right: Array, seed_value: int, rival_quality: float = 1.
     unit.max_hp *= CombatPacing.ELITE_SQUAD.hp; unit.hp = unit.max_hp
     unit.attack *= CombatPacing.ELITE_SQUAD.attack; unit.attack_basic = unit.get("attack_basic", unit.attack) * CombatPacing.ELITE_SQUAD.attack
     unit.elite = true
-    unit.skill_base *= 1.20;unit.ability_power *= 1.20
+    unit.skill_base *= 1.20;unit.ability_power *= 1.20;unit.sig_scale = 1.20
  for u in units:
   if not u.summon and not team_mods[u.team].is_empty(): Relics.apply(self, u, team_mods[u.team])
 
 func add_unit(hero: Dictionary, team: int, pos: Vector2, quality: float = 1.0, owner: int = -1) -> Dictionary:
  hero=hero.duplicate(true)
- if owner<0 and HeroData.is_awakened(hero):hero.learned["12"]=1
- # A species evolution may bring its own ability (learned slot 13-15 inside the fight only).
- if owner<0 and Evolutions.grant_index(str(hero.get("evolution","")))>=0:hero.learned[str(Evolutions.grant_index(hero.evolution))]=1
+ hero.learned = {}
  var s = HeroData.stats(hero, quality)
  var u = {"uid": uid, "hero": hero.duplicate(true), "team": team, "pos": pos, "heading": PI / 2 if team == 0 else -PI / 2, "hp": s.hp, "max_hp": s.hp, "attack": s.attack, "armor": s.armor, "speed": s.speed, "range": s.range, "interval": s.interval, "cd": rng.randf_range(1.3, 2.8), "attack_timer": rng.randf_range(0.0, 0.4), "windup": 0.0, "target": -1, "pending_target": -1, "status": {}, "shield": 0.0, "shield_time": 0.0, "cast_time": 0.0, "alive": true, "moving": false, "reborn": false, "summon": owner >= 0, "owner": owner, "ttl": 16.0, "damage": 0.0, "healing": 0.0, "blocked": 0.0, "kills": 0, "kill_chain": 0, "last_kill": -20.0, "ability_cds": {}, "radius": BODY.get(hero.sp, 0.72)}
  u.items = {}; u.tactics = BattleTactics.for_hero(hero)
  for key in ["ability_power","skill_base","base_hp","base_armor","base_interval"]:u[key]=s[key]
- if owner < 0 and float(Evolutions.perk(hero, "regen", 0.0)) > 0.0: u.evo_regen = float(Evolutions.perk(hero, "regen", 0.0))
+ # v0.76: six stats and a mana bar.
+ u.ap = s.ap; u.res = s.res; u.mana_gain = s.mana; u.base_as = s.base_as
+ u.max_mana = float(s.max_mana); u.mana = float(s.start_mana); u.buffs = {}; u.sig = {}; u.sig_mult = Signatures.power_mult(hero)
  u.velocity = Vector2.ZERO
  u.start_pos = pos; u.area_wait = {}; u.recovery = 0.0; u.windup_total = 0.0
  u.dots = []; u.credit = "basic"; u.ability_stats = {}; u.timeline = {}; u.damage_taken = 0.0; u.healing_received = 0.0
  # Staggered openers per class (CombatPacing): front line first, flankers and artillery last.
- var opener = CombatPacing.opening(hero, rng)
- if owner < 0: u.cd = opener.signature
- for k in hero.learned: u.ability_cds[k] = opener.get(k, 6.0)
- if owner < 0:
-  u.max_hp *= CombatPacing.HP_SCALE; u.hp = u.max_hp; u.attack_basic = u.attack * CombatPacing.BASIC_SCALE
- else:
-  u.attack_basic = u.attack
+ u.cd = 0.0
+ u.attack_basic = u.attack
  if owner < 0 and HeroData.species[hero.sp].role == "Artillery": u.attack_basic *= 1.30
  if owner >= 0:
   u.max_hp *= 0.21; u.hp = u.max_hp; u.attack *= 0.36; u.radius = 0.3
-  u.range = 0.7; u.speed *= 1.2
+  u.range = 0.7; u.speed *= 1.2; u.mana = 0.0; u.max_mana = 99999.0
  uid += 1
  units.append(u)
  Forge.setup_unit(self, u)
@@ -169,7 +169,7 @@ func begin_hex_step(unit: Dictionary, target: Dictionary, lurking: bool=false, r
 func advance_hex_step(unit: Dictionary, dt: float) -> void:
  var destination = ArenaGrid.point(unit.next_cell)
  var direction = destination-unit.pos
- var speed = unit.speed*(0.55 if active(unit,"slow") else 1.0)*(1.22 if active(unit,"rally") else 1.0)
+ var speed = unit.speed*(0.55 if active(unit,"slow") else 1.0)*(1.22 if active(unit,"rally") else 1.0)*(1.0+buff_sum(unit,"move"))
  unit.velocity=direction.normalized()*speed
  unit.heading=atan2(direction.x,direction.y);unit.moving=true
  unit.pos=unit.pos.move_toward(destination,speed*dt)
@@ -230,7 +230,7 @@ func target_score(u: Dictionary, enemy: Dictionary) -> float:
  return score
 
 func can_heal(u: Dictionary) -> bool:
- if HeroData.species[u.hero.sp].ab in ["rootbloom", "radiance"]: return true
+ if u.hero.sp in ["treant", "unicorn", "naga"] or (u.hero.sp == "phoenix" and Signatures.evo_index(u.hero) == 2): return true
  for key in u.hero.learned:
   if HeroData.learned_ability(u.hero.sp, int(key)).effect == "renew": return true
  return false
@@ -267,6 +267,8 @@ const CC_WEIGHT := {"stun": 1.0, "root": 1.0, "silence": 1.0, "fear": 1.0, "slow
 
 func status(u: Dictionary, key: String, seconds: float) -> void:
  if not u.alive: return
+ if key in ["stun", "root", "slow", "taunt", "confuse"] and (active(u, "unstoppable") or active(u, "stone")): return
+ if key in ["stun", "root", "slow", "poison"] and active(u, "cleansed"): return
  var original_seconds=seconds
  seconds = Forge.status_mod(u, key, seconds)
  if seconds<original_seconds:
@@ -286,16 +288,16 @@ func status(u: Dictionary, key: String, seconds: float) -> void:
   if key == "stun": u.windup = 0.0; u.attack_timer = maxf(u.attack_timer, 0.25)
   u.erase("pending_cast"); u.cast_time = 0.0
 
-func shield(u: Dictionary, value: float) -> void:
+func shield(u: Dictionary, value: float, seconds: float = 5.0) -> void:
  var original_value=value
  value = Forge.shield_mod(u, value)
  if value>original_value:ItemFeedback.signal_effect(self,u,"worldtree",u)
  value *= CombatPacing.sustain_factor(time)
- u.shield = minf(u.max_hp * 0.55, u.shield + value)
- u.shield_time = 5.0
+ u.shield = minf(u.max_hp * 0.75, u.shield + value)
+ u.shield_time = maxf(u.shield_time, seconds)
 
 func heal(source: Dictionary, target: Dictionary, amount: float, credit: String = "") -> void:
- if not target.alive: return
+ if not target.alive or active(target, "airborne"): return
  amount = Forge.heal_mod(target, amount, source)
  if HeroData.species.get(source.hero.sp,{}).get("role","")=="Support":
   var support_count=living(source.team,false).filter(func(u):return HeroData.species.get(u.hero.sp,{}).get("role","")=="Support").size()
@@ -329,10 +331,8 @@ var reflecting := false
 func hurt(source: Dictionary, target: Dictionary, amount: float, magical: bool = true, credit: String = "") -> void:
  if not target.alive: return
  var hit_credit=credit if not credit.is_empty() else str(source.credit)
- if hit_credit=="signature":magical=SkillScaling.magical(source.hero.sp,HeroData.species[source.hero.sp].ab)
- elif hit_credit.begins_with("ability:"):
-  var skill_key=hit_credit.trim_prefix("ability:")
-  magical=SkillScaling.magical(source.hero.sp,HeroData.learned_ability(source.hero.sp,int(skill_key)).effect,skill_key)
+ var is_true = true_hit
+ if active(target, "stone"): return
  if magical and ItemEffects.has(target,"spellguard"):
   track(target,"mitigated",amount*.12,"item:spellguard");amount*=.88
  if hit_credit=="basic" and target.shield>0:RoleItems.trigger(self,source,"shield_hit",target)
@@ -342,18 +342,24 @@ func hurt(source: Dictionary, target: Dictionary, amount: float, magical: bool =
   var broken=minf(target.shield,source.attack*0.35)
   target.shield-=broken;target.blocked+=broken;track(target,"blocked",broken,"incoming");track(source,"shield_break",broken,"item:claw");ItemEffects.proc(self,source,"claw",target)
  amount = Forge.damage_mod(self, source, target, amount, magical, hit_credit)
- if not source.summon and target.hp < target.max_hp * 0.35: amount *= 1.0 + float(Evolutions.perk(source.hero, "execute", 0.0))
+ amount *= SignatureCast.damage_mult(self, source, target)
  amount *= 1.22 if active(source, "rally") else 1.0
+ amount *= 1.0 + buff_sum(source, "ad") if hit_credit == "basic" else 1.0
  amount *= 0.75 if active(source, "weaken") else 1.0
- amount *= 0.35 if active(target, "shell") else 1.0
- amount *= 0.84 if target.hero.sp == "nemean" else 1.0
- amount *= 1.0 - target.armor * (0.55 if magical else 1.0)
+ var pre = amount
+ var shell_cut = 0.0
+ if active(target, "shell"): shell_cut = amount * 0.80; amount *= 0.20
+ amount *= 1.0 - minf(0.6, buff_sum(target, "dr"))
+ if target.hero.sp == "nemean" and not target.summon: amount *= 0.75 if Signatures.evo_index(target.hero) == 1 else 0.85
+ if not is_true: amount *= 100.0 / (100.0 + maxf(0.0, resist(target)))
+ if target.sig.has("absorbed"): target.sig.absorbed = float(target.sig.absorbed) + shell_cut
  var absorbed = minf(target.shield, amount)
  target.shield -= absorbed; target.blocked += absorbed; amount -= absorbed
  track(target,"blocked",absorbed,"incoming")
  if absorbed > 0: emit({"type":"blocked", "uid":target.uid, "source":source.uid, "pos":target.pos, "amount":absorbed, "credit":credit if not credit.is_empty() else source.credit})
  var actual = minf(target.hp, amount)
  target.hp = maxf(0, target.hp - amount); source.damage += actual
+ if not target.summon: add_mana(target, minf(MANA_HIT_CAP, pre * 0.01 + actual * 0.03))
  target.damage_taken += actual; track(target,"taken",actual,"incoming")
  if target.summon:
   var owner_unit = find_unit(target.owner)
@@ -362,7 +368,7 @@ func hurt(source: Dictionary, target: Dictionary, amount: float, magical: bool =
  if source.summon:
   var owner_unit = find_unit(source.owner)
   if not owner_unit.is_empty(): owner_unit.damage += actual
- if active(source, "hunger"): heal(source, source, actual * 0.45,"signature")
+ if active(source, "hunger") and hit_credit == "basic": heal(source, source, actual * float(source.sig.get("lifesteal", 0.5)),"signature")
  if not magical and not source.summon and source.hero.get("evolution", "") == "ravager": heal(source, source, actual * 0.12,"lifesteal")
  # Evolution perks: lifesteal on basics, on-hit riders, thorns.
  if not source.summon and hit_credit == "basic" and actual > 0:
@@ -392,7 +398,10 @@ func hurt(source: Dictionary, target: Dictionary, amount: float, magical: bool =
  if target.hp > 0: return
  if Forge.on_death(self, target): return
  if target.hero.sp == "phoenix" and not target.reborn and not target.summon:
-  target.reborn = true; target.hp = target.max_hp * 0.35
+  target.reborn = true; target.hp = target.max_hp * (0.70 if Signatures.evo_index(target.hero) == 0 else 0.40)
+  target.mana = target.max_mana
+  if Signatures.evo_index(target.hero) == 0:
+   for e in SignatureCast.within(self, target, target.pos, 1): SignatureCast.hit(self, target, e, SignatureCast.ap(target, 180))
   target.healing += target.hp; target.healing_received += target.hp
   track(target,"healing",target.hp,"rebirth"); track(target,"casts",1,"rebirth")
   target.status.clear(); target.dots.clear(); shield(target, target.max_hp * 0.15)
@@ -400,6 +409,13 @@ func hurt(source: Dictionary, target: Dictionary, amount: float, magical: bool =
   return
  target.alive = false; target.moving = false; target.windup = 0.0
  emit({"type": "death", "uid": target.uid, "pos": target.pos})
+ SignatureCast.on_death(self, target)
+ if not source.summon and source.alive and source.hero.sp == "wendigo":
+  var we = Signatures.evo_index(source.hero)
+  if we == 0 and source.buffs.has("frenzy"): source.buffs.frenzy.t += 1.0; source.status.hunger = source.status.get("hunger", 0.0) + 1.0
+  if we == 1:
+   var prey = SignatureCast.lowest(self, source)
+   if not prey.is_empty(): SignatureCast.leap(self, source, prey)
  if not target.summon:
   var killer = find_unit(source.owner) if source.summon else source
   if killer.is_empty(): killer = source
@@ -415,16 +431,14 @@ func attack(u: Dictionary, target: Dictionary) -> void:
  cc_source = u
  u.credit = "basic"; track(u,"casts",1)
  emit({"type": "release", "uid": u.uid, "pos": u.pos, "target": target.pos, "ranged": u.range > 2})
- var amount = u.get("attack_basic", u.attack)
+ var amount = u.get("attack_basic", u.attack) * SignatureCast.basic_mult(u)
+ if not u.summon: add_mana(u, MANA_PER_ATTACK)
  if u.range > 2:
   var duration = clampf(u.pos.distance_to(target.pos) / (8.0 if is_artillery(u) else 10.0), 0.28, 1.35)
   launch(u, target, amount, duration, false, HeroData.species[u.hero.sp].ab)
  else:
   hurt(u, target, amount, false)
-  if u.summon and u.hero.sp == "arachne": status(target, "slow", 0.8)
-  if u.hero.sp == "hydra" and not u.summon:
-   for e in near_foes(u, target.pos, 1.5):
-    if e.uid != target.uid: hurt(u, e, amount * 0.3, false)
+  if target.alive: SignatureCast.on_basic(self, u, target, amount)
 
 func step(dt: float) -> void:
  if finished: return
@@ -435,14 +449,27 @@ func step(dt: float) -> void:
    var source = find_unit(p.source); var target = find_unit(p.target)
    if not source.is_empty() and not target.is_empty():
     cc_source = source
+    true_hit = p.get("true_damage", false)
     if p.get("area", false):
-     for e in near_foes(source, target.pos, 2.4):
-      hurt(source, e, p.amount,true,p.get("credit","basic")); status(e, "stun", 0.6)
+     var hexes = int(p.get("radius", 1))
+     for e in SignatureCast.within(self, source, p.last_pos if not target.alive else target.pos, hexes):
+      hurt(source, e, p.amount,true,p.get("credit","basic")); status(e, "stun", float(p.get("stun", 0.6)))
+      if p.get("knock", false): SignatureCast.push(self, e, target.pos, 1)
+     if p.get("roll", false):
+      var dir = (target.pos - source.pos).normalized(); var a = target.pos; var b = target.pos + dir * ArenaGrid.ROW_GAP * 3
+      for e in SignatureCast.line_hits(self, source, a, b, 1.5): hurt(source, e, p.amount * 0.5, true, "signature"); SignatureCast.push(self, e, a, 1)
      emit({"type": "impact", "pos": target.pos, "effect": p.effect, "credit": p.credit, "uid": source.uid, "heavy": p.get("heavy", false)})
     else:
      if target.alive:
       hurt(source, target, p.amount, p.magical,p.get("credit","basic"))
+      if float(p.get("stun", 0.0)) > 0.0: status(target, "stun", float(p.stun))
+      if float(p.get("silence", 0.0)) > 0.0: status(target, "silence", float(p.silence))
+      if p.get("pierce", false):
+       var behind = foes(source).filter(func(e): return e.uid != target.uid and (e.pos - target.pos).normalized().dot((target.pos - source.pos).normalized()) > 0.7 and e.pos.distance_to(target.pos) < ArenaGrid.ROW_GAP * 2.2)
+       if not behind.is_empty(): hurt(source, behind[0], p.amount * 0.5, true, "signature")
+      if p.get("credit","basic") == "basic" and target.alive: SignatureCast.on_basic(self, source, target, p.amount)
       emit({"type": "impact", "pos": target.pos, "effect": p.effect, "credit": p.credit, "uid": source.uid, "small": true, "heavy": p.get("heavy", false)})
+    true_hit = false
    projectiles.erase(p)
  for zone in zones.duplicate():
   zone.remaining -= dt
@@ -469,7 +496,10 @@ func step(dt: float) -> void:
    var source = find_unit(int(dot.source))
    var tick_time = minf(dt, dot.remaining)
    dot.remaining -= dt
-   if not source.is_empty() and u.alive: hurt(source, u, dot.damage * tick_time,true,dot.get("credit","signature"))
+   if not source.is_empty() and u.alive:
+    true_hit = str(dot.kind).begins_with("venom_true")
+    hurt(source, u, dot.damage * tick_time,true,dot.get("credit","signature"))
+    true_hit = false
    if dot.remaining <= 0: u.dots.erase(dot)
   if not u.alive: continue
   Forge.tick(self, u, dt)
@@ -477,15 +507,18 @@ func step(dt: float) -> void:
    u.ttl -= dt
    if u.ttl <= 0:
     u.alive = false; emit({"type": "death", "uid": u.uid, "pos": u.pos}); continue
-  if u.hero.sp == "troll": heal(u, u, u.max_hp * 0.007 * dt,"regeneration")
-  if not u.summon and u.has("evo_regen"): heal(u, u, u.max_hp * u.evo_regen * dt, "regeneration")
+  for key in u.buffs.keys():
+   u.buffs[key].t -= dt
+   if u.buffs[key].t <= 0 or (u.buffs[key].get("while_shield", false) and u.shield <= 0): u.buffs.erase(key)
+  SignatureCast.tick(self, u, dt)
+  SignatureCast.tick_any(self, u)
+  if not u.alive: continue
   if not u.summon and u.has("run_regen"): heal(u, u, u.max_hp * u.run_regen * dt, "regeneration")
   if u.has("boss"): Bestiary.tick(self, u, dt)
   u.cd = maxf(0, u.cd - dt)
   u.cast_time = maxf(0, u.cast_time - dt)
   u.recovery = maxf(0, u.recovery - dt)
-  u.attack_timer = maxf(0, u.attack_timer - dt * (1.22 if active(u, "rally") else 1.0))
-  for key in u.ability_cds: u.ability_cds[key] = maxf(0, u.ability_cds[key] - dt)
+  u.attack_timer = maxf(0, u.attack_timer - dt * as_mult(u))
   if active(u, "stun"):
    u.windup = 0.0; u.erase("pending_cast"); continue
   if u.has("next_cell"):
@@ -505,7 +538,6 @@ func step(dt: float) -> void:
     u.casting_resolution = true
     if not victim.is_empty():
      if pending.kind == "signature": cast_signature(u, victim)
-     else: cast_learned(u, victim, pending.ability, pending.rank)
     u.erase("casting_resolution"); u.erase("pending_cast"); u.cast_time = 0.22
     u.recovery = 0.22; u.recovery_clip = "cast"
    continue
@@ -522,24 +554,18 @@ func step(dt: float) -> void:
    # The dive: switch to the back line and open with the signature right away.
    u.dove = true; lurking = false
    u.tactics = u.tactics.duplicate(); u.tactics.target = "backline"; u.tactics.persistence = "committed"
-   u.cd = minf(u.cd, 0.15); team_cast[u.team] = -10.0
+   u.mana = maxf(u.mana, u.max_mana); team_cast[u.team] = -10.0
   var target = closest(u)
   if target.is_empty(): continue
   u.target = target.uid
   var direction = target.pos - u.pos
   u.heading = atan2(direction.x, direction.y)
   if u.cast_time > 0 or u.recovery > 0: continue
-  # Teams take turns: a fighter waits for its team's previous skill to start landing before
-  # beginning its own, so skills arrive as a readable sequence instead of a pile-up.
-  var lane_free = time >= team_cast[u.team] + CombatPacing.TEAM_SPACING * 0.35 or (can_heal(u) and wounded_allies(u)[0].hp / wounded_allies(u)[0].max_hp < 0.3)
-  if not u.summon and not active(u, "silence") and lane_free and not lurking:
-   var casted = false
-   if u.tactics.abilities == "learned": casted = try_learned(u, target)
-   if not casted and u.cd <= 0 and cast_signature(u, target):
-    u.cd = CombatPacing.signature_cd(u.hero)
-    u.cast_time = 0.6; casted = true
-   if not casted and u.tactics.abilities != "learned": casted = try_learned(u, target)
-   if casted: continue
+  # v0.76: cast the signature the moment the mana bar is full (TFT-style).
+  if not u.summon and not active(u, "silence") and not lurking and u.mana >= u.max_mana and SignatureCast.ready(self, u):
+   if cast_signature(u, target):
+    u.cast_time = 0.6
+    continue
   var engaged = in_attack_range(u, target)
   if engaged and u.attack_timer <= 0:
    u.velocity = Vector2.ZERO
@@ -620,118 +646,40 @@ func poison(u: Dictionary, target: Dictionary, seconds: float, power: float, kin
 func cast_signature(u: Dictionary, target: Dictionary) -> bool:
  cc_source = u
  var key = HeroData.species[u.hero.sp].ab
- if key in ["howl","brood"] and living(u.team).filter(func(v):return v.summon and v.owner==u.uid).size()>=3:return false
- if not u.get("casting_resolution", false) and u.tactics.target == "natural":
-  var candidates = foes(u).filter(func(e): return u.pos.distance_to(e.pos) <= 8.5)
-  if key in ["venom", "vanish"]:
-   candidates.sort_custom(func(a, b): return a.hp / a.max_hp < b.hp / b.max_hp)
-   if not candidates.is_empty(): target = candidates[0]
-  if key in ["skystrike", "stonedive", "foxfire"]:
-   var backline = candidates.filter(func(e): return e.range > 2 and not e.summon)
-   backline.sort_custom(func(a, b): return u.pos.distance_to(a.pos) < u.pos.distance_to(b.pos))
-   if not backline.is_empty(): target = backline[0]
- var range_limit = maxf(9.5, u.range + 1.0) if u.range > 2 else 3.2
- if key in ["shriek", "triplebite"]: range_limit = 3.2
- if key in ["gore", "venom", "skystrike", "foxfire", "stonedive", "vanish", "antlerrush", "maul"]: range_limit = 8.5
- var friendly = key in ["rootbloom", "radiance", "tidal", "tailwind", "regrowth", "shellup", "bulwark", "hunger", "howl", "brood", "prideroar", "frostroar"]
- if not friendly and ArenaGrid.distance(u.cell,target.cell)>ArenaGrid.attack_hexes(range_limit): return false
- var allies = wounded_allies(u)
- if key in ["rootbloom", "radiance"] and allies[0].hp / allies[0].max_hp > 0.86: return false
- if key == "regrowth" and u.hp / u.max_hp > 0.72: return false
- if key in ["shellup", "bulwark", "hunger", "prideroar", "frostroar"] and u.pos.distance_to(target.pos) > 4.5: return false
+ var sig_name = HeroData.species[u.hero.sp].ability_name
  if not u.get("casting_resolution", false):
-  if key in ["smash", "acid", "flamewave", "magma", "boulder", "shriek", "triplebite"]:
-   if not area_ready(u, key, u.pos if key in ["shriek", "triplebite"] else target.pos, 2.5): return false
-  team_cast[u.team] = time + SkillCombat.windup(key)
-  u.pending_cast = {"kind": "signature", "target": target.uid, "delay": SkillCombat.windup(key), "total": SkillCombat.windup(key), "effect": key, "name": HeroData.species[u.hero.sp].ability_name, "credit": "signature"}
-  emit({"type": "telegraph", "credit": u.pending_cast.credit, "uid": u.uid, "pos": u.pos, "target": u.pos if friendly or key in ["shriek", "triplebite"] else target.pos, "effect": key, "name": HeroData.species[u.hero.sp].ability_name})
+  var windup = SkillCombat.windup(key)
+  team_cast[u.team] = time + windup
+  u.pending_cast = {"kind": "signature", "target": target.uid, "delay": windup, "total": windup, "effect": key, "name": sig_name, "credit": "signature"}
+  emit({"type": "telegraph", "credit": "signature", "uid": u.uid, "pos": u.pos, "target": target.pos, "effect": key, "name": sig_name})
   return true
+ # The bar empties as the signature lands; overflow is lost, as in TFT.
+ u.mana = 0.0
  u.credit = "signature"; track(u,"casts",1)
- var strength = (1.0 + (u.hero.signature_rank - 1) * 0.20)
- var power = SkillScaling.power(u,key) * strength * CombatPacing.power(u.hero, "signature")
- var utility=clampf(SkillScaling.power(u,key)/u.skill_base,0.65,1.60)
- cast_visual(u, key, HeroData.species[u.hero.sp].ability_name, target.pos)
- match key:
-  "gore", "venom", "skystrike", "maul", "stonedive", "vanish", "antlerrush":
-   var start = u.pos
-   leap(u, target)
-   hurt(u, target, power * (2.1 if key == "vanish" else 1.55 if key == "maul" else 1.7))
-   if key in ["gore", "skystrike", "stonedive"]: status(target, "stun", 0.8)
-   if key == "maul": status(target, "root", 1.5)
-   if key == "venom": poison(u, target, 4, power * 0.3)
-   if key == "stonedive":
-    shield(u, u.max_hp * 0.18)
-    for e in near_foes(u, target.pos, ArenaGrid.ROW_GAP * 1.05):
-     if e.uid != target.uid: hurt(u, e, power * 0.55)
-   if key == "vanish": status(u, "stealth", 0.9)
-   if key == "antlerrush":
-    for e in foes(u):
-     if e.uid != target.uid and Geometry2D.get_closest_point_to_segment(e.pos, start, u.pos).distance_to(e.pos) < 1.7: hurt(u, e, power * 1.4)
-  "bulwark", "prideroar", "shellup", "frostroar":
-   shield(u, u.base_hp * CombatPacing.HP_SCALE * 0.24 * strength * utility)
-   for e in near_foes(u, u.pos, 3.4):
-    e.taunt_by = u.uid; status(e, "taunt", 2.5 * strength)
-    if key == "frostroar": status(e, "slow", 3); hurt(u, e, power * 0.6)
-   if key == "shellup": status(u, "shell", minf(4.5,3 * strength * utility))
-   if key == "prideroar":
-    for a in allies:
-     if a.pos.distance_to(u.pos) < 5: status(a, "rally", minf(6.0,4 * strength * utility))
-  "smash", "shriek", "triplebite":
-   var victims = near_foes(u, target.pos if key == "smash" else u.pos, 3.0)
-   if key == "triplebite": victims = victims.slice(0, 3)
-   for e in victims:
-    hurt(u, e, power * (1.55 if key == "smash" else 1.05))
-    if key == "shriek": status(e, "silence", 2.5)
-    elif key == "triplebite": poison(u, e, 3, power * 0.20, "bleed")
-    else: status(e, "slow", 2.5)
-  "hunger": status(u, "hunger", minf(7.0,5 * strength * utility)); status(u, "rally", minf(7.0,5 * strength * utility))
-  "howl", "brood", "foxfire":
-   var pets = living(u.team).filter(func(a): return a.summon and a.owner == u.uid)
-   if pets.size() < 3:
-    for i in range(mini(3 if key == "brood" else 2,3-pets.size())):
-     var pet = HeroData.make_hero("arachne" if key == "brood" else "direwolf" if key == "howl" else "kitsune", "pet", "Broodling" if key == "brood" else "Spirit", int(u.hero.level))
-     add_unit(pet, u.team, u.pos + Vector2(rng.randf_range(-1, 1), rng.randf_range(-1, 1)), strength * utility, u.uid)
-   if key == "foxfire": leap(u, target); shield(u, u.max_hp * 0.12)
-  "acid", "flamewave", "magma":
-   zones.append({"source": u.uid, "pos": target.pos, "credit":u.credit, "radius": ArenaGrid.ROW_GAP, "damage": power * 0.43, "remaining": 4.0, "effect": key})
-   for e in near_foes(u, target.pos, 2.5): hurt(u, e, power * 0.65)
-  "chain":
-   var struck = []; var current = target; var origin = u.pos
-   for jump in range(4):
-    hurt(u, current, power * 1.15 * pow(0.90, jump)); struck.append(current.uid)
-    emit({"type": "bolt", "uid": u.uid, "pos": origin, "target": current.pos, "effect": key})
-    origin = current.pos
-    var options = foes(u).filter(func(e): return not struck.has(e.uid) and e.pos.distance_to(origin) < 4.8)
-    options.sort_custom(func(a, b): return a.pos.distance_to(origin) < b.pos.distance_to(origin))
-    if options.is_empty(): break
-    current = options[0]
-  "stormcall":
-   var victims = foes(u)
-   for i in range(mini(3, victims.size())):
-    var index = rng.randi_range(0, victims.size() - 1); var e = victims[index]; victims.remove_at(index)
-    hurt(u, e, power * 1.05)
-    emit({"type": "bolt", "uid": u.uid, "pos": u.pos, "target": e.pos, "effect": key})
-  "gaze": hurt(u, target, power * 1.3); status(target, "stun", 1.6)
-  "rootbloom": heal(u, allies[0], power * 2.3); status(target, "root", 1.3)
-  "tidal":
-   for a in allies:
-    if a.pos.distance_to(u.pos) < 6.0: shield(a, power * 2.0)
-  "radiance":
-   for a in allies:
-    if a.pos.distance_to(u.pos) < 5.2:
-     heal(u, a, power * 1.6)
-     for k in ["stun", "root", "poison", "slow"]: a.status.erase(k)
-     a.dots = a.dots.filter(func(dot): return dot.kind != "poison")
-  "regrowth": heal(u, u, u.base_hp * CombatPacing.HP_SCALE * 0.23 * strength * utility); status(u, "rally", 4)
-  "threefold":
-   for i in range(3): hurt(u, target, power * 0.72)
-   poison(u, target, 3, power * 0.22, "burn")
-  "boulder": projectile_ability(u, target, power * 2.0)
-  "riddle": hurt(u, target, power * 0.8); status(target, "confuse", 2.5)
-  "tailwind":
-   for a in allies:
-    if a.pos.distance_to(u.pos) < 6: status(a, "rally", minf(7.0,5 * strength * utility))
+ cast_visual(u, key, sig_name, target.pos)
+ u.base_as_now = 1.0 / u.interval
+ SignatureCast.cast(self, u, target)
  return true
+
+## Mana: earned from attacks and hits, scaled by the Mana stat, not while silenced or channeling.
+func add_mana(u: Dictionary, amount: float) -> void:
+ if u.summon or not u.alive or active(u, "silence") or active(u, "channel") or u.has("pending_cast"): return
+ u.mana = minf(u.max_mana, u.mana + amount * float(u.get("mana_gain", 1.0)))
+
+func buff_sum(u: Dictionary, stat: String) -> float:
+ var t = 0.0
+ for b in u.get("buffs", {}).values(): t += float(b.get(stat, 0.0))
+ return t
+
+func as_mult(u: Dictionary) -> float:
+ return maxf(0.2, 1.0 + buff_sum(u, "as") + (0.22 if active(u, "rally") else 0.0))
+
+func resist(u: Dictionary) -> float:
+ return float(u.get("res", 0.0)) + buff_sum(u, "res")
+
+## A point on a unit's own side of the arena (its starting hex).
+func home(u: Dictionary) -> Vector2:
+ return u.get("start_pos", u.pos)
 
 func projectile_ability(u: Dictionary, target: Dictionary, power: float) -> void:
  launch(u, target, power, clampf(u.pos.distance_to(target.pos) / 8.0, 0.7, 1.5), true, "meteor", true)

@@ -5,16 +5,24 @@ extends Control
 ## the species with average rolls, so the gap between the two shows what this champion's rolls did.
 ## Stars mark the two axes where it excels; dots mark the stats its role relies on.
 
-# Clockwise from the top-left corner, like a classic RPG stat chart.
-const AXES := ["attack", "haste", "speed", "hp", "armor", "potency"]
+# Clockwise from the top-left corner, like a classic RPG stat chart. Keys are the save's roll keys:
+# attack = AD, haste = AS, potency = AP, speed = Mana, hp = HP, armor = Resistance.
+const AXES := ["attack", "haste", "potency", "speed", "hp", "armor"]
+const SHORT := {"attack": "AD", "haste": "AS", "potency": "AP", "speed": "MANA", "hp": "HP", "armor": "RES"}
 const GUIDE := {
-	"attack": {"name": "Attack damage", "does": "Basic attacks and the attack-damage portion of physical or hybrid skills. Does not boost pure spells.", "scale": "Grows with level, rolls, temperament and attack-damage items."},
-	"haste": {"name": "Attack speed", "does": "More basic attacks and on-hit effects. Also boosts designated rapid skills; it does not speed every spell.", "scale": "Grows through rolls, items and temperament. Rapid-skill amplification is capped."},
-	"speed": {"name": "Move speed", "does": "How fast it reaches the back line, chases, or escapes.", "scale": "Grows slowly through its roll as it levels. Items add more."},
-	"hp": {"name": "Health", "does": "How much damage it can take before it falls.", "scale": "Grows a lot every level (species health x24 per level), plus its roll creeps up as it levels."},
-	"armor": {"name": "Armor", "does": "Reduces incoming damage and strengthens armor-scaling slams and defensive skills.", "scale": "Rolls, armor items and defensive evolutions raise it."},
-	"potency": {"name": "Ability power", "does": "Spells, healing and the ability-power portion of hybrid skills. Does not boost basic attacks. Ability haste separately reduces cooldowns.", "scale": "Grows with level, AP rolls, AP items and caster evolutions."},
+	"attack": {"name": "AD", "does": "Attack damage: each basic attack, and every signature number marked % AD.", "scale": "+2% base per level, plus AD cards, rolls, temperament and items."},
+	"haste": {"name": "AS", "does": "Attack speed: attacks per second. More attacks also means more mana, so faster casts.", "scale": "AS cards, rolls, temperament and items."},
+	"potency": {"name": "AP", "does": "Ability power: every signature number marked AP. Everyone starts at 100.", "scale": "AP cards, rolls and items. Signature AP numbers also grow 4.5% per level."},
+	"speed": {"name": "Mana", "does": "Mana gain: multiplies all mana earned, so the signature casts more often.", "scale": "Mana cards, rolls, temperament and items."},
+	"hp": {"name": "HP", "does": "Health: damage it can take before it falls.", "scale": "+3% base per level, plus HP cards, rolls, temperament and items."},
+	"armor": {"name": "Resistance", "does": "Reduces all damage: Resistance ÷ (100 + Resistance). 50 blocks 33%, 100 blocks 50%. True damage ignores it.", "scale": "Resistance cards, rolls and items."},
 }
+const BUILD_TO_AXIS := {"ad": "attack", "as": "haste", "ap": "potency", "mana": "speed", "hp": "hp", "res": "armor"}
+
+## The axes this champion's signature scales with (marked with a dot).
+static func key_axes(sp: String) -> Array:
+	return Signatures.build_keys(sp).map(func(k): return BUILD_TO_AXIS[k])
+
 const FILL := Color(0.22, 0.75, 0.39, 0.78)
 const EDGE := Color(0.12, 0.45, 0.24)
 const GHOST := Color(1, 1, 1, 0.55)
@@ -37,7 +45,7 @@ static var _ranges := {}
 ## Effective value of each stat (bigger is better for every axis).
 static func effective(h: Dictionary) -> Dictionary:
 	var s = HeroData.stats(h)
-	return {"attack": s.attack, "haste": 1.0 / maxf(0.05, s.interval), "speed": s.speed, "hp": s.hp, "armor": s.armor, "potency": s.ability_power}
+	return {"attack": s.attack, "haste": float(s["as"]), "speed": float(s.mana), "hp": s.hp, "armor": float(s.res), "potency": float(s.ap)}
 
 ## Min/max of every stat across all species at a level, with average rolls (cached per level).
 static func ranges(level: int) -> Dictionary:
@@ -56,6 +64,9 @@ static func ranges(level: int) -> Dictionary:
 	# Leave room past the species extremes for great (or poor) rolls, items and temperament.
 	for k in AXES:
 		var span = maxf(0.0001, hi[k] - lo[k]); lo[k] -= span * 0.15; hi[k] += span * 0.15
+	# AP and Mana start equal for everyone, so their scale comes from what cards and items can add.
+	lo.potency = 70.0; hi.potency = 130.0 + 6.0 * level
+	lo.speed = 0.80; hi.speed = 1.20 + 0.025 * level
 	_ranges[cache_key] = {"lo": lo, "hi": hi}
 	return _ranges[cache_key]
 
@@ -147,10 +158,10 @@ func _draw() -> void:
 	for i in range(6): poly.append(corner(i, R * (0.08 + 0.92 * lerpf(prior_values.get(AXES[i],values[AXES[i]]),values[AXES[i]],reveal))))
 	draw_colored_polygon(poly, FILL)
 	var edge = poly.duplicate(); edge.append(poly[0]); draw_polyline(edge, EDGE, 2.0, true)
-	var w = HeroData.role_weights(hero.sp)
+	var w = key_axes(hero.sp)
 	for i in range(6):
 		var k = AXES[i]; var p = corner(i, R + 14.0)
-		var name = ("★ " if k in excels else "") + ({"attack":"AD","haste":"AS","speed":"MOV","hp":"HP","armor":"ARM","potency":"AP"}[k] if size.x<500 else GUIDE[k].name) + (" •" if w.has(k) else "")
+		var name = ("★ " if k in excels else "") + (SHORT[k] if size.x<500 else GUIDE[k].name) + (" •" if k in w else "")
 		if improvement.get(k,0.0)>.00001:
 			var delta=float(improvement[k])
 			name+=" +%.1fpp"%(delta*100) if k=="armor" else " +%.1f%%"%(delta/maxf(.0001,hero.copy_feedback.before[k])*100) if k=="speed" else " +%.1f"%delta
@@ -183,14 +194,14 @@ func _get_tooltip(_at: Vector2) -> String:
 
 ## Stat guide: one line per stat with this champion's grade, what the stat does and how it scales.
 static func guide(game: Node, parent: Node, h: Dictionary, compact := false) -> void:
-	var v = normalized(h); var w = HeroData.role_weights(h.sp)
+	var v = normalized(h); var w = key_axes(h.sp)
 	var grid = GridContainer.new(); grid.columns = 2 if compact else 3
 	grid.add_theme_constant_override("h_separation", 12); grid.add_theme_constant_override("v_separation", 4); parent.add_child(grid)
 	for k in AXES:
 		var g = GUIDE[k]
-		var n = game.label(grid, ("• " if w.has(k) else "  ") + g.name, 13 if compact else 14, Color("ffd36e") if w.has(k) else Color.WHITE, false)
+		var n = game.label(grid, ("• " if k in w else "  ") + g.name, 13 if compact else 14, Color("ffd36e") if k in w else Color.WHITE, false)
 		n.custom_minimum_size.x = 112 if compact else 120; n.mouse_filter = Control.MOUSE_FILTER_STOP
-		n.tooltip_text = g.does + "\n" + g.scale + ("\nKey stat for a " + HeroData.species[h.sp].role + "." if w.has(k) else "")
+		n.tooltip_text = g.does + "\n" + g.scale + ("\nIts signature scales with this." if k in w else "")
 		var gl = game.label(grid, grade(v[k]), 13 if compact else 14, grade_color(v[k]), false); gl.custom_minimum_size.x = 58 if compact else 70
 		gl.tooltip_text = n.tooltip_text; gl.mouse_filter = Control.MOUSE_FILTER_STOP
 		if not compact:
@@ -206,10 +217,11 @@ static func scaling(game: Node, parent: Node, h: Dictionary) -> void:
 	var hp = []; var dmg = []
 	for l in levels:
 		var c = h.duplicate(true); c.level = l
+		if l != int(h.level): c.cards = {}
 		var s = HeroData.stats(c); hp.append(str(roundi(s.hp))); dmg.append(str(roundi(s.attack)))
 	game.label(row, "SCALING  ·  " + Traits.scaling_text(h.sp) + "  ·  " + Traits.info(h.sp).calling, 13, Color("ffd36e"), false)
 	game.label(row, "Level %s" % "  →  ".join(levels.map(func(x): return str(x))), 13, Color("9fb0b8"), false)
-	game.label(row, "Health %s     Damage %s" % ["  →  ".join(hp), "  →  ".join(dmg)], 14, Color.WHITE, false)
+	game.label(row, "HP %s     AD %s   (before level-up cards)" % ["  →  ".join(hp), "  →  ".join(dmg)], 14, Color.WHITE, false)
 	var curve = Traits.score(h)
 	var note = "Strong from the first cup; its lead shrinks later." if curve <= 4.0 else ("Starts slower and keeps getting stronger into the late cups." if curve >= 7.0 else "Even growth across the tour.")
 	game.label(row, note, 12, Color("b9c6cc"), false)
@@ -230,21 +242,22 @@ static func explain(game: Node, h: Dictionary = {}) -> void:
 		game.label(grid, g.name, 15, Color.WHITE, false).custom_minimum_size.x = 130
 		var d = game.label(grid, g.does, 13, Color("c9d6dc"), true); d.custom_minimum_size.x = 400
 		var sc = game.label(grid, g.scale, 13, Color("9fd8ff"), true); sc.custom_minimum_size.x = 500
-	head.call("ROLLS · 0 to 31")
-	para.call("Every champion is born with a roll from 0 to 31 in each stat. 31 is perfect, 15-16 is average. A roll changes that stat by up to about ±18% (Health, Damage, Ability power), ±12% Attack speed, ±10% Move speed and ±3 Armor. Most rolls land near the middle; very high or very low ones are rare.")
-	para.call("Rarer champions never roll very low: Legendary rolls start at %d, Epic at %d and Common at %d. So a headliner is never born with a useless stat." % [HeroData.ROLL_FLOOR.Legendary, HeroData.ROLL_FLOOR.Epic, HeroData.ROLL_FLOOR.Common])
-	para.call("Rolls grow as a champion levels: about +%.1f per level in its role's key stats (marked • or ●) and +%.2f in the others. By level 20 a key stat has gained about +11, so it can pass 31." % [HeroData.GROWTH_KEY, HeroData.GROWTH_OTHER])
+	head.call("MANA AND THE SIGNATURE")
+	para.call("Every champion has one signature ability, cast the moment its mana bar fills, then the bar empties. Mana comes from basic attacks (+10 each) and from taking damage (1% of the hit before Resistance plus 3% after, up to 40). The Mana stat multiplies everything earned. A silenced champion earns no mana, and nobody earns mana while a signature is channeling.")
+	para.call("Signature numbers say what they scale with: \"300% AD\" grows with AD; \"150 AP\" is 150 at 100 AP and grows with AP and level. The champion card always shows the current number.")
+	head.call("LEVEL-UP CARDS")
+	para.call("Every level-up deals three cards, each a different stat at a random rarity (Common 55%, Rare 28%, Epic 13%, Legendary 4%; better from level 15). Keep one. Each level also adds +3% base HP and +2% base AD. Evolutions come at level %d and the Apex at level %d. Card rerolls redraw the three cards: every run starts with %d, and dungeon elites and Wardens give more." % [HeroData.EVOLVE_LEVEL, HeroData.APEX_LEVEL, StatCards.REROLLS_START])
 	var grades = HBoxContainer.new(); grades.add_theme_constant_override("separation", 10); box.add_child(grades)
-	for v in [4, 12, 20, 27, 33]:
-		var c = HeroData.roll_color(v); var p = PanelContainer.new(); grades.add_child(p)
+	for r in StatCards.RARITIES:
+		var c = Color(StatCards.COLORS[r]); var p = PanelContainer.new(); grades.add_child(p)
 		p.add_theme_stylebox_override("panel", game.style(c.darkened(0.74), c, 6, 6, 1))
-		game.label(p, "%d  %s" % [v, HeroData.roll_grade(v)], 13, c, false)
-	head.call("LEVELS")
-	para.call("Health and Damage come mostly from level: each level adds a big step on top of the species' base, shaped by its scaling curve (early bloomers lead in the first cups, late bloomers overtake them). Champions earn XP from every fight; use XP priority on the roster to focus it. At level %d a champion chooses its first evolution." % HeroData.EVOLVE_LEVEL)
+		game.label(p, "%s  AD +%d · HP +%d" % [r, StatCards.VALUES.ad[StatCards.RARITIES.find(r)], StatCards.VALUES.hp[StatCards.RARITIES.find(r)]], 13, c, false)
+	head.call("ROLLS · 0 to 31")
+	para.call("Every champion is born with a roll from 0 to 31 in each stat; 15-16 is average. A roll changes HP and AD by up to ±18%, AS by ±12%, AP by ±12, Mana by ±10% and Resistance by ±5. Rarer champions never roll very low: Legendary rolls start at %d, Epic at %d and Common at %d." % [HeroData.ROLL_FLOOR.Legendary, HeroData.ROLL_FLOOR.Epic, HeroData.ROLL_FLOOR.Common])
 	head.call("ROLE, TEMPERAMENT AND FIT")
-	para.call("Each role relies on two or three key stats (• marks them). Temperament nudges stats too (for example faster attacks but less health). A champion is a GOOD or GREAT fit when its best rolls land on its key stats and its temperament suits its role; both count.")
+	para.call("• marks the stats its signature scales with. Temperament nudges stats too (for example faster attacks but less health). A champion is a GOOD or GREAT fit when its best rolls land on the stats its signature wants and its temperament suits its role; both count.")
 	head.call("POWER")
-	para.call("Power (1 to 100) sums it all up: level, rolls and kit. New champions top out around the low 30s and the best late-tour champions reach 100. Its colour shows how good the rolls are for that champion, whatever its level.")
+	para.call("Power (1 to 100) sums it all up: level, rolls, cards and evolutions. New champions top out around the low 30s and the best late-tour champions reach 100. Its colour shows how good the rolls are for that champion, whatever its level.")
 	head.call("THE HEXAGON")
 	para.call("The hexagon compares this champion's real stats with every species at the same level: centre is the weakest, the rim the strongest. The faint outline is the same species with average rolls, so the gap shows what its rolls did. Stars mark where it excels.")
 	if not h.is_empty():
@@ -258,5 +271,5 @@ static func explain(game: Node, h: Dictionary = {}) -> void:
 ## Small "?  How stats work" button.
 static func help_button(game: Node, parent: Node, h: Dictionary = {}, text := "?  How stats work") -> Button:
 	var b = game.button(parent, text, func(): explain(game, h))
-	b.tooltip_text = "What each stat does, how rolls and levels scale them, and how fit and Power work."
+	b.tooltip_text = "The six stats, mana and the signature, level-up cards, rolls, fit and Power."
 	return b

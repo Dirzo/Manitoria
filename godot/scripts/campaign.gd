@@ -13,7 +13,7 @@ func new_run(club_name: String, slot: int, seed_value: int = 0, difficulty: Stri
  HeroData.load_data()
  var seed_used = seed_value if seed_value else int(Time.get_unix_time_from_system())
  HeroData.run_salt = str(seed_used) + ("" if seed_value else "|" + str(randi()))
- state = {"version": SAVE_VERSION, "name": club_name.strip_edges().left(36) if not club_name.strip_edges().is_empty() else "Ravenmoor Menagerie", "slot": slot, "seed": seed_used, "season": 1, "round": 0, "gold": League.START_GOLD, "earned_gold": 0, "roster": [], "market": [], "clubs": [], "schedule": [], "report": {}, "wins": 0, "losses": 0, "draws": 0, "difficulty": difficulty, "selected": "", "trophies": 0, "history": [], "next_id": 100, "music": true, "effects": true, "guide_seen": false}
+ state = {"version": SAVE_VERSION, "name": club_name.strip_edges().left(36) if not club_name.strip_edges().is_empty() else "Ravenmoor Menagerie", "slot": slot, "seed": seed_used, "season": 1, "round": 0, "gold": League.START_GOLD, "earned_gold": 0, "roster": [], "market": [], "clubs": [], "schedule": [], "report": {}, "wins": 0, "losses": 0, "draws": 0, "difficulty": difficulty, "selected": "", "trophies": 0, "history": [], "next_id": 100, "music": true, "effects": true, "guide_seen": false, "card_rerolls": StatCards.REROLLS_START}
  # Fresh tiers every run: a random headliner and Epic from each of the eight niches.
  state.tiers = League.roll_tiers(HeroData.run_salt); League.run_tiers = state.tiers
  var rng = RandomNumberGenerator.new(); rng.seed = seed_used
@@ -45,8 +45,7 @@ func draft_prospect(sp: String) -> Dictionary:
   lvl = clampi(roundi(float(total) / lineup().size()) - 1, 1, 18)
  var h = HeroData.make_hero(sp, "h%d" % state.next_id, HeroData.themed_name(sp, "h%d" % state.next_id), lvl)
  state.next_id += 1
- for k in range(mini(3, maxi(0, lvl - 1))): h.learned[str(k)] = 1
- if lvl >= 5: h.signature_rank = 2
+ HeroData.auto_cards(h, str(h.id))
  h.price = League.cost(sp) if wave == 0 else value_price(h)
  return h
 
@@ -173,6 +172,24 @@ func choose(id: String, index: int) -> bool:
  if save(): return true
  hero.clear(); hero.merge(before, true); return false
 
+## v0.76: redraw a level-up's three stat cards (3 per run, more from the dungeon).
+func reroll_cards(id: String) -> bool:
+ var hero = hero_by_id(id)
+ if hero.is_empty() or hero.pending.is_empty() or int(state.get("card_rerolls", 0)) <= 0: return false
+ var cards: Array = hero.pending[0]
+ if cards.is_empty() or str(cards[0].type) != "stat": return false
+ var rng = RandomNumberGenerator.new(); rng.randomize()
+ var level = int(hero.rewards[0].level) if not hero.get("rewards", []).is_empty() else int(hero.level)
+ hero.pending[0] = StatCards.draw(rng, level)
+ state.card_rerolls = int(state.card_rerolls) - 1
+ save(); return true
+
+## v0.76: the one free reset of auto-picked cards on champions from older saves.
+func reset_cards(id: String) -> bool:
+ var hero = hero_by_id(id)
+ if hero.is_empty() or not HeroData.reset_cards(hero): return false
+ save(); return true
+
 func quality() -> float:
  if Dungeon.active(self): return Dungeon.quality(self)
  if state.has("tour"):
@@ -287,7 +304,8 @@ func gain_xp(h: Dictionary, amount: int, won: bool, player: bool, rng: RandomNum
   else:
    var cards = HeroData.choices(h, won, rng)
    h.last_offers = cards.map(func(c): return c.key)
-   HeroData.apply_choice(h, cards[rng.randi_range(0, cards.size() - 1)])
+   var pick = rng.randi_range(0, cards.size() - 1) if cards[0].type != "stat" else StatCards.auto_pick(h, cards)
+   HeroData.apply_choice(h, cards[pick])
 
 func set_xp_priority(id: String, priority: String) -> bool:
  var h = hero_by_id(id)
@@ -466,6 +484,7 @@ func ensure_management() -> void:
  if state.has("tour"):
   if state.tour.stock.any(func(v): return not v is String): state.tour.stock = WorldTour.stock(self) if state.tour.shop else []
   state.tour.rerolls=int(state.tour.get("rerolls",0))
+ if not state.has("card_rerolls"): state.card_rerolls = StatCards.REROLLS_START
  for h in state.roster + state.market: HeroData.migrate_progression(h)
  for club in state.clubs:
   for h in club.roster:

@@ -3,7 +3,7 @@ extends RefCounted
 ## Full scouting report on the next rival: every champion's power, real stats (graded against every
 ## champion at its level), equipped items, skills and evolution, plus a one-line plan.
 
-const ROWS := [["hp", "Health"], ["attack", "Damage"], ["armor", "Armor"], ["haste", "Attack speed"], ["speed", "Move speed"], ["potency", "Ability power"]]
+const ROWS := [["attack", "AD"], ["haste", "AS"], ["potency", "AP"], ["speed", "Mana"], ["hp", "HP"], ["armor", "Resistance"]]
 
 static func open(game: Node, opponent: Dictionary, tip := "") -> void:
 	var c: Campaign = game.campaign
@@ -34,7 +34,7 @@ static func card(game: Node, parent: Node, h: Dictionary, quality: float) -> voi
 	if not ev.is_empty(): game.label(box, "EVOLVED · " + str(ev.name), 12, Color(str(ev.get("color", "ffd36e")))).tooltip_text = str(ev.get("description", ""))
 	# Stats: real numbers, coloured by how they compare at this level.
 	var s = HeroData.stats(h, quality); var n = StatHex.normalized(h)
-	var values = {"hp": "%d" % s.hp, "attack": "%d" % s.attack, "armor": "%d%%" % roundi(s.armor * 100), "haste": "%.2f/s" % (1.0 / maxf(0.05, s.interval)), "speed": "%.1f" % s.speed, "potency": "x%.2f" % HeroData.spell_factor(h)}
+	var values = {"hp": "%d" % s.hp, "attack": "%d" % s.attack, "armor": "%d" % roundi(s.res), "haste": "%.2f/s" % float(s["as"]), "speed": "%d%%" % roundi(s.mana * 100), "potency": "%d" % roundi(s.ap)}
 	var grid = GridContainer.new(); grid.columns = 3; grid.add_theme_constant_override("h_separation", 8); grid.add_theme_constant_override("v_separation", 1); box.add_child(grid)
 	for r in ROWS:
 		var k = r[0]
@@ -53,5 +53,5 @@ static func card(game: Node, parent: Node, h: Dictionary, quality: float) -> voi
 	# Skills.
 	game.label(box, "SKILLS", 12, Color("ffd36e"), false)
 	for e in ChampionKit.entries(h):
-		var sk = game.label(box, "%s · R%d" % [e.name, e.rank], 12, RarityStyle.color(e.rarity), false)
+		var sk = game.label(box, "%s · Mana %d/%d" % [e.name, e.mana[0], e.mana[1]], 12, Color("ffd36e"), false)
 		sk.tooltip_text = e.description; sk.mouse_filter = Control.MOUSE_FILTER_STOP

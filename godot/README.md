@@ -1,3 +1,7 @@
+# Manitoria 0.76 — Combat and leveling rework
+
+Six stats, one mana-cast signature per champion, stat-card level-ups and rewritten evolutions. See [COMBAT-REWORK-0.76.md](../COMBAT-REWORK-0.76.md).
+
 # Manitoria 0.73 — Speedrun Stat Check
 
 Normal draft, hex formation, twenty item priorities, build/evolution choices and full five- or ten-cup simulations. Champion copies and star bonuses are retired. See [controls, benchmark rules and validation](../SPEEDRUN-STAT-CHECK-0.73.md).

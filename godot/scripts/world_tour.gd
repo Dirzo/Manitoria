@@ -51,10 +51,9 @@ static func seeded_team(c: Campaign, entrant: int) -> Dictionary:
   var sp=REGIONS[(int(t.level)-1+entrant/2)%REGIONS.size()].roster[i]
   var h=HeroData.make_hero(sp,"tour_%d_%d_%d" % [t.level,entrant,i],HeroData.themed_name(sp,"tour_%d_%d_%d" % [t.level,entrant,i]),level)
   h.slot=Campaign.FORMATION[i]
-  for k in range(mini(3,maxi(0,level-1))): h.learned[str(k)]=2 if level>=8 else 1
-  if level>=5: h.signature_rank=2
+  HeroData.auto_cards(h, str(h.id))
   var tier=TourBalance.rarity(st,str(c.state.get("difficulty","Standard")),str(h.id))
-  h.skill_rarity={"0":tier};h.ability_bonus_0=1.25 if tier=="Legendary" else 1.1 if tier=="Rare" else 1.0
+  h.erase("skill_rarity")
   h.equipment=Forge.rival_loadout(h,st,str(c.state.get("difficulty","Standard")))
   if level>=HeroData.EVOLVE_LEVEL: h.evolution="%s:%d" % [sp, i % 3]
   heroes.append(h)
@@ -204,10 +203,6 @@ static func outfit_clubs(c: Campaign) -> void:
    var target_level=TourBalance.level(int(c.state.tour.level),str(c.state.get("difficulty","Standard")),str(h.id))
    while int(h.level)<target_level:c.gain_xp(h,maxi(1,HeroData.xp_needed(int(h.level))-int(h.xp)),true,false,rng)
 
-   if h.learned.has("0"):
-    var tier=TourBalance.rarity(lvl,str(c.state.get("difficulty","Standard")),str(h.id))
-    h.skill_rarity=h.get("skill_rarity",{});h.skill_rarity["0"]=tier
-    h.ability_bonus_0=1.25 if tier=="Legendary" else 1.1 if tier=="Rare" else 1.0
    if int(h.level)>=HeroData.EVOLVE_LEVEL and h.get("evolution","").is_empty():h.evolution="%s:%d" % [h.sp, abs(hash(h.id))%3]
 
   RivalEconomy.develop(c,cl)

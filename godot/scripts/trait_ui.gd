@@ -22,7 +22,7 @@ static func species_line(game: Node, parent: Node, sp: String) -> void:
 	game.label(parent, "%s  ·  %s" % [Traits.scaling_text(sp), info.calling], 13, IDEAL, true)
 	game.label(parent, "Ideal: " + " · ".join(info.ideal), 12, IDEAL, true)
 
-const ROLL_SHORT := {"hp": "HP", "attack": "DMG", "armor": "ARM", "haste": "AS", "speed": "MOV", "potency": "AP"}
+const ROLL_SHORT := {"hp": "HP", "attack": "AD", "armor": "RES", "haste": "AS", "speed": "MANA", "potency": "AP"}
 
 ## Colour for a Power number. Pass the champion (or a team's average quality): the colour reflects how
 ## good the champion is for its level (rarity, rolls, fit), not the raw number, which grows with level.
@@ -69,9 +69,9 @@ static func rolls(game: Node, parent: Node, hero: Dictionary, compact := false) 
 		bar.add_theme_stylebox_override("background", game.style(Color("1d2a31"), Color.TRANSPARENT, 4, 0, 0))
 		bar.add_theme_stylebox_override("fill", game.style(c, Color.TRANSPARENT, 4, 0, 0))
 		game.label(grid, "%d" % v, 13, c, false).custom_minimum_size.x = 24
-		var pct = roundi((HeroData.roll_mult(hero, k) - 1.0) * 100.0) if k != "armor" else roundi(HeroData.roll_norm_now(hero, k) * 3.0)
+		var pct = roundi(HeroData.roll_norm_now(hero, k) * 5.0) if k == "armor" else roundi(HeroData.roll_norm_now(hero, k) * 12.0) if k == "potency" else roundi(HeroData.roll_norm_now(hero, k) * 10.0) if k == "speed" else roundi((HeroData.roll_mult(hero, k) - 1.0) * 100.0)
 		name.tooltip_text = roll_tip(hero, k); name.mouse_filter = Control.MOUSE_FILTER_STOP; bar.tooltip_text = name.tooltip_text
-		game.label(grid, ("%s  %+d%%" % [HeroData.roll_grade(v), pct]) if k != "armor" else ("%s  %+d armor" % [HeroData.roll_grade(v), pct]), 12, c, false)
+		game.label(grid, ("%s  %+d %s" % [HeroData.roll_grade(v), pct, "Res" if k == "armor" else "AP"]) if k in ["armor", "potency"] else ("%s  %+d%%" % [HeroData.roll_grade(v), pct]), 12, c, false)
 
 ## One stat roll explained: what it does, base roll (with the rarity floor), growth from levels, effect.
 static func roll_tip(hero: Dictionary, k: String) -> String:
