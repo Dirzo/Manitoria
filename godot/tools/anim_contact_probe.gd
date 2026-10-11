@@ -7,7 +7,7 @@ extends SceneTree
 ## Fractions of clip length. Speed = mean world-space speed of the rig's leaf bones, sampled at 60 Hz.
 ## Run: godot --headless --path godot -s tools/anim_contact_probe.gd   (PRINT=1 prints the speed curves)
 const RATE := 60.0
-const CLIPS := ["attack", "cast"]
+const CLIPS := ["attack", "attack_1", "attack_2", "attack_heavy", "cast"]
 
 func _init() -> void:
 	run.call_deferred()

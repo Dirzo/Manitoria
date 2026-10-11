@@ -38,9 +38,9 @@ func run() -> void:
 			var src = sim.find_unit(int(e.source))
 			if src.is_empty() or src.range > 2: return
 			var a: CombatAnimator = arena.models[int(e.source)].anim
-			if a.action_clip() != "attack": return
+			if not a.action_clip().begins_with("attack"): return
 			n.hits += 1
-			var want = CombatAnimator.marks(src.hero.sp, "attack").hit * float(a.clips.attack.length)
+			var want = CombatAnimator.marks(src.hero.sp, a.action_clip()).hit * float(a.clips[a.action_clip()].length)
 			# The sim resolves on its own 30 Hz tick; the animator is at most one render frame behind it.
 			if absf(a.action_time() - want) <= 0.035: n.aligned += 1
 			else: misaligned.append("%s %.3f/%.3f" % [src.hero.sp, a.action_time(), want])

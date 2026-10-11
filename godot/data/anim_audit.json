@@ -1,0 +1,1570 @@
+{
+	"arachne": {
+		"bones": 40,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.48,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.28,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.57,
+				"drift": 0.102,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.18,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.55,
+				"drift": 0.0,
+				"length": 0.6,
+				"seam_deg": 0.1
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 48% of the rig",
+			"cast moves 28% of the rig"
+		]
+	},
+	"basilisk": {
+		"bones": 56,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.38,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.36,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.39,
+				"drift": 0.102,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.3,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.46,
+				"drift": 0.0,
+				"length": 0.7,
+				"seam_deg": 0.2
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 38% of the rig",
+			"cast moves 36% of the rig"
+		]
+	},
+	"cerberus": {
+		"bones": 55,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.44,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.44,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.49,
+				"drift": 0.102,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.27,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.64,
+				"drift": 0.0,
+				"length": 0.7,
+				"seam_deg": 0.2
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 44% of the rig",
+			"cast moves 44% of the rig"
+		]
+	},
+	"chimera": {
+		"bones": 61,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.39,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.44,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.41,
+				"drift": 0.1,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.21,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.41,
+				"drift": 0.0,
+				"length": 0.7,
+				"seam_deg": 0.2
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 39% of the rig",
+			"cast moves 44% of the rig"
+		]
+	},
+	"cyclops": {
+		"bones": 61,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.11,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.1,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.21,
+				"drift": 0.085,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.15,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.21,
+				"drift": 0.0,
+				"length": 0.9,
+				"seam_deg": 0.1
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 11% of the rig",
+			"cast moves 10% of the rig"
+		]
+	},
+	"direwolf": {
+		"bones": 40,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.45,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.45,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.5,
+				"drift": 0.102,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.33,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.57,
+				"drift": 0.0,
+				"length": 0.7,
+				"seam_deg": 0.2
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 45% of the rig",
+			"cast moves 45% of the rig"
+		]
+	},
+	"gargoyle": {
+		"bones": 72,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.44,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.44,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.47,
+				"drift": 0.102,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.31,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.49,
+				"drift": 0.0,
+				"length": 0.7,
+				"seam_deg": 0.2
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 44% of the rig",
+			"cast moves 44% of the rig"
+		]
+	},
+	"golem": {
+		"bones": 27,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.26,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.15,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.41,
+				"drift": 0.085,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.26,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.44,
+				"drift": 0.0,
+				"length": 0.9,
+				"seam_deg": 0.1
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 26% of the rig",
+			"cast moves 15% of the rig"
+		]
+	},
+	"griffin": {
+		"bones": 63,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.41,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.41,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.44,
+				"drift": 0.102,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.29,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.49,
+				"drift": 0.0,
+				"length": 0.7,
+				"seam_deg": 0.2
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 41% of the rig",
+			"cast moves 41% of the rig"
+		]
+	},
+	"harpy": {
+		"bones": 68,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.24,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.19,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.29,
+				"drift": 0.085,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.24,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.1
+			},
+			"walk": {
+				"coverage": 0.15,
+				"drift": 0.0,
+				"length": 0.8,
+				"seam_deg": 0.2
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 24% of the rig",
+			"cast moves 19% of the rig"
+		]
+	},
+	"hydra": {
+		"bones": 69,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.36,
+				"drift": 0.0,
+				"length": 0.8
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.62,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.68,
+				"drift": 0.08,
+				"length": 1.4
+			},
+			"idle": {
+				"coverage": 0.51,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.68,
+				"drift": 0.0,
+				"length": 0.8,
+				"seam_deg": 0.1
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 36% of the rig",
+			"cast moves 62% of the rig"
+		]
+	},
+	"jackalope": {
+		"bones": 46,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.33,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.33,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.37,
+				"drift": 0.102,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.24,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.48,
+				"drift": 0.0,
+				"length": 0.6,
+				"seam_deg": 0.2
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 33% of the rig",
+			"cast moves 33% of the rig"
+		]
+	},
+	"kirin": {
+		"bones": 69,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.43,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.41,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.43,
+				"drift": 0.102,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.39,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.54,
+				"drift": 0.0,
+				"length": 0.7,
+				"seam_deg": 0.2
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 43% of the rig",
+			"cast moves 41% of the rig"
+		]
+	},
+	"kitsune": {
+		"bones": 68,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.46,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.46,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.49,
+				"drift": 0.102,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.4,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.56,
+				"drift": 0.0,
+				"length": 0.7,
+				"seam_deg": 0.2
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 46% of the rig",
+			"cast moves 46% of the rig"
+		]
+	},
+	"manticore": {
+		"bones": 69,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.46,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.45,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.48,
+				"drift": 0.102,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.32,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.52,
+				"drift": 0.0,
+				"length": 0.7,
+				"seam_deg": 0.2
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 46% of the rig",
+			"cast moves 45% of the rig"
+		]
+	},
+	"minotaur": {
+		"bones": 85,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.07,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.06,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.14,
+				"drift": 0.085,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.09,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.15,
+				"drift": 0.0,
+				"length": 0.9,
+				"seam_deg": 0.2
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 7% of the rig",
+			"cast moves 6% of the rig"
+		]
+	},
+	"naga": {
+		"bones": 84,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.08,
+				"drift": 0.0,
+				"length": 0.8
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.49,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.33,
+				"drift": 0.0,
+				"length": 1.4
+			},
+			"idle": {
+				"coverage": 0.45,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.46,
+				"drift": 0.0,
+				"length": 0.9,
+				"seam_deg": 0.0
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 8% of the rig",
+			"cast moves 49% of the rig"
+		]
+	},
+	"nekomata": {
+		"bones": 52,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.54,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.5,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.54,
+				"drift": 0.102,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.46,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.67,
+				"drift": 0.0,
+				"length": 0.7,
+				"seam_deg": 0.2
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 54% of the rig",
+			"cast moves 50% of the rig"
+		]
+	},
+	"nemean": {
+		"bones": 43,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.44,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.44,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.49,
+				"drift": 0.102,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.35,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.58,
+				"drift": 0.0,
+				"length": 0.7,
+				"seam_deg": 0.2
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 44% of the rig",
+			"cast moves 44% of the rig"
+		]
+	},
+	"owlbear": {
+		"bones": 33,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.33,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.33,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.39,
+				"drift": 0.102,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.21,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.55,
+				"drift": 0.0,
+				"length": 0.7,
+				"seam_deg": 0.2
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 33% of the rig",
+			"cast moves 33% of the rig"
+		]
+	},
+	"pegasus": {
+		"bones": 53,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.53,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.53,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.57,
+				"drift": 0.102,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.42,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.55,
+				"drift": 0.0,
+				"length": 0.7,
+				"seam_deg": 0.2
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 53% of the rig",
+			"cast moves 53% of the rig"
+		]
+	},
+	"phoenix": {
+		"bones": 49,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.47,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.45,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.59,
+				"drift": 0.085,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.51,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.35,
+				"drift": 0.0,
+				"length": 0.8,
+				"seam_deg": 0.1
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 47% of the rig",
+			"cast moves 45% of the rig"
+		]
+	},
+	"salamander": {
+		"bones": 63,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.33,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.32,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.35,
+				"drift": 0.102,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.27,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.41,
+				"drift": 0.0,
+				"length": 0.7,
+				"seam_deg": 0.2
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 33% of the rig",
+			"cast moves 32% of the rig"
+		]
+	},
+	"sphinx": {
+		"bones": 63,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.54,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.54,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.57,
+				"drift": 0.102,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.4,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.6,
+				"drift": 0.0,
+				"length": 0.7,
+				"seam_deg": 0.2
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 54% of the rig",
+			"cast moves 54% of the rig"
+		]
+	},
+	"thunderbird": {
+		"bones": 50,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.36,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.34,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.48,
+				"drift": 0.085,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.4,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.3,
+				"drift": 0.0,
+				"length": 0.8,
+				"seam_deg": 0.1
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 36% of the rig",
+			"cast moves 34% of the rig"
+		]
+	},
+	"treant": {
+		"bones": 58,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.14,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.09,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.21,
+				"drift": 0.085,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.14,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.22,
+				"drift": 0.0,
+				"length": 0.9,
+				"seam_deg": 0.1
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 14% of the rig",
+			"cast moves 9% of the rig"
+		]
+	},
+	"troll": {
+		"bones": 67,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.1,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.09,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.19,
+				"drift": 0.085,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.13,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.19,
+				"drift": 0.0,
+				"length": 0.9,
+				"seam_deg": 0.2
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 10% of the rig",
+			"cast moves 9% of the rig"
+		]
+	},
+	"unicorn": {
+		"bones": 36,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.53,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.53,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.58,
+				"drift": 0.102,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.42,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.67,
+				"drift": 0.0,
+				"length": 0.7,
+				"seam_deg": 0.2
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 53% of the rig",
+			"cast moves 53% of the rig"
+		]
+	},
+	"wendigo": {
+		"bones": 64,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.13,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.08,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.19,
+				"drift": 0.085,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.13,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.19,
+				"drift": 0.0,
+				"length": 0.9,
+				"seam_deg": 0.1
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 13% of the rig",
+			"cast moves 8% of the rig"
+		]
+	},
+	"wyvern": {
+		"bones": 76,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.46,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.45,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.47,
+				"drift": 0.102,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.33,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.47,
+				"drift": 0.0,
+				"length": 0.7,
+				"seam_deg": 0.2
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 46% of the rig",
+			"cast moves 45% of the rig"
+		]
+	},
+	"yeti": {
+		"bones": 29,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.28,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.17,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.41,
+				"drift": 0.085,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.28,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.45,
+				"drift": 0.0,
+				"length": 0.9,
+				"seam_deg": 0.2
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 28% of the rig",
+			"cast moves 17% of the rig"
+		]
+	},
+	"zaratan": {
+		"bones": 76,
+		"clips": {
+			"attack_1": {
+				"contact": true,
+				"coverage": 0.2,
+				"drift": 0.0,
+				"length": 0.7
+			},
+			"cast": {
+				"contact": true,
+				"coverage": 0.2,
+				"drift": 0.0,
+				"length": 1.2
+			},
+			"death": {
+				"coverage": 0.22,
+				"drift": 0.102,
+				"length": 1.3
+			},
+			"idle": {
+				"coverage": 0.14,
+				"drift": 0.0,
+				"length": 4.0,
+				"seam_deg": 0.0
+			},
+			"walk": {
+				"coverage": 0.28,
+				"drift": 0.0,
+				"length": 0.7,
+				"seam_deg": 0.1
+			}
+		},
+		"missing": [
+			"idle_combat",
+			"run",
+			"attack_2",
+			"attack_heavy",
+			"hit_light",
+			"hit_heavy",
+			"stun",
+			"spawn",
+			"victory"
+		],
+		"warnings": [
+			"attack_1 moves 20% of the rig",
+			"cast moves 20% of the rig"
+		]
+	}
+}
