@@ -26,3 +26,9 @@ rumble, crackle, steam, wind, swells and stone-hall echoes.
 - "Dark Rainy Night (ambience)" by **kindland**, OpenGameArt.org, CC0 (the Storm Spire rain bed).
 - Kenney Impact Sounds (glass, mining, metal, plate, wood) and Casino Audio (dice, as rattling bones), CC0.
 - Everything else (crystal hum, wind, thunder, sparks, spore puffs, insects, the tomb choir, void drone and pulse) is synthesised.
+
+## Warden audio
+
+All 70 `fx/boss_*` cues are original deterministic synthesis by `tools/generate_boss_audio.py`.
+Ten distinct timbral profiles each have entrance, warning, attack, summon, phase, enrage and death cues.
+No recordings or external services are used. Mono 44.1 kHz Vorbis, synthesized PCM peak capped at -4 dBFS before encoding and runtime mixing.

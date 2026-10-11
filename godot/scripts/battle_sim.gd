@@ -141,7 +141,7 @@ func swap_hexes(a: Dictionary, b: Dictionary) -> void:
   unit.erase("next_cell"); unit.pos = ArenaGrid.point(unit.cell); unit.velocity = Vector2.ZERO; unit.moving = false
 
 func in_attack_range(a: Dictionary, b: Dictionary) -> bool:
- return not a.has("next_cell") and ArenaGrid.distance(a.cell,b.cell) <= a.attack_hexes
+ return CombatRange.contains(a, b, a.attack_hexes)
 
 func begin_hex_step(unit: Dictionary, target: Dictionary, lurking: bool=false, retreat: bool=false) -> void:
  var occupied = occupied_cells(unit.uid)
@@ -437,6 +437,7 @@ func hurt(source: Dictionary, target: Dictionary, amount: float, magical: bool =
   Forge.on_ally_death(self, target)
 
 func attack(u: Dictionary, target: Dictionary) -> void:
+ if not u.alive or not target.alive or not in_attack_range(u, target): return
  cc_source = u
  u.credit = "basic"; track(u,"casts",1)
  emit({"type": "release", "uid": u.uid, "pos": u.pos, "target": target.pos, "ranged": u.range > 2})
@@ -528,6 +529,7 @@ func step(dt: float) -> void:
   u.cast_time = maxf(0, u.cast_time - dt)
   u.recovery = maxf(0, u.recovery - dt)
   u.attack_timer = maxf(0, u.attack_timer - dt * as_mult(u))
+  if u.has("boss_pending"): continue
   if active(u, "stun"):
    u.windup = 0.0; u.erase("pending_cast"); continue
   if u.has("next_cell"):
@@ -727,7 +729,7 @@ func cast_learned(u: Dictionary, target: Dictionary, a: Dictionary, rank: int) -
  # A self-shield rider can resolve even when the selected enemy is outside the aura.
  # Damage/control coverage is still measured around the caster below.
  var self_guard = effect == "fear" and a.get("rider", "none") == "guard"
- if not support and not self_guard and ArenaGrid.distance(u.cell,target.cell)>ArenaGrid.attack_hexes(a.range): return false
+ if not support and not self_guard and not CombatRange.contains(u, target, ArenaGrid.attack_hexes(a.range)): return false
  var allies = wounded_allies(u)
  if effect == "renew" and allies[0].hp / allies[0].max_hp > 0.82: return false
  if support and effect not in ["brood","legend_bastion"] and u.pos.distance_to(target.pos) > 8: return false

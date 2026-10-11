@@ -34,3 +34,8 @@ common/physics_ticks_per_second=60
 [gui]
 
 timers/tooltip_delay_sec=3600.0
+
+[debug]
+file_logging/enable_file_logging=true
+file_logging/log_path="user://logs/godot.log"
+file_logging/max_log_files=5

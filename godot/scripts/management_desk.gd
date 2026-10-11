@@ -536,7 +536,7 @@ func club_page() -> void:
   difficulty.item_selected.connect(func(index): state.difficulty = ["Keeper", "Standard", "Champion"][index]; campaign.save(); game.render())
   text(box, "Keeper offers a gentler start. Standard uses equal base stats. Champion strengthens the opposition. Current rival health and attack: %d%%." % roundi(campaign.quality() * 100), 19, MUTED)
   action(box, "Music: " + ("On" if game.sound.music_enabled else "Off"), game.toggle_music)
-  action(box, "Battle sounds: " + ("On" if game.sound.effects_enabled else "Off"), game.toggle_effects)
+  text(box, "Sound effects temporarily disabled · music only", 17, MUTED)
   action(box, "⚙  Audio settings", func(): FlowUI.settings(game))
   action(box, "Save campaign", func(): game.toast("Campaign saved." if campaign.save() else campaign.last_error))
   action(box, "Save & return to main menu", game.quit_to_menu)
