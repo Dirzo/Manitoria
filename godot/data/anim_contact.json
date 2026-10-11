@@ -1,0 +1,450 @@
+{
+	"arachne": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.27,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.67
+		}
+	},
+	"basilisk": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.27,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.67
+		}
+	},
+	"cerberus": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.29,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.67
+		}
+	},
+	"chimera": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.29,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.29
+		}
+	},
+	"cyclops": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.29,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.67
+		}
+	},
+	"direwolf": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.29,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.67
+		}
+	},
+	"gargoyle": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.29,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.29
+		}
+	},
+	"golem": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.27,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.67
+		}
+	},
+	"griffin": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.27,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.29
+		}
+	},
+	"harpy": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.29,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.39
+		}
+	},
+	"hydra": {
+		"attack": {
+			"hit": 0.52,
+			"length": 0.8,
+			"ready": 0.52,
+			"resume": 0.52
+		},
+		"cast": {
+			"hit": 0.96,
+			"length": 1.2,
+			"ready": 0.67,
+			"resume": 1.0
+		}
+	},
+	"jackalope": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.29,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.67
+		}
+	},
+	"kirin": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.29,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.67
+		}
+	},
+	"kitsune": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.29,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.67
+		}
+	},
+	"manticore": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.27,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.29
+		}
+	},
+	"minotaur": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.29,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.67
+		}
+	},
+	"naga": {
+		"attack": {
+			"hit": 0.48,
+			"length": 0.8,
+			"ready": 0.27,
+			"resume": 0.63
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.58
+		}
+	},
+	"nekomata": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.27,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.67
+		}
+	},
+	"nemean": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.29,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.67
+		}
+	},
+	"owlbear": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.29,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.67
+		}
+	},
+	"pegasus": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.29,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.39
+		}
+	},
+	"phoenix": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.27,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.29
+		}
+	},
+	"salamander": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.27,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.67
+		}
+	},
+	"sphinx": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.29,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.67
+		}
+	},
+	"thunderbird": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.27,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.29
+		}
+	},
+	"treant": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.27,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.67
+		}
+	},
+	"troll": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.29,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.67
+		}
+	},
+	"unicorn": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.29,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.67
+		}
+	},
+	"wendigo": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.27,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.67
+		}
+	},
+	"wyvern": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.27,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.29
+		}
+	},
+	"yeti": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.27,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.67
+		}
+	},
+	"zaratan": {
+		"attack": {
+			"hit": 0.46,
+			"length": 0.7,
+			"ready": 0.29,
+			"resume": 0.46
+		},
+		"cast": {
+			"hit": 0.29,
+			"length": 1.2,
+			"ready": 0.29,
+			"resume": 0.67
+		}
+	}
+}
