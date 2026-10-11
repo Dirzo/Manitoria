@@ -1,3 +1,7 @@
+# Manitoria 0.78
+
+Current playable release: [Windows v0.78](../builds/v0.78). [Release notes and narration](../RELEASE-0.78.md). Use Godot 4.7.2 with Forward+ for this project. Earlier version sections below are historical.
+
 # Manitoria 0.77 — Item overhaul
 
 Size and Crit stats, 36 items, Wild items, Mythic Anvil Legendaries and item feedback in combat. See [ITEM-OVERHAUL-0.77.md](../ITEM-OVERHAUL-0.77.md).
