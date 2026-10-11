@@ -9,8 +9,9 @@ const W := 1548.0
 const H := 768.0
 const TOP_H := 78.0
 const MAP_Y := 86.0
-const MAP_H := 550.0
-const SQUAD_Y := 644.0
+const MAP_H := 532.0
+# Leave the bottom drawer handle clear of the map's Scout / Formation / Fight actions.
+const SQUAD_Y := 626.0
 const BRONZE := Color("8a6a3a")
 const GOLDEN := Color("e3c589")
 const PARCH := Color("f1e6cc")
@@ -215,6 +216,8 @@ static func overview(desk: ManagementDesk) -> void:
  top_band(game, stage, c)
  map_panel(game, stage, c)
  squad_band(game, stage, c)
+ if d.get("instance_choices",[]).is_empty() and not c.state.tour.get("complete",false) and not c.state.get("run_over",false) and not d.awaiting_endless and d.loot.is_empty() and d.get("draft",{}).is_empty() and d.event.is_empty():
+  var tray=DungeonTeamTray.new();tray.game=game;tray.desk=desk;game.ui.add_child(tray)
  if not d.get("instance_choices", []).is_empty(): path_overlay(game, stage, c)
  elif c.state.tour.get("complete", false) or c.state.get("run_over", false): end_overlay(game, stage, c)
  elif d.awaiting_endless: endless_overlay(game, stage, c)

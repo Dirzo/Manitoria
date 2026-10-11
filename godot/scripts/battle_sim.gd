@@ -600,7 +600,7 @@ func cast_visual(u: Dictionary, effect: String, label_text: String, target: Vect
   var allies = living(u.team, false).filter(func(v): return v.pos.distance_to(u.pos) <= 5.0)
   allies.sort_custom(func(a, b): return a.hp/a.max_hp < b.hp/b.max_hp)
   if not allies.is_empty(): shield(allies[0], u.max_hp * 0.03)
- if effect in ["quake", "whirl", "fear", "shriek", "triplebite", "bulwark", "prideroar", "shellup", "frostroar"]: target = u.pos
+ if effect in ["legend_bastion", "quake", "whirl", "fear", "shriek", "triplebite", "bulwark", "prideroar", "shellup", "frostroar"]: target = u.pos
  emit({"type": "cast", "uid": u.uid, "effect": effect, "name": label_text, "pos": u.pos, "target": target})
 
 func leap(u: Dictionary, target: Dictionary) -> void:
@@ -739,12 +739,15 @@ func projectile_ability(u: Dictionary, target: Dictionary, power: float) -> void
 func cast_learned(u: Dictionary, target: Dictionary, a: Dictionary, rank: int) -> bool:
  cc_source = u
  var effect = a.effect
- var support = effect in ["renew", "ward", "rally", "brood"]
+ var support = effect in ["renew", "ward", "rally", "brood", "legend_bastion"]
  if effect=="brood" and living(u.team).filter(func(v):return v.summon and v.owner==u.uid).size()>=3:return false
- if not support and ArenaGrid.distance(u.cell,target.cell)>ArenaGrid.attack_hexes(a.range): return false
+ # A self-shield rider can resolve even when the selected enemy is outside the aura.
+ # Damage/control coverage is still measured around the caster below.
+ var self_guard = effect == "fear" and a.get("rider", "none") == "guard"
+ if not support and not self_guard and ArenaGrid.distance(u.cell,target.cell)>ArenaGrid.attack_hexes(a.range): return false
  var allies = wounded_allies(u)
  if effect == "renew" and allies[0].hp / allies[0].max_hp > 0.82: return false
- if support and effect!="brood" and u.pos.distance_to(target.pos) > 8: return false
+ if support and effect not in ["brood","legend_bastion"] and u.pos.distance_to(target.pos) > 8: return false
  if not u.get("casting_resolution", false):
   if effect in ["meteor", "quake", "whirl", "fear", "toxic", "fire", "gust", "silence", "frost", "roots", "magma"]:
    if not area_ready(u, effect, u.pos if effect in ["quake", "whirl", "fear"] else target.pos, 2.5): return false
@@ -759,6 +762,15 @@ func cast_learned(u: Dictionary, target: Dictionary, a: Dictionary, rank: int) -
  cast_visual(u, effect, a.name, target.pos)
  apply_rider(u, target, str(a.get("rider", "none")), power)
  match effect:
+  "legend_cataclysm":
+   for v in near_foes(u,target.pos,ArenaGrid.ROW_GAP*2):
+    hurt(u,v,power*2.4);status(v,"stun",1.2)
+   zones.append({"source":u.uid,"pos":target.pos,"credit":u.credit,"radius":ArenaGrid.ROW_GAP*2,"damage":power*0.30,"remaining":4.0,"effect":"legend_cataclysm"})
+  "legend_bastion":
+   for v in allies:
+    if ArenaGrid.distance(u.cell,v.cell)<=2:
+     shield(v,u.max_hp*0.25);status(v,"rally",5.0)
+   for v in near_foes(u,u.pos,ArenaGrid.ROW_GAP*2):status(v,"weaken",4.0)
   "magma":
    zones.append({"source":u.uid,"pos":target.pos,"credit":u.credit,"radius":ArenaGrid.ROW_GAP,"damage":power*0.35,"remaining":4.0,"effect":"magma"})
    for v in near_foes(u,target.pos,2.5):hurt(u,v,power*0.6)

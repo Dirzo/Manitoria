@@ -282,7 +282,7 @@ func roster_card(parent: Node, h: Dictionary) -> void:
  portrait(box, h.sp, 210)
  if not h.get("evolution", "").is_empty(): text(box,HeroData.evolution_info(h).name.to_upper(),12,HeroData.evolution_color(h))
  text(box, h.name, 23); text(box, HeroData.species[h.sp].n + " · " + HeroData.line(h.sp), 14, MUTED)
- text(box,"%d / 4 abilities · %s" % [h.learned.size()+1,"Evolved" if not h.get("evolution", "").is_empty() else "Evolution at Lv %d" % HeroData.EVOLVE_LEVEL],12,GOLD)
+ text(box,"%d / 4 abilities · %s" % [HeroData.regular_learned_count(h)+1,"Evolved" if not h.get("evolution", "").is_empty() else "Evolution at Lv %d" % HeroData.EVOLVE_LEVEL],12,GOLD)
  progress(box, "Level %d" % h.level, h.xp, HeroData.xp_needed(h.level))
  action(box, "Inspect hero", func(): profile(h, true))
  if h.slot >= 0: action(box, "Bench", func(): campaign.bench(h.id); game.render())
@@ -346,10 +346,11 @@ func profile(h: Dictionary, yours: bool) -> void:
  var right = column(split)
  var full_text = FlowUI.detailed(game)
  var kit_head = HBoxContainer.new(); right.add_child(kit_head)
- text(kit_head, "ABILITIES · %d / %d" % [h.learned.size()+1, HeroData.ABILITY_SLOTS], 13, GOLD).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ text(kit_head, "ABILITIES · %d / %d" % [HeroData.regular_learned_count(h)+1, HeroData.ABILITY_SLOTS], 13, GOLD).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ text(right, "LEGENDARY · learned" if h.learned.has("100") else "LEGENDARY · separate slot · rare roll from level 5", 12, GOLD)
  for entry in ChampionKit.entries(h): ChampionKit.row(game, right, entry, full_text)
- if h.learned.size()+1 < HeroData.ABILITY_SLOTS:
-  text(right, "%d empty slot%s · level up in the arena to learn more" % [HeroData.ABILITY_SLOTS-h.learned.size()-1, "" if HeroData.ABILITY_SLOTS-h.learned.size()-1 == 1 else "s"], 13, MUTED)
+ if HeroData.regular_learned_count(h)+1 < HeroData.ABILITY_SLOTS:
+  text(right, "%d empty slot%s · level up in the arena to learn more" % [HeroData.ABILITY_SLOTS-HeroData.regular_learned_count(h)-1, "" if HeroData.ABILITY_SLOTS-HeroData.regular_learned_count(h)-1 == 1 else "s"], 13, MUTED)
  # The full skill book: every skill this species can learn (hover for details).
  text(right, "SKILL BOOK · %d skills · hover for details" % HeroData.DISCOVERY_CHOICES, 13, GOLD)
  var book = GridContainer.new(); book.columns = 2; book.add_theme_constant_override("h_separation", 8); book.add_theme_constant_override("v_separation", 4); right.add_child(book)

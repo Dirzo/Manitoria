@@ -58,6 +58,7 @@ var qa_level = 1
 var qa_elapsed = 0.0
 var qa_taken = false
 var resolving = false
+var playtest: PlaytestRecorder
 var desk_state = {"role": "All", "sort": "Board", "view": "Grid", "metric": "impact", "per_bout": true, "intel": "Rankings", "club": "Identity", "compare": []}
 
 func _ready() -> void:
@@ -79,6 +80,12 @@ func _ready() -> void:
   if arg.begins_with("--qa_level="): qa_level = int(arg.trim_prefix("--qa_level="))
   if arg.begins_with("--qa_view="): desk_state.view = arg.trim_prefix("--qa_view=")
   if arg.begins_with("--qa_scroll="): set_meta("qa_scroll", int(arg.trim_prefix("--qa_scroll=")))
+ if "--playtest" in OS.get_cmdline_user_args():
+  var directory = ProjectSettings.globalize_path("res://../../facts-archive")
+  for arg in OS.get_cmdline_user_args():
+   if arg.begins_with("--facts-dir="): directory = arg.trim_prefix("--facts-dir=")
+  playtest = PlaytestRecorder.new(); add_child(playtest)
+  playtest.start(self,directory,not qa.is_empty() or "--agent=1" in OS.get_cmdline_user_args())
  if not qa.is_empty():
   campaign.new_run("Ravenmoor Menagerie", 97, 731)
   League.run_tiers = {}; campaign.state.tiers = {}; campaign.create_market()   # QA uses the classic tiers
@@ -418,7 +425,15 @@ func button(parent: Node, text_value: String, callback: Callable, primary: bool 
  var b = Button.new(); b.text = uncial_text(text_value); b.custom_minimum_size.y = 44; b.disabled = disabled
  if primary:
   DungeonUI.restyle(self, b, true)
- b.pressed.connect(callback); parent.add_child(b); return b
+ b.pressed.connect(func():
+  if playtest:
+   var action = "button"
+   for known in ["Shop","Continue","Ready","Roll","Scout","Match stats","Bracket","Cup progress","Level ups","Keep team"]:
+    if text_value.begins_with(known): action = known; break
+   playtest.record("decision",{"action":action,"control":str(b.name)})
+  callback.call()
+  if playtest: playtest.screen())
+ parent.add_child(b); return b
 
 func panel(rect: Rect2) -> VBoxContainer:
  var p = FantasyFrame.new(); ui.add_child(p); p.position = rect.position; p.size = rect.size
@@ -461,6 +476,7 @@ func zone_music() -> String:
  return ("zone_" + id) if id != "" and sound.music_cache.has("zone_" + id) else ""
 
 func render() -> void:
+ if playtest: playtest.screen()
  if phase != last_rendered_phase:
   if presentation_tween: presentation_tween.kill()
   ui.modulate.a = 0.0
@@ -546,7 +562,7 @@ func build_showcase() -> void:
  var preview = HeroPreview.new(); preview.species_id = sp; stage.add_child(preview); preview.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); preview.stretch = true
  label(box,HeroData.species[sp].n,30)
  label(box,HeroData.species[sp].role + "  ·  " + HeroData.species[sp].ability_name,17,GOLD)
- var row = HBoxContainer.new(); box.add_child(row)
+ var row = HBoxContainer.new(); row.size_flags_vertical = Control.SIZE_EXPAND_FILL; box.add_child(row)
  button(row,"← Previous",func(): showcase_index = posmod(showcase_index-1,gallery.size()); render())
  for clip in ["idle","attack","cast"]: button(row,clip.capitalize(),func(): preview.play(clip))
  button(row,"Next →",func(): showcase_index = (showcase_index+1)%gallery.size(); render())
@@ -918,6 +934,7 @@ func build_battle_hud() -> void:
  refresh_feed()
 
 func on_battle_event(e: Dictionary) -> void:
+ if playtest: playtest.combat(e,sim)
  arena.handle_event(e)
  var unit = sim.find_unit(int(e.get("uid", -1)))
  var pan = 0.0
@@ -984,6 +1001,7 @@ func poll_resolve(dt: float) -> void:
  show_result()
 
 func show_result() -> void:
+ if playtest: playtest.record("battle_result",{"battle":playtest.battle_number,"winner":sim.winner,"duration":sim.time})
  phase = "result"; sound.scene_music(music_now()); sound.cue("victory" if sim.winner == 0 else "honor", true)
  render()
  FlowUI.banner(self, "VICTORY" if sim.winner == 0 else "DRAW" if sim.winner == -1 else "DEFEAT", Color("ffd36e") if sim.winner == 0 else Color("ff8a7a"))
@@ -1033,8 +1051,7 @@ func build_result() -> void:
   else:
    var analytics = MatchAnalytics.new(); analytics.game = self; analytics.report = report; holder.add_child(analytics)
    toggle.text = uncial_text("Hide stats  ▴"))
- # The graphs open straight away; the button hides them.
- toggle.pressed.emit()
+ # Keep the full report one click away without interrupting the next decision.
  var pending = campaign.pending_heroes().size()
  if campaign.state.get("run_over", false) and not exhibition and report.get("dungeon", false):
   label(box, "OUT OF LIVES · THE RUN IS OVER", 30, Color("ff8a7a"))
@@ -1050,13 +1067,18 @@ func build_result() -> void:
   button(end, "See the guild's final record  →", func(): phase = "runover"; render(), true)
   return
  var footer = HBoxContainer.new(); ui.add_child(footer); footer.position = Vector2(560, 800); footer.size = Vector2(480, 62); footer.alignment = BoxContainer.ALIGNMENT_CENTER
- FlowUI.cta(self, footer, "Menu  ▶" if exhibition else "Map  ▶" if Dungeon.active(campaign) else "Bracket  ▶" if campaign.state.has("tour") else ("Level ups (%d)  ▶" % pending) if pending else "Continue  ▶", func():
+ var next_label = "Menu  ▶" if exhibition else "Final record  ▶" if campaign.state.get("run_over",false) else "Level ups (%d)  ▶" % pending if pending else "Map  ▶" if Dungeon.active(campaign) else "Shop  ▶" if campaign.state.get("tour",{}).get("shop",false) else "Keep team  ▶" if campaign.state.get("tour",{}).get("intermission",false) else "Continue  ▶"
+ if campaign.state.has("tour") and not Dungeon.active(campaign) and not exhibition:
+  button(stats_row,"Bracket",func(): TournamentRewardsUI.open_screen(self,"bracket",func():render(),"Back  ▶"))
+  if campaign.state.tour.get("bracket",{}).get("finished",false):
+   button(stats_row,"Cup progress",func(): TournamentRewardsUI.open_screen(self,"progress",func():render(),"Back  ▶"))
+ FlowUI.cta(self, footer, next_label, func():
   if exhibition: quit_to_menu()
   elif campaign.state.has("tour"): show_bracket_then_shop()
   else:
    phase = "upgrade" if pending else "hub"; tab = "overview"; render(), false, 480)
 
-## After a tour match: replay the bracket, then (if the cup just ended) the progress screen, then shop.
+## Continue to the next required decision; bracket and cup progress remain optional.
 func show_bracket_then_shop() -> void:
  if Dungeon.active(campaign):
   if campaign.state.get("run_over", false): phase = "runover"; render(); return
@@ -1068,12 +1090,8 @@ func show_bracket_then_shop() -> void:
   if not campaign.pending_heroes().is_empty(): phase = "upgrade"; render(); return
   phase = "shop" if campaign.state.get("tour",{}).get("shop",false) else "hub"; tab = "overview"; render()
   if phase == "shop": FlowUI.banner(self, "SHOP", Color("c8ff9d"))
- var cup_over = campaign.state.tour.get("bracket",{}).get("finished",false)
  campaign.state.tour.board_seen = int(campaign.state.tour.get("serial", 0))
- var next_text = "Keep team  ▶" if campaign.state.tour.get("intermission", false) else "Shop  ▶"
- var after = (func(): render(); TournamentRewardsUI.open_screen(self, "progress", to_shop, next_text)) if cup_over else to_shop
- render()
- TournamentRewardsUI.open_screen(self, "bracket", after, "Cup results  ▶" if cup_over else "Shop  ▶", true)
+ to_shop.call()
 
 ## Arena Impact Score for every creature in the match, with the MVP called out.
 func impact_board(box: Node, report: Dictionary) -> void:
@@ -1108,15 +1126,15 @@ func build_upgrade() -> void:
  var reward_level = h.rewards[0].level if not h.get("rewards", []).is_empty() else h.level
  label(details, "%s · Level %d" % [h.name, reward_level], 28)
  label(details, "%s  /  %s  /  %s build" % [HeroData.species[h.sp].n, HeroData.species[h.sp].role,SkillScaling.audited(h.sp,"signature").get("build_path","ap").to_upper()], 20, GOLD)
- label(details, "Choose an evolution to define this hero’s build. Evolving also unlocks a 4th item slot." if h.pending[0][0].type == "evolution" else "APEX · the second evolution. Pick one permanent upgrade." if h.pending[0][0].type == "apex" else "%d / %d abilities · Discover your kit, then rank up your chosen abilities." % [h.learned.size()+1, HeroData.ABILITY_SLOTS], 18, MUTED)
+ label(details, "Choose an evolution to define this hero’s build. Evolving also unlocks a 4th item slot." if h.pending[0][0].type == "evolution" else "APEX · the second evolution. Pick one permanent upgrade." if h.pending[0][0].type == "apex" else "%d / %d abilities · Discover your kit, then rank up your chosen abilities." % [HeroData.regular_learned_count(h)+1, HeroData.ABILITY_SLOTS], 18, MUTED)
  var row = HBoxContainer.new(); box.add_child(row)
  for index in range(h.pending[0].size()):
   var card = h.pending[0][index]
-  var shell = PanelContainer.new(); shell.size_flags_horizontal = Control.SIZE_EXPAND_FILL; shell.custom_minimum_size = Vector2(405, 510); row.add_child(shell)
+  var shell = PanelContainer.new(); shell.name = "UpgradeCard%d" % index; shell.size_flags_horizontal = Control.SIZE_EXPAND_FILL; shell.custom_minimum_size = Vector2(405, 0); row.add_child(shell)
   shell.add_theme_stylebox_override("panel", style(Color("1c3440"), HeroData.evolution_color({"evolution":card.key}) if card.type == "evolution" else RarityStyle.color(card.rarity), 12, 17, 2))
   var content = VBoxContainer.new(); content.add_theme_constant_override("separation",8); shell.add_child(content)
   label(content, "LEVEL %d · EVOLUTION" % HeroData.EVOLVE_LEVEL if card.type == "evolution" else "LEVEL %d · APEX EVOLUTION" % HeroData.APEX_LEVEL if card.type == "apex" else card.rarity.to_upper() + ("  ·  NEW ABILITY" if card.type == "ability" and not h.learned.has(card.key) else "  ·  EVOLUTION" if card.type == "evolution" else "  ·  RANK UP" if card.type in ["ability", "signature"] else "  ·  MASTERY"), 12, GOLD)
-  var art = TextureRect.new(); art.name = "AbilityCardArt"; art.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS; art.texture = AbilityArt.texture(AbilityArt.card_key(h,card)); art.custom_minimum_size = Vector2(0,244); art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; content.add_child(art)
+  var art = TextureRect.new(); art.name = "AbilityCardArt"; art.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS; art.texture = AbilityArt.texture(AbilityArt.card_key(h,card)); art.custom_minimum_size = Vector2(0,150); art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; content.add_child(art)
   RarityStyle.decorate(art,card.rarity)
   if card.get("rarity","") == "Legendary":
    # A legendary drop is an event: the card lands with a golden flash and a banner.
@@ -1130,17 +1148,19 @@ func build_upgrade() -> void:
    sound.cue("upgrade", true)
   label(content, card.name, 23)
   var full_text = FlowUI.detailed(self)
-  var description = label(content, card.description if full_text else card.get("summary", card.description), 15 if full_text else 17, WHITE)
+  var scroll = ScrollContainer.new(); scroll.name = "SkillDetails"; scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL; scroll.custom_minimum_size.y = 60; scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED; content.add_child(scroll)
+  var description = label(scroll, card.description if full_text else card.get("summary", card.description), 15 if full_text else 17, WHITE)
+  description.size_flags_horizontal = Control.SIZE_EXPAND_FILL
   if not full_text: description.max_lines_visible = 3; description.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
   description.tooltip_text = card.description; description.mouse_filter = Control.MOUSE_FILTER_STOP
+  if full_text: label(content, "Scroll for full details", 11, MUTED)
   if card.get("upgrade", false): label(content, "▲ UPGRADES A SKILL YOU OWN", 12, Color("6fe08a"))
   if not full_text:
    var more = label(content, "Hover for full details", 11, MUTED); more.tooltip_text = card.description; more.mouse_filter = Control.MOUSE_FILTER_STOP
-  var spacer = Control.new(); spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL; content.add_child(spacer)
   if card.type != "apex":
    button(content,"Preview in arena",func():
     var demo=AbilityPreview.new();demo.game=self;demo.hero=h.duplicate(true);demo.card=card.duplicate(true);ui.add_child(demo);demo.build())
-  button(content, "Choose evolution" if card.type == "evolution" else "Choose apex" if card.type == "apex" else "Learn ability" if card.type == "ability" and not h.learned.has(card.key) else "Choose upgrade", func():
+  var choose_button = button(content, "Choose evolution" if card.type == "evolution" else "Choose apex" if card.type == "apex" else "Learn ability" if card.type == "ability" and not h.learned.has(card.key) else "Choose upgrade", func():
    var newly_learned=card.type=="ability" and not h.learned.has(card.key)
    var before_choice=h.duplicate(true)
    if campaign.choose(h.id, index):
@@ -1148,6 +1168,7 @@ func build_upgrade() -> void:
     if newly_learned:
      var demo=AbilityPreview.new();demo.game=self;demo.hero=before_choice;demo.card=card.duplicate(true);demo.unlocked=true;ui.add_child(demo);demo.build()
    else: toast(campaign.last_error), true)
+  choose_button.name = "ChooseSkill%d" % index
  label(box, "%d heroes awaiting their own choice. Wins slightly improve rarity." % pending.size(), 15, MUTED)
 
 func show_guide() -> void:
@@ -1228,6 +1249,7 @@ func _process(dt: float) -> void:
    close_game()
 
 func close_game() -> void:
+ if playtest: playtest.finish()
  sound.stop_all()
  await get_tree().create_timer(0.3).timeout
  get_tree().quit()
@@ -1238,6 +1260,7 @@ func _notification(what: int) -> void:
   close_game()
 
 func _input(event: InputEvent) -> void:
+ if playtest: playtest.input(event)
  if resolve_thread != null: get_viewport().set_input_as_handled(); return   # results are being written; ignore input for that moment
  if event is InputEventMouseMotion and not dragged_id.is_empty() and phase == "prep":
   var point = arena.ground_position(event.position)

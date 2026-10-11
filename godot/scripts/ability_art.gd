@@ -21,6 +21,7 @@ static func texture(key: String) -> Texture2D:
   var path="res://assets/abilities/%s-%s.png" % [parts[1],parts[2]]
   if ResourceLoader.exists(path): return load(path)
   key=HeroData.learned_ability(parts[1],int(parts[2])).effect
+ key = {"legend_cataclysm":"meteor","legend_bastion":"ward"}.get(key,key)
  var atlas = load("res://assets/ability-atlas.png") as Texture2D
  var index = KEYS.find(key)
  if index < 0: index = 58

@@ -60,6 +60,15 @@ static func windup(vfx: VFX, c: Dictionary, at: Vector3, duration: float) -> voi
 
 # ---------------------------------------------------------------- per-family compositions
 static func play(vfx: VFX, family: String, c: Dictionary, from: Vector3, to: Vector3, targets: Array = []) -> void:
+	if family in ["legend_cataclysm","legend_bastion"]:
+		var composition = AbilityFX.new()
+		if family == "legend_cataclysm":
+			composition.fx_meteor(vfx,c,from,to,targets)
+			composition.fx_quake(vfx,c,to,to,targets)
+		else:
+			composition.fx_ward(vfx,c,from,from,targets)
+			composition.fx_fear(vfx,c,from,from,targets)
+		return
 	if SkillVFX.play(vfx,family,c,from,to,targets):return
 	var fn = "fx_" + family
 	var me = AbilityFX.new()
@@ -161,7 +170,10 @@ func fx_meteor(vfx: VFX, c: Dictionary, _from: Vector3, to: Vector3, _t: Array) 
 	for i in range(5): vfx.smoke(to + Vector3(randf_range(-1, 1), 0.5, randf_range(-1, 1)), 2.6, c.smoke if c.el != "fire" else Color(0.25, 0.2, 0.18, 0.6), 2.2, i * 0.05, Vector3(0, 0.7, 0))
 	_element_burst(vfx, c, to, 1.6)
 
-func fx_boulder(vfx, c, f, t, x): fx_meteor(vfx, c, f, t, x)
+func fx_boulder(vfx, c, f, t, x):
+	vfx.rune(t,2.0,c.color,1,.35,0,1.4)
+	vfx.smoke(t+Vector3.UP*.2,1.6,c.smoke,.5)
+	vfx.spray(t,18,"shard",c.hot,Vector2(2,4),Vector2(.2,.45),.11,Vector3.UP,1,4,1)
 
 # STORM / STORMCALL: overhead cloud and branching strikes on each target
 func fx_storm(vfx: VFX, c: Dictionary, _from: Vector3, to: Vector3, targets: Array) -> void:
@@ -336,7 +348,10 @@ func fx_ward(vfx: VFX, c: Dictionary, from: Vector3, _to: Vector3, targets: Arra
 
 func fx_tidal(vfx, c, f, t, x): fx_ward(vfx, c, f, t, x)
 func fx_bulwark(vfx, c, f, t, x): fx_ward(vfx, c, f, t, x)
-func fx_shellup(vfx, c, f, t, x): fx_ward(vfx, c, f, t, x)
+func fx_shellup(vfx, c, f, t, x):
+	# Persistent shell state is displayed by ArenaView.
+	vfx.rune(f,1.6,c.color,0,.45,0,1.0)
+	vfx.spray(f+Vector3.UP*.4,10,"droplet",c.hot,Vector2(.6,1.2),Vector2(.25,.45),.08,Vector3.UP,.8,0,1)
 
 # RENEW / RADIANCE / REGROWTH / REBIRTH: pillars of light and rising motes over healed allies
 func fx_renew(vfx: VFX, c: Dictionary, from: Vector3, _to: Vector3, targets: Array) -> void:

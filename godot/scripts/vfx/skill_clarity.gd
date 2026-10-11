@@ -45,6 +45,8 @@ static func shape(sim: BattleSim, u: Dictionary) -> Dictionary:
 	var tp: Vector2 = tgt.pos if not tgt.is_empty() else u.pos
 	var rng = float(pc.get("ability", {}).get("range", 6.0))
 	match effect:
+		"legend_cataclysm": return {"kind":"circle","center":tp,"radius":ArenaGrid.ROW_GAP*2}
+		"legend_bastion": return {"kind":"circle","center":u.pos,"radius":ArenaGrid.ROW_GAP*2,"support":true}
 		"quake", "whirl", "fear", "shriek", "triplebite": return {"kind": "circle", "center": u.pos, "radius": 3.0}
 		"bulwark", "prideroar", "shellup", "frostroar": return {"kind": "circle", "center": u.pos, "radius": 3.4}
 		"meteor", "toxic", "fire", "gust", "silence", "frost", "roots", "acid", "flamewave", "magma": return {"kind": "circle", "center": tp, "radius": 2.5}
@@ -146,7 +148,9 @@ func _tag(u: Dictionary, pos: Vector3, vis: Dictionary) -> void:
 	var parts = []; var col = Color.WHITE
 	if u.alive:
 		for k in STATUS_TEXT:
-			if u.status.get(k, 0.0) > 0.05 and k in HARD_CC:
+			if u.status.get(k, 0.0) > 0.05 and (k in HARD_CC or k == "shell"):
+				# The cast callout already identifies Shell Up; avoid duplicate stacked text.
+				if k == "shell" and callouts.any(func(c): return c.uid == u.uid and c.age < c.life): continue
 				if parts.is_empty(): col = Color(STATUS_TEXT[k][1])
 				parts.append(STATUS_TEXT[k][0])
 	if parts.is_empty():
@@ -161,7 +165,7 @@ func _tag(u: Dictionary, pos: Vector3, vis: Dictionary) -> void:
 	lab.position = pos + Vector3.UP * (vis.bars.position.y + 0.45)
 
 func _line(sim: BattleSim, u: Dictionary, pos: Vector3, models: Dictionary) -> void:
-	var show = tactical and u.alive and int(u.get("target", -1)) >= 0 and models.has(int(u.target))
+	var show = (tactical or float(u.status.get("taunt",0)) > 0) and u.alive and int(u.get("target", -1)) >= 0 and models.has(int(u.target))
 	if show:
 		var tg = sim.find_unit(int(u.target))
 		show = not tg.is_empty() and tg.alive and tg.team != u.team

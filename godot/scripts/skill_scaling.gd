@@ -6,6 +6,7 @@ const SPELL = {"ap":1.0}
 const GUARD = {"ap":0.25,"armor":0.35,"hp":0.40}
 const HEAL = {"ap":0.80,"hp":0.20}
 const PROFILES = {
+ "legend_cataclysm":{"ad":0.50,"ap":0.50},"legend_bastion":{"hp":1.0},
  "gore":{"ad":0.70,"armor":0.30},"maul":PHYSICAL,"skystrike":PHYSICAL,"antlerrush":{"ad":0.80,"ap":0.20,"as":0.25},
  "vanish":PHYSICAL,"ambush":PHYSICAL,"execute":PHYSICAL,
  "smash":{"ad":0.55,"hp":0.45},"quake":{"ad":0.35,"armor":0.65},"fissure":{"ad":0.35,"armor":0.65},

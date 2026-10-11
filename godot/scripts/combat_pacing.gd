@@ -65,6 +65,9 @@ static func opening(hero: Dictionary, rng: RandomNumberGenerator) -> Dictionary:
 	var out = {"signature": first}
 	var k = 0
 	for key in hero.learned:
+		if key == "100":
+			out[key] = first + 1.2
+			continue
 		out[key] = first + 2.2 + k * 2.6 + rng.randf_range(0.0, 1.2)
 		k += 1
 	return out

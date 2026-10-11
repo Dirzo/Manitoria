@@ -367,6 +367,7 @@ const RIDERS = {
 
 static func learned_ability(sp: String, index: int) -> Dictionary:
  load_data()
+ if index == 100: return legendary_ability(sp)
  if index==12:return audit_ability(sp,index,ChampionEvolution.action(sp))
  if index>=13:return audit_ability(sp,index,Evolutions.grant_ability(sp,index-13))
  var pool = ability_pool(sp)
@@ -440,6 +441,22 @@ static func spell_factor(hero: Dictionary) -> float:
  var apex = {"apex_stats": 1.0 + APEX_STAT, "apex_skill": 1.0 + APEX_SKILL}.get(str(hero.get("apex", "")), 1.0)
  return apex * (1.20 if hero.get("evolution", "") == "arcanist" else 1.0) * Evolutions.mod(hero, "potency") * roll_mult(hero, "potency") * Traits.mod(hero, "potency") * (1.0 + Forge.totals(hero).potency)
 
+## A legendary occupies its own one-skill slot; the regular four-slot kit is unchanged.
+static func regular_learned_count(hero: Dictionary) -> int:
+ return hero.learned.size() - (1 if hero.learned.has("100") else 0)
+
+static func legendary_ability(sp: String) -> Dictionary:
+ var role_name = species[sp].role
+ var effect = "legend_bastion" if role_name in ["Tank","Warden","Support"] else "legend_cataclysm"
+ var title = species[sp].n + (" · Last Stand" if effect == "legend_bastion" else " · Worldbreaker")
+ var detail = "Shield allies within 2 hexes for 25% of your maximum health and rally them for 5s. Enemies within 2 hexes are weakened for 4s." if effect == "legend_bastion" else "Strike enemies within 2 hexes of the target for 240% skill power and stun them for 1.2s. Leave a 4s ruin field dealing 30% skill power per second."
+ var scaling = "Scaling: caster maximum health only. Attack, ability power, armor and skill potency do not increase this shield. Ability haste lowers cooldowns." if effect == "legend_bastion" else SkillScaling.description(sp,effect,"100")
+ return {"key":"100","name":title,"effect":effect,"rider":"none","power":1.0,"cooldown":24.0,"range":10.0,"summary":"NEW LEGENDARY · " + ("Area protection + enemy suppression" if effect == "legend_bastion" else "Area impact + stun + lingering ruin"),"description":detail + " 24s base cooldown. " + scaling}
+
+static func legendary_card(sp: String) -> Dictionary:
+ var a = legendary_ability(sp)
+ return {"type":"ability","key":"100","name":a.name,"summary":a.summary,"description":a.description+" Fills your separate legendary slot. Cannot be ranked up.","rarity":"Legendary","bonus":1.0}
+
 static func choices(hero: Dictionary, won: bool, rng: RandomNumberGenerator, reward_level: int = -1) -> Array:
  var out = []
  var level = int(hero.level) if reward_level < 0 else reward_level
@@ -460,6 +477,7 @@ static func choices(hero: Dictionary, won: bool, rng: RandomNumberGenerator, rew
  # Upgrades always follow the skills this champion already chose; new skills only fill empty slots.
  var upgrades = []
  for key in hero.learned:
+  if key == "100": continue
   var r = int(hero.learned[key])
   if r >= MAX_RANK: continue
   var a = learned_ability(hero.sp, int(key))
@@ -467,7 +485,7 @@ static func choices(hero: Dictionary, won: bool, rng: RandomNumberGenerator, rew
  if hero.signature_rank < MAX_RANK:
   upgrades.append({"type":"signature", "key":"signature", "name":species[hero.sp].ability_name + " · Rank %d" % (hero.signature_rank + 1), "summary":"Upgrade your signature: +20% power, faster", "description":"Your signature gains 20% skill power and an 8% shorter cooldown. "+SkillScaling.description(hero.sp,species[hero.sp].ab), "rarity":"Uncommon", "bonus":1.0, "upgrade":true})
  var discoveries = []
- if hero.learned.size() + 1 < ABILITY_SLOTS:
+ if regular_learned_count(hero) + 1 < ABILITY_SLOTS:
   for i in range(DISCOVERY_CHOICES):
    if hero.learned.has(str(i)): continue
    var a = learned_ability(hero.sp, i)
@@ -493,22 +511,24 @@ static func choices(hero: Dictionary, won: bool, rng: RandomNumberGenerator, rew
  for card in out:
   if card.type in ["ability","signature"]:
    var roll=rng.randf()
-   if level>=5 and roll<(0.09 if won else 0.05):
-    card.rarity="Legendary";card.bonus=1.25;card.description+=" Legendary: +75% skill power, a gilded spell effect and a moment in the spotlight. Recharges 12% slower."
-   elif roll<(0.31 if won else 0.21):
+   var rare_chance = (0.22 if won else 0.16) if level>=5 else (0.31 if won else 0.21)
+   if roll<rare_chance:
     card.rarity="Rare";card.bonus=1.1;card.description+=" Rare: +30% skill power and a luminous spell effect."
+ # One rare discovery roll per reward, independent of regular card upgrades.
+ if level>=5 and not hero.learned.has("100") and rng.randf()<(0.05 if won else 0.03):
+  out[rng.randi_range(0,out.size()-1)] = legendary_card(hero.sp)
  return out
 
 static func apply_choice(hero: Dictionary, card: Dictionary) -> void:
  if card.type in ["ability","signature"]:
-  if card.type=="ability" and not hero.learned.has(card.key) and hero.learned.size()+1>=ABILITY_SLOTS:return
+  if card.type=="ability" and card.key!="100" and not hero.learned.has(card.key) and regular_learned_count(hero)+1>=ABILITY_SLOTS:return
   if not hero.has("skill_rarity"):hero.skill_rarity={}
   var previous=RarityStyle.for_skill(hero,"signature" if card.type=="signature" else "ability:"+card.key)
   if previous!="Legendary" and (card.rarity=="Legendary" or previous!="Rare"):hero.skill_rarity[card.key]=card.rarity
  match card.type:
   "ability":
-   if not hero.learned.has(card.key) and hero.learned.size()+1 >= ABILITY_SLOTS: return
-   hero.learned[card.key] = mini(MAX_RANK, int(hero.learned.get(card.key, 0)) + 1)
+   if card.key!="100" and not hero.learned.has(card.key) and regular_learned_count(hero)+1 >= ABILITY_SLOTS: return
+   hero.learned[card.key] = 1 if card.key=="100" else mini(MAX_RANK, int(hero.learned.get(card.key, 0)) + 1)
    hero["ability_bonus_" + card.key] = maxf(hero.get("ability_bonus_" + card.key, 1.0), card.bonus)
   "signature":
    hero.signature_rank = mini(MAX_RANK, hero.signature_rank + 1)
@@ -521,7 +541,8 @@ static func apply_choice(hero: Dictionary, card: Dictionary) -> void:
    hero.apex = card.key
    if card.key == "apex_skill":
     hero.signature_rank = mini(MAX_RANK, hero.signature_rank + 1)
-    for k in hero.learned: hero.learned[k] = mini(MAX_RANK, int(hero.learned[k]) + 1)
+    for k in hero.learned:
+     if k!="100":hero.learned[k] = mini(MAX_RANK, int(hero.learned[k]) + 1)
   "vigor", "force", "focus", "agility": hero[card.type] = int(hero.get(card.type, 0)) + 1
  hero.history.append(card.name)
 
@@ -538,6 +559,18 @@ static func materialize_reward(hero: Dictionary) -> void:
  hero.pending[0] = choices(hero, reward.won, rng, int(reward.level))
 
 static func migrate_progression(hero: Dictionary) -> void:
+ # Convert only unchosen legacy Legendary upgrades. Already learned skills retain balance.
+ if not hero.get("legendary_offers_v1",false):
+  var replaced = false
+  for group in hero.get("pending",[]):
+   for i in range(group.size()):
+    if group[i].get("rarity","") == "Legendary" and group[i].get("type","") in ["ability","signature"]:
+     if not hero.learned.has("100") and not replaced:
+      group[i] = legendary_card(hero.sp); replaced = true
+     else:
+      group[i].rarity = "Rare";group[i].bonus = 1.1
+      group[i].description = group[i].description.split(" Legendary:")[0]+" Rare: +30% skill power and a luminous spell effect."
+  hero.legendary_offers_v1 = true
  if hero.get("progression_version", 0) >= 2: return
  var count = hero.get("pending", []).size()
  hero.pending = []; hero.rewards = []; hero.last_offers = []

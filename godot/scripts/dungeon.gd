@@ -188,7 +188,9 @@ static func reachable(c: Campaign) -> Array:
  if busy(c) or d.map.is_empty(): return []
  if int(d.row) < 0: return range(d.map[0].size())
  if int(d.row) >= ROWS - 1: return []
- return node(c).get("links", [])
+ # JSON reloads integer-looking numbers as floats; Array membership is type-sensitive.
+ # Both map buttons and enter() compare integer room indices against this list.
+ return node(c).get("links", []).map(func(col): return int(col))
 
 ## Something must be settled before moving: a fight, spoils, an event, the outfitter or a choice.
 static func busy(c: Campaign) -> bool:

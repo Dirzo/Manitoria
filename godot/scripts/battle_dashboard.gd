@@ -62,7 +62,7 @@ func inspect(id: int) -> void:
  add_ability(row,HeroData.species[u.hero.sp].ability_name,HeroData.signature_summary(u.hero.sp)+"\n\n"+HeroData.species[u.hero.sp].ability_description,"signature",u.hero.signature_rank)
  for key in u.hero.learned:
   var a = HeroData.learned_ability(u.hero.sp,int(key)); add_ability(row,a.name,a.summary+"\n\n"+a.description,key,int(u.hero.learned[key]))
- for i in range(maxi(0,HeroData.ABILITY_SLOTS-1-u.hero.learned.size())):
+ for i in range(maxi(0,HeroData.ABILITY_SLOTS-1-HeroData.regular_learned_count(u.hero))):
   var empty = game.label(row,"UNDISCOVERED\nEarn an arena level",12,game.MUTED); empty.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 func add_ability(row: HBoxContainer, title: String, description: String, key: String, rank: int) -> void:
  var stack = VBoxContainer.new(); stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL; stack.add_theme_constant_override("separation",3); row.add_child(stack)

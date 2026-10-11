@@ -411,7 +411,16 @@ func sync(sim: BattleSim, dt: float, speed: float = 1.0) -> void:
   visual.bar.mesh.size.x = maxf(0.005, 1.75 * health_ratio)
   visual.bar.material_override.albedo_color = Color("ee806c") if health_ratio < 0.3 else Color("e7c36f") if health_ratio < 0.6 else Color("70d6dd") if u.team == 0 else Color("eb987b")
   visual.hp_label.text = "%d / %d%s" % [ceili(u.hp), ceili(u.max_hp), " +%d" % ceili(u.shield) if u.shield > 0 else ""]
-  visual.bubble.visible = false
+  var shelled = u.alive and float(u.status.get("shell",0)) > 0
+  visual.bubble.visible = shelled
+  var primed = u.alive and u.get("fx",{}).get("primed",false)
+  if primed and not visual.get("primed",false):
+   floating_text(u.pos * FLOOR_SCALE,"SPELLBLADE READY",Color("cbb0ff"),23)
+  visual.primed = primed
+  if u.alive and u.cd <= 0 and int(u.kills) > int(visual.get("kills",0)) and "executioner" in u.hero.get("equipment",{}).values():
+   floating_text(u.pos * FLOOR_SCALE,"SIGNATURE READY",Color("ffd36e"),27)
+   flash(u.uid,Color("ffd36e"),.5)
+  visual.kills = int(u.kills)
   visual.shield_bar.visible = u.alive and u.shield > 0
   visual.shield_bar.mesh.size.x = maxf(0.01,1.75*minf(1,u.shield/(u.max_hp*0.55)))
   visual.cast_bar.visible = u.alive and (u.windup > 0 or u.has("pending_cast"))
@@ -523,8 +532,9 @@ func handle_event(e: Dictionary) -> void:
   "item_feedback":
    if vfx:ItemFeedback.play(vfx,e,world_point(e.pos,0),world_point(e.target,0))
    if e.stage=="proc":
-    flash(int(e.target_uid),ItemFeedback.profile(e.item_id).color,.35)
-    floating_text(e.target*FLOOR_SCALE,e.name,ItemFeedback.profile(e.item_id).color,23)
+    var carrier_effect = e.item_id in ["runeward","spellblade","executioner"]
+    flash(int(e.uid if carrier_effect else e.target_uid),ItemFeedback.profile(e.item_id).color,.35)
+    floating_text((e.pos if carrier_effect else e.target)*FLOOR_SCALE,e.name,ItemFeedback.profile(e.item_id).color,23)
   "attack": pass
   "release":
    if not e.ranged: AttackVisuals.strike(self,e.pos,e.target,e.get("species",""))
@@ -749,7 +759,7 @@ func sync_telegraphs(sim: BattleSim) -> void:
 # Coalesce rapid ticks for a short window without discarding small hits.
 # The displayed amount is effective HP damage/healing, not nominal power.
 func number_event(e: Dictionary) -> void:
- var key = "%s:%s" % [e.uid,e.type]
+ var key = "%s:%s:%s:%s" % [e.uid,e.type,e.get("source",-1),e.get("credit","basic")]
  # Small damage-over-time ticks pool for longer so the fight isn't buried in "0.7"s.
  var window = 0.48 if e.amount >= 6.0 else 0.9
  if combat_numbers.has(key) and combat_numbers[key].age < window:
@@ -759,6 +769,12 @@ func number_event(e: Dictionary) -> void:
   return
  if e.type == "blocked" and (e.amount < 10.0 or (clarity and clarity.tactical)): return   # minor absorbs read as noise
  if clarity and clarity.tactical and e.type == "hit" and e.amount < 12.0: return
+ # Keep source-aware attribution bounded during dense accelerated fights.
+ if combat_numbers.size() >= 64:
+  var oldest = combat_numbers.keys()[0]
+  for candidate in combat_numbers:
+   if combat_numbers[candidate].age > combat_numbers[oldest].age: oldest = candidate
+  combat_numbers[oldest].node.queue_free(); combat_numbers.erase(oldest)
  var label = Label3D.new(); effects.add_child(label)
  var skill_hit = e.type == "hit" and e.get("credit", "basic") != "basic"
  label.font_size = (52 if skill_hit else 40) if e.type == "hit" else 32 if e.type == "heal" else 24; label.pixel_size = 0.014; label.no_depth_test = true; label.outline_size = 12; label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -819,6 +835,8 @@ func animate_weight(u: Dictionary, visual: Dictionary, dt: float) -> void:
  var shift = 0.0
  var lean = 0.0
  var lift = absf(sin(visual.stride)) * pace * (0.025 if heavy else 0.045)
+ if u.hero.sp == "zaratan" and float(u.status.get("shell",0)) > 0:
+  lift = -0.12
  if u.windup > 0:
   var phase = 1-u.windup/maxf(0.01,u.windup_total)
   shift = -sin(phase*PI*0.5)*0.12
@@ -831,8 +849,12 @@ func animate_weight(u: Dictionary, visual: Dictionary, dt: float) -> void:
   var phase = 1-u.pending_cast.delay/u.pending_cast.total
   lift += sin(phase*PI)*0.045
   lean = -0.035*sin(phase*PI)
+  if u.hero.sp == "cyclops" and u.pending_cast.effect == "boulder":
+   shift = -0.22*sin(phase*PI*0.5)
+   lean = -0.13*sin(phase*PI*0.5)
  else:
   lean = pace*(0.025 if heavy else 0.06)
+ if u.hero.sp == "zaratan" and float(u.status.get("shell",0)) > 0: lean = 0.09
  var target = forward*shift+visual.recoil+Vector3.UP*lift
  visual.motion.position = visual.motion.position.lerp(target,1-exp(-dt*24))
  visual.motion.rotation.x = lerpf(visual.motion.rotation.x,cos(u.heading)*lean,1-exp(-dt*12))
@@ -916,13 +938,16 @@ func fx_cast(e: Dictionary, color: Color) -> void:
  var effect = e.get("effect", "basic")
  if not vfx or effect in BOLT_FAMILIES: return
  var c = fx_context(e, color)
- c.area_radius=ArenaGrid.ROW_GAP*FLOOR_SCALE
+ c.area_radius=ArenaGrid.ROW_GAP*FLOOR_SCALE*(2 if effect in ["legend_cataclysm","legend_bastion"] else 1)
  var from = world_point(e.pos, 0.0); var to = world_point(e.get("target", e.pos), 0.0)
  var targets = []
  if sim_ref:
   var caster = sim_ref.find_unit(e.uid)
   if not caster.is_empty():
-   if effect in SUPPORT_FAMILIES:
+   if effect == "legend_bastion":
+    for u in sim_ref.units:
+     if u.alive and u.team == caster.team and ArenaGrid.distance(caster.cell,u.cell)<=2: targets.append(world_point(u.pos,0.0))
+   elif effect in SUPPORT_FAMILIES:
     for u in sim_ref.units:
      if u.alive and u.team == caster.team and u.pos.distance_to(caster.pos) <= 5.5: targets.append(world_point(u.pos, 0.0))
    else:

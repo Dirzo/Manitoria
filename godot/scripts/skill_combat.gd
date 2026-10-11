@@ -8,6 +8,7 @@ static func tint(species: String) -> Color:
 
 static func windup(effect: String) -> float:
  match effect:
+  "legend_cataclysm", "legend_bastion": return 1.2
   "ambush", "vanish", "execute", "venom", "antlerrush": return 0.40
   "barrage", "wisps", "gust", "silence", "gore", "maul": return 0.50
   "renew", "ward", "rally", "radiance", "rootbloom", "tidal", "regrowth": return 0.65
@@ -17,4 +18,4 @@ static func windup(effect: String) -> float:
  return 0.60
 
 static func self_centered(effect: String) -> bool:
- return effect in ["renew", "ward", "rally", "quake", "whirl", "fear", "shriek", "triplebite", "bulwark", "prideroar", "shellup", "frostroar", "radiance", "rootbloom", "tidal", "regrowth", "tailwind", "hunger", "howl", "brood"]
+ return effect in ["legend_bastion", "renew", "ward", "rally", "quake", "whirl", "fear", "shriek", "triplebite", "bulwark", "prideroar", "shellup", "frostroar", "radiance", "rootbloom", "tidal", "regrowth", "tailwind", "hunger", "howl", "brood"]

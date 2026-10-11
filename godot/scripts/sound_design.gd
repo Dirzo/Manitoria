@@ -2,7 +2,7 @@ class_name SoundDesign
 extends Node
 
 const SPECIES_FAMILY = {"minotaur":"beast", "golem":"stone", "troll":"stone", "wendigo":"shadow", "direwolf":"beast", "manticore":"venom", "griffin":"wing", "kitsune":"spirit", "wyvern":"venom", "harpy":"wing", "phoenix":"fire", "kirin":"lightning", "basilisk":"venom", "treant":"nature", "naga":"water", "unicorn":"holy", "cerberus":"beast", "nemean":"beast", "yeti":"ice", "zaratan":"shield", "owlbear":"claw", "hydra":"nature", "chimera":"fire", "gargoyle":"stone", "nekomata":"shadow", "jackalope":"nature", "cyclops":"quake", "thunderbird":"lightning", "sphinx":"spirit", "pegasus":"wing", "arachne":"venom", "salamander":"fire"}
-const EFFECT_FAMILY = {"gore":"beast", "bulwark":"shield", "smash":"stone", "hunger":"shadow", "howl":"beast", "venom":"venom", "skystrike":"wing", "foxfire":"spirit", "acid":"venom", "shriek":"wing", "flamewave":"fire", "chain":"lightning", "gaze":"venom", "rootbloom":"nature", "tidal":"water", "radiance":"holy", "triplebite":"claw", "prideroar":"beast", "frostroar":"ice", "shellup":"shield", "maul":"claw", "regrowth":"nature", "threefold":"fire", "stonedive":"stone", "vanish":"shadow", "antlerrush":"nature", "boulder":"quake", "stormcall":"lightning", "riddle":"spirit", "tailwind":"wing", "brood":"venom", "magma":"fire", "quake":"quake", "ward":"shield", "meteor":"quake", "renew":"heal", "drain":"shadow", "fear":"shadow", "ambush":"claw", "toxic":"venom", "execute":"metal", "gust":"wing", "wisps":"spirit", "barrage":"bow", "silence":"shadow", "beam":"holy", "storm":"lightning", "frost":"ice", "roots":"nature", "fire":"fire", "whirl":"metal", "fissure":"stone", "rally":"holy", "rebirth":"fire"}
+const EFFECT_FAMILY = {"legend_cataclysm":"quake", "legend_bastion":"shield", "gore":"beast", "bulwark":"shield", "smash":"stone", "hunger":"shadow", "howl":"beast", "venom":"venom", "skystrike":"wing", "foxfire":"spirit", "acid":"venom", "shriek":"wing", "flamewave":"fire", "chain":"lightning", "gaze":"venom", "rootbloom":"nature", "tidal":"water", "radiance":"holy", "triplebite":"claw", "prideroar":"beast", "frostroar":"ice", "shellup":"shield", "maul":"claw", "regrowth":"nature", "threefold":"fire", "stonedive":"stone", "vanish":"shadow", "antlerrush":"nature", "boulder":"quake", "stormcall":"lightning", "riddle":"spirit", "tailwind":"wing", "brood":"venom", "magma":"fire", "quake":"quake", "ward":"shield", "meteor":"quake", "renew":"heal", "drain":"shadow", "fear":"shadow", "ambush":"claw", "toxic":"venom", "execute":"metal", "gust":"wing", "wisps":"spirit", "barrage":"bow", "silence":"shadow", "beam":"holy", "storm":"lightning", "frost":"ice", "roots":"nature", "fire":"fire", "whirl":"metal", "fissure":"stone", "rally":"holy", "rebirth":"fire"}
 const MUSIC_GAIN = {"club": -2.0, "preparation": -1.0, "arena": -4.0, "battle": -3.0, "shop": -1.0, "intro": -3.5, "zone": -3.0}
 ## Title theme and one song per dungeon zone (files normalised to -16 LUFS). A zone's song plays
 ## through its map, formation, fights and results; the outfitter keeps the shop playlist.
@@ -121,7 +121,7 @@ func scene_music(which: String) -> void:
 func _crossfade_to(which: String) -> void:
  if not music_cache.has(which): return
  if (scene_name == "arena" or scene_name.begins_with("battle_")) and not (which == "arena" or which.begins_with("battle_")):
-  for voice in voices: voice.stop()
+  # Keep already-playing impact tails; new combat events stop at result resolution.
   last_event.clear()
  var previous_scene = scene_name
  scene_name = which
@@ -144,9 +144,9 @@ func _crossfade_to(which: String) -> void:
  var target_gain = db_to_linear(gain_for(which))
  music_transition = create_tween()
  music_transition.tween_method(func(t):
-  # Aligned stems use a linear blend; unrelated music fades through silence.
-  var blend_in = t if aligned else maxf(0.0, (t - 0.5) * 2.0)
-  var blend_out = 1.0 - t if aligned else maxf(0.0, 1.0 - t * 2.0)
+  # Aligned stems blend linearly; unrelated tracks overlap without a silent midpoint.
+  var blend_in = t if aligned else sin(t * PI * 0.5)
+  var blend_out = 1.0 - t if aligned else cos(t * PI * 0.5)
   incoming.volume_db = linear_to_db(maxf(0.0001, lerpf(start_in, target_gain, blend_in)))
   outgoing.volume_db = linear_to_db(maxf(0.0001, start_out * blend_out)), 0.0, 1.0, fade_time)
  music_transition.tween_callback(func(): outgoing.stop())
@@ -303,7 +303,9 @@ static func event_sound(e: Dictionary, unit: Dictionary) -> Dictionary:
    result.gain=-16 if e.stage=="proc" else -27
    result.priority=2 if e.stage=="proc" else 1;result.gap=.20 if e.stage=="proc" else .5
    if e.stage=="proc" and ItemEffects.definition(e.item_id).get("wild",false):result.priority=3;result.gain=-12
-  "telegraph": return result
+  "telegraph":
+   if sp != "cyclops" or e.get("effect","") != "boulder": return result
+   result.key = "attack_quake"; result.gain = -22; result.gap = .3
   "cast":
    result.key = "hero_" + sp if HeroData.species.has(sp) and e.effect == HeroData.species[sp].ab else effect
    result.gain = -14; result.priority = 2; result.gap = 0.22
@@ -318,7 +320,10 @@ static func event_sound(e: Dictionary, unit: Dictionary) -> Dictionary:
    if e.get("credit", "") != "basic" or e.get("amount",0) < 4: return result
    result.key = "impact_stone" if family in ["stone","quake"] else "impact_metal" if family in ["shield","metal"] else "impact_flesh"
    result.gain = -17; result.gap = 0.12
-  "heal", "blocked": return result
+  "heal": return result
+  "blocked":
+   if float(e.get("amount",0)) < 10: return result
+   result.key = "shield"; result.gain = -20; result.gap = 0.3
   "death":
    if unit.get("summon", false): return result
    result.key = "death_" + family; result.gain = -9; result.priority = 3; result.gap = 0.25
@@ -332,7 +337,9 @@ func battle_event(e: Dictionary, unit: Dictionary, pan: float = 0.0) -> void:
  if sound.key.is_empty(): return
  var now = Time.get_ticks_msec() / 1000.0
  # Wall-clock limits prevent 4x speed, DoTs and summons becoming an audio flood.
- var gate = ("item_"+str(e.get("stage","")) if e.type=="item_feedback" else e.type) + (str(e.get("uid", -1)) if e.type in ["death", "interrupt"] else "")
+ var important = e.type in ["cast", "impact", "blocked", "death", "interrupt"] or (e.type == "item_feedback" and e.get("stage","") == "proc")
+ var gate = ("item_"+str(e.get("stage","")) if e.type=="item_feedback" else e.type)
+ if important: gate += ":%s:%s" % [e.get("uid",-1),e.get("credit",e.get("item_id",""))]
  if now - last_event.get(gate, -100.0) < sound.gap: return
  last_event[gate] = now
  var variant = 0.97 + float(int(e.get("uid", 0)) % 5) * 0.015

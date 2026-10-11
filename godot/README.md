@@ -1,3 +1,13 @@
+# Current Godot workspace
+
+This source declares 0.75.4 and runs with the local Godot 4.7.2 editor. Current authority,
+remaining work and next action are in the shared [living plan](../../docs/IMPLEMENTATION_PLAN.md).
+See [approved direction](../../docs/GAME_SPEC.md) and [run/test commands](../../docs/DEVELOPMENT.md).
+Read [juice.md](../../juice.md) and its relevant links for presentation changes;
+[COPYWRITING.md](../../COPYWRITING.md) owns audience/message guidance. Maintain affected
+expressive direction within the approved scope.
+The release notes below are historical evidence, not current delivery instructions.
+
 # Manitoria 0.73 — Speedrun Stat Check
 
 Normal draft, hex formation, twenty item priorities, build/evolution choices and full five- or ten-cup simulations. Champion copies and star bonuses are retired. See [controls, benchmark rules and validation](../SPEEDRUN-STAT-CHECK-0.73.md).
