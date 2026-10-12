@@ -1,5 +1,5 @@
 {
-	"_about": "Combat clips retargeted from Mesh2Motion's CC0 libraries (art/mesh2motion) by tools/retarget_creature.gd. Per clip: from = source clip name, set = source library (default: the creature's set), loop, speed (playback multiplier baked in), trim = [start, end] fraction of the source clip, roles = only drive these chains (spine, neck, arm_l, arm_r, leg_l, leg_r, tail), travel = max in-place hip shift. ready/hit = hand-picked anticipation end and contact (fractions of the clip), used instead of the probe's measurement. no_springs = chain roles that must not get spring bones (the naga's coiled lower body carries her). body = scale the trunk's copied rotation (for creatures without driven legs).",
+	"_about": "Combat clips retargeted from Mesh2Motion's CC0 libraries (art/mesh2motion) by tools/retarget_creature.gd. Per clip: from = source clip name, set = source library (default: the creature's set), loop, speed (playback multiplier baked in), trim = [start, end] fraction of the source clip, roles = only drive these chains (spine, neck, arm_l, arm_r, leg_l, leg_r, tail), travel = max in-place hip shift. ready/hit = hand-picked anticipation end and contact (fractions of the clip), used instead of the probe's measurement. no_springs = chain roles that must not get spring bones (the naga's coiled lower body carries her). body = scale the trunk's copied rotation (for creatures without driven legs). chains: a role may be a list of bones or just its first bone (the chain is followed from there).",
 	"minotaur": {
 		"set": "human",
 		"clips": {
@@ -693,6 +693,997 @@
 			},
 			"victory": {
 				"from": "Victory",
+				"loop": true
+			}
+		}
+	},
+	"owlbear": {
+		"set": "fox",
+		"clips": {
+			"idle": {
+				"from": "Idle",
+				"loop": true
+			},
+			"idle_combat": {
+				"from": "Idle Alert",
+				"loop": true
+			},
+			"walk": {
+				"from": "Walk",
+				"loop": true
+			},
+			"run": {
+				"from": "Run",
+				"loop": true
+			},
+			"attack_1": {
+				"from": "Bite",
+				"amplify": 2.0,
+				"ready": 0.36,
+				"hit": 0.55
+			},
+			"attack_2": {
+				"from": "Head_But",
+				"set": "horse",
+				"amplify": 1.5,
+				"ready": 0.55,
+				"hit": 0.73
+			},
+			"attack_heavy": {
+				"from": "Jump",
+				"trim": [
+					0.1,
+					0.8
+				],
+				"ground": 0.0,
+				"travel": 0.4,
+				"ready": 0.09,
+				"hit": 0.82
+			},
+			"cast": {
+				"from": "Howl",
+				"speed": 1.5,
+				"ready": 0.1,
+				"hit": 0.27
+			},
+			"hit_light": {
+				"from": "Hit",
+				"set": "kaiju",
+				"roles": [
+					"spine",
+					"neck",
+					"tail"
+				]
+			},
+			"death": {
+				"from": "Death"
+			},
+			"spawn": {
+				"from": "Jump",
+				"trim": [
+					0.45,
+					1.0
+				],
+				"ground": 0.0
+			},
+			"victory": {
+				"from": "Howl",
+				"loop": true
+			}
+		}
+	},
+	"cerberus": {
+		"set": "fox",
+		"clips": {
+			"idle": {
+				"from": "Idle",
+				"loop": true
+			},
+			"idle_combat": {
+				"from": "Idle Alert",
+				"loop": true
+			},
+			"walk": {
+				"from": "Walk",
+				"loop": true
+			},
+			"run": {
+				"from": "Run",
+				"loop": true
+			},
+			"attack_1": {
+				"from": "Bite",
+				"amplify": 2.0,
+				"ready": 0.36,
+				"hit": 0.55
+			},
+			"attack_2": {
+				"from": "Head_But",
+				"set": "horse",
+				"amplify": 1.5,
+				"ready": 0.55,
+				"hit": 0.73
+			},
+			"attack_heavy": {
+				"from": "Jump",
+				"trim": [
+					0.1,
+					0.8
+				],
+				"ground": 0.0,
+				"travel": 0.4,
+				"ready": 0.09,
+				"hit": 0.82
+			},
+			"cast": {
+				"from": "Howl",
+				"speed": 1.5,
+				"ready": 0.1,
+				"hit": 0.27
+			},
+			"hit_light": {
+				"from": "Hit",
+				"set": "kaiju",
+				"roles": [
+					"spine",
+					"neck",
+					"tail"
+				]
+			},
+			"death": {
+				"from": "Death"
+			},
+			"spawn": {
+				"from": "Jump",
+				"trim": [
+					0.45,
+					1.0
+				],
+				"ground": 0.0
+			},
+			"victory": {
+				"from": "Howl",
+				"loop": true
+			}
+		}
+	},
+	"nemean": {
+		"set": "fox",
+		"clips": {
+			"idle": {
+				"from": "Idle",
+				"loop": true
+			},
+			"idle_combat": {
+				"from": "Idle Alert",
+				"loop": true
+			},
+			"walk": {
+				"from": "Walk",
+				"loop": true
+			},
+			"run": {
+				"from": "Run",
+				"loop": true
+			},
+			"attack_1": {
+				"from": "Bite",
+				"amplify": 2.0,
+				"ready": 0.36,
+				"hit": 0.55
+			},
+			"attack_2": {
+				"from": "Head_But",
+				"set": "horse",
+				"amplify": 1.5,
+				"ready": 0.55,
+				"hit": 0.73
+			},
+			"attack_heavy": {
+				"from": "Jump",
+				"trim": [
+					0.1,
+					0.8
+				],
+				"ground": 0.0,
+				"travel": 0.4,
+				"ready": 0.09,
+				"hit": 0.82
+			},
+			"cast": {
+				"from": "Howl",
+				"speed": 1.5,
+				"ready": 0.1,
+				"hit": 0.27
+			},
+			"hit_light": {
+				"from": "Hit",
+				"set": "kaiju",
+				"roles": [
+					"spine",
+					"neck",
+					"tail"
+				]
+			},
+			"death": {
+				"from": "Death"
+			},
+			"spawn": {
+				"from": "Jump",
+				"trim": [
+					0.45,
+					1.0
+				],
+				"ground": 0.0
+			},
+			"victory": {
+				"from": "Howl",
+				"loop": true
+			}
+		}
+	},
+	"chimera": {
+		"set": "fox",
+		"chains": {
+			"spine": [
+				"Bone_002",
+				"Bone_014",
+				"Bone_013",
+				"Bone_012"
+			],
+			"neck": "Bone_028",
+			"arm_l": "Bone_033",
+			"arm_r": "Bone_038",
+			"leg_l": "Bone_020",
+			"leg_r": "Bone_026",
+			"tail": "Bone_011"
+		},
+		"clips": {
+			"idle": {
+				"from": "Idle",
+				"loop": true
+			},
+			"idle_combat": {
+				"from": "Idle Alert",
+				"loop": true
+			},
+			"walk": {
+				"from": "Walk",
+				"loop": true
+			},
+			"run": {
+				"from": "Run",
+				"loop": true
+			},
+			"attack_1": {
+				"from": "Bite",
+				"amplify": 2.0,
+				"ready": 0.36,
+				"hit": 0.55
+			},
+			"attack_2": {
+				"from": "Head_But",
+				"set": "horse",
+				"amplify": 1.5,
+				"ready": 0.55,
+				"hit": 0.73
+			},
+			"attack_heavy": {
+				"from": "Jump",
+				"trim": [
+					0.1,
+					0.8
+				],
+				"ground": 0.0,
+				"travel": 0.4,
+				"ready": 0.09,
+				"hit": 0.82
+			},
+			"cast": {
+				"from": "Howl",
+				"speed": 1.5,
+				"ready": 0.1,
+				"hit": 0.27
+			},
+			"hit_light": {
+				"from": "Hit",
+				"set": "kaiju",
+				"roles": [
+					"spine",
+					"neck",
+					"tail"
+				]
+			},
+			"death": {
+				"from": "Death"
+			},
+			"spawn": {
+				"from": "Jump",
+				"trim": [
+					0.45,
+					1.0
+				],
+				"ground": 0.0
+			},
+			"victory": {
+				"from": "Howl",
+				"loop": true
+			}
+		}
+	},
+	"manticore": {
+		"set": "fox",
+		"clips": {
+			"idle": {
+				"from": "Idle",
+				"loop": true
+			},
+			"idle_combat": {
+				"from": "Idle Alert",
+				"loop": true
+			},
+			"walk": {
+				"from": "Walk",
+				"loop": true
+			},
+			"run": {
+				"from": "Run",
+				"loop": true
+			},
+			"attack_1": {
+				"from": "Bite",
+				"amplify": 2.0,
+				"ready": 0.36,
+				"hit": 0.55
+			},
+			"attack_2": {
+				"from": "Head_But",
+				"set": "horse",
+				"amplify": 1.5,
+				"ready": 0.55,
+				"hit": 0.73
+			},
+			"attack_heavy": {
+				"from": "Jump",
+				"trim": [
+					0.1,
+					0.8
+				],
+				"ground": 0.0,
+				"travel": 0.4,
+				"ready": 0.09,
+				"hit": 0.82
+			},
+			"cast": {
+				"from": "Howl",
+				"speed": 1.5,
+				"ready": 0.1,
+				"hit": 0.27
+			},
+			"hit_light": {
+				"from": "Hit",
+				"set": "kaiju",
+				"roles": [
+					"spine",
+					"neck",
+					"tail"
+				]
+			},
+			"death": {
+				"from": "Death"
+			},
+			"spawn": {
+				"from": "Jump",
+				"trim": [
+					0.45,
+					1.0
+				],
+				"ground": 0.0
+			},
+			"victory": {
+				"from": "Howl",
+				"loop": true
+			}
+		}
+	},
+	"sphinx": {
+		"set": "fox",
+		"clips": {
+			"idle": {
+				"from": "Idle",
+				"loop": true
+			},
+			"idle_combat": {
+				"from": "Idle Alert",
+				"loop": true
+			},
+			"walk": {
+				"from": "Walk",
+				"loop": true
+			},
+			"run": {
+				"from": "Run",
+				"loop": true
+			},
+			"attack_1": {
+				"from": "Bite",
+				"amplify": 2.0,
+				"ready": 0.36,
+				"hit": 0.55
+			},
+			"attack_2": {
+				"from": "Head_But",
+				"set": "horse",
+				"amplify": 1.5,
+				"ready": 0.55,
+				"hit": 0.73
+			},
+			"attack_heavy": {
+				"from": "Jump",
+				"trim": [
+					0.1,
+					0.8
+				],
+				"ground": 0.0,
+				"travel": 0.4,
+				"ready": 0.09,
+				"hit": 0.82
+			},
+			"cast": {
+				"from": "Howl",
+				"speed": 1.5,
+				"ready": 0.1,
+				"hit": 0.27
+			},
+			"hit_light": {
+				"from": "Hit",
+				"set": "kaiju",
+				"roles": [
+					"spine",
+					"neck",
+					"tail"
+				]
+			},
+			"death": {
+				"from": "Death"
+			},
+			"spawn": {
+				"from": "Jump",
+				"trim": [
+					0.45,
+					1.0
+				],
+				"ground": 0.0
+			},
+			"victory": {
+				"from": "Howl",
+				"loop": true
+			}
+		}
+	},
+	"nekomata": {
+		"set": "fox",
+		"clips": {
+			"idle": {
+				"from": "Idle",
+				"loop": true
+			},
+			"idle_combat": {
+				"from": "Idle Alert",
+				"loop": true
+			},
+			"walk": {
+				"from": "Walk",
+				"loop": true
+			},
+			"run": {
+				"from": "Run",
+				"loop": true
+			},
+			"attack_1": {
+				"from": "Bite",
+				"amplify": 2.0,
+				"ready": 0.36,
+				"hit": 0.55
+			},
+			"attack_2": {
+				"from": "Head_But",
+				"set": "horse",
+				"amplify": 1.5,
+				"ready": 0.55,
+				"hit": 0.73
+			},
+			"attack_heavy": {
+				"from": "Jump",
+				"trim": [
+					0.1,
+					0.8
+				],
+				"ground": 0.0,
+				"travel": 0.4,
+				"ready": 0.09,
+				"hit": 0.82
+			},
+			"cast": {
+				"from": "Howl",
+				"speed": 1.5,
+				"ready": 0.1,
+				"hit": 0.27
+			},
+			"hit_light": {
+				"from": "Hit",
+				"set": "kaiju",
+				"roles": [
+					"spine",
+					"neck",
+					"tail"
+				]
+			},
+			"death": {
+				"from": "Death"
+			},
+			"spawn": {
+				"from": "Jump",
+				"trim": [
+					0.45,
+					1.0
+				],
+				"ground": 0.0
+			},
+			"victory": {
+				"from": "Howl",
+				"loop": true
+			}
+		}
+	},
+	"kitsune": {
+		"set": "fox",
+		"chains": {
+			"spine": [
+				"Bone_001",
+				"Bone_006",
+				"Bone_005",
+				"Bone_004"
+			],
+			"neck": "Bone_046",
+			"arm_l": "Bone_061",
+			"arm_r": "Bone_055",
+			"leg_l": "Bone_034",
+			"leg_r": "Bone_027",
+			"tail": "Bone_041"
+		},
+		"clips": {
+			"idle": {
+				"from": "Idle",
+				"loop": true
+			},
+			"idle_combat": {
+				"from": "Idle Alert",
+				"loop": true
+			},
+			"walk": {
+				"from": "Walk",
+				"loop": true
+			},
+			"run": {
+				"from": "Run",
+				"loop": true
+			},
+			"attack_1": {
+				"from": "Bite",
+				"amplify": 2.0,
+				"ready": 0.36,
+				"hit": 0.55
+			},
+			"attack_2": {
+				"from": "Head_But",
+				"set": "horse",
+				"amplify": 1.5,
+				"ready": 0.55,
+				"hit": 0.73
+			},
+			"attack_heavy": {
+				"from": "Jump",
+				"trim": [
+					0.1,
+					0.8
+				],
+				"ground": 0.0,
+				"travel": 0.4,
+				"ready": 0.09,
+				"hit": 0.82
+			},
+			"cast": {
+				"from": "Howl",
+				"speed": 1.5,
+				"ready": 0.1,
+				"hit": 0.27
+			},
+			"hit_light": {
+				"from": "Hit",
+				"set": "kaiju",
+				"roles": [
+					"spine",
+					"neck",
+					"tail"
+				]
+			},
+			"death": {
+				"from": "Death"
+			},
+			"spawn": {
+				"from": "Jump",
+				"trim": [
+					0.45,
+					1.0
+				],
+				"ground": 0.0
+			},
+			"victory": {
+				"from": "Howl",
+				"loop": true
+			}
+		}
+	},
+	"jackalope": {
+		"set": "fox",
+		"clips": {
+			"idle": {
+				"from": "Idle",
+				"loop": true
+			},
+			"idle_combat": {
+				"from": "Idle Alert",
+				"loop": true
+			},
+			"walk": {
+				"from": "Walk",
+				"loop": true
+			},
+			"run": {
+				"from": "Run",
+				"loop": true
+			},
+			"attack_1": {
+				"from": "Bite",
+				"amplify": 2.0,
+				"ready": 0.36,
+				"hit": 0.55
+			},
+			"attack_2": {
+				"from": "Head_But",
+				"set": "horse",
+				"amplify": 1.5,
+				"ready": 0.55,
+				"hit": 0.73
+			},
+			"attack_heavy": {
+				"from": "Jump",
+				"trim": [
+					0.1,
+					0.8
+				],
+				"ground": 0.0,
+				"travel": 0.4,
+				"ready": 0.09,
+				"hit": 0.82
+			},
+			"cast": {
+				"from": "Howl",
+				"speed": 1.5,
+				"ready": 0.1,
+				"hit": 0.27
+			},
+			"hit_light": {
+				"from": "Hit",
+				"set": "kaiju",
+				"roles": [
+					"spine",
+					"neck",
+					"tail"
+				]
+			},
+			"death": {
+				"from": "Death"
+			},
+			"spawn": {
+				"from": "Jump",
+				"trim": [
+					0.45,
+					1.0
+				],
+				"ground": 0.0
+			},
+			"victory": {
+				"from": "Howl",
+				"loop": true
+			}
+		}
+	},
+	"salamander": {
+		"set": "fox",
+		"clips": {
+			"idle": {
+				"from": "Idle",
+				"loop": true
+			},
+			"idle_combat": {
+				"from": "Idle Alert",
+				"loop": true
+			},
+			"walk": {
+				"from": "Walk",
+				"loop": true
+			},
+			"run": {
+				"from": "Run",
+				"loop": true
+			},
+			"attack_1": {
+				"from": "Bite",
+				"amplify": 2.0,
+				"ready": 0.36,
+				"hit": 0.55
+			},
+			"attack_2": {
+				"from": "Head_But",
+				"set": "horse",
+				"amplify": 1.5,
+				"ready": 0.55,
+				"hit": 0.73
+			},
+			"attack_heavy": {
+				"from": "Jump",
+				"trim": [
+					0.1,
+					0.8
+				],
+				"ground": 0.0,
+				"travel": 0.4,
+				"ready": 0.09,
+				"hit": 0.82
+			},
+			"cast": {
+				"from": "Howl",
+				"speed": 1.5,
+				"ready": 0.1,
+				"hit": 0.27
+			},
+			"hit_light": {
+				"from": "Hit",
+				"set": "kaiju",
+				"roles": [
+					"spine",
+					"neck",
+					"tail"
+				]
+			},
+			"death": {
+				"from": "Death"
+			},
+			"spawn": {
+				"from": "Jump",
+				"trim": [
+					0.45,
+					1.0
+				],
+				"ground": 0.0
+			},
+			"victory": {
+				"from": "Howl",
+				"loop": true
+			}
+		}
+	},
+	"zaratan": {
+		"set": "fox",
+		"clips": {
+			"idle": {
+				"from": "Idle",
+				"loop": true
+			},
+			"idle_combat": {
+				"from": "Idle Alert",
+				"loop": true
+			},
+			"walk": {
+				"from": "Walk",
+				"loop": true
+			},
+			"run": {
+				"from": "Run",
+				"loop": true
+			},
+			"attack_1": {
+				"from": "Bite",
+				"amplify": 2.0,
+				"ready": 0.36,
+				"hit": 0.55
+			},
+			"attack_2": {
+				"from": "Head_But",
+				"set": "horse",
+				"amplify": 1.5,
+				"ready": 0.55,
+				"hit": 0.73
+			},
+			"attack_heavy": {
+				"from": "Jump",
+				"trim": [
+					0.1,
+					0.8
+				],
+				"ground": 0.0,
+				"travel": 0.4,
+				"ready": 0.09,
+				"hit": 0.82
+			},
+			"cast": {
+				"from": "Howl",
+				"speed": 1.5,
+				"ready": 0.1,
+				"hit": 0.27
+			},
+			"hit_light": {
+				"from": "Hit",
+				"set": "kaiju",
+				"roles": [
+					"spine",
+					"neck",
+					"tail"
+				]
+			},
+			"death": {
+				"from": "Death"
+			},
+			"spawn": {
+				"from": "Jump",
+				"trim": [
+					0.45,
+					1.0
+				],
+				"ground": 0.0
+			},
+			"victory": {
+				"from": "Howl",
+				"loop": true
+			}
+		}
+	},
+	"unicorn": {
+		"set": "horse",
+		"clips": {
+			"idle": {
+				"from": "Idle",
+				"loop": true
+			},
+			"idle_combat": {
+				"from": "Idle Alert",
+				"set": "fox",
+				"loop": true
+			},
+			"walk": {
+				"from": "Walk",
+				"loop": true
+			},
+			"run": {
+				"from": "Run",
+				"loop": true
+			},
+			"attack_1": {
+				"from": "Head_But",
+				"amplify": 1.5,
+				"ready": 0.27,
+				"hit": 0.45
+			},
+			"attack_2": {
+				"from": "Kick",
+				"ready": 0.36,
+				"hit": 0.55
+			},
+			"attack_heavy": {
+				"from": "Rear",
+				"ready": 0.45,
+				"hit": 0.73
+			},
+			"cast": {
+				"from": "Rear",
+				"speed": 1.6,
+				"ready": 0.27,
+				"hit": 0.36
+			},
+			"hit_light": {
+				"from": "Hit",
+				"set": "kaiju",
+				"roles": [
+					"spine",
+					"neck",
+					"tail"
+				]
+			},
+			"death": {
+				"from": "Death"
+			},
+			"spawn": {
+				"from": "Jump",
+				"set": "fox",
+				"trim": [
+					0.45,
+					1.0
+				],
+				"ground": 0.0
+			},
+			"victory": {
+				"from": "Rear",
+				"loop": true
+			}
+		}
+	},
+	"kirin": {
+		"set": "horse",
+		"clips": {
+			"idle": {
+				"from": "Idle",
+				"loop": true
+			},
+			"idle_combat": {
+				"from": "Idle Alert",
+				"set": "fox",
+				"loop": true
+			},
+			"walk": {
+				"from": "Walk",
+				"loop": true
+			},
+			"run": {
+				"from": "Run",
+				"loop": true
+			},
+			"attack_1": {
+				"from": "Head_But",
+				"amplify": 1.5,
+				"ready": 0.27,
+				"hit": 0.45
+			},
+			"attack_2": {
+				"from": "Kick",
+				"ready": 0.36,
+				"hit": 0.55
+			},
+			"attack_heavy": {
+				"from": "Rear",
+				"ready": 0.45,
+				"hit": 0.73
+			},
+			"cast": {
+				"from": "Rear",
+				"speed": 1.6,
+				"ready": 0.27,
+				"hit": 0.36
+			},
+			"hit_light": {
+				"from": "Hit",
+				"set": "kaiju",
+				"roles": [
+					"spine",
+					"neck",
+					"tail"
+				]
+			},
+			"death": {
+				"from": "Death"
+			},
+			"spawn": {
+				"from": "Jump",
+				"set": "fox",
+				"trim": [
+					0.45,
+					1.0
+				],
+				"ground": 0.0
+			},
+			"victory": {
+				"from": "Rear",
 				"loop": true
 			}
 		}

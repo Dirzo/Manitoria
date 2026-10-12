@@ -11,7 +11,7 @@ Read this first when resuming. Each step is committed and pushed as it lands.
 2. DONE: wyvern (kaiju attacks, roar, hit and death; dragon idle; original walk).
 3. Roll out by family with `data/retarget_jobs.json` templates:
    - DONE bipeds (minotaur template): cyclops, troll, wendigo, golem, treant (14 clips each); yeti upper body only (`body` 0.35, its rig has one leg chain). The owlbear is four-legged, so it moved to the quadrupeds.
-   - Quadrupeds (fox and horse libraries): owlbear, cerberus, nemean, chimera, manticore, sphinx, kirin, unicorn, nekomata, kitsune, jackalope, salamander, zaratan.
+   - DONE quadrupeds: fox template (direwolf) for owlbear, cerberus, nemean, chimera*, manticore, sphinx, nekomata, kitsune*, jackalope, salamander and zaratan; horse template for unicorn and kirin (contact points picked). *Named chains.
    - Arachne (spider), basilisk and hydra (snake), winged creatures (dragon or bird, plus attacks from elsewhere).
 
 ## Notes

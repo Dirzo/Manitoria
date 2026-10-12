@@ -173,7 +173,11 @@ static func pair(tsk: Skeleton3D, tch: Dictionary, ssk: Skeleton3D, sch: Diction
 static func chains_from_names(sk: Skeleton3D, names: Dictionary) -> Dictionary:
 	var out = {}
 	for role in names:
-		out[role] = Array(names[role]).map(func(n): return sk.find_bone(n)).filter(func(b): return b >= 0)
+		if names[role] is String:   # just the first bone: follow the chain from there
+			var start = sk.find_bone(names[role])
+			out[role] = primary_path(sk, start) if start >= 0 else []
+		else:
+			out[role] = Array(names[role]).map(func(n): return sk.find_bone(n)).filter(func(b): return b >= 0)
 	if out.has("spine") and not out.spine.is_empty(): out.hips = [out.spine[0]]
 	return out
 

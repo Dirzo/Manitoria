@@ -10,13 +10,6 @@
 	],
 	"cerberus": [
 		{
-			"bones": 6,
-			"end": "Bone_007",
-			"kind": "tail",
-			"root": "Bone_012",
-			"tip": 1.0
-		},
-		{
 			"bones": 3,
 			"end": "Bone_032",
 			"kind": "loose",
@@ -38,13 +31,6 @@
 			"kind": "loose",
 			"root": "Bone_060",
 			"tip": 0.98
-		},
-		{
-			"bones": 8,
-			"end": "Bone_004",
-			"kind": "loose",
-			"root": "Bone_011",
-			"tip": 0.78
 		}
 	],
 	"cyclops": [
@@ -155,15 +141,6 @@
 			"tip": 0.82
 		}
 	],
-	"jackalope": [
-		{
-			"bones": 5,
-			"end": "Bone_002",
-			"kind": "tail",
-			"root": "Bone_006",
-			"tip": 0.51
-		}
-	],
 	"kirin": [
 		{
 			"bones": 4,
@@ -180,13 +157,6 @@
 			"tip": 0.89
 		},
 		{
-			"bones": 9,
-			"end": "Bone_019",
-			"kind": "tail",
-			"root": "Bone_027",
-			"tip": 0.49
-		},
-		{
 			"bones": 11,
 			"end": "Bone_028",
 			"kind": "loose",
@@ -197,13 +167,6 @@
 	"kitsune": [
 		{
 			"bones": 7,
-			"end": "Bone_035",
-			"kind": "loose",
-			"root": "Bone_041",
-			"tip": 1.0
-		},
-		{
-			"bones": 7,
 			"end": "Bone_007",
 			"kind": "loose",
 			"root": "Bone_013",
@@ -212,7 +175,7 @@
 		{
 			"bones": 7,
 			"end": "Bone_014",
-			"kind": "tail",
+			"kind": "loose",
 			"root": "Bone_020",
 			"tip": 0.77
 		}
@@ -259,13 +222,6 @@
 			"kind": "loose",
 			"root": "Bone_068",
 			"tip": 0.43
-		},
-		{
-			"bones": 9,
-			"end": "Bone_016",
-			"kind": "tail",
-			"root": "Bone_024",
-			"tip": 0.88
 		}
 	],
 	"minotaur": [
@@ -314,13 +270,6 @@
 			"kind": "loose",
 			"root": "Bone_018",
 			"tip": 0.94
-		},
-		{
-			"bones": 9,
-			"end": "Bone_024",
-			"kind": "tail",
-			"root": "Bone_032",
-			"tip": 1.0
 		}
 	],
 	"nemean": [
@@ -377,22 +326,6 @@
 			"kind": "loose",
 			"root": "Bone_058",
 			"tip": 0.45
-		},
-		{
-			"bones": 5,
-			"end": "Bone_007",
-			"kind": "tail",
-			"root": "Bone_011",
-			"tip": 0.1
-		}
-	],
-	"sphinx": [
-		{
-			"bones": 10,
-			"end": "Bone_002",
-			"kind": "tail",
-			"root": "Bone_011",
-			"tip": 0.52
 		}
 	],
 	"thunderbird": [
@@ -418,15 +351,6 @@
 			"kind": "loose",
 			"root": "Bone_007",
 			"tip": 0.22
-		}
-	],
-	"unicorn": [
-		{
-			"bones": 6,
-			"end": "Bone_004",
-			"kind": "tail",
-			"root": "Bone_009",
-			"tip": 0.16
 		}
 	],
 	"wyvern": [
@@ -517,13 +441,6 @@
 			"kind": "loose",
 			"root": "Bone_049",
 			"tip": 0.99
-		},
-		{
-			"bones": 4,
-			"end": "Bone_014",
-			"kind": "tail",
-			"root": "Bone_017",
-			"tip": 0.16
 		}
 	]
 }
