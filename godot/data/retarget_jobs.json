@@ -1687,5 +1687,327 @@
 				"loop": true
 			}
 		}
+	},
+	"pegasus": {
+		"set": "horse",
+		"chains": {
+			"spine": [
+				"Bone_001",
+				"Bone_003",
+				"Bone_002"
+			],
+			"neck": "Bone_018",
+			"arm_l": "Bone_012",
+			"leg_l": "Bone_041",
+			"leg_r": "Bone_048",
+			"tail": "Bone_034"
+		},
+		"clips": {
+			"idle": {
+				"from": "Idle",
+				"loop": true
+			},
+			"idle_combat": {
+				"from": "Idle Alert",
+				"set": "fox",
+				"loop": true
+			},
+			"walk": {
+				"from": "Walk",
+				"loop": true
+			},
+			"run": {
+				"from": "Run",
+				"loop": true
+			},
+			"attack_1": {
+				"from": "Head_But",
+				"amplify": 1.5,
+				"ready": 0.27,
+				"hit": 0.45
+			},
+			"attack_2": {
+				"from": "Kick",
+				"ready": 0.36,
+				"hit": 0.55
+			},
+			"attack_heavy": {
+				"from": "Rear",
+				"ready": 0.45,
+				"hit": 0.73
+			},
+			"cast": {
+				"from": "Rear",
+				"speed": 1.6,
+				"ready": 0.27,
+				"hit": 0.36
+			},
+			"hit_light": {
+				"from": "Hit",
+				"set": "kaiju",
+				"roles": [
+					"spine",
+					"neck",
+					"tail"
+				]
+			},
+			"death": {
+				"from": "Death"
+			},
+			"spawn": {
+				"from": "Jump",
+				"set": "fox",
+				"trim": [
+					0.45,
+					1.0
+				],
+				"ground": 0.0
+			},
+			"victory": {
+				"from": "Rear",
+				"loop": true
+			}
+		}
+	},
+	"griffin": {
+		"set": "fox",
+		"clips": {
+			"idle": {
+				"from": "Idle",
+				"loop": true
+			},
+			"idle_combat": {
+				"from": "Idle Alert",
+				"loop": true
+			},
+			"walk": {
+				"from": "Walk",
+				"loop": true
+			},
+			"run": {
+				"from": "Run",
+				"loop": true
+			},
+			"attack_1": {
+				"from": "Bite",
+				"amplify": 2.0,
+				"ready": 0.36,
+				"hit": 0.55
+			},
+			"attack_2": {
+				"from": "Head_But",
+				"set": "horse",
+				"amplify": 1.5,
+				"ready": 0.55,
+				"hit": 0.73
+			},
+			"attack_heavy": {
+				"from": "Jump",
+				"trim": [
+					0.1,
+					0.8
+				],
+				"ground": 0.0,
+				"travel": 0.4,
+				"ready": 0.09,
+				"hit": 0.82
+			},
+			"cast": {
+				"from": "Howl",
+				"speed": 1.5,
+				"ready": 0.1,
+				"hit": 0.27
+			},
+			"hit_light": {
+				"from": "Hit",
+				"set": "kaiju",
+				"roles": [
+					"spine",
+					"neck",
+					"tail"
+				]
+			},
+			"death": {
+				"from": "Death"
+			},
+			"spawn": {
+				"from": "Jump",
+				"trim": [
+					0.45,
+					1.0
+				],
+				"ground": 0.0
+			},
+			"victory": {
+				"from": "Howl",
+				"loop": true
+			}
+		}
+	},
+	"gargoyle": {
+		"set": "human",
+		"clips": {
+			"idle": {
+				"from": "Idle_Sword",
+				"loop": true
+			},
+			"idle_combat": {
+				"from": "Fighting Idle",
+				"loop": true
+			},
+			"walk": {
+				"from": "Walk_Large",
+				"loop": true
+			},
+			"run": {
+				"from": "Sprint",
+				"loop": true
+			},
+			"attack_1": {
+				"from": "Sword_Regular_A",
+				"twist": 0.35,
+				"ready": 0.45,
+				"hit": 0.55
+			},
+			"attack_2": {
+				"from": "Melee_Hook",
+				"twist": 0.5,
+				"ready": 0.45,
+				"hit": 0.64
+			},
+			"attack_heavy": {
+				"from": "Sword_Regular_C",
+				"twist": 0.3,
+				"ready": 0.36,
+				"hit": 0.55
+			},
+			"cast": {
+				"from": "Attack_Ground_Pound",
+				"speed": 1.4,
+				"ready": 0.09,
+				"hit": 0.27
+			},
+			"hit_light": {
+				"from": "Hit_Head"
+			},
+			"hit_heavy": {
+				"from": "Idle_Shield_Break",
+				"speed": 1.6
+			},
+			"stun": {
+				"from": "Dizzy",
+				"loop": true
+			},
+			"death": {
+				"from": "Death_B",
+				"twist": 0.6
+			},
+			"spawn": {
+				"from": "NinjaJump_Land",
+				"speed": 1.2,
+				"ground": 0.0
+			},
+			"victory": {
+				"from": "Victory",
+				"loop": true
+			}
+		}
+	},
+	"harpy": {
+		"set": "human",
+		"clips": {
+			"idle": {
+				"from": "Idle_Sword",
+				"loop": true
+			},
+			"idle_combat": {
+				"from": "Fighting Idle",
+				"loop": true
+			},
+			"attack_1": {
+				"from": "Sword_Regular_A",
+				"twist": 0.35,
+				"ready": 0.45,
+				"hit": 0.55
+			},
+			"attack_2": {
+				"from": "Melee_Hook",
+				"twist": 0.5,
+				"ready": 0.45,
+				"hit": 0.64
+			},
+			"attack_heavy": {
+				"from": "Sword_Regular_C",
+				"twist": 0.3,
+				"ready": 0.36,
+				"hit": 0.55
+			},
+			"cast": {
+				"from": "Attack_Ground_Pound",
+				"speed": 1.4,
+				"ready": 0.09,
+				"hit": 0.27
+			},
+			"hit_light": {
+				"from": "Hit_Head"
+			},
+			"hit_heavy": {
+				"from": "Idle_Shield_Break",
+				"speed": 1.6
+			},
+			"stun": {
+				"from": "Dizzy",
+				"loop": true
+			},
+			"death": {
+				"from": "Death_B",
+				"twist": 0.6
+			},
+			"victory": {
+				"from": "Victory",
+				"loop": true
+			}
+		},
+		"roles": [
+			"spine",
+			"neck",
+			"arm_l",
+			"arm_r"
+		],
+		"body": 0.35
+	},
+	"phoenix": {
+		"set": "bird",
+		"clips": {
+			"idle": {
+				"from": "Idle",
+				"loop": true
+			},
+			"walk": {
+				"from": "Walk",
+				"loop": true
+			},
+			"victory": {
+				"from": "Flap",
+				"loop": true
+			}
+		}
+	},
+	"thunderbird": {
+		"set": "bird",
+		"clips": {
+			"idle": {
+				"from": "Idle",
+				"loop": true
+			},
+			"walk": {
+				"from": "Walk",
+				"loop": true
+			},
+			"victory": {
+				"from": "Flap",
+				"loop": true
+			}
+		}
 	}
 }

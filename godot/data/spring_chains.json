@@ -283,13 +283,6 @@
 	],
 	"pegasus": [
 		{
-			"bones": 7,
-			"end": "Bone_006",
-			"kind": "loose",
-			"root": "Bone_012",
-			"tip": 0.2
-		},
-		{
 			"bones": 5,
 			"end": "Bone_019",
 			"kind": "loose",
@@ -299,16 +292,9 @@
 		{
 			"bones": 5,
 			"end": "Bone_024",
-			"kind": "tail",
+			"kind": "loose",
 			"root": "Bone_028",
 			"tip": 1.0
-		},
-		{
-			"bones": 6,
-			"end": "Bone_029",
-			"kind": "loose",
-			"root": "Bone_034",
-			"tip": 0.2
 		}
 	],
 	"phoenix": [

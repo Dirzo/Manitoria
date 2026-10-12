@@ -177,16 +177,39 @@
 	},
 	"gargoyle": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.29,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.81
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.81
+		},
+		"attack_2": {
+			"hit": 0.64,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.74
+		},
+		"attack_heavy": {
+			"hit": 0.55,
+			"length": 1.67,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.29
+			"hit": 0.27,
+			"length": 1.93,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.51
 		}
 	},
 	"golem": {
@@ -228,30 +251,76 @@
 	},
 	"griffin": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.27,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
+		},
+		"attack_2": {
+			"hit": 0.73,
+			"length": 1.0,
+			"picked": true,
+			"ready": 0.55,
+			"resume": 0.73
+		},
+		"attack_heavy": {
+			"hit": 0.82,
+			"length": 1.54,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.82
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.29
+			"hit": 0.27,
+			"length": 1.56,
+			"picked": true,
+			"ready": 0.1,
+			"resume": 0.27
 		}
 	},
 	"harpy": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.29,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_2": {
+			"hit": 0.64,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_heavy": {
+			"hit": 0.55,
+			"length": 1.67,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.39
+			"hit": 0.27,
+			"length": 1.93,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.51
 		}
 	},
 	"hydra": {
@@ -603,16 +672,39 @@
 	},
 	"pegasus": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.29,
-			"resume": 0.46
+			"hit": 0.45,
+			"length": 1.0,
+			"picked": true,
+			"ready": 0.27,
+			"resume": 1.0
+		},
+		"attack_1": {
+			"hit": 0.45,
+			"length": 1.0,
+			"picked": true,
+			"ready": 0.27,
+			"resume": 1.0
+		},
+		"attack_2": {
+			"hit": 0.55,
+			"length": 1.3,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.74
+		},
+		"attack_heavy": {
+			"hit": 0.73,
+			"length": 2.93,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.73
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.39
+			"hit": 0.36,
+			"length": 1.83,
+			"picked": true,
+			"ready": 0.27,
+			"resume": 0.36
 		}
 	},
 	"phoenix": {

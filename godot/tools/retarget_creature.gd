@@ -10,7 +10,7 @@ const Retargeter = preload("res://tools/retargeter.gd")
 const SETS := {
 	"human": ["human-base-animations.glb", "human-addon-animations.glb", "human-mocap-animations.glb"],
 	"fox": ["fox-animations.glb"], "horse": ["horse-animations.glb"], "snake": ["snake-animations.glb"],
-	"spider": ["spider-animations.glb"], "kaiju": ["kaiju-animations.glb"], "dragon": ["dragon-animations.glb"],
+	"spider": ["spider-animations.glb"], "kaiju": ["kaiju-animations.glb"], "dragon": ["dragon-animations.glb"], "bird": ["bird-animations.glb"],
 }
 var args := {}
 var cache := {}
