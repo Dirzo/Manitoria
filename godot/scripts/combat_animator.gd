@@ -115,6 +115,37 @@ static func subtree(sk: Skeleton3D, b: int) -> int:
 	for c in sk.get_bone_children(b): n += subtree(sk, c)
 	return n
 
+## Loose chains (tails, hair, manes, feathers: data/spring_chains.json from tools/spring_chains_probe.gd)
+## trail and swing with the body. The animated pose stays the spring's target, so clips still drive them.
+static var spring_data := {}
+var springs: SpringBoneSimulator3D
+
+## anchor: the node the springs measure motion against. In the arena it is the fighter's holder, so loose
+## chains swing from the creature's own motion (swings, lunges, flinches, turns) but not from sliding
+## across the board.
+func add_springs(anchor: Node3D = null) -> void:
+	if spring_data.is_empty():
+		var path = "res://data/spring_chains.json"
+		var parsed = JSON.parse_string(FileAccess.get_file_as_string(path)) if FileAccess.file_exists(path) else null
+		spring_data = parsed if parsed is Dictionary else {"_": []}
+	var list: Array = spring_data.get(key, [])
+	if list.is_empty(): return
+	springs = SpringBoneSimulator3D.new(); springs.name = "LooseChains"
+	skeleton.add_child(springs)
+	springs.setting_count = list.size()
+	for i in list.size():
+		var c: Dictionary = list[i]
+		springs.set_root_bone_name(i, str(c.root)); springs.set_end_bone_name(i, str(c.end))
+		# Long chains get stiffer so their tips don't whip; short ones (feathers, horns) stay firm.
+		var n = int(c.bones)
+		springs.set_stiffness(i, clampf(0.9 + 0.08 * n, 1.2, 2.4) if c.kind == "tail" or n >= 5 else 2.0)
+		springs.set_drag(i, 0.6)
+		springs.set_gravity(i, 0.0)   # resting tails lie on the floor; gravity would sink them
+		springs.set_radius(i, 0.02)
+		if anchor:
+			springs.set_center_from(i, SpringBoneSimulator3D.CENTER_FROM_NODE)
+			springs.set_center_node(i, springs.get_path_to(anchor))
+
 ## Retargeted combat clips (tools/retarget_creature.gd) live beside the model in
 ## assets/beasts/clips/<model>.res and replace the model's own clips of the same name. The model's
 ## animation library is shared by every instance of that model, so this happens once per model.
@@ -159,6 +190,9 @@ func setup(model: Node3D, model_key: String, heavy_body: bool, unit_tempo: float
 	for i in spine_bones.size():
 		spine.append(spine_bones[i])
 		spine_w.append(0.15 if i == 0 else 0.85 / maxf(1, spine_bones.size() - 1))
+	# The arena nests the model as holder > CombatMotion > model.
+	var holder = model.get_parent().get_parent() if model.get_parent() and model.get_parent().get_parent() is Node3D else model
+	add_springs(holder)
 	ok = true
 	# Desynchronise idles so a squad of the same creature doesn't breathe in lockstep.
 	tree.advance(randf() * float(clips.idle.length))

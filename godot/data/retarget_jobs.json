@@ -1,5 +1,5 @@
 {
-	"_about": "Combat clips retargeted from Mesh2Motion's CC0 libraries (art/mesh2motion) by tools/retarget_creature.gd. Per clip: from = source clip name, set = source library (default: the creature's set), loop, speed (playback multiplier baked in), trim = [start, end] fraction of the source clip, roles = only drive these chains (spine, neck, arm_l, arm_r, leg_l, leg_r, tail), travel = max in-place hip shift. ready/hit = hand-picked anticipation end and contact (fractions of the clip), used instead of the probe's measurement.",
+	"_about": "Combat clips retargeted from Mesh2Motion's CC0 libraries (art/mesh2motion) by tools/retarget_creature.gd. Per clip: from = source clip name, set = source library (default: the creature's set), loop, speed (playback multiplier baked in), trim = [start, end] fraction of the source clip, roles = only drive these chains (spine, neck, arm_l, arm_r, leg_l, leg_r, tail), travel = max in-place hip shift. ready/hit = hand-picked anticipation end and contact (fractions of the clip), used instead of the probe's measurement. no_springs = chain roles that must not get spring bones (the naga's coiled lower body carries her).",
 	"minotaur": {
 		"set": "human",
 		"clips": {
@@ -248,6 +248,9 @@
 				"from": "Victory",
 				"loop": true
 			}
-		}
+		},
+		"no_springs": [
+			"tail"
+		]
 	}
 }
