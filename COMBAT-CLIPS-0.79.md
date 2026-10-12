@@ -1,11 +1,6 @@
-# Manitoria 0.79 (in progress) — Combat clip set: pipeline and first pilot creatures
+# Manitoria 0.79 (in progress) — Combat clip set for 29 creatures
 
-Step 2 of the fluid-combat plan replaces each creature's five thin clips with a 14-clip combat set. The **minotaur, direwolf and naga** now fight with new clips:
-
-- **Minotaur:** all 14 clips.
-- **Direwolf and naga:** 12 each, falling back cleanly for the rest.
-
-The clips are retargeted from Mesh2Motion's public-domain (CC0) animation libraries onto each creature's existing Meshy rig. Models and skin weights are unchanged, no Meshy credits were used, and the simulation and balance are untouched. The other 29 creatures look exactly as they did in 0.78.
+Step 2 of the fluid-combat plan replaces each creature's five thin clips with a combat set. **29 of the 32 creatures** now fight with clips retargeted from Mesh2Motion's public-domain (CC0) animation libraries onto their own Meshy rigs. Loose hair, tails, manes and feathers swing with the body through spring bones. Models and skin weights are unchanged, no Meshy credits were used, and the simulation and balance are untouched. Arachne, basilisk and hydra keep their 0.78 clips for now.
 
 ## Why not Meshy for these clips
 
@@ -46,16 +41,24 @@ Meshy's 631 animation presets are humanoid only; four-legged rigs get a walk and
 - `anim_audit.gd`: clip presence, rig coverage, loop seams, root drift, measured contact and feet. Writes `data/anim_audit.json`. `--strict` gates the pilot creatures.
 - `anim_contact_probe.gd`: now also measures `attack_1`, `attack_2` and `attack_heavy`.
 
-## Pilot results
+## Roster
 
-| Creature | Source | Clips | Highlights |
+| Body type | Source clips | Creatures | Clips each |
 | --- | --- | --- | --- |
-| minotaur | human | 14/14 | Guard stance, axe swing, hooking lunge, overhead heavy slash, ground-pound cast, head-snap and shield-break hits, dizzy stun, ninja landing, victory raise. |
-| direwolf | fox, horse, kaiju | 12/14 | Stalking alert idle, real gallop, amplified bite, head-butt, pounce, howl cast and victory, leap-in spawn. |
-| naga | human (upper body) | 12/14 | Trident guard, sweep, left-hand jab, overhead thrust, thrust cast, staggers, dizzy, slumping death. The tail and hair don't move yet. |
-| wyvern | — | 0/14 | The dragon library has no attacks, so this needs another source. |
+| Bipeds | human | minotaur, cyclops, troll, wendigo, golem, treant, gargoyle | 14 |
+| Bipeds, upper body only (rig has no usable legs) | human | yeti, naga, harpy | 11–12 |
+| Quadrupeds | fox (+ horse head-butt, kaiju hit) | direwolf, owlbear, cerberus, nemean, chimera, manticore, sphinx, nekomata, kitsune, jackalope, salamander, zaratan, griffin | 12 |
+| Hoofed | horse | unicorn, kirin, pegasus | 12 |
+| Wyvern | kaiju attacks, dragon idle | wyvern | 6 new |
+| Birds | bird (idle, walk, flap victory; no attacks in the library) | phoenix, thunderbird | 3 new |
+| Not yet | — | arachne, basilisk, hydra | original 5 |
 
-Share of the rig each attack moves (`anim_audit`): minotaur 7% → 26%, direwolf 46% → 63–78%, naga 8% → 13–14%. The minotaur and naga numbers stay low because their rigs carry many accessory bones (fingers, hair, tail, cloth) that no source rig has. A spring-bone pass for hair, tails and cloth is the next improvement.
+Clip choices live in `godot/data/retarget_jobs.json`. Creatures share templates, and a contact point picked for a source clip carries over to every creature using it.
+
+**Spring bones** (`tools/spring_chains_probe.gd` → `data/spring_chains.json`, 55 chains on 23 creatures):
+- Tails, hair, manes, feathers and shell growth trail the creature's own swings, lunges, flinches and turns.
+- They're anchored to the fighter, so sliding across the board doesn't whip them.
+- Tails already animated by retargeted clips are skipped, as is the naga's coiled body.
 
 ## Validation
 
@@ -68,11 +71,6 @@ Share of the rig each attack moves (`anim_audit`): minotaur 7% → 26%, direwolf
 
 ## Next
 
-- **Secondary motion:** spring bones for the tails, hair and cloth that no source rig drives (naga hair and tail, minotaur tail and loincloth). Godot 4.7 has a spring-bone simulator built in.
-- **Wyvern:** the dragon library has no attacks. Try the kaiju library's attacks on its body, key a bite by hand, or use Meshy if its creature tools improve.
-- **Roll out by body family**, using the pilot's job files as templates:
-  - **Bipeds:** human library (cyclops, troll, yeti, wendigo, golem, treant, owlbear).
-  - **Quadrupeds:** fox and horse libraries (cerberus, nemean, chimera, manticore, sphinx, kirin, unicorn, nekomata, kitsune, jackalope, salamander, zaratan).
-  - **Arachne:** spider library.
-  - **Basilisk and hydra:** snake library.
-  - **Winged creatures:** dragon and bird locomotion plus another source for attacks.
+- **Arachne, basilisk, hydra:** teach the chain finder spider legs and snake bodies on the source side, or name their chains.
+- **Birds and wyvern:** attacks need another source, since the bird and dragon libraries have none.
+- **Weak spots:** review in game at 1×, 2× and 4×. Known: the direwolf's bite is subtle even amplified, the harpy's death sinks oddly, and the pegasus rig has only one front leg.

@@ -75,7 +75,9 @@ func run() -> void:
 				var held = 0
 				for i in range(1, r.times.size()):
 					if absf(r.times[i] - r.times[i - 1]) < 0.00001 and absf(r.times[i] - m.ready * float(a.clips.attack.length)) < 0.002: held += 1
-				check(held >= 6, "%s long windup holds the anticipation pose (%d frames)" % [sp, held])
+				# The hold uses the slack between the windup and the clip's natural time to contact.
+				var slack_frames = int((total - m.hit * float(a.clips.attack.length)) * 60.0) - 1
+				check(held >= mini(6, slack_frames), "%s long windup holds the anticipation pose (%d frames, slack %d)" % [sp, held, slack_frames])
 			u.holder.queue_free()
 	# 3: swing into swing. Fast attacker: recovery 0.22 s, next windup right after.
 	var u3 = make("direwolf"); var a3: CombatAnimator = u3.anim

@@ -12,7 +12,9 @@ Read this first when resuming. Each step is committed and pushed as it lands.
 3. Roll out by family with `data/retarget_jobs.json` templates:
    - DONE bipeds (minotaur template): cyclops, troll, wendigo, golem, treant (14 clips each); yeti upper body only (`body` 0.35, its rig has one leg chain). The owlbear is four-legged, so it moved to the quadrupeds.
    - DONE quadrupeds: fox template (direwolf) for owlbear, cerberus, nemean, chimera*, manticore, sphinx, nekomata, kitsune*, jackalope, salamander and zaratan; horse template for unicorn and kirin (contact points picked). *Named chains.
-   - Arachne (spider), basilisk and hydra (snake), winged creatures (dragon or bird, plus attacks from elsewhere).
+   - DONE winged: pegasus (horse), griffin (fox), gargoyle (human), harpy (human upper body); phoenix and thunderbird (bird idle, walk and flap victory only).
+   - NOT DONE: arachne, basilisk, hydra (the source-side chain finder can't read spider or snake rigs).
+4. Next: in-game review at 1×, 2× and 4×; attacks for birds and wyvern from another source.
 
 ## Notes
 - Contact points (`ready`/`hit` in jobs) are fractions of the source clip, so a pick carries over to every creature using the same source clip and trim.
