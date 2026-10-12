@@ -57,16 +57,39 @@
 	},
 	"cyclops": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.29,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_2": {
+			"hit": 0.64,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_heavy": {
+			"hit": 0.55,
+			"length": 1.67,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.67
+			"hit": 0.27,
+			"length": 1.93,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.68
 		}
 	},
 	"direwolf": {
@@ -122,16 +145,39 @@
 	},
 	"golem": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.27,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_2": {
+			"hit": 0.64,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.93
+		},
+		"attack_heavy": {
+			"hit": 0.55,
+			"length": 1.67,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.67
+			"hit": 0.27,
+			"length": 1.93,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.51
 		}
 	},
 	"griffin": {
@@ -420,30 +466,76 @@
 	},
 	"treant": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.27,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_2": {
+			"hit": 0.64,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 1.0
+		},
+		"attack_heavy": {
+			"hit": 0.55,
+			"length": 1.67,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.67
+			"hit": 0.27,
+			"length": 1.93,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.68
 		}
 	},
 	"troll": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.29,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_2": {
+			"hit": 0.64,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_heavy": {
+			"hit": 0.55,
+			"length": 1.67,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.67
+			"hit": 0.27,
+			"length": 1.93,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.7
 		}
 	},
 	"unicorn": {
@@ -462,16 +554,39 @@
 	},
 	"wendigo": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.27,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_2": {
+			"hit": 0.64,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.93
+		},
+		"attack_heavy": {
+			"hit": 0.55,
+			"length": 1.67,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.67
+			"hit": 0.27,
+			"length": 1.93,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.68
 		}
 	},
 	"wyvern": {
@@ -506,16 +621,39 @@
 	},
 	"yeti": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.27,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.81
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.81
+		},
+		"attack_2": {
+			"hit": 0.64,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_heavy": {
+			"hit": 0.55,
+			"length": 1.67,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.67
+			"hit": 0.27,
+			"length": 1.93,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.51
 		}
 	},
 	"zaratan": {

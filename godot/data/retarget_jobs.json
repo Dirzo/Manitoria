@@ -1,5 +1,5 @@
 {
-	"_about": "Combat clips retargeted from Mesh2Motion's CC0 libraries (art/mesh2motion) by tools/retarget_creature.gd. Per clip: from = source clip name, set = source library (default: the creature's set), loop, speed (playback multiplier baked in), trim = [start, end] fraction of the source clip, roles = only drive these chains (spine, neck, arm_l, arm_r, leg_l, leg_r, tail), travel = max in-place hip shift. ready/hit = hand-picked anticipation end and contact (fractions of the clip), used instead of the probe's measurement. no_springs = chain roles that must not get spring bones (the naga's coiled lower body carries her).",
+	"_about": "Combat clips retargeted from Mesh2Motion's CC0 libraries (art/mesh2motion) by tools/retarget_creature.gd. Per clip: from = source clip name, set = source library (default: the creature's set), loop, speed (playback multiplier baked in), trim = [start, end] fraction of the source clip, roles = only drive these chains (spine, neck, arm_l, arm_r, leg_l, leg_r, tail), travel = max in-place hip shift. ready/hit = hand-picked anticipation end and contact (fractions of the clip), used instead of the probe's measurement. no_springs = chain roles that must not get spring bones (the naga's coiled lower body carries her). body = scale the trunk's copied rotation (for creatures without driven legs).",
 	"minotaur": {
 		"set": "human",
 		"clips": {
@@ -286,6 +286,414 @@
 				"from": "Death",
 				"speed": 2.0,
 				"ground": 0.0
+			}
+		}
+	},
+	"cyclops": {
+		"set": "human",
+		"clips": {
+			"idle": {
+				"from": "Idle_Sword",
+				"loop": true
+			},
+			"idle_combat": {
+				"from": "Fighting Idle",
+				"loop": true
+			},
+			"walk": {
+				"from": "Walk_Large",
+				"loop": true
+			},
+			"run": {
+				"from": "Sprint",
+				"loop": true
+			},
+			"attack_1": {
+				"from": "Sword_Regular_A",
+				"twist": 0.35,
+				"ready": 0.45,
+				"hit": 0.55
+			},
+			"attack_2": {
+				"from": "Melee_Hook",
+				"twist": 0.5,
+				"ready": 0.45,
+				"hit": 0.64
+			},
+			"attack_heavy": {
+				"from": "Sword_Regular_C",
+				"twist": 0.3,
+				"ready": 0.36,
+				"hit": 0.55
+			},
+			"cast": {
+				"from": "Attack_Ground_Pound",
+				"speed": 1.4,
+				"ready": 0.09,
+				"hit": 0.27
+			},
+			"hit_light": {
+				"from": "Hit_Head"
+			},
+			"hit_heavy": {
+				"from": "Idle_Shield_Break",
+				"speed": 1.6
+			},
+			"stun": {
+				"from": "Dizzy",
+				"loop": true
+			},
+			"death": {
+				"from": "Death_B",
+				"twist": 0.6
+			},
+			"spawn": {
+				"from": "NinjaJump_Land",
+				"speed": 1.2,
+				"ground": 0.0
+			},
+			"victory": {
+				"from": "Victory",
+				"loop": true
+			}
+		}
+	},
+	"troll": {
+		"set": "human",
+		"clips": {
+			"idle": {
+				"from": "Idle_Sword",
+				"loop": true
+			},
+			"idle_combat": {
+				"from": "Fighting Idle",
+				"loop": true
+			},
+			"walk": {
+				"from": "Walk_Large",
+				"loop": true
+			},
+			"run": {
+				"from": "Sprint",
+				"loop": true
+			},
+			"attack_1": {
+				"from": "Sword_Regular_A",
+				"twist": 0.35,
+				"ready": 0.45,
+				"hit": 0.55
+			},
+			"attack_2": {
+				"from": "Melee_Hook",
+				"twist": 0.5,
+				"ready": 0.45,
+				"hit": 0.64
+			},
+			"attack_heavy": {
+				"from": "Sword_Regular_C",
+				"twist": 0.3,
+				"ready": 0.36,
+				"hit": 0.55
+			},
+			"cast": {
+				"from": "Attack_Ground_Pound",
+				"speed": 1.4,
+				"ready": 0.09,
+				"hit": 0.27
+			},
+			"hit_light": {
+				"from": "Hit_Head"
+			},
+			"hit_heavy": {
+				"from": "Idle_Shield_Break",
+				"speed": 1.6
+			},
+			"stun": {
+				"from": "Dizzy",
+				"loop": true
+			},
+			"death": {
+				"from": "Death_B",
+				"twist": 0.6
+			},
+			"spawn": {
+				"from": "NinjaJump_Land",
+				"speed": 1.2,
+				"ground": 0.0
+			},
+			"victory": {
+				"from": "Victory",
+				"loop": true
+			}
+		}
+	},
+	"yeti": {
+		"set": "human",
+		"clips": {
+			"idle": {
+				"from": "Idle_Sword",
+				"loop": true
+			},
+			"idle_combat": {
+				"from": "Fighting Idle",
+				"loop": true
+			},
+			"attack_1": {
+				"from": "Sword_Regular_A",
+				"twist": 0.35,
+				"ready": 0.45,
+				"hit": 0.55
+			},
+			"attack_2": {
+				"from": "Melee_Hook",
+				"twist": 0.5,
+				"ready": 0.45,
+				"hit": 0.64
+			},
+			"attack_heavy": {
+				"from": "Sword_Regular_C",
+				"twist": 0.3,
+				"ready": 0.36,
+				"hit": 0.55
+			},
+			"cast": {
+				"from": "Attack_Ground_Pound",
+				"speed": 1.4,
+				"ready": 0.09,
+				"hit": 0.27
+			},
+			"hit_light": {
+				"from": "Hit_Head"
+			},
+			"hit_heavy": {
+				"from": "Idle_Shield_Break",
+				"speed": 1.6
+			},
+			"stun": {
+				"from": "Dizzy",
+				"loop": true
+			},
+			"death": {
+				"from": "Death_B",
+				"twist": 0.6
+			},
+			"victory": {
+				"from": "Victory",
+				"loop": true
+			}
+		},
+		"roles": [
+			"spine",
+			"neck",
+			"arm_l",
+			"arm_r"
+		],
+		"body": 0.35
+	},
+	"wendigo": {
+		"set": "human",
+		"clips": {
+			"idle": {
+				"from": "Idle_Sword",
+				"loop": true
+			},
+			"idle_combat": {
+				"from": "Fighting Idle",
+				"loop": true
+			},
+			"walk": {
+				"from": "Walk_Large",
+				"loop": true
+			},
+			"run": {
+				"from": "Sprint",
+				"loop": true
+			},
+			"attack_1": {
+				"from": "Sword_Regular_A",
+				"twist": 0.35,
+				"ready": 0.45,
+				"hit": 0.55
+			},
+			"attack_2": {
+				"from": "Melee_Hook",
+				"twist": 0.5,
+				"ready": 0.45,
+				"hit": 0.64
+			},
+			"attack_heavy": {
+				"from": "Sword_Regular_C",
+				"twist": 0.3,
+				"ready": 0.36,
+				"hit": 0.55
+			},
+			"cast": {
+				"from": "Attack_Ground_Pound",
+				"speed": 1.4,
+				"ready": 0.09,
+				"hit": 0.27
+			},
+			"hit_light": {
+				"from": "Hit_Head"
+			},
+			"hit_heavy": {
+				"from": "Idle_Shield_Break",
+				"speed": 1.6
+			},
+			"stun": {
+				"from": "Dizzy",
+				"loop": true
+			},
+			"death": {
+				"from": "Death_B",
+				"twist": 0.6
+			},
+			"spawn": {
+				"from": "NinjaJump_Land",
+				"speed": 1.2,
+				"ground": 0.0
+			},
+			"victory": {
+				"from": "Victory",
+				"loop": true
+			}
+		}
+	},
+	"golem": {
+		"set": "human",
+		"clips": {
+			"idle": {
+				"from": "Idle_Sword",
+				"loop": true
+			},
+			"idle_combat": {
+				"from": "Fighting Idle",
+				"loop": true
+			},
+			"walk": {
+				"from": "Walk_Large",
+				"loop": true
+			},
+			"run": {
+				"from": "Sprint",
+				"loop": true
+			},
+			"attack_1": {
+				"from": "Sword_Regular_A",
+				"twist": 0.35,
+				"ready": 0.45,
+				"hit": 0.55
+			},
+			"attack_2": {
+				"from": "Melee_Hook",
+				"twist": 0.5,
+				"ready": 0.45,
+				"hit": 0.64
+			},
+			"attack_heavy": {
+				"from": "Sword_Regular_C",
+				"twist": 0.3,
+				"ready": 0.36,
+				"hit": 0.55
+			},
+			"cast": {
+				"from": "Attack_Ground_Pound",
+				"speed": 1.4,
+				"ready": 0.09,
+				"hit": 0.27
+			},
+			"hit_light": {
+				"from": "Hit_Head"
+			},
+			"hit_heavy": {
+				"from": "Idle_Shield_Break",
+				"speed": 1.6
+			},
+			"stun": {
+				"from": "Dizzy",
+				"loop": true
+			},
+			"death": {
+				"from": "Death_B",
+				"twist": 0.6
+			},
+			"spawn": {
+				"from": "NinjaJump_Land",
+				"speed": 1.2,
+				"ground": 0.0
+			},
+			"victory": {
+				"from": "Victory",
+				"loop": true
+			}
+		}
+	},
+	"treant": {
+		"set": "human",
+		"clips": {
+			"idle": {
+				"from": "Idle_Sword",
+				"loop": true
+			},
+			"idle_combat": {
+				"from": "Fighting Idle",
+				"loop": true
+			},
+			"walk": {
+				"from": "Walk_Large",
+				"loop": true
+			},
+			"run": {
+				"from": "Sprint",
+				"loop": true
+			},
+			"attack_1": {
+				"from": "Sword_Regular_A",
+				"twist": 0.35,
+				"ready": 0.45,
+				"hit": 0.55
+			},
+			"attack_2": {
+				"from": "Melee_Hook",
+				"twist": 0.5,
+				"ready": 0.45,
+				"hit": 0.64
+			},
+			"attack_heavy": {
+				"from": "Sword_Regular_C",
+				"twist": 0.3,
+				"ready": 0.36,
+				"hit": 0.55
+			},
+			"cast": {
+				"from": "Attack_Ground_Pound",
+				"speed": 1.4,
+				"ready": 0.09,
+				"hit": 0.27
+			},
+			"hit_light": {
+				"from": "Hit_Head"
+			},
+			"hit_heavy": {
+				"from": "Idle_Shield_Break",
+				"speed": 1.6
+			},
+			"stun": {
+				"from": "Dizzy",
+				"loop": true
+			},
+			"death": {
+				"from": "Death_B",
+				"twist": 0.6
+			},
+			"spawn": {
+				"from": "NinjaJump_Land",
+				"speed": 1.2,
+				"ground": 0.0
+			},
+			"victory": {
+				"from": "Victory",
+				"loop": true
 			}
 		}
 	}

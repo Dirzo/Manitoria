@@ -79,11 +79,15 @@ static func chains(sk: Skeleton3D) -> Dictionary:
 	var chest = spine[-1]
 	var tip = func(b: int) -> Vector3: return world_rest(sk, primary_path(sk, b)[-1]).origin
 	var at_chest = significant(sk, chest)
-	if not at_chest.is_empty():
-		var neck = at_chest[0]
-		for c in at_chest:
-			var p = tip.call(c); var q = tip.call(neck)
-			if p.y + p.z > q.y + q.z: neck = c
+	var chest_kids = Array(sk.get_bone_children(chest))
+	if not chest_kids.is_empty():
+		# The head: high, forward and central among all the chest's branches (a short 2-bone head counts;
+		# wings, being lateral, don't win).
+		var score = func(c: int) -> float:
+			var p = tip.call(c); return p.y + p.z - 1.5 * absf(p.x - hip_pos.x)
+		var neck = chest_kids[0]
+		for c in chest_kids:
+			if score.call(c) > score.call(neck): neck = c
 		out.neck = primary_path(sk, neck)
 		var limbs = at_chest.filter(func(c): return c != neck)
 		# With wings and arms both at the chest, the arms are the pair that reaches lowest.
@@ -114,6 +118,11 @@ static func chains(sk: Skeleton3D) -> Dictionary:
 				if subtree(sk, c) > subtree(sk, best): best = c
 			path.append(best)
 		out.tail = path
+	# A symmetric rig has the same joints on both sides; a longer chain ran on into a weapon or prop.
+	for pair_roles in [["arm_l", "arm_r"], ["leg_l", "leg_r"]]:
+		if out.has(pair_roles[0]) and out.has(pair_roles[1]):
+			var n = mini(out[pair_roles[0]].size(), out[pair_roles[1]].size())
+			out[pair_roles[0]] = out[pair_roles[0]].slice(0, n); out[pair_roles[1]] = out[pair_roles[1]].slice(0, n)
 	out.hips = [hips]
 	return out
 
@@ -175,7 +184,7 @@ static func chains_from_names(sk: Skeleton3D, names: Dictionary) -> Dictionary:
 ## ones with a flight phase (runs), 0 for deaths and leaps that own their height.
 func retarget(target: Node3D, source: Node3D, clip: String, roles: Array = [], loop: bool = false,
 		speed: float = 1.0, trim: Vector2 = Vector2(0, 1), travel: float = 0.25, override: Dictionary = {},
-		ground: float = 1.0, twist: float = 1.0, amplify: float = 1.0) -> Animation:
+		ground: float = 1.0, twist: float = 1.0, amplify: float = 1.0, body: float = 1.0) -> Animation:
 	var tsk: Skeleton3D = target.find_children("*", "Skeleton3D", true, false)[0]
 	var ssk: Skeleton3D = source.find_children("*", "Skeleton3D", true, false)[0]
 	var sap: AnimationPlayer = source.find_children("*", "AnimationPlayer", true, false)[0]
@@ -292,7 +301,7 @@ func retarget(target: Node3D, source: Node3D, clip: String, roles: Array = [], l
 			var tmp: Quaternion = parent_w * rest_local
 			var w: Quaternion = tmp
 			if b == t_hips and drive_hips:
-				w = (s_rot[s_hips] * s_rest_rot[s_hips].inverse()) * t_rest_rot[b]
+				w = Quaternion.IDENTITY.slerp(s_rot[s_hips] * s_rest_rot[s_hips].inverse(), body) * t_rest_rot[b]
 			elif pairs.has(b):
 				var p = pairs[b]; var s = p.source
 				var mode = MODES.get(p.role, "relative")
@@ -303,7 +312,10 @@ func retarget(target: Node3D, source: Node3D, clip: String, roles: Array = [], l
 					if cur.length() > 0.0001 and want.length() > 0.0001:
 						w = Quaternion(cur, want) * tmp
 				else:
-					w = (s_rot[s] * s_rest_rot[s].inverse()) * t_rest_rot[b]
+					var d: Quaternion = s_rot[s] * s_rest_rot[s].inverse()
+					# body < 1 tones down the trunk for creatures whose legs aren't driven (they'd tip over).
+					if p.role == "spine": d = Quaternion.IDENTITY.slerp(d, body)
+					w = d * t_rest_rot[b]
 			W[b] = w.normalized()
 			var local = (parent_w.inverse() * W[b]).normalized()
 			out.rotation_track_insert_key(tracks[b], time_out, local)

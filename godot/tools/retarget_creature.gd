@@ -84,7 +84,7 @@ func run() -> void:
 		var trim = c.get("trim", [0.0, 1.0])
 		var anim = rt.retarget(target, src, str(c.from), Array(c.get("roles", job.get("roles", []))),
 			bool(c.get("loop", false)), float(c.get("speed", 1.0)), Vector2(trim[0], trim[1]), float(c.get("travel", 0.25)),
-			job.get("chains", {}), float(c.get("ground", 0.0 if clip in ["death", "spawn"] else 0.6 if clip == "run" else 1.0)), float(c.get("twist", 1.0)), float(c.get("amplify", 1.0)))
+			job.get("chains", {}), float(c.get("ground", 0.0 if clip in ["death", "spawn"] else 0.6 if clip == "run" else 1.0)), float(c.get("twist", 1.0)), float(c.get("amplify", 1.0)), float(c.get("body", job.get("body", 1.0))))
 		if anim == null: continue
 		anim.resource_name = clip
 		if library.has_animation(clip): library.remove_animation(clip)

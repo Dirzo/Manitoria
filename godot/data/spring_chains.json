@@ -65,13 +65,6 @@
 	],
 	"gargoyle": [
 		{
-			"bones": 6,
-			"end": "Bone_024",
-			"kind": "loose",
-			"root": "Bone_029",
-			"tip": 0.45
-		},
-		{
 			"bones": 3,
 			"end": "Bone_060",
 			"kind": "loose",
@@ -131,45 +124,10 @@
 	"griffin": [
 		{
 			"bones": 3,
-			"end": "Bone_045",
+			"end": "Bone_032",
 			"kind": "loose",
-			"root": "Bone_047",
-			"tip": 0.96
-		},
-		{
-			"bones": 3,
-			"end": "Bone_048",
-			"kind": "loose",
-			"root": "Bone_050",
-			"tip": 0.63
-		},
-		{
-			"bones": 3,
-			"end": "Bone_051",
-			"kind": "loose",
-			"root": "Bone_053",
-			"tip": 0.8
-		},
-		{
-			"bones": 3,
-			"end": "Bone_054",
-			"kind": "loose",
-			"root": "Bone_056",
-			"tip": 0.96
-		},
-		{
-			"bones": 3,
-			"end": "Bone_057",
-			"kind": "loose",
-			"root": "Bone_059",
-			"tip": 0.63
-		},
-		{
-			"bones": 3,
-			"end": "Bone_060",
-			"kind": "loose",
-			"root": "Bone_062",
-			"tip": 0.8
+			"root": "Bone_034",
+			"tip": 0.55
 		}
 	],
 	"harpy": [
