@@ -513,13 +513,6 @@
 			"kind": "loose",
 			"root": "Bone_075",
 			"tip": 0.55
-		},
-		{
-			"bones": 9,
-			"end": "Bone_016",
-			"kind": "tail",
-			"root": "Bone_024",
-			"tip": 0.23
 		}
 	],
 	"yeti": [

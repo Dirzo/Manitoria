@@ -252,5 +252,41 @@
 		"no_springs": [
 			"tail"
 		]
+	},
+	"wyvern": {
+		"set": "kaiju",
+		"clips": {
+			"idle": {
+				"from": "Idle",
+				"set": "dragon",
+				"loop": true
+			},
+			"attack_1": {
+				"from": "Attack",
+				"twist": 0.6,
+				"ready": 0.33,
+				"hit": 0.5
+			},
+			"attack_heavy": {
+				"from": "Tail Attack",
+				"twist": 0.5,
+				"ready": 0.25,
+				"hit": 0.45
+			},
+			"cast": {
+				"from": "Roar",
+				"speed": 2.0,
+				"ready": 0.33,
+				"hit": 0.5
+			},
+			"hit_heavy": {
+				"from": "Hit"
+			},
+			"death": {
+				"from": "Death",
+				"speed": 2.0,
+				"ground": 0.0
+			}
+		}
 	}
 }

@@ -476,16 +476,32 @@
 	},
 	"wyvern": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.27,
-			"resume": 0.46
+			"hit": 0.5,
+			"length": 1.07,
+			"picked": true,
+			"ready": 0.33,
+			"resume": 1.0
+		},
+		"attack_1": {
+			"hit": 0.5,
+			"length": 1.07,
+			"picked": true,
+			"ready": 0.33,
+			"resume": 1.0
+		},
+		"attack_heavy": {
+			"hit": 0.45,
+			"length": 2.73,
+			"picked": true,
+			"ready": 0.25,
+			"resume": 1.0
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.29
+			"hit": 0.5,
+			"length": 3.02,
+			"picked": true,
+			"ready": 0.33,
+			"resume": 0.5
 		}
 	},
 	"yeti": {
