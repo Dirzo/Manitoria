@@ -1,0 +1,432 @@
+{
+	"arachne": [
+		{
+			"bones": 4,
+			"end": "Bone_028",
+			"kind": "tail",
+			"root": "Bone_031",
+			"tip": 0.06
+		}
+	],
+	"cerberus": [
+		{
+			"bones": 3,
+			"end": "Bone_032",
+			"kind": "loose",
+			"root": "Bone_034",
+			"tip": 0.41
+		}
+	],
+	"chimera": [
+		{
+			"bones": 3,
+			"end": "Bone_055",
+			"kind": "loose",
+			"root": "Bone_057",
+			"tip": 1.0
+		},
+		{
+			"bones": 3,
+			"end": "Bone_058",
+			"kind": "loose",
+			"root": "Bone_060",
+			"tip": 0.98
+		}
+	],
+	"cyclops": [
+		{
+			"bones": 3,
+			"end": "Bone_002",
+			"kind": "tail",
+			"root": "Bone_004",
+			"tip": 0.33
+		},
+		{
+			"bones": 3,
+			"end": "Bone_005",
+			"kind": "loose",
+			"root": "Bone_007",
+			"tip": 0.32
+		}
+	],
+	"gargoyle": [
+		{
+			"bones": 3,
+			"end": "Bone_060",
+			"kind": "loose",
+			"root": "Bone_062",
+			"tip": 0.77
+		},
+		{
+			"bones": 3,
+			"end": "Bone_063",
+			"kind": "loose",
+			"root": "Bone_065",
+			"tip": 0.5
+		},
+		{
+			"bones": 4,
+			"end": "Bone_047",
+			"kind": "loose",
+			"root": "Bone_050",
+			"tip": 0.56
+		},
+		{
+			"bones": 3,
+			"end": "Bone_066",
+			"kind": "loose",
+			"root": "Bone_068",
+			"tip": 0.74
+		},
+		{
+			"bones": 3,
+			"end": "Bone_069",
+			"kind": "loose",
+			"root": "Bone_071",
+			"tip": 0.6
+		},
+		{
+			"bones": 4,
+			"end": "Bone_052",
+			"kind": "loose",
+			"root": "Bone_055",
+			"tip": 0.63
+		},
+		{
+			"bones": 4,
+			"end": "Bone_056",
+			"kind": "loose",
+			"root": "Bone_059",
+			"tip": 0.76
+		},
+		{
+			"bones": 7,
+			"end": "Bone_017",
+			"kind": "tail",
+			"root": "Bone_023",
+			"tip": 0.06
+		}
+	],
+	"griffin": [
+		{
+			"bones": 3,
+			"end": "Bone_032",
+			"kind": "loose",
+			"root": "Bone_034",
+			"tip": 0.55
+		}
+	],
+	"harpy": [
+		{
+			"bones": 5,
+			"end": "Bone_004",
+			"kind": "tail",
+			"root": "Bone_008",
+			"tip": 0.02
+		}
+	],
+	"hydra": [
+		{
+			"bones": 8,
+			"end": "Bone_018",
+			"kind": "loose",
+			"root": "Bone_025",
+			"tip": 0.52
+		},
+		{
+			"bones": 5,
+			"end": "Bone_R4",
+			"kind": "tail",
+			"root": "Bone_R0",
+			"tip": 0.82
+		}
+	],
+	"kirin": [
+		{
+			"bones": 4,
+			"end": "Bone_061",
+			"kind": "loose",
+			"root": "Bone_064",
+			"tip": 0.9
+		},
+		{
+			"bones": 4,
+			"end": "Bone_065",
+			"kind": "loose",
+			"root": "Bone_068",
+			"tip": 0.89
+		},
+		{
+			"bones": 11,
+			"end": "Bone_028",
+			"kind": "loose",
+			"root": "Bone_038",
+			"tip": 1.0
+		}
+	],
+	"kitsune": [
+		{
+			"bones": 7,
+			"end": "Bone_007",
+			"kind": "loose",
+			"root": "Bone_013",
+			"tip": 0.79
+		},
+		{
+			"bones": 7,
+			"end": "Bone_014",
+			"kind": "loose",
+			"root": "Bone_020",
+			"tip": 0.77
+		}
+	],
+	"manticore": [
+		{
+			"bones": 3,
+			"end": "Bone_045",
+			"kind": "loose",
+			"root": "Bone_047",
+			"tip": 0.61
+		},
+		{
+			"bones": 3,
+			"end": "Bone_055",
+			"kind": "loose",
+			"root": "Bone_057",
+			"tip": 0.55
+		},
+		{
+			"bones": 4,
+			"end": "Bone_058",
+			"kind": "loose",
+			"root": "Bone_061",
+			"tip": 0.47
+		},
+		{
+			"bones": 3,
+			"end": "Bone_050",
+			"kind": "loose",
+			"root": "Bone_052",
+			"tip": 0.59
+		},
+		{
+			"bones": 3,
+			"end": "Bone_062",
+			"kind": "loose",
+			"root": "Bone_064",
+			"tip": 0.52
+		},
+		{
+			"bones": 4,
+			"end": "Bone_065",
+			"kind": "loose",
+			"root": "Bone_068",
+			"tip": 0.43
+		}
+	],
+	"minotaur": [
+		{
+			"bones": 3,
+			"end": "Bone_002",
+			"kind": "tail",
+			"root": "Bone_004",
+			"tip": 0.36
+		},
+		{
+			"bones": 3,
+			"end": "Bone_005",
+			"kind": "loose",
+			"root": "Bone_007",
+			"tip": 0.29
+		}
+	],
+	"naga": [
+		{
+			"bones": 6,
+			"end": "Bone_056",
+			"kind": "loose",
+			"root": "Bone_061",
+			"tip": 0.57
+		},
+		{
+			"bones": 6,
+			"end": "Bone_062",
+			"kind": "loose",
+			"root": "Bone_067",
+			"tip": 0.6
+		},
+		{
+			"bones": 6,
+			"end": "Bone_068",
+			"kind": "loose",
+			"root": "Bone_073",
+			"tip": 0.58
+		}
+	],
+	"nekomata": [
+		{
+			"bones": 9,
+			"end": "Bone_010",
+			"kind": "loose",
+			"root": "Bone_018",
+			"tip": 0.94
+		}
+	],
+	"nemean": [
+		{
+			"bones": 8,
+			"end": "Bone_004",
+			"kind": "loose",
+			"root": "Bone_011",
+			"tip": 0.25
+		}
+	],
+	"pegasus": [
+		{
+			"bones": 5,
+			"end": "Bone_019",
+			"kind": "loose",
+			"root": "Bone_023",
+			"tip": 0.99
+		},
+		{
+			"bones": 5,
+			"end": "Bone_024",
+			"kind": "loose",
+			"root": "Bone_028",
+			"tip": 1.0
+		}
+	],
+	"phoenix": [
+		{
+			"bones": 7,
+			"end": "Bone_037",
+			"kind": "tail",
+			"root": "Bone_009"
+		}
+	],
+	"salamander": [
+		{
+			"bones": 5,
+			"end": "Bone_054",
+			"kind": "loose",
+			"root": "Bone_058",
+			"tip": 0.45
+		}
+	],
+	"thunderbird": [
+		{
+			"bones": 3,
+			"end": "Bone_002",
+			"kind": "tail",
+			"root": "Bone_004",
+			"tip": 0.07
+		}
+	],
+	"troll": [
+		{
+			"bones": 3,
+			"end": "Bone_002",
+			"kind": "tail",
+			"root": "Bone_004",
+			"tip": 0.24
+		},
+		{
+			"bones": 3,
+			"end": "Bone_005",
+			"kind": "loose",
+			"root": "Bone_007",
+			"tip": 0.22
+		}
+	],
+	"wyvern": [
+		{
+			"bones": 4,
+			"end": "Bone_052",
+			"kind": "loose",
+			"root": "Bone_055",
+			"tip": 0.58
+		},
+		{
+			"bones": 4,
+			"end": "Bone_056",
+			"kind": "loose",
+			"root": "Bone_059",
+			"tip": 0.64
+		},
+		{
+			"bones": 4,
+			"end": "Bone_060",
+			"kind": "loose",
+			"root": "Bone_063",
+			"tip": 0.55
+		},
+		{
+			"bones": 4,
+			"end": "Bone_064",
+			"kind": "loose",
+			"root": "Bone_067",
+			"tip": 0.59
+		},
+		{
+			"bones": 4,
+			"end": "Bone_068",
+			"kind": "loose",
+			"root": "Bone_071",
+			"tip": 0.64
+		},
+		{
+			"bones": 4,
+			"end": "Bone_072",
+			"kind": "loose",
+			"root": "Bone_075",
+			"tip": 0.55
+		}
+	],
+	"yeti": [
+		{
+			"bones": 5,
+			"end": "Bone_006",
+			"kind": "tail",
+			"root": "Bone_010",
+			"tip": 0.04
+		}
+	],
+	"zaratan": [
+		{
+			"bones": 4,
+			"end": "Bone_050",
+			"kind": "loose",
+			"root": "Bone_053",
+			"tip": 0.55
+		},
+		{
+			"bones": 4,
+			"end": "Bone_030",
+			"kind": "loose",
+			"root": "Bone_033",
+			"tip": 0.49
+		},
+		{
+			"bones": 5,
+			"end": "Bone_034",
+			"kind": "loose",
+			"root": "Bone_038",
+			"tip": 0.27
+		},
+		{
+			"bones": 4,
+			"end": "Bone_039",
+			"kind": "loose",
+			"root": "Bone_042",
+			"tip": 0.67
+		},
+		{
+			"bones": 3,
+			"end": "Bone_047",
+			"kind": "loose",
+			"root": "Bone_049",
+			"tip": 0.99
+		}
+	]
+}

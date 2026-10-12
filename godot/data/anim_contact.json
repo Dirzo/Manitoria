@@ -29,114 +29,298 @@
 	},
 	"cerberus": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.29,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 1.0
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 1.0
+		},
+		"attack_2": {
+			"hit": 0.73,
+			"length": 1.0,
+			"picked": true,
+			"ready": 0.55,
+			"resume": 1.0
+		},
+		"attack_heavy": {
+			"hit": 0.82,
+			"length": 1.54,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.82
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.67
+			"hit": 0.27,
+			"length": 1.56,
+			"picked": true,
+			"ready": 0.1,
+			"resume": 0.6
 		}
 	},
 	"chimera": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.29,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.87
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.87
+		},
+		"attack_2": {
+			"hit": 0.73,
+			"length": 1.0,
+			"picked": true,
+			"ready": 0.55,
+			"resume": 1.0
+		},
+		"attack_heavy": {
+			"hit": 0.82,
+			"length": 1.54,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.82
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.29
+			"hit": 0.27,
+			"length": 1.56,
+			"picked": true,
+			"ready": 0.1,
+			"resume": 0.27
 		}
 	},
 	"cyclops": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.29,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_2": {
+			"hit": 0.64,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_heavy": {
+			"hit": 0.55,
+			"length": 1.67,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.67
+			"hit": 0.27,
+			"length": 1.93,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.68
 		}
 	},
 	"direwolf": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.29,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 1.0
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 1.0
+		},
+		"attack_2": {
+			"hit": 0.73,
+			"length": 1.0,
+			"picked": true,
+			"ready": 0.55,
+			"resume": 0.98
+		},
+		"attack_heavy": {
+			"hit": 0.82,
+			"length": 1.54,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.9
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.67
+			"hit": 0.27,
+			"length": 1.56,
+			"picked": true,
+			"ready": 0.1,
+			"resume": 0.27
 		}
 	},
 	"gargoyle": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.29,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.81
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.81
+		},
+		"attack_2": {
+			"hit": 0.64,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.74
+		},
+		"attack_heavy": {
+			"hit": 0.55,
+			"length": 1.67,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.29
+			"hit": 0.27,
+			"length": 1.93,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.51
 		}
 	},
 	"golem": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.27,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_2": {
+			"hit": 0.64,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.93
+		},
+		"attack_heavy": {
+			"hit": 0.55,
+			"length": 1.67,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.67
+			"hit": 0.27,
+			"length": 1.93,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.51
 		}
 	},
 	"griffin": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.27,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
+		},
+		"attack_2": {
+			"hit": 0.73,
+			"length": 1.0,
+			"picked": true,
+			"ready": 0.55,
+			"resume": 0.73
+		},
+		"attack_heavy": {
+			"hit": 0.82,
+			"length": 1.54,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.82
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.29
+			"hit": 0.27,
+			"length": 1.56,
+			"picked": true,
+			"ready": 0.1,
+			"resume": 0.27
 		}
 	},
 	"harpy": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.29,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_2": {
+			"hit": 0.64,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_heavy": {
+			"hit": 0.55,
+			"length": 1.67,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.39
+			"hit": 0.27,
+			"length": 1.93,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.51
 		}
 	},
 	"hydra": {
@@ -155,142 +339,372 @@
 	},
 	"jackalope": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.29,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
+		},
+		"attack_2": {
+			"hit": 0.73,
+			"length": 1.0,
+			"picked": true,
+			"ready": 0.55,
+			"resume": 0.77
+		},
+		"attack_heavy": {
+			"hit": 0.82,
+			"length": 1.54,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.82
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.67
+			"hit": 0.27,
+			"length": 1.56,
+			"picked": true,
+			"ready": 0.1,
+			"resume": 0.27
 		}
 	},
 	"kirin": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.29,
-			"resume": 0.46
+			"hit": 0.45,
+			"length": 1.0,
+			"picked": true,
+			"ready": 0.27,
+			"resume": 0.72
+		},
+		"attack_1": {
+			"hit": 0.45,
+			"length": 1.0,
+			"picked": true,
+			"ready": 0.27,
+			"resume": 0.72
+		},
+		"attack_2": {
+			"hit": 0.55,
+			"length": 1.3,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.77
+		},
+		"attack_heavy": {
+			"hit": 0.73,
+			"length": 2.93,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.73
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.67
+			"hit": 0.36,
+			"length": 1.83,
+			"picked": true,
+			"ready": 0.27,
+			"resume": 0.36
 		}
 	},
 	"kitsune": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.29,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.87
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.87
+		},
+		"attack_2": {
+			"hit": 0.73,
+			"length": 1.0,
+			"picked": true,
+			"ready": 0.55,
+			"resume": 0.73
+		},
+		"attack_heavy": {
+			"hit": 0.82,
+			"length": 1.54,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.82
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.67
+			"hit": 0.27,
+			"length": 1.56,
+			"picked": true,
+			"ready": 0.1,
+			"resume": 0.27
 		}
 	},
 	"manticore": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.27,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.87
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.87
+		},
+		"attack_2": {
+			"hit": 0.73,
+			"length": 1.0,
+			"picked": true,
+			"ready": 0.55,
+			"resume": 0.98
+		},
+		"attack_heavy": {
+			"hit": 0.82,
+			"length": 1.54,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 1.0
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.29
+			"hit": 0.27,
+			"length": 1.56,
+			"picked": true,
+			"ready": 0.1,
+			"resume": 0.27
 		}
 	},
 	"minotaur": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.29,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_2": {
+			"hit": 0.64,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_heavy": {
+			"hit": 0.55,
+			"length": 1.67,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.67
+			"hit": 0.27,
+			"length": 1.93,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.68
 		}
 	},
 	"naga": {
 		"attack": {
-			"hit": 0.48,
-			"length": 0.8,
-			"ready": 0.27,
-			"resume": 0.63
+			"hit": 0.36,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.18,
+			"resume": 0.81
+		},
+		"attack_1": {
+			"hit": 0.36,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.18,
+			"resume": 0.81
+		},
+		"attack_2": {
+			"hit": 0.18,
+			"length": 0.92,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.56
+		},
+		"attack_heavy": {
+			"hit": 0.82,
+			"length": 1.67,
+			"picked": true,
+			"ready": 0.64,
+			"resume": 0.82
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.58
+			"hit": 0.3,
+			"length": 0.63,
+			"picked": true,
+			"ready": 0.27,
+			"resume": 0.32
 		}
 	},
 	"nekomata": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.27,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.87
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.87
+		},
+		"attack_2": {
+			"hit": 0.73,
+			"length": 1.0,
+			"picked": true,
+			"ready": 0.55,
+			"resume": 0.78
+		},
+		"attack_heavy": {
+			"hit": 0.82,
+			"length": 1.54,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.82
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.67
+			"hit": 0.27,
+			"length": 1.56,
+			"picked": true,
+			"ready": 0.1,
+			"resume": 0.27
 		}
 	},
 	"nemean": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.29,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
+		},
+		"attack_2": {
+			"hit": 0.73,
+			"length": 1.0,
+			"picked": true,
+			"ready": 0.55,
+			"resume": 0.73
+		},
+		"attack_heavy": {
+			"hit": 0.82,
+			"length": 1.54,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 1.0
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.67
+			"hit": 0.27,
+			"length": 1.56,
+			"picked": true,
+			"ready": 0.1,
+			"resume": 0.27
 		}
 	},
 	"owlbear": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.29,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 1.0
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 1.0
+		},
+		"attack_2": {
+			"hit": 0.73,
+			"length": 1.0,
+			"picked": true,
+			"ready": 0.55,
+			"resume": 0.73
+		},
+		"attack_heavy": {
+			"hit": 0.82,
+			"length": 1.54,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 1.0
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.67
+			"hit": 0.27,
+			"length": 1.56,
+			"picked": true,
+			"ready": 0.1,
+			"resume": 0.27
 		}
 	},
 	"pegasus": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.29,
-			"resume": 0.46
+			"hit": 0.45,
+			"length": 1.0,
+			"picked": true,
+			"ready": 0.27,
+			"resume": 1.0
+		},
+		"attack_1": {
+			"hit": 0.45,
+			"length": 1.0,
+			"picked": true,
+			"ready": 0.27,
+			"resume": 1.0
+		},
+		"attack_2": {
+			"hit": 0.55,
+			"length": 1.3,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.74
+		},
+		"attack_heavy": {
+			"hit": 0.73,
+			"length": 2.93,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.73
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.39
+			"hit": 0.36,
+			"length": 1.83,
+			"picked": true,
+			"ready": 0.27,
+			"resume": 0.36
 		}
 	},
 	"phoenix": {
@@ -309,30 +723,76 @@
 	},
 	"salamander": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.27,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
+		},
+		"attack_2": {
+			"hit": 0.73,
+			"length": 1.0,
+			"picked": true,
+			"ready": 0.55,
+			"resume": 0.73
+		},
+		"attack_heavy": {
+			"hit": 0.82,
+			"length": 1.54,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.82
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.67
+			"hit": 0.27,
+			"length": 1.56,
+			"picked": true,
+			"ready": 0.1,
+			"resume": 0.27
 		}
 	},
 	"sphinx": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.29,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
+		},
+		"attack_2": {
+			"hit": 0.73,
+			"length": 1.0,
+			"picked": true,
+			"ready": 0.55,
+			"resume": 0.98
+		},
+		"attack_heavy": {
+			"hit": 0.82,
+			"length": 1.54,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.9
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.67
+			"hit": 0.27,
+			"length": 1.56,
+			"picked": true,
+			"ready": 0.1,
+			"resume": 0.27
 		}
 	},
 	"thunderbird": {
@@ -351,100 +811,254 @@
 	},
 	"treant": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.27,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_2": {
+			"hit": 0.64,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 1.0
+		},
+		"attack_heavy": {
+			"hit": 0.55,
+			"length": 1.67,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.67
+			"hit": 0.27,
+			"length": 1.93,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.68
 		}
 	},
 	"troll": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.29,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_2": {
+			"hit": 0.64,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_heavy": {
+			"hit": 0.55,
+			"length": 1.67,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.67
+			"hit": 0.27,
+			"length": 1.93,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.7
 		}
 	},
 	"unicorn": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.29,
-			"resume": 0.46
+			"hit": 0.45,
+			"length": 1.0,
+			"picked": true,
+			"ready": 0.27,
+			"resume": 0.78
+		},
+		"attack_1": {
+			"hit": 0.45,
+			"length": 1.0,
+			"picked": true,
+			"ready": 0.27,
+			"resume": 0.78
+		},
+		"attack_2": {
+			"hit": 0.55,
+			"length": 1.3,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.77
+		},
+		"attack_heavy": {
+			"hit": 0.73,
+			"length": 2.93,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.73
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.67
+			"hit": 0.36,
+			"length": 1.83,
+			"picked": true,
+			"ready": 0.27,
+			"resume": 0.36
 		}
 	},
 	"wendigo": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.27,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_2": {
+			"hit": 0.64,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.93
+		},
+		"attack_heavy": {
+			"hit": 0.55,
+			"length": 1.67,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.67
+			"hit": 0.27,
+			"length": 1.93,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.68
 		}
 	},
 	"wyvern": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.27,
-			"resume": 0.46
+			"hit": 0.5,
+			"length": 1.07,
+			"picked": true,
+			"ready": 0.33,
+			"resume": 1.0
+		},
+		"attack_1": {
+			"hit": 0.5,
+			"length": 1.07,
+			"picked": true,
+			"ready": 0.33,
+			"resume": 1.0
+		},
+		"attack_heavy": {
+			"hit": 0.45,
+			"length": 2.73,
+			"picked": true,
+			"ready": 0.25,
+			"resume": 1.0
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.29
+			"hit": 0.5,
+			"length": 3.02,
+			"picked": true,
+			"ready": 0.33,
+			"resume": 0.5
 		}
 	},
 	"yeti": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.27,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.81
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.81
+		},
+		"attack_2": {
+			"hit": 0.64,
+			"length": 0.46,
+			"picked": true,
+			"ready": 0.45,
+			"resume": 0.7
+		},
+		"attack_heavy": {
+			"hit": 0.55,
+			"length": 1.67,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.67
+			"hit": 0.27,
+			"length": 1.93,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.51
 		}
 	},
 	"zaratan": {
 		"attack": {
-			"hit": 0.46,
-			"length": 0.7,
-			"ready": 0.29,
-			"resume": 0.46
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
+		},
+		"attack_1": {
+			"hit": 0.55,
+			"length": 0.87,
+			"picked": true,
+			"ready": 0.36,
+			"resume": 0.55
+		},
+		"attack_2": {
+			"hit": 0.73,
+			"length": 1.0,
+			"picked": true,
+			"ready": 0.55,
+			"resume": 0.95
+		},
+		"attack_heavy": {
+			"hit": 0.82,
+			"length": 1.54,
+			"picked": true,
+			"ready": 0.09,
+			"resume": 0.82
 		},
 		"cast": {
-			"hit": 0.29,
-			"length": 1.2,
-			"ready": 0.29,
-			"resume": 0.67
+			"hit": 0.27,
+			"length": 1.56,
+			"picked": true,
+			"ready": 0.1,
+			"resume": 1.0
 		}
 	}
 }

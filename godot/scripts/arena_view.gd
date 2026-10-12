@@ -329,6 +329,8 @@ func spawn(u: Dictionary) -> void:
  var tempo = randf_range(0.92, 1.08)
  var anim = CombatAnimator.new()
  anim.setup(model, path.get_file().get_basename(), u.hero.sp in HEAVY, tempo)
+ # Fighters on the board before the bell leap onto it (when the creature has a spawn clip).
+ if not u.summon and (sim_ref == null or sim_ref.time <= 0.0): anim.spawn()
  var team_color = Color("70d6dd") if u.team == 0 else Color("eb987b")
  var circle = Node3D.new(); holder.add_child(circle) # Legacy selection anchor; team identity is in the health bar.
  var aura = Node3D.new(); holder.add_child(aura); aura.name = "EvolutionAura"
@@ -480,7 +482,8 @@ func animate_clips(sim: BattleSim, u: Dictionary, visual: Dictionary, dt: float)
  if anim == null or not anim.ok: return
  var act = ""; var remaining = 0.0
  if u.alive and u.has("pending_cast"):
-  act = "attack" if not AttackVisuals.style(u.hero.sp, u.pending_cast.effect).is_empty() else "cast"
+  # Physical skills (charges, slams, bites) use the heavy attack; magical ones the cast.
+  act = "heavy" if not AttackVisuals.style(u.hero.sp, u.pending_cast.effect).is_empty() else "cast"
   remaining = float(u.pending_cast.delay)
  elif u.alive and u.windup > 0:
   act = "attack"; remaining = u.windup
@@ -493,8 +496,13 @@ func animate_clips(sim: BattleSim, u: Dictionary, visual: Dictionary, dt: float)
  var next_eta = 99.0
  if engaged: next_eta = maxf(u.recovery, u.attack_timer / maxf(0.2, sim.as_mult(u)))
  visual.state = "death" if not u.alive else act if act != "" else "walk" if walking else "idle"
+ # Pre-fight (the countdown stops the battle clock): spawn leaps still play in real time.
+ if sim.time <= 0.0 and dt <= 0.0: anim.intro_dt = get_process_delta_time()
+ # Winners celebrate while the results are tallied.
+ if sim.finished and u.alive and u.team == sim.winner and not u.summon: anim.celebrate()
  anim.drive(dt, act, remaining, u.alive, sim.active(u, "stun"), walking,
-  GaitRates.walk_rate(u.hero.sp, maxf(visual.ground_speed, 0.6)), engaged, next_eta)
+  GaitRates.walk_rate(u.hero.sp, maxf(visual.ground_speed, 0.6)), engaged, next_eta,
+  visual.ground_speed, GaitRates.PLANT.get(u.hero.sp, 2.0))
 
 ## Grow-in for summons, contact squash and the shrink away after death, all on the CombatMotion node.
 func shape_body(u: Dictionary, visual: Dictionary, dt: float) -> void:
@@ -661,6 +669,7 @@ func react(e: Dictionary, amount: float, skill: bool) -> void:
   victim.stagger = 0.20
   if away != Vector3.ZERO: victim.recoil = away * minf(0.32, amount * 0.003)
  if away != Vector3.ZERO and share >= 0.02: victim.anim.flinch(away, clampf(share * 5.0, 0.15, 1.0))
+ if share >= 0.015: victim.anim.hit_react(share >= 0.06)
  var source = sim_ref.find_unit(source_id) if sim_ref and models.has(source_id) else {}
  # Contact: the swing that just landed (not a projectile, not a damage-over-time tick).
  var contact = not source.is_empty() and source.alive and (physical_casts.has(source_id) or (sim_ref and is_equal_approx(float(released.get(source_id, -1.0)), sim_ref.time)))
