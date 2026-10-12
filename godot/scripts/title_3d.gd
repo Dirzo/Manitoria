@@ -46,7 +46,7 @@ func _ready() -> void:
 ## Frame the word so it fills ~92% of the control's width at any size.
 func fit() -> void:
 	if vp == null or face_mesh == null or size.x < 8: return
-	vp.size = Vector2i(size)
+	# The stretching container owns its viewport size.
 	var w = face_mesh.get_aabb().size.x * 1.03
 	var aspect = size.x / maxf(1.0, size.y)
 	var d = w / (0.92 * 2.0 * tan(deg_to_rad(cam.fov * 0.5)) * aspect)

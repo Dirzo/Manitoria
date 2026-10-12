@@ -6,6 +6,8 @@ signal hitstop(duration: float)
 
 ## Fighters read big and chunky on the floor (was 0.72).
 const MODEL_SCALE = 0.98
+## Big-bodied creatures: slower turns, longer squash, smaller flinch.
+const HEAVY := ["golem", "cyclops", "zaratan", "treant", "yeti", "minotaur", "troll", "hydra"]
 const BAR_LIFT = 1.32
 const HITFLASH = preload("res://shaders/vfx/hitflash.gdshader")
 var shake := 0.0
@@ -28,6 +30,7 @@ var camera_distance = 33.0 * ArenaGrid.LINEAR_SCALE
 var target_yaw = 0.30
 var target_distance = 33.0 * ArenaGrid.LINEAR_SCALE
 var elapsed = 0.0
+var released := {}   # uid -> sim time of its last melee release (to tell a landed swing from a DoT tick)
 var inspecting = false
 var flames: Array = []
 var current_speed = 1.0
@@ -35,6 +38,7 @@ var effect_tweens: Array = []
 var missiles: Dictionary = {}
 var zone_visuals: Dictionary = {}
 var telegraphs: Dictionary = {}
+var boss_markers: Dictionary = {}
 var clarity: SkillClarity
 var combat_numbers: Dictionary = {}
 var camera_pitch = 0.8
@@ -46,6 +50,9 @@ var world_props: Node3D
 var region_name = ""
 var theme_materials: Array = []
 var vfx: VFX
+var range_hero_id := ""
+var range_mesh: MeshInstance3D
+var range_key := ""
 var sim_ref: BattleSim
 var trail_clock: Dictionary = {}
 ## Follow the action: the camera pans to where the living fighters are and zooms to fit them.
@@ -294,6 +301,9 @@ func zoom(amount: float) -> void:
 func clear_fighters() -> void:
  live = false; follow_bias = 0.0
  physical_casts.clear()
+ range_key = ""
+ if is_instance_valid(range_mesh): range_mesh.queue_free()
+ range_mesh = null
  for child in fighters.get_children(): child.queue_free()
  for child in effects.get_children():
   if child!=card_particles:child.queue_free()
@@ -304,7 +314,9 @@ func clear_fighters() -> void:
  if clarity: clarity.clear()
  trail_clock.clear()
  for tween in effect_tweens: tween.kill()
- effect_tweens.clear(); missiles.clear(); zone_visuals.clear(); telegraphs.clear(); combat_numbers.clear()
+ released.clear(); effect_tweens.clear(); missiles.clear(); zone_visuals.clear(); telegraphs.clear(); combat_numbers.clear()
+ for mark in boss_markers.values(): mark.queue_free()
+ boss_markers.clear()
  models.clear()
 
 func spawn(u: Dictionary) -> void:
@@ -321,12 +333,11 @@ func spawn(u: Dictionary) -> void:
  model.scale = Vector3.ONE * (0.48 if u.summon else MODEL_SCALE)
  var players = model.find_children("*", "AnimationPlayer", true, false)
  var player: AnimationPlayer = players[0] if not players.is_empty() else null
- if player:
-  for anim in ["idle", "walk"]:
-   if player.has_animation(anim): player.get_animation(anim).loop_mode = Animation.LOOP_LINEAR
-  if player.has_animation("idle"):
-   # Desynchronise idles so a squad of the same creature doesn't breathe in lockstep.
-   player.play("idle"); player.seek(randf() * player.get_animation("idle").length, true)
+ # v0.78: clips are driven by a per-fighter AnimationTree (forward-played swings timed to the sim's hit,
+ # skeletal flinches, per-unit hit-stop). See combat_animator.gd.
+ var tempo = randf_range(0.92, 1.08)
+ var anim = CombatAnimator.new()
+ anim.setup(model, path.get_file().get_basename(), u.hero.sp in HEAVY, tempo)
  var team_color = Color("70d6dd") if u.team == 0 else Color("eb987b")
  var circle = Node3D.new(); holder.add_child(circle) # Legacy selection anchor; team identity is in the health bar.
  var aura = Node3D.new(); holder.add_child(aura); aura.name = "EvolutionAura"
@@ -378,7 +389,7 @@ func spawn(u: Dictionary) -> void:
  var bubble_mat = material(Color(0.35, 0.82, 0.95, 0.16), 0.2, 0.3, true); bubble_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
  var bubble = mesh(holder, bubble_shape, bubble_mat, Vector3(0, 1.1, 0)); bubble.visible = false
 
- var name_label = Label3D.new(); name_label.text = u.hero.name; name_label.position.y = 0.22; name_label.font_size = 29; name_label.pixel_size = 0.010; name_label.modulate = team_color.lightened(0.4); name_label.outline_size = 8; name_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED; bars.add_child(name_label)
+ var name_label = Label3D.new(); name_label.text = u.hero.name + "\nATK %d HEX" % u.attack_hexes; name_label.position.y = 0.55; name_label.font_size = 29; name_label.pixel_size = 0.010; name_label.modulate = team_color.lightened(0.4); name_label.outline_size = 8; name_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED; bars.add_child(name_label)
  if u.summon: bars.visible = false
  # v0.77 item feedback: path aura, stack badge, Legendary nameplate.
  var stack_label = Label3D.new(); stack_label.font_size = 30; stack_label.pixel_size = 0.010; stack_label.outline_size = 8; stack_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -405,7 +416,7 @@ func spawn(u: Dictionary) -> void:
  var flash_mat = ShaderMaterial.new(); flash_mat.shader = HITFLASH
  for mi in model.find_children("*", "MeshInstance3D", true, false): mi.material_overlay = flash_mat
  if u.hero.has("monster"): Bestiary.dress(model, flash_mat, u.hero, u.summon)
- models[u.uid] = {"root": holder, "motion":motion, "stride":0.0, "recoil":Vector3.ZERO, "aura": aura, "model": model, "player": player, "bar": bar, "bars": bars, "ring": circle, "state": "idle", "lock": 0.0, "dead": false, "hp_label": hp_label, "cast_bar": cast_bar, "bubble": bubble, "shield_bar":shield_bar, "mana_bar": mana_bar, "stack_label": stack_label, "path_ring": path_ring, "item_tint": item_tint, "base_scale": model.scale, "bars_y": bars.position.y, "size_now": 1.0, "ghosts": [], "ghost_t": 0.0, "wind": null, "step_t": 0.0, "stagger": 0.0, "death_elapsed": 0.0, "arc": {}, "last_target": world_point(u.pos), "ground_speed": 0.0, "walk_hold": 0.0, "turn_rate": 0.0, "name_label": name_label, "tempo": randf_range(0.92, 1.08), "flash": flash_mat, "flash_amt": 0.0, "born": 0.0 if (u.summon or (sim_ref != null and sim_ref.time > 0.5)) else 1.0}
+ models[u.uid] = {"root": holder, "motion":motion, "stride":0.0, "recoil":Vector3.ZERO, "aura": aura, "model": model, "player": player, "bar": bar, "bars": bars, "ring": circle, "state": "idle", "lock": 0.0, "dead": false, "hp_label": hp_label, "cast_bar": cast_bar, "bubble": bubble, "shield_bar":shield_bar, "mana_bar": mana_bar, "stack_label": stack_label, "path_ring": path_ring, "item_tint": item_tint, "base_scale": model.scale, "bars_y": bars.position.y, "size_now": 1.0, "ghosts": [], "ghost_t": 0.0, "wind": null, "step_t": 0.0, "stagger": 0.0, "death_elapsed": 0.0, "arc": {}, "last_target": world_point(u.pos), "ground_speed": 0.0, "walk_hold": 0.0, "turn_rate": 0.0, "name_label": name_label, "tempo": tempo, "anim": anim, "squash": 0.0, "hit_dir": Vector3.ZERO, "death_dir": Vector3.ZERO, "jolt": 0.0, "flash": flash_mat, "flash_amt": 0.0, "born": 0.0 if (u.summon or (sim_ref != null and sim_ref.time > 0.5)) else 1.0}
  holder.position = world_point(u.pos)
  model.rotation.y = u.heading
 
@@ -427,6 +438,7 @@ func sync(sim: BattleSim, dt: float, speed: float = 1.0) -> void:
  sync_zones(sim)
  sync_telegraphs(sim)
  sync_numbers(dt * speed)
+ sync_range(sim)
  for u in sim.units:
   if not models.has(u.uid): spawn(u)
   var visual = models[u.uid]
@@ -437,7 +449,16 @@ func sync(sim: BattleSim, dt: float, speed: float = 1.0) -> void:
   visual.bar.mesh.size.x = maxf(0.005, 1.75 * health_ratio)
   visual.bar.material_override.albedo_color = Color("ee806c") if health_ratio < 0.3 else Color("e7c36f") if health_ratio < 0.6 else Color("70d6dd") if u.team == 0 else Color("eb987b")
   visual.hp_label.text = "%d / %d%s" % [ceili(u.hp), ceili(u.max_hp), " +%d" % ceili(u.shield) if u.shield > 0 else ""]
-  visual.bubble.visible = false
+  var shelled = u.alive and float(u.status.get("shell",0)) > 0
+  visual.bubble.visible = shelled
+  var primed = u.alive and u.get("fx",{}).get("primed",false)
+  if primed and not visual.get("primed",false):
+   floating_text(u.pos * FLOOR_SCALE,"SPELLBLADE READY",Color("cbb0ff"),23)
+  visual.primed = primed
+  if u.alive and u.cd <= 0 and int(u.kills) > int(visual.get("kills",0)) and "executioner" in u.hero.get("equipment",{}).values():
+   floating_text(u.pos * FLOOR_SCALE,"SIGNATURE READY",Color("ffd36e"),27)
+   flash(u.uid,Color("ffd36e"),.5)
+  visual.kills = int(u.kills)
   visual.shield_bar.visible = u.alive and u.shield > 0
   visual.shield_bar.mesh.size.x = maxf(0.01,1.75*minf(1,u.shield/(u.max_hp*0.55)))
   if visual.has("mana_bar"):
@@ -446,67 +467,79 @@ func sync(sim: BattleSim, dt: float, speed: float = 1.0) -> void:
    visual.mana_bar.mesh.size.x = maxf(0.005, 1.75 * mana_ratio)
    var ready_soon = float(u.get("mana", 0.0)) + sim.MANA_PER_ATTACK * float(u.get("mana_gain", 1.0)) >= float(u.get("max_mana", 100.0))
    visual.mana_bar.material_override.albedo_color = Color("bfe4ff") if ready_soon else Color("4f9dff")
-  visual.cast_bar.visible = u.alive and (u.windup > 0 or u.has("pending_cast"))
+  visual.cast_bar.visible = u.alive and (u.windup > 0 or u.has("pending_cast") or u.has("boss_pending"))
   if visual.cast_bar.visible:
-   var remaining = u.pending_cast.delay / u.pending_cast.total if u.has("pending_cast") else u.windup / maxf(0.01, u.windup_total)
+   var remaining = u.boss_pending.delay / u.boss_pending.total if u.has("boss_pending") else u.pending_cast.delay / u.pending_cast.total if u.has("pending_cast") else u.windup / maxf(0.01, u.windup_total)
    visual.cast_bar.mesh.size.x = maxf(0.01, 1.75 * (1.0 - remaining))
   item_visuals(sim, u, visual, dt * speed)
   visual.stagger = maxf(0, visual.stagger - dt * speed)
   visual.flash_amt = maxf(0.0, visual.flash_amt - dt * 6.0)
   visual.flash.set_shader_parameter("flash", visual.flash_amt)
-  visual.name_label.visible = not (clarity and clarity.tactical)   # team rings identify sides in Tactical view
+  visual.name_label.visible = u.alive
+  visual.name_label.text = ("ATK %d HEX" % u.attack_hexes) if clarity and clarity.tactical else (u.hero.name + "\nATK %d HEX" % u.attack_hexes)
+  if not u.alive and not visual.dead:
+   visual.dead = true; visual.state = "death"
+   visual.death_dir = visual.hit_dir
+   visual.bars.visible = false; visual.ring.visible = false
   animate_weight(u, visual, dt * speed)
   visual.lock = maxf(0, visual.lock - dt * speed)
-  if visual.player: visual.player.speed_scale = speed * visual.tempo
-  if visual.born < 1.0:
-   # Summons and late arrivals grow in with a small overshoot instead of popping into existence.
-   visual.born = minf(1.0, visual.born + dt * speed / 0.35)
-   var b = visual.born
-   visual.motion.scale = Vector3.ONE * maxf(0.05, 1.0 + 2.70158 * pow(b - 1.0, 3) + 1.70158 * pow(b - 1.0, 2))   # ease-out-back
-  if not u.alive and not visual.dead:
-   visual.dead = true; play(u.uid, "death", 999)
-   visual.bars.visible = false; visual.ring.visible = false
-  elif u.alive:
-   if u.has("pending_cast"):
-    pose_phase(visual, "attack" if not AttackVisuals.style(u.hero.sp,u.pending_cast.effect).is_empty() else "cast", (1.0 - u.pending_cast.delay / u.pending_cast.total) * 0.46)
-   elif u.windup > 0:
-    pose_phase(visual, "attack", (1.0 - u.windup / maxf(0.01, u.windup_total)) * 0.46)
-   elif u.recovery > 0:
-    var clip=u.get("recovery_clip","attack")
-    if clip=="cast":
-     var skill_effect=HeroData.species[u.hero.sp].ab if u.credit=="signature" else HeroData.learned_ability(u.hero.sp,int(u.credit.trim_prefix("ability:"))).effect if u.credit.begins_with("ability:") else "basic"
-     if not AttackVisuals.style(u.hero.sp,skill_effect).is_empty():clip="attack"
-    pose_phase(visual,clip,0.46 + (1.0 - u.recovery / 0.22) * 0.53)
-   elif visual.lock <= 0:
-    # Walk while the body is really travelling (incl. shoves), with a short hold so
-    # stop-start steering doesn't chatter between idle and walk.
-    var travelling = (u.moving or visual.ground_speed > 1.0) and visual.arc.is_empty()
-    if travelling: visual.walk_hold = 0.16
-    play(u.uid, "walk" if visual.walk_hold > 0 else "idle")
-    if visual.player and visual.state == "walk":
-     visual.player.speed_scale = speed * GaitRates.walk_rate(u.hero.sp, maxf(visual.ground_speed, 0.6))
-
+  animate_clips(sim, u, visual, dt * speed)
+  shape_body(u, visual, dt * speed)
   if not u.alive:
+   # v0.78: the body is thrown back by the killing blow (animate_weight), the death clip plays at 1.3x,
+   # then it settles into the floor and shrinks away by 2.6 s instead of sinking for 3.5 s.
    visual.death_elapsed += dt * speed
-   visual.model.position.y = -maxf(0, visual.death_elapsed - 1.0) * 0.22
-   visual.model.visible = visual.death_elapsed < 3.5
+   visual.model.position.y = -maxf(0, visual.death_elapsed - 1.1) * 0.35
+   visual.model.visible = visual.death_elapsed < 2.6
  if clarity: clarity.sync(sim, dt * speed, models)
 
-func pose_phase(visual: Dictionary, clip: String, fraction: float) -> void:
- if not visual.player or not visual.player.has_animation(clip): return
- if visual.state != clip: visual.player.play(clip, 0.07); visual.state = clip
- visual.player.speed_scale = 0.0
- visual.player.seek(visual.player.get_animation(clip).length * clampf(fraction, 0, 0.99), true)
+## v0.78: feed the sim's state to the fighter's CombatAnimator. The simulation decides *when*; the
+## animator decides how the authored clip gets there (contact frame on the hit, swing-into-swing).
+func animate_clips(sim: BattleSim, u: Dictionary, visual: Dictionary, dt: float) -> void:
+ var anim: CombatAnimator = visual.anim
+ if anim == null or not anim.ok: return
+ var act = ""; var remaining = 0.0
+ if u.alive and u.has("boss_pending"):
+  act = "cast"; remaining = float(u.boss_pending.delay)
+ elif u.alive and u.has("pending_cast"):
+  act = "attack" if not AttackVisuals.style(u.hero.sp, u.pending_cast.effect).is_empty() else "cast"
+  remaining = float(u.pending_cast.delay)
+ elif u.alive and u.windup > 0:
+  act = "attack"; remaining = u.windup
+ # Walk while the body is really travelling (incl. shoves), with a short hold so
+ # stop-start steering doesn't chatter between idle and walk.
+ var travelling = (u.moving or visual.ground_speed > 1.0) and visual.arc.is_empty()
+ if travelling: visual.walk_hold = 0.16
+ var walking = visual.walk_hold > 0 and act == ""
+ var engaged = u.alive and int(u.get("target", -1)) >= 0 and not u.moving
+ var next_eta = 99.0
+ if engaged: next_eta = maxf(u.recovery, u.attack_timer / maxf(0.2, sim.as_mult(u)))
+ visual.state = "death" if not u.alive else act if act != "" else "walk" if walking else "idle"
+ anim.drive(dt, act, remaining, u.alive, sim.active(u, "stun"), walking,
+  GaitRates.walk_rate(u.hero.sp, maxf(visual.ground_speed, 0.6)), engaged, next_eta)
+
+## Grow-in for summons, contact squash and the shrink away after death, all on the CombatMotion node.
+func shape_body(u: Dictionary, visual: Dictionary, dt: float) -> void:
+ var k = 1.0
+ if visual.born < 1.0:
+  # Summons and late arrivals grow in with a small overshoot instead of popping into existence.
+  visual.born = minf(1.0, visual.born + dt / 0.35)
+  var b = visual.born
+  k = maxf(0.05, 1.0 + 2.70158 * pow(b - 1.0, 3) + 1.70158 * pow(b - 1.0, 2))   # ease-out-back
+ var heavy = u.hero.sp in HEAVY
+ if visual.squash > 0.0 and not visual.anim.frozen():
+  visual.squash = maxf(0.0, visual.squash - dt * (3.5 if heavy else 5.5))
+ var s = visual.squash * visual.squash * (1.35 if heavy else 1.0)
+ var shape = Vector3(1.0 + 0.045 * s, 1.0 - 0.065 * s, 1.0 + 0.045 * s)
+ if not u.alive: shape *= maxf(0.02, 1.0 - smoothstep(2.05, 2.55, visual.death_elapsed))
+ visual.motion.scale = shape * k
+ # The struck body shudders while the hit-stop holds it.
+ if visual.jolt > 0.0 and dt > 0.0:
+  visual.jolt = maxf(0.0, visual.jolt - dt)
+  visual.motion.position += Vector3(sin(elapsed * 113.0), 0.0, cos(elapsed * 97.0)) * 0.035 * minf(1.0, visual.jolt / 0.03)
 
 func effect_tween() -> Tween:
  var tween = create_tween(); tween.pause(); effect_tweens.append(tween); return tween
-
-func play(id: int, clip: String, lock: float = 0.0) -> void:
- if not models.has(id): return
- var v = models[id]
- if v.player and v.player.has_animation(clip) and (v.state != clip or lock > 0):
-  v.player.play(clip, 0.16); v.state = clip
- v.lock = maxf(v.lock, lock)
 
 func _process(dt: float) -> void:
  elapsed += dt
@@ -556,11 +589,14 @@ func handle_event(e: Dictionary) -> void:
   "item_feedback":
    if vfx:ItemFeedback.play(vfx,e,world_point(e.pos,0),world_point(e.target,0))
    if e.stage=="proc":
-    flash(int(e.target_uid),ItemFeedback.profile(e.item_id).color,.35)
-    floating_text(e.target*FLOOR_SCALE,e.name,ItemFeedback.profile(e.item_id).color,23)
+    var carrier_effect = e.item_id in ["runeward","spellblade","executioner"]
+    flash(int(e.uid if carrier_effect else e.target_uid),ItemFeedback.profile(e.item_id).color,.35)
+    floating_text((e.pos if carrier_effect else e.target)*FLOOR_SCALE,e.name,ItemFeedback.profile(e.item_id).color,23)
   "attack": pass
   "release":
-   if not e.ranged: AttackVisuals.strike(self,e.pos,e.target,e.get("species",""))
+   if not e.ranged:
+    AttackVisuals.strike(self,e.pos,e.target,e.get("species",""))
+    if sim_ref: released[e.uid] = sim_ref.time
   "interrupt":
    floating_text(e.pos, "INTERRUPTED", Color("ef9b83"), 30)
    if models.has(e.uid): models[e.uid].lock = 0
@@ -572,7 +608,7 @@ func handle_event(e: Dictionary) -> void:
     punch(0.55); hitstop.emit(0.09)
   "telegraph":
    # One callout per skill: it appears as the windup starts and pops when the skill lands.
-   if clarity and sim_ref: clarity.callout(sim_ref, e, models, SkillCombat.windup(effect))
+   if clarity and sim_ref: clarity.callout(sim_ref, e, models, float(e.get("duration", SkillCombat.windup(effect))))
   "cast":
    # The overhead windup identifies the skill; avoid a duplicate cast banner.
    if not AttackVisuals.style(e.get("species",""),effect).is_empty():physical_casts[e.uid]={"remaining":.3,"targets":{}}
@@ -593,13 +629,8 @@ func handle_event(e: Dictionary) -> void:
    var skill = e.get("credit", "basic") != "basic"
    var amount = float(e.get("amount", 0.0))
    if amount >= 3: flash(e.uid, fx_context(e, color).hot if skill else Color(1, 0.95, 0.9), clampf(0.35 + amount / 60.0, 0.4, 1.2))
-   if models.has(e.uid) and amount >= 6:
-    models[e.uid].stagger = 0.20
-    if models.has(e.get("source",-1)):
-     var away = models[e.uid].root.position-models[e.source].root.position
-     models[e.uid].recoil = away.normalized()*minf(0.45,amount*0.004)
+   if models.has(e.uid): react(e, amount, skill)
    if skill and amount >= 30: punch(clampf(amount / 140.0, 0.2, 0.6))
-   if skill and amount >= 55: hitstop.emit(0.06)
    number_event(e)
   "heal":
    number_event(e)
@@ -635,6 +666,34 @@ func handle_event(e: Dictionary) -> void:
    if models.has(e.uid): flash(e.uid, Color("ffb347"), 0.6)
    if float(e.get("size", 1.0)) >= 1.5: punch(0.15)
   "projectile": pass # Visuals track live simulation projectiles, including pause and target movement.
+
+## v0.78 hit reaction: the victim's spine bends away from the blow (scaled by the share of its health
+## the hit took), and solid hits freeze just the two fighters for a few frames (per-unit hit-stop)
+## while the attacker's body squashes on contact. Kills, quakes and MEGA CRITs keep the global hit-stop.
+func react(e: Dictionary, amount: float, skill: bool) -> void:
+ var victim = models[e.uid]
+ var unit = sim_ref.find_unit(e.uid) if sim_ref else {}
+ var max_hp = maxf(1.0, float(unit.get("max_hp", 100.0)) if not unit.is_empty() else 100.0)
+ var share = amount / max_hp
+ var source_id = int(e.get("source", -1))
+ var away = Vector3.ZERO
+ if models.has(source_id) and source_id != e.uid:
+  away = victim.root.position - models[source_id].root.position; away.y = 0.0
+  if away.length_squared() > 0.0001: away = away.normalized(); victim.hit_dir = away
+ if amount >= 6:
+  victim.stagger = 0.20
+  if away != Vector3.ZERO: victim.recoil = away * minf(0.32, amount * 0.003)
+ if away != Vector3.ZERO and share >= 0.02: victim.anim.flinch(away, clampf(share * 5.0, 0.15, 1.0))
+ var source = sim_ref.find_unit(source_id) if sim_ref and models.has(source_id) else {}
+ # Contact: the swing that just landed (not a projectile, not a damage-over-time tick).
+ var contact = not source.is_empty() and source.alive and (physical_casts.has(source_id) or (sim_ref and is_equal_approx(float(released.get(source_id, -1.0)), sim_ref.time)))
+ var stop = 0.0
+ if share >= 0.03 or (skill and amount >= 30): stop = clampf(0.035 + share * 0.45, 0.035, 0.09)
+ if skill and amount >= 55: stop = maxf(stop, 0.08)
+ if stop > 0.0:
+  victim.anim.hitstop(stop); victim.jolt = stop
+  if contact: models[source_id].anim.hitstop(stop * 0.8)
+ if contact: models[source_id].squash = maxf(models[source_id].squash, clampf(0.55 + share * 8.0, 0.55, 1.0))
 
 func physical_contact(e: Dictionary) -> void:
  var source_id=e.get("source",-1)
@@ -784,6 +843,23 @@ func polish_stage(stage: Node3D) -> void:
 # Windups are state-driven, so pausing, speed changes and interrupts cannot
 # leave a misleading warning behind or release a visual before the skill.
 func sync_telegraphs(sim: BattleSim) -> void:
+ var pending_bosses = {}
+ for u in sim.units:
+  if not u.alive or not u.has("boss_pending"): continue
+  var p = u.boss_pending
+  pending_bosses[u.uid] = true
+  if not boss_markers.has(u.uid) and float(p.spec.get("radius", 0.0)) > 0.0:
+   var mark = MeshInstance3D.new(); var torus = TorusMesh.new()
+   var radius = float(p.spec.radius) * FLOOR_SCALE
+   torus.inner_radius = maxf(0.1, radius - 0.07); torus.outer_radius = radius + 0.07
+   torus.rings = 48; torus.ring_segments = 8; mark.mesh = torus
+   var mat = StandardMaterial3D.new(); mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+   mat.albedo_color = Color("ff7863"); mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+   mat.no_depth_test = false; mark.material_override = mat
+   mark.position = world_point(p.target, 0.08); add_child(mark); boss_markers[u.uid] = mark
+  if boss_markers.has(u.uid): boss_markers[u.uid].material_override.albedo_color.a = 0.45 + 0.5 * (1.0 - p.delay / p.total)
+ for id in boss_markers.keys():
+  if not pending_bosses.has(id): boss_markers[id].queue_free(); boss_markers.erase(id)
  var live = {}
  for u in sim.units:
   if not u.alive or not u.has("pending_cast"): continue
@@ -858,9 +934,8 @@ func ghost(u: Dictionary, visual: Dictionary) -> void:
  var tint = visual.item_tint if visual.item_tint.a > 0.0 else Color("5fe3ff")
  gm.albedo_color = Color(tint.r, tint.g, tint.b, 0.32)
  for mi in g.find_children("*", "MeshInstance3D", true, false): mi.material_override = gm
- var players = g.find_children("*", "AnimationPlayer", true, false)
- if not players.is_empty() and visual.player and visual.player.current_animation != "":
-  players[0].play(visual.player.current_animation); players[0].seek(visual.player.current_animation_position, true); players[0].speed_scale = 0.0
+ var skeletons = g.find_children("*", "Skeleton3D", true, false)
+ if not skeletons.is_empty() and visual.anim: visual.anim.copy_pose_to(skeletons[0])
  var tw = effect_tween()
  tw.tween_property(gm, "albedo_color:a", 0.0, 0.28)
  tw.tween_callback(g.queue_free)
@@ -869,7 +944,7 @@ func number_event(e: Dictionary) -> void:
  var crit = float(e.get("crit", 0.0))
  if e.type == "hit" and crit > 0.0:
   crit_number(e, crit); return
- var key = "%s:%s" % [e.uid,e.type]
+ var key = "%s:%s:%s:%s" % [e.uid,e.type,e.get("source",-1),e.get("credit","basic")]
  # Small damage-over-time ticks pool for longer so the fight isn't buried in "0.7"s.
  var window = 0.48 if e.amount >= 6.0 else 0.9
  if combat_numbers.has(key) and combat_numbers[key].age < window:
@@ -879,6 +954,12 @@ func number_event(e: Dictionary) -> void:
   return
  if e.type == "blocked" and (e.amount < 10.0 or (clarity and clarity.tactical)): return   # minor absorbs read as noise
  if clarity and clarity.tactical and e.type == "hit" and e.amount < 12.0: return
+ # Keep source-aware attribution bounded during dense accelerated fights.
+ if combat_numbers.size() >= 64:
+  var oldest = combat_numbers.keys()[0]
+  for candidate in combat_numbers:
+   if combat_numbers[candidate].age > combat_numbers[oldest].age: oldest = candidate
+  combat_numbers[oldest].node.queue_free(); combat_numbers.erase(oldest)
  var label = Label3D.new(); effects.add_child(label)
  var skill_hit = e.type == "hit" and e.get("credit", "basic") != "basic"
  label.font_size = (52 if skill_hit else 40) if e.type == "hit" else 32 if e.type == "heal" else 24; label.pixel_size = 0.014; label.no_depth_test = true; label.outline_size = 12; label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -959,7 +1040,9 @@ func animate_weight(u: Dictionary, visual: Dictionary, dt: float) -> void:
  if dt <= 0: return
  visual.recoil = visual.recoil.lerp(Vector3.ZERO,1-exp(-dt*12))
  if not u.alive:
-  visual.motion.position = visual.motion.position.lerp(Vector3.ZERO,1-exp(-dt*10))
+  # Thrown back along the killing blow, then settled.
+  var thrown = visual.death_dir * (0.75 if u.hero.sp not in HEAVY else 0.4)
+  visual.motion.position = visual.motion.position.lerp(thrown,1-exp(-dt*9))
   visual.motion.rotation = visual.motion.rotation.lerp(Vector3.ZERO,1-exp(-dt*10))
   return
  var pace = u.get("velocity",Vector2.ZERO).length()/maxf(0.1,u.speed) if u.moving else 0.0
@@ -969,6 +1052,8 @@ func animate_weight(u: Dictionary, visual: Dictionary, dt: float) -> void:
  var shift = 0.0
  var lean = 0.0
  var lift = absf(sin(visual.stride)) * pace * (0.025 if heavy else 0.045)
+ if u.hero.sp == "zaratan" and float(u.status.get("shell",0)) > 0:
+  lift = -0.12
  if u.windup > 0:
   var phase = 1-u.windup/maxf(0.01,u.windup_total)
   shift = -sin(phase*PI*0.5)*0.12
@@ -981,8 +1066,12 @@ func animate_weight(u: Dictionary, visual: Dictionary, dt: float) -> void:
   var phase = 1-u.pending_cast.delay/u.pending_cast.total
   lift += sin(phase*PI)*0.045
   lean = -0.035*sin(phase*PI)
+  if u.hero.sp == "cyclops" and u.pending_cast.effect == "boulder":
+   shift = -0.22*sin(phase*PI*0.5)
+   lean = -0.13*sin(phase*PI*0.5)
  else:
   lean = pace*(0.025 if heavy else 0.06)
+ if u.hero.sp == "zaratan" and float(u.status.get("shell",0)) > 0: lean = 0.09
  var target = forward*shift+visual.recoil+Vector3.UP*lift
  visual.motion.position = visual.motion.position.lerp(target,1-exp(-dt*24))
  visual.motion.rotation.x = lerpf(visual.motion.rotation.x,cos(u.heading)*lean,1-exp(-dt*12))
@@ -1066,13 +1155,16 @@ func fx_cast(e: Dictionary, color: Color) -> void:
  var effect = e.get("effect", "basic")
  if not vfx or effect in BOLT_FAMILIES: return
  var c = fx_context(e, color)
- c.area_radius=ArenaGrid.ROW_GAP*FLOOR_SCALE
+ c.area_radius=ArenaGrid.ROW_GAP*FLOOR_SCALE*(2 if effect in ["legend_cataclysm","legend_bastion"] else 1)
  var from = world_point(e.pos, 0.0); var to = world_point(e.get("target", e.pos), 0.0)
  var targets = []
  if sim_ref:
   var caster = sim_ref.find_unit(e.uid)
   if not caster.is_empty():
-   if effect in SUPPORT_FAMILIES:
+   if effect == "legend_bastion":
+    for u in sim_ref.units:
+     if u.alive and u.team == caster.team and ArenaGrid.distance(caster.cell,u.cell)<=2: targets.append(world_point(u.pos,0.0))
+   elif effect in SUPPORT_FAMILIES:
     for u in sim_ref.units:
      if u.alive and u.team == caster.team and u.pos.distance_to(caster.pos) <= 5.5: targets.append(world_point(u.pos, 0.0))
    else:
@@ -1131,3 +1223,29 @@ func follow(u: Dictionary, visual: Dictionary, dt: float) -> void:
   var diff = angle_difference(visual.model.rotation.y, u.heading)
   var want = diff * (1.0 - exp(-dt * 10.0))
   visual.model.rotation.y += clampf(want, -max_rate * dt, max_rate * dt)
+
+func sync_range(sim: BattleSim) -> void:
+ var unit: Dictionary = {}
+ for u in sim.units:
+  if u.alive and str(u.hero.get("id", "")) == range_hero_id:
+   unit = u; break
+ var key = "%s:%s:%s:%s" % [range_hero_id, unit.get("cell", ""), unit.get("attack_hexes", 0), unit.has("next_cell")]
+ if key == range_key: return
+ range_key = key
+ if is_instance_valid(range_mesh): range_mesh.queue_free()
+ range_mesh = null
+ if unit.is_empty() or unit.has("next_cell"): return
+ var lines = ImmediateMesh.new()
+ var ink = material(Color(0.25, 0.95, 1.0, 0.65))
+ ink.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+ ink.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+ lines.surface_begin(Mesh.PRIMITIVE_LINES, ink)
+ for cell in ArenaGrid.cells():
+  if ArenaGrid.distance(unit.cell, cell) > unit.attack_hexes: continue
+  var center = ArenaGrid.point(cell)
+  for i in range(6):
+   var a = i * TAU / 6.0; var b = (i + 1) * TAU / 6.0
+   lines.surface_add_vertex(world_point(center + Vector2(cos(a), sin(a)) * ArenaGrid.HEX_RADIUS * 0.92, 0.08))
+   lines.surface_add_vertex(world_point(center + Vector2(cos(b), sin(b)) * ArenaGrid.HEX_RADIUS * 0.92, 0.08))
+ lines.surface_end()
+ range_mesh = MeshInstance3D.new(); range_mesh.mesh = lines; fighters.add_child(range_mesh)

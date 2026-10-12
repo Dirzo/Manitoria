@@ -3,7 +3,7 @@ extends SceneTree
 ## walks the map, takes and equips every reward, shops at outfitters, and fights every battle for
 ## real. Reports win rates per room type and depth and how far runs get.
 ##   PROBE_RUNS (default 12) · PROBE_DIFFICULTY (default Standard) · PROBE_ENDLESS=1 keeps going
-##   PROBE_RULES='{"death":"wounds","guild":8,"field":5}' plays a v0.78 permadeath rule set
+##   PROBE_RULES='{"death":"wounds","guild":8,"field":5}' plays a v0.79 permadeath rule set
 ##   PROBE_SEED0 (first seed, default 0) · PROBE_JSON=1 prints one JSON summary line per run
 var stats = {}
 var drafted = [];

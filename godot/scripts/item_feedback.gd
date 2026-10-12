@@ -88,6 +88,8 @@ static func credited(sim: BattleSim,u: Dictionary,target: Dictionary,credit: Str
  else:signal_effect(sim,u,id,target,"proc",amount)
 
 static func play(vfx: VFX,e: Dictionary,from: Vector3,to: Vector3) -> void:
+ # Negation belongs to the item carrier, not the enemy whose ability was stopped.
+ if e.item_id == "runeward": to = from
  var p=profile(e.item_id);var color: Color=p.color;var strong=e.stage=="proc"
  var life=.8 if strong else .45
  if strong:
@@ -101,6 +103,14 @@ static func play(vfx: VFX,e: Dictionary,from: Vector3,to: Vector3) -> void:
   vfx.spray(from+Vector3.UP*.7,5,p.motif,color,Vector2(.5,1.2),Vector2(.4,.8),.06,Vector3.UP,1,0,1)
   return
  var at=to+Vector3.UP
+ if strong and e.item_id == "runeward":
+  vfx.shield(at,1.2,Color("a2e7ff"),.35,.12)
+  vfx.spray(at,10,"shard",Color("e6faff"),Vector2(2,4),Vector2(.15,.3),.08,Vector3.UP,1,2,1)
+  return
+ if strong and e.item_id == "bell":
+  vfx.rune(from,1.7,Color("ffd36e"),1,.45)
+  vfx.shield(from+Vector3.UP,1.05,Color("a2e7ff"),.55,.12)
+  return
  match p.family:
   "lightning":vfx.bolt(from+Vector3.UP,at,color,.10 if strong else .045,life,2 if strong else 0)
   "heal":

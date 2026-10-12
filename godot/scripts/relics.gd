@@ -45,7 +45,7 @@ const RELICS := {
  "doppel_cloak":   {"name": "Doppelganger Cloak", "rarity": "Boss", "art": "vanish", "text": "Your headliner starts each fight with a shadow copy at 50% stats. Downside: the headliner has 25% less HP.", "mods": [{"flag": "doppel", "hp": -0.25, "filter": {"headliner": true}}], "downside": true},
  "sugar_rush":     {"name": "Sugar Rush", "rarity": "Rare", "art": "tailwind", "text": "Your team gets +30% AS. Downside: your team loses 0.5% max HP per second.", "mods": [{"haste": 0.30, "drain": 0.005}], "downside": true},
  "berserker_totem":{"name": "Berserker's Totem", "rarity": "Rare", "art": "maul", "text": "Your team gets +25% AD. Downside: champions ignore tactics and charge the nearest enemy.", "mods": [{"attack": 0.25, "flag": "berserk"}], "downside": true},
- # v0.78: the sixth place in the formation. Each one costs something different.
+ # v0.79: the sixth place in the formation. Each one costs something different.
  "war_council":    {"name": "War Council", "rarity": "Boss", "art": "rally", "text": "Field a sixth champion.", "field": 1},
  "crowded_banner": {"name": "Crowded Banner", "rarity": "Common", "art": "bulwark", "text": "Field a sixth champion. Downside: your team has 8% less HP, AD and AP.", "field": 1, "mods": [{"hp": -0.08, "attack": -0.08, "power": -0.08}], "downside": true},
  "mercenary_contract": {"name": "Mercenary Contract", "rarity": "Rare", "art": "victory", "text": "Field a sixth champion. Downside: pay 35 gold upkeep after every fight.", "field": 1, "upkeep": 35, "downside": true},

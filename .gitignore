@@ -6,3 +6,9 @@
 **/.env.*
 *.log
 _site/
+
+**/narration-deps/
+**/facts-archive/
+**/facts-eras.json
+/builds/*/Manitoria.exe
+/builds/*/Manitoria.pck

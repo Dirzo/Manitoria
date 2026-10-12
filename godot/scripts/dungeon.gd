@@ -4,7 +4,7 @@ extends RefCounted
 ## Your guild crosses three depths. Each depth is a map of rooms (skirmishes, elites, outfitters,
 ## campfires, unknown events and treasure) that ends at a Warden boss. You choose a path one room
 ## at a time. The guild has a few lives: every lost fight costs one, and the run ends at zero.
-## From v0.78 a lost fight also kills the first champion to fall, for good (see DEFAULT_RULES).
+## From v0.79 a lost fight also kills the first champion to fall, for good (see DEFAULT_RULES).
 ## Wins offer one of three rewards: components, finished items or relics (run-long passives).
 ## Every species carries two run traits, re-rolled each run, that unlock team synergies.
 ## Clearing the third depth lets you bank your score or keep going into the endless depths.
@@ -18,16 +18,16 @@ const MAX_CHAMPIONS := 6       # the guild grows from headliner + partner to six
 const DRAFT_SIZE := 5           # champions offered at each draft
 const SLOTS := [5, 11, 7, 3, 9, 13]   # formation slots for up to six monsters
 const LIVES := {"Keeper": 4, "Standard": 3, "Champion": 2}
-## v0.78 permadeath. Runs carry their rules in d.rules; saves without them keep the old guild lives.
-##   death  "lives"  every lost fight costs a guild life (pre-0.78)
+## v0.79 permadeath. Runs carry their rules in d.rules; saves without them keep the old guild lives.
+##   death  "lives"  every lost fight costs a guild life (pre-0.79)
 ##          "fallen" a lost fight claims the first champion to fall, for good
 ##          "wounds" a champion who falls is Wounded; falling again while Wounded is death
 ##          "hard"   every champion who falls in any fight is gone
 ##   guild  how many champions the guild may hold      field  how many may fight (relics add more)
 const LEGACY_RULES := {"death": "lives", "guild": 6, "field": 6}
-## v0.78 default, chosen from the permadeath playtests (PERMADEATH-0.78.md): a lost fight costs a
+## v0.79 default, chosen from the permadeath playtests (PERMADEATH-0.79.md): a lost fight costs a
 ## life AND the first champion to fall; the first three rooms only wound; the dead leave a legacy.
-const DEFAULT_RULES := {"death": "fallen", "lives_too": true, "guild": 7, "field": 5, "grace_rows": 3, "legacy_xp": 60, "recruit_offset": -2, "threat": [1.0, 1.15, 1.2]}
+const DEFAULT_RULES := {"death": "fallen", "lives_too": true, "guild": 7, "field": 5, "grace_rows": 3, "legacy_xp": 60, "recruit_offset": -2, "threat": [1.0, 1.18, 1.24]}
 const FIELD_MAX := 6
 static var probe_rules := {}   # balance probes override run rules here
 const XP_SCALE := 2.6           # fewer fights than the five cups, so each one teaches more
@@ -125,7 +125,7 @@ static func depth(c: Campaign) -> Dictionary:
  return info
 
 static func warden(c: Campaign) -> Dictionary:
- return Bestiary.BOSSES[str(DungeonInstances.info(instance_id(c)).boss)]
+ return Bestiary.info(str(DungeonInstances.info(instance_id(c)).boss))
 
 ## The arena and banners use this like a World Tour region; "dungeon" tells the arena to dress the stage.
 static func region(c: Campaign) -> Dictionary:
@@ -218,7 +218,9 @@ static func reachable(c: Campaign) -> Array:
  if busy(c) or d.map.is_empty(): return []
  if int(d.row) < 0: return range(d.map[0].size())
  if int(d.row) >= ROWS - 1: return []
- return node(c).get("links", [])
+ # JSON reloads integer-looking numbers as floats; Array membership is type-sensitive.
+ # Both map buttons and enter() compare integer room indices against this list.
+ return node(c).get("links", []).map(func(col): return int(col))
 
 ## Something must be settled before moving: a fight, spoils, an event, the outfitter or a choice.
 static func busy(c: Campaign) -> bool:
@@ -549,8 +551,8 @@ static func boss_fight(c: Campaign, row: int) -> Dictionary:
  if int(d.act) > ACTS: heroes[0].empower = 0.35 * (int(d.act) - 1)
  var pool = DungeonInstances.info(instance_id(c)).mobs
  # Escorts grow with the guild: none against two or three champions, two against five or more.
- # v0.78: at most one escort, so a fifth champion doesn't double the Warden's guard (the old
- # second escort made five-champion Warden fights far harder than four; see PERMADEATH-0.78.md).
+ # v0.79: at most one escort, so a fifth champion doesn't double the Warden's guard (the old
+ # second escort made five-champion Warden fights far harder than four; see PERMADEATH-0.79.md).
  for i in range(clampi(party(c) - 3, 0, 1)):
   var id = "boss_%d_escort_%d" % [int(d.act), i]
   heroes.append(Bestiary.make(pool[abs(hash(id + str(c.state.seed))) % pool.size()], id, maxi(1, level - 1), st, diff, SLOTS[i + 3]))
@@ -722,7 +724,7 @@ static func offer_draft(c: Campaign, kind: String, cost: int) -> void:
   var sum = 0
   for h in c.lineup(): sum += int(h.level)
   level = clampi(roundi(float(sum) / c.lineup().size()), 1, 18)
-  # Recruits join behind the guild's veterans (v0.78 rule sets), so a death costs experience.
+  # Recruits join behind the guild's veterans (v0.79 rule sets), so a death costs experience.
   if rule(c, "recruit_offset") != null and kind != "partner": level = clampi(level + int(rule(c, "recruit_offset")), 1, 18)
  var offers = []
  for sp in picks:
@@ -782,7 +784,7 @@ static func buy_shop_draft(c: Campaign) -> bool:
  offer_draft(c, "shop", shop_draft_cost(c))
  return c.save()
 
-# ------------------------------------------------------------------ Permadeath (v0.78)
+# ------------------------------------------------------------------ Permadeath (v0.79)
 static func rule(c: Campaign, key: String):
  if probe_rules.has(key): return probe_rules[key]
  return c.state.get("dungeon", {}).get("rules", LEGACY_RULES).get(key, LEGACY_RULES.get(key))

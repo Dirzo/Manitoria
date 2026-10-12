@@ -1,10 +1,20 @@
 # Manitoria
 
-**0.78 — Permadeath.** In the dungeon, a lost fight now costs a life and the first champion to fall, for good. Keep a bench, protect your carry, and find one of five relics that let a sixth champion fight. Play it from [`builds/v0.78`](builds/v0.78). See [PERMADEATH-0.78.md](PERMADEATH-0.78.md).
+Play [v0.79 for Windows](builds/v0.79): dungeon permadeath on top of everything in v0.78.
 
-**0.77 — Item overhaul.** Items make champions huge, blindingly fast or crit for screen-shaking MEGA CRITS. Size and Crit join the stats (an octagon), every item has a Legendary from the new Mythic Anvil, and Wild items come back with real downsides. See [ITEM-OVERHAUL-0.77.md](ITEM-OVERHAUL-0.77.md).
+**0.79 — Permadeath.** In the dungeon, a lost fight now costs a life and the first champion to fall, for good. Keep a bench, protect your carry, and find one of five relics that let a sixth champion fight. Wardens bring at most one escort, and threat rises by depth. See [PERMADEATH-0.79.md](PERMADEATH-0.79.md).
+
+The v0.78 build is in [builds/v0.78](builds/v0.78), including all 91 new item icons and the integrated dungeon drawer. Narration launchers and verification are in [the release notes](RELEASE-0.78.md).
+
+**0.78 — Fluid combat, part 1.** Attacks now play forward and land on the frame where the blow connects. Fast attackers roll swing into swing, hits bend the victim away from the blow, solid hits freeze just the two fighters involved, and deaths throw the body back. Code only: same models and clips, and the simulation and balance are unchanged. The latest Windows build is [v0.78](builds/v0.78). See [FLUID-COMBAT-0.78.md](FLUID-COMBAT-0.78.md).
+
+**0.77 — Item overhaul.** Items make champions huge, blindingly fast or crit for screen-shaking MEGA CRITS. Size and Crit join the stats (an octagon), every item has a Legendary from the new Mythic Anvil, and Wild items come back with real downsides. Play it from [`builds/v0.77`](builds/v0.77). See [ITEM-OVERHAUL-0.77.md](ITEM-OVERHAUL-0.77.md).
 
 **0.76 — Combat and leveling rework.** Six stats (AD, AS, AP, Mana, HP, Resistance), one signature ability per champion cast when its mana bar fills, and level-ups that deal three stat cards to choose from. Evolutions now only reshape the signature, stats or movement. Old saves migrate automatically. See [COMBAT-REWORK-0.76.md](COMBAT-REWORK-0.76.md).
+
+**Local play diagnostics:** the native source now records game events, errors, state and feature usage, with **Settings → Export play logs** for sharing a support ZIP. See [play logging](PLAY-LOGGING.md). Included in the v0.78 Windows export.
+
+**Combat clarity and pre-fight equipment (native source).** Champions show their actual hex attack reach, and selecting one outlines its firing hexes. Every watched fight pauses at formation/equipment; dungeon components list recipes, and noncombat encounters offer equipment access. Audio is temporarily music-only: all effects, ambience and announcer playback are disabled, including old saves. Ten themed, interruptible boss techniques remain. See [validation and behavior](COMBAT-CLARITY.md). Included in the v0.78 Windows export.
 
 **0.75 — Visual overhaul, part 1.** Dungeon mode is the headline feature on a new title screen. The dungeon is immersive, with no tournament menus. Every menu has a cleaner look, buttons that respond to hover and press, and floating tooltip cards. Each zone now has five mobs and a Warden. See [UI-OVERHAUL-0.75.md](UI-OVERHAUL-0.75.md), and the [dungeon art brief](DUNGEON-ART-BRIEF.md) for the 70 image prompts and the Meshy steps.
 
@@ -40,6 +50,6 @@ Progress saves automatically in your browser's local storage. The Club office me
 
 ## Godot edition
 
-The full Godot 4 project lives in [`godot/`](godot/). Open `godot/project.godot` with **Godot 4.7.2** (Compatibility renderer) to play from the editor or export your own build.
+The full Godot 4 project lives in [`godot/`](godot/). Open `godot/project.godot` with **Godot 4.7.2** (Forward+ renderer) to play from the editor or export your own build.
 
-A ready-to-play Windows build of version 0.75 (visual overhaul part 1 on top of Dungeon mode) is in [`builds/v0.75/`](builds/v0.75/): download the folder, run `JOIN-ME.bat`, then `Manitoria.exe`.
+A ready-to-play Windows build of version 0.78 is in [`builds/v0.78/`](builds/v0.78/): download the folder, run `JOIN-ME.bat`, then `Manitoria.exe`.

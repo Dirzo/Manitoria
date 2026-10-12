@@ -185,7 +185,7 @@ func run() -> void:
  check(hits>30*1.2,"Drafts lean toward champions that share traits (%d synergy offers in 30 drafts)"%hits)
  while g.state.roster.size()<Dungeon.guild_cap(g):
   Dungeon.offer_draft(g,"checkpoint",0);check(Dungeon.take_champion(g,0),"Unlock a champion")
- check(Dungeon.guild_cap(g)==7 and g.lineup().size()==5 and g.lineup_ready(),"A guild of seven fields five (v0.78)")
+ check(Dungeon.guild_cap(g)==7 and g.lineup().size()==5 and g.lineup_ready(),"A guild of seven fields five (v0.79)")
  Dungeon.offer_draft(g,"checkpoint",0);check(not Dungeon.take_champion(g,0),"No eighth champion")
  g.state.dungeon.relics.append("war_council");Dungeon.fill_field(g)
  check(Dungeon.field_cap(g)==6 and g.lineup().size()==6 and g.lineup_ready(),"War Council fields a sixth champion")

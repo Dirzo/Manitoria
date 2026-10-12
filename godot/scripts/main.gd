@@ -7,6 +7,7 @@ const MUTED = Color("c2c4d6")
 var campaign = Campaign.new()
 var speedrun_lab: SpeedrunLab
 var arena: ArenaView
+var telemetry: PlayTelemetry
 var sound: SoundDesign
 var ui: Control
 var layer: CanvasLayer
@@ -58,9 +59,11 @@ var qa_level = 1
 var qa_elapsed = 0.0
 var qa_taken = false
 var resolving = false
+var playtest: PlaytestRecorder
 var desk_state = {"role": "All", "sort": "Board", "view": "Grid", "metric": "impact", "per_bout": true, "intel": "Rankings", "club": "Identity", "compare": []}
 
 func _ready() -> void:
+ telemetry = PlayTelemetry.new(); telemetry.game = self; add_child(telemetry)
  HeroData.load_data()
  arena = ArenaView.new(); add_child(arena)
  arena.legendary_moment.connect(func(d): legend_left = d; legend_total = d)
@@ -79,6 +82,12 @@ func _ready() -> void:
   if arg.begins_with("--qa_level="): qa_level = int(arg.trim_prefix("--qa_level="))
   if arg.begins_with("--qa_view="): desk_state.view = arg.trim_prefix("--qa_view=")
   if arg.begins_with("--qa_scroll="): set_meta("qa_scroll", int(arg.trim_prefix("--qa_scroll=")))
+ if "--playtest" in OS.get_cmdline_user_args():
+  var directory = ProjectSettings.globalize_path("res://../../facts-archive")
+  for arg in OS.get_cmdline_user_args():
+   if arg.begins_with("--facts-dir="): directory = arg.trim_prefix("--facts-dir=")
+  playtest = PlaytestRecorder.new(); add_child(playtest)
+  playtest.start(self,directory,not qa.is_empty() or "--agent=1" in OS.get_cmdline_user_args())
  if not qa.is_empty():
   campaign.new_run("Ravenmoor Menagerie", 97, 731)
   League.run_tiers = {}; campaign.state.tiers = {}; campaign.create_market()   # QA uses the classic tiers
@@ -427,7 +436,15 @@ func button(parent: Node, text_value: String, callback: Callable, primary: bool 
  var b = Button.new(); b.text = uncial_text(text_value); b.custom_minimum_size.y = 44; b.disabled = disabled
  if primary:
   DungeonUI.restyle(self, b, true)
- b.pressed.connect(callback); parent.add_child(b); return b
+ b.pressed.connect(func():
+  if playtest:
+   var action = "button"
+   for known in ["Shop","Continue","Ready","Roll","Scout","Match stats","Bracket","Cup progress","Level ups","Keep team"]:
+    if text_value.begins_with(known): action = known; break
+   playtest.record("decision",{"action":action,"control":str(b.name)})
+  callback.call()
+  if playtest: playtest.screen())
+ parent.add_child(b); return b
 
 func panel(rect: Rect2) -> VBoxContainer:
  var p = FantasyFrame.new(); ui.add_child(p); p.position = rect.position; p.size = rect.size
@@ -470,6 +487,8 @@ func zone_music() -> String:
  return ("zone_" + id) if id != "" and sound.music_cache.has("zone_" + id) else ""
 
 func render() -> void:
+ if playtest: playtest.screen()
+ if telemetry: telemetry.screen(phase, tab)
  if phase != last_rendered_phase:
   if presentation_tween: presentation_tween.kill()
   ui.modulate.a = 0.0
@@ -555,7 +574,7 @@ func build_showcase() -> void:
  var preview = HeroPreview.new(); preview.species_id = sp; stage.add_child(preview); preview.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); preview.stretch = true
  label(box,HeroData.species[sp].n,30)
  label(box,HeroData.species[sp].role + "  ·  " + HeroData.species[sp].ability_name,17,GOLD)
- var row = HBoxContainer.new(); box.add_child(row)
+ var row = HBoxContainer.new(); row.size_flags_vertical = Control.SIZE_EXPAND_FILL; box.add_child(row)
  button(row,"← Previous",func(): showcase_index = posmod(showcase_index-1,gallery.size()); render())
  for clip in ["idle","attack","cast"]: button(row,clip.capitalize(),func(): preview.play(clip))
  button(row,"Next →",func(): showcase_index = (showcase_index+1)%gallery.size(); render())
@@ -732,7 +751,7 @@ func load_campaign(slot: int) -> void:
  exhibition = false
  if not campaign.load_slot(slot): toast(campaign.last_error); return
  desk_state.compare = []; desk_state.role = "All"
- sound.set_music(campaign.state.get("music", true)); sound.effects_enabled = campaign.state.get("effects", true)
+ sound.set_music(campaign.state.get("music", true)); sound.effects_enabled = false
  sound.apply_levels()
  selected_id = campaign.state.get("selected", "")
  phase = "upgrade" if not campaign.pending_heroes().is_empty() else "shop" if campaign.state.get("tour",{}).get("shop",false) else "hub"
@@ -757,7 +776,9 @@ func prepare_match() -> void:
 
 func build_prep() -> void:
  var box = scroll_panel(Rect2(26, 135, 350, 602))
- label(box, "Formation", 28)
+ label(box, "Formation & equipment", 24)
+ button(box, "Bag & forge", func(): GearUI.open_bag(self)).name = "PrepBag"
+ button(box, "Team equipment", func(): GearUI.manage_team(self)).name = "PrepEquipment"
  var select = OptionButton.new()
  for h in campaign.state.roster:
   select.add_item(h.name + " · " + HeroData.species[h.sp].n)
@@ -800,6 +821,9 @@ func build_prep() -> void:
   var info = VBoxContainer.new(); info.size_flags_horizontal = Control.SIZE_EXPAND_FILL; identity.add_child(info)
   label(info, hero.name, 18)
   label(info, HeroData.species[hero.sp].role, 12, MUTED)
+  label(stack, CombatRange.basic_label(HeroData.stats(hero).range), 15, Color("70d6dd"))
+  var gear = HBoxContainer.new(); stack.add_child(gear)
+  for key in GearUI.slot_keys(hero): GearUI.slot(self, gear, hero, key, 44)
   var tactics = button(identity, "Tactics", func(): selected_id = hero.id; show_tactics(hero.id))
   tactics.name = "StarterTactics_" + hero.id; tactics.add_theme_font_size_override("font_size", 14)
   label(stack, BattleTactics.summary(hero), 13, GOLD)
@@ -807,6 +831,9 @@ func build_prep() -> void:
  controls_hint()
 
 func place_hero(id: String, destination: int) -> void:
+ if telemetry:
+  telemetry.feature("formation", true)
+  telemetry.record("formation_change", {"hero":id,"destination":destination})
  if campaign.place_hero(id, destination): selected_id = id; render()
  else: toast("Swap with a starter, or move a starter to the bench first.")
 
@@ -815,6 +842,7 @@ func preview_formation() -> void:
  arena.clear_fighters(); arena.target_distance = 49.0 * ArenaGrid.LINEAR_SCALE; arena.camera.h_offset = 0; arena.target_pitch = 0.95; arena.target_yaw = 0.0
  sim = BattleSim.new(); sim.silent = true
  sim.setup(campaign.lineup(), campaign.opponent().roster, campaign.match_seed(), campaign.quality())
+ arena.range_hero_id = selected_id
  arena.sync(sim, 1.0, 1.0)
 
 func preview_team() -> void:
@@ -836,12 +864,13 @@ func demo_stage() -> void:
 # The contestant intro screen is retired: matches start straight in the arena with a countdown.
 func introduce_match() -> void:
  if campaign.state.get("speedrun_lab",false):prepare_match();return
- if not campaign.lineup_ready() or not campaign.pending_heroes().is_empty():return
+ if not campaign.pending_heroes().is_empty(): prepare_match(); return
+ if not campaign.lineup_ready():return
  if Dungeon.active(campaign):
   # The dungeon has no bracket board: only a room with a pending fight leads to the arena.
   if campaign.state.tour.get("intermission",false): WorldTour.end_intermission(campaign)
   if not campaign.state.dungeon.fight or campaign.state.tour.get("shop",false): phase = "hub"; tab = "overview"; render(); return
-  phase = "intro"; render(); return
+  phase = "prep"; render(); return
  if campaign.state.has("tour"): WorldTour.end_intermission(campaign)
  if campaign.state.get("tour",{}).get("shop",false) or campaign.state.get("tour",{}).get("complete",false):return
  # Every tour fight walks up to the tournament board first, then the matchup, then the arena.
@@ -855,11 +884,14 @@ func introduce_match() -> void:
  if not t.is_empty() and int(t.get("board_seen", -1)) != int(t.get("serial", 0)):
   t.board_seen = int(t.get("serial", 0))
   phase = "hub"; tab = "overview"; render()
-  TournamentRewardsUI.open_screen(self, "bracket", func(): phase = "intro"; render(), "Matchup  ▶")
+  TournamentRewardsUI.open_screen(self, "bracket", func(): phase = "prep"; render(), "Matchup  ▶")
   return
- phase = "intro"; render()
+ phase = "prep"; render()
 
 func begin_battle() -> void:
+ if not exhibition and qa.is_empty() and phase != "prep":
+  prepare_match(); return
+ if not exhibition and Dungeon.active(campaign) and not campaign.state.dungeon.fight: return
  campaign.state.erase("roster_intro")
  if not campaign.lineup_ready() or not campaign.pending_heroes().is_empty(): return
  if not exhibition and (campaign.state.get("tour",{}).get("shop",false) or campaign.state.get("tour",{}).get("complete",false)): return
@@ -873,6 +905,9 @@ func begin_battle() -> void:
   sim = BattleSim.new(); sim.action.connect(on_battle_event)
   if not exhibition: sim.team_mods = campaign.battle_mods(); sim.elite_squads = not Dungeon.active(campaign)
   sim.setup(campaign.lineup(), exhibition_rivals if exhibition else campaign.opponent().roster, campaign.match_seed(), 1.0 if exhibition else campaign.quality())
+  if telemetry:
+   telemetry.record("battle_start", {"seed":campaign.match_seed(), "quality":campaign.quality(), "team_mods":sim.team_mods})
+   telemetry.snapshot("battle_start")
   sound.announce("battle", true)
   countdown = COUNTDOWN; countdown_shown = -1; arena.target_yaw = 0.55; arena.camera_yaw = 0.55; arena.target_distance += 6.0
   arena.sync(sim, 1.0); render(); sound.scene_music(zone_music() if zone_music() != "" else "arena"); pass # Music supplies the arena entrance; avoid a competing pitched stinger.
@@ -927,6 +962,8 @@ func build_battle_hud() -> void:
  refresh_feed()
 
 func on_battle_event(e: Dictionary) -> void:
+ if playtest: playtest.combat(e,sim)
+ if telemetry: telemetry.record("combat", e)
  arena.handle_event(e)
  var unit = sim.find_unit(int(e.get("uid", -1)))
  var pan = 0.0
@@ -958,6 +995,7 @@ func refresh_feed() -> void:
 
 ## Speed medallion: 1× → 2× → 4× → tactical ¾× → 1×.
 func cycle_speed() -> void:
+ if telemetry: telemetry.record("speed_cycle", {"previous_speed":speed,"tactical":tactical})
  if tactical: set_tactical(false); speed = 1.0
  elif speed < 2.0: speed = 2.0
  elif speed < 4.0: speed = 4.0
@@ -969,6 +1007,9 @@ var resolve_wait := 0.0
 
 func finish_battle() -> void:
  if resolving: return
+ if telemetry:
+  telemetry.record("battle_end", {"winner":sim.winner, "duration":sim.time, "rows":sim.report_rows()})
+  telemetry.snapshot("battle_end"); telemetry.flush()
  resolving = true
  if not qa.is_empty(): return
  if exhibition:
@@ -993,6 +1034,7 @@ func poll_resolve(dt: float) -> void:
  show_result()
 
 func show_result() -> void:
+ if playtest: playtest.record("battle_result",{"battle":playtest.battle_number,"winner":sim.winner,"duration":sim.time})
  phase = "result"; sound.scene_music(music_now()); sound.cue("victory" if sim.winner == 0 else "honor", true)
  render()
  FlowUI.banner(self, "VICTORY" if sim.winner == 0 else "DRAW" if sim.winner == -1 else "DEFEAT", Color("ffd36e") if sim.winner == 0 else Color("ff8a7a"))
@@ -1018,7 +1060,7 @@ func build_result() -> void:
   var lost = report.get("life_lost", false) or report.get("flame_lost", false)
   var verdict_text = ("%s · %d LEFT" % ["TWO LIVES LOST" if int(report.get("lives_lost", 1)) > 1 else "LIFE LOST", int(report.get("lives", 0))]) if lost else ("FLAWLESS · +50% POINTS · " if report.get("flawless", false) else "") + ("DUNGEON CONQUERED · BANK YOUR SCORE OR GO ENDLESS" if report.get("dungeon_cleared", false) else ("WARDEN DEFEATED · THE WAY DOWN IS OPEN" if report.get("warden_down", false) else "ROOM CLEARED · CHOOSE YOUR SPOILS ON THE MAP"))
   var fl = label(box, verdict_text, 26, Color("ff8a7a") if lost else GOLD); fl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-  # v0.78 permadeath: who fell for good, and who limps on Wounded.
+  # v0.79 permadeath: who fell for good, and who limps on Wounded.
   for f in report.get("fates", []):
    var dead = str(f.fate) == "dead"
    var line = ("%s FELL FOR GOOD · ITEMS RETURN TO THE BAG" if dead else "%s IS WOUNDED · -15%% UNTIL THEY REST") % str(f.name).to_upper()
@@ -1048,8 +1090,7 @@ func build_result() -> void:
   else:
    var analytics = MatchAnalytics.new(); analytics.game = self; analytics.report = report; holder.add_child(analytics)
    toggle.text = uncial_text("Hide stats  ▴"))
- # The graphs open straight away; the button hides them.
- toggle.pressed.emit()
+ # Keep the full report one click away without interrupting the next decision.
  var pending = campaign.pending_heroes().size()
  if campaign.state.get("run_over", false) and not exhibition and report.get("dungeon", false):
   label(box, "OUT OF LIVES · THE RUN IS OVER", 30, Color("ff8a7a"))
@@ -1065,13 +1106,18 @@ func build_result() -> void:
   button(end, "See the guild's final record  →", func(): phase = "runover"; render(), true)
   return
  var footer = HBoxContainer.new(); ui.add_child(footer); footer.position = Vector2(560, 800); footer.size = Vector2(480, 62); footer.alignment = BoxContainer.ALIGNMENT_CENTER
- FlowUI.cta(self, footer, "Menu  ▶" if exhibition else "Map  ▶" if Dungeon.active(campaign) else "Bracket  ▶" if campaign.state.has("tour") else ("Level ups (%d)  ▶" % pending) if pending else "Continue  ▶", func():
+ var next_label = "Menu  ▶" if exhibition else "Final record  ▶" if campaign.state.get("run_over",false) else "Level ups (%d)  ▶" % pending if pending else "Map  ▶" if Dungeon.active(campaign) else "Shop  ▶" if campaign.state.get("tour",{}).get("shop",false) else "Keep team  ▶" if campaign.state.get("tour",{}).get("intermission",false) else "Continue  ▶"
+ if campaign.state.has("tour") and not Dungeon.active(campaign) and not exhibition:
+  button(stats_row,"Bracket",func(): TournamentRewardsUI.open_screen(self,"bracket",func():render(),"Back  ▶"))
+  if campaign.state.tour.get("bracket",{}).get("finished",false):
+   button(stats_row,"Cup progress",func(): TournamentRewardsUI.open_screen(self,"progress",func():render(),"Back  ▶"))
+ FlowUI.cta(self, footer, next_label, func():
   if exhibition: quit_to_menu()
   elif campaign.state.has("tour"): show_bracket_then_shop()
   else:
    phase = "upgrade" if pending else "hub"; tab = "overview"; render(), false, 480)
 
-## After a tour match: replay the bracket, then (if the cup just ended) the progress screen, then shop.
+## Continue to the next required decision; bracket and cup progress remain optional.
 func show_bracket_then_shop() -> void:
  if Dungeon.active(campaign):
   if campaign.state.get("run_over", false): phase = "runover"; render(); return
@@ -1083,12 +1129,8 @@ func show_bracket_then_shop() -> void:
   if not campaign.pending_heroes().is_empty(): phase = "upgrade"; render(); return
   phase = "shop" if campaign.state.get("tour",{}).get("shop",false) else "hub"; tab = "overview"; render()
   if phase == "shop": FlowUI.banner(self, "SHOP", Color("c8ff9d"))
- var cup_over = campaign.state.tour.get("bracket",{}).get("finished",false)
  campaign.state.tour.board_seen = int(campaign.state.tour.get("serial", 0))
- var next_text = "Keep team  ▶" if campaign.state.tour.get("intermission", false) else "Shop  ▶"
- var after = (func(): render(); TournamentRewardsUI.open_screen(self, "progress", to_shop, next_text)) if cup_over else to_shop
- render()
- TournamentRewardsUI.open_screen(self, "bracket", after, "Cup results  ▶" if cup_over else "Shop  ▶", true)
+ to_shop.call()
 
 ## Arena Impact Score for every creature in the match, with the MVP called out.
 func impact_board(box: Node, report: Dictionary) -> void:
@@ -1133,11 +1175,11 @@ func build_upgrade() -> void:
   build_stat_cards(box, h, pending.size()); return
  for index in range(h.pending[0].size()):
   var card = h.pending[0][index]
-  var shell = PanelContainer.new(); shell.size_flags_horizontal = Control.SIZE_EXPAND_FILL; shell.custom_minimum_size = Vector2(405, 510); row.add_child(shell)
+  var shell = PanelContainer.new(); shell.name = "UpgradeCard%d" % index; shell.size_flags_horizontal = Control.SIZE_EXPAND_FILL; shell.custom_minimum_size = Vector2(405, 0); row.add_child(shell)
   shell.add_theme_stylebox_override("panel", style(Color("1c3440"), HeroData.evolution_color({"evolution":card.key}) if card.type == "evolution" else RarityStyle.color(card.rarity), 12, 17, 2))
   var content = VBoxContainer.new(); content.add_theme_constant_override("separation",8); shell.add_child(content)
   label(content, "LEVEL %d · EVOLUTION" % HeroData.EVOLVE_LEVEL if card.type == "evolution" else "LEVEL %d · APEX EVOLUTION" % HeroData.APEX_LEVEL if card.type == "apex" else card.rarity.to_upper() + ("  ·  NEW ABILITY" if card.type == "ability" and not h.learned.has(card.key) else "  ·  EVOLUTION" if card.type == "evolution" else "  ·  RANK UP" if card.type in ["ability", "signature"] else "  ·  MASTERY"), 12, GOLD)
-  var art = TextureRect.new(); art.name = "AbilityCardArt"; art.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS; art.texture = AbilityArt.texture(AbilityArt.card_key(h,card)); art.custom_minimum_size = Vector2(0,244); art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; content.add_child(art)
+  var art = TextureRect.new(); art.name = "AbilityCardArt"; art.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS; art.texture = AbilityArt.texture(AbilityArt.card_key(h,card)); art.custom_minimum_size = Vector2(0,150); art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; content.add_child(art)
   RarityStyle.decorate(art,card.rarity)
   if card.get("rarity","") == "Legendary":
    # A legendary drop is an event: the card lands with a golden flash and a banner.
@@ -1151,17 +1193,19 @@ func build_upgrade() -> void:
    sound.cue("upgrade", true)
   label(content, card.name, 23)
   var full_text = FlowUI.detailed(self)
-  var description = label(content, card.description if full_text else card.get("summary", card.description), 15 if full_text else 17, WHITE)
+  var scroll = ScrollContainer.new(); scroll.name = "SkillDetails"; scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL; scroll.custom_minimum_size.y = 60; scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED; content.add_child(scroll)
+  var description = label(scroll, card.description if full_text else card.get("summary", card.description), 15 if full_text else 17, WHITE)
+  description.size_flags_horizontal = Control.SIZE_EXPAND_FILL
   if not full_text: description.max_lines_visible = 3; description.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
   description.tooltip_text = card.description; description.mouse_filter = Control.MOUSE_FILTER_STOP
+  if full_text: label(content, "Scroll for full details", 11, MUTED)
   if card.get("upgrade", false): label(content, "▲ UPGRADES A SKILL YOU OWN", 12, Color("6fe08a"))
   if not full_text:
    var more = label(content, "Hover for full details", 11, MUTED); more.tooltip_text = card.description; more.mouse_filter = Control.MOUSE_FILTER_STOP
-  var spacer = Control.new(); spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL; content.add_child(spacer)
   if card.type != "apex":
    button(content,"Preview in arena",func():
     var demo=AbilityPreview.new();demo.game=self;demo.hero=h.duplicate(true);demo.card=card.duplicate(true);ui.add_child(demo);demo.build())
-  button(content, "Choose evolution" if card.type == "evolution" else "Choose apex" if card.type == "apex" else "Learn ability" if card.type == "ability" and not h.learned.has(card.key) else "Choose upgrade", func():
+  var choose_button = button(content, "Choose evolution" if card.type == "evolution" else "Choose apex" if card.type == "apex" else "Learn ability" if card.type == "ability" and not h.learned.has(card.key) else "Choose upgrade", func():
    var newly_learned=card.type=="ability" and not h.learned.has(card.key)
    var before_choice=h.duplicate(true)
    if campaign.choose(h.id, index):
@@ -1169,6 +1213,7 @@ func build_upgrade() -> void:
     if newly_learned:
      var demo=AbilityPreview.new();demo.game=self;demo.hero=before_choice;demo.card=card.duplicate(true);demo.unlocked=true;ui.add_child(demo);demo.build()
    else: toast(campaign.last_error), true)
+  choose_button.name = "ChooseSkill%d" % index
  label(box, "%d hero%s awaiting a choice." % [pending.size(), "" if pending.size() == 1 else "es"], 15, MUTED)
 
 ## v0.76 level-up: three stat cards at random rarities; keep one. Each card previews the result.
@@ -1222,7 +1267,7 @@ func toggle_music() -> void:
  render()
 
 func toggle_effects() -> void:
- sound.effects_enabled = not sound.effects_enabled
+ sound.effects_enabled = false
  if not exhibition and not campaign.state.is_empty(): campaign.state.effects = sound.effects_enabled; campaign.save()
  render()
 
@@ -1236,6 +1281,7 @@ func quit_to_menu() -> void:
  if was_battle: toast("Campaign saved. The unfinished bout restarts from preparation.")
 
 func toast(text_value: String) -> void:
+ if telemetry: telemetry.record("feedback", {"message":text_value})
  if is_instance_valid(toast_label):
   toast_label.text = text_value; toast_label.modulate.a = 1.0
   var t = create_tween(); t.tween_interval(4.0); t.tween_property(toast_label, "modulate:a", 0.0, 0.6)
@@ -1289,6 +1335,8 @@ func _process(dt: float) -> void:
    close_game()
 
 func close_game() -> void:
+ if playtest: playtest.finish()
+ if telemetry: telemetry.finish()
  sound.stop_all()
  await get_tree().create_timer(0.3).timeout
  get_tree().quit()
@@ -1299,6 +1347,7 @@ func _notification(what: int) -> void:
   close_game()
 
 func _input(event: InputEvent) -> void:
+ if playtest: playtest.input(event)
  if resolve_thread != null: get_viewport().set_input_as_handled(); return   # results are being written; ignore input for that moment
  if event is InputEventMouseMotion and not dragged_id.is_empty() and phase == "prep":
   var point = arena.ground_position(event.position)
@@ -1347,6 +1396,7 @@ func _unhandled_input(event: InputEvent) -> void:
 # Tactical view slows the fight to 0.75x and turns on the clarity overlay: stronger skill
 # footprints, who-is-attacking-whom lines, status tags and fewer small numbers.
 func set_tactical(on: bool) -> void:
+ if telemetry: telemetry.record("tactical_view", {"enabled":on})
  tactical = on
  if arena and arena.clarity: arena.clarity.tactical = on
  if on:

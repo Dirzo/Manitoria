@@ -1,9 +1,7 @@
-# Manitoria 0.78 · Permadeath (Windows build)
+# Manitoria v0.78 for Windows
 
-GitHub limits single files to 100 MB, so the game is split into parts.
+Download this complete folder, run JOIN-ME.bat, then Manitoria.exe. Joining verifies SHA-256 hashes and preserves the parts. Keep Manitoria.pck beside the executable.
 
-1. Download this whole folder (or the repo ZIP) to your PC.
-2. Double-click `JOIN-ME.bat`. It stitches the parts back into `Manitoria.exe` and `Manitoria.pck`.
-3. Run `Manitoria.exe`. Keep the `.exe` and `.pck` side by side.
+For narration, install Python 3.14, run Setup-Narration.cmd once, then Narrate-Manitoria.cmd. F8 pauses/resumes capture. Close the game normally and wait for offline transcription. Audio and transcripts remain in facts-archive/narration. Normal game launch never records the microphone.
 
-Old saves load and migrate automatically. See [PERMADEATH-0.78.md](../../PERMADEATH-0.78.md).
+Includes 91 new item icons, fluid combat, Warden counterplay, equipment preparation, the dungeon team drawer and local diagnostics. Music-only audio follows the integrated branch policy. See ../../RELEASE-0.78.md for details and validation.

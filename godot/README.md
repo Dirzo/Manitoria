@@ -1,6 +1,14 @@
-# Manitoria 0.78 — Permadeath
+# Manitoria 0.79 — Permadeath
 
-Champions die for good in the dungeon, a guild of seven fields five, and five relics field a sixth. See [PERMADEATH-0.78.md](../PERMADEATH-0.78.md). The 0.77 item overhaul is in [ITEM-OVERHAUL-0.77.md](../ITEM-OVERHAUL-0.77.md).
+Current playable release: [Windows v0.79](../builds/v0.79). Champions die for good in the dungeon, a guild of seven fields five, and five relics field a sixth. See [PERMADEATH-0.79.md](../PERMADEATH-0.79.md).
+
+# Manitoria 0.78
+
+Windows build: [v0.78](../builds/v0.78). [Release notes and narration](../RELEASE-0.78.md). Use Godot 4.7.2 with Forward+ for this project. Earlier version sections below are historical.
+
+# Manitoria 0.77 — Item overhaul
+
+Size and Crit stats, 36 items, Wild items, Mythic Anvil Legendaries and item feedback in combat. See [ITEM-OVERHAUL-0.77.md](../ITEM-OVERHAUL-0.77.md).
 
 # Manitoria 0.76 — Combat and leveling rework
 

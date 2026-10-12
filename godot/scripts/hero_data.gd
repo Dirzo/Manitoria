@@ -405,6 +405,7 @@ const RIDERS = {
 
 static func learned_ability(sp: String, index: int) -> Dictionary:
  load_data()
+ if index == 100: return legendary_ability(sp)
  if index==12:return audit_ability(sp,index,ChampionEvolution.action(sp))
  if index>=13:return audit_ability(sp,index,Evolutions.grant_ability(sp,index-13))
  var pool = ability_pool(sp)
@@ -477,6 +478,22 @@ static func cooldown_factor(hero: Dictionary) -> float:
 
 static func spell_factor(hero: Dictionary) -> float:
  return stats(hero).ap / 100.0
+
+## A legendary occupies its own one-skill slot; the regular four-slot kit is unchanged.
+static func regular_learned_count(hero: Dictionary) -> int:
+ return hero.learned.size() - (1 if hero.learned.has("100") else 0)
+
+static func legendary_ability(sp: String) -> Dictionary:
+ var role_name = species[sp].role
+ var effect = "legend_bastion" if role_name in ["Tank","Warden","Support"] else "legend_cataclysm"
+ var title = species[sp].n + (" · Last Stand" if effect == "legend_bastion" else " · Worldbreaker")
+ var detail = "Shield allies within 2 hexes for 25% of your maximum health and rally them for 5s. Enemies within 2 hexes are weakened for 4s." if effect == "legend_bastion" else "Strike enemies within 2 hexes of the target for 240% skill power and stun them for 1.2s. Leave a 4s ruin field dealing 30% skill power per second."
+ var scaling = "Scaling: caster maximum health only. Attack, ability power, armor and skill potency do not increase this shield. Ability haste lowers cooldowns." if effect == "legend_bastion" else SkillScaling.description(sp,effect,"100")
+ return {"key":"100","name":title,"effect":effect,"rider":"none","power":1.0,"cooldown":24.0,"range":10.0,"summary":"NEW LEGENDARY · " + ("Area protection + enemy suppression" if effect == "legend_bastion" else "Area impact + stun + lingering ruin"),"description":detail + " 24s base cooldown. " + scaling}
+
+static func legendary_card(sp: String) -> Dictionary:
+ var a = legendary_ability(sp)
+ return {"type":"ability","key":"100","name":a.name,"summary":a.summary,"description":a.description+" Fills your separate legendary slot. Cannot be ranked up.","rarity":"Legendary","bonus":1.0}
 
 static func choices(hero: Dictionary, won: bool, rng: RandomNumberGenerator, reward_level: int = -1) -> Array:
  var out = []
